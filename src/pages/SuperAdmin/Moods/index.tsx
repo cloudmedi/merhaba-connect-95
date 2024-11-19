@@ -1,13 +1,13 @@
-import { AdminNav } from "@/components/AdminNav";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { MoodsContent } from "./MoodsContent";
 
 export default function Moods() {
   return (
-    <div className="flex h-screen bg-white">
-      <AdminNav />
-      <main className="flex-1 p-8 overflow-auto bg-white">
-        <MoodsContent />
-      </main>
-    </div>
+    <DashboardLayout 
+      title="Moods" 
+      description="Manage music moods and emotions"
+    >
+      <MoodsContent />
+    </DashboardLayout>
   );
 }

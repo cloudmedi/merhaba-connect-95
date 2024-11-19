@@ -1,13 +1,13 @@
-import { AdminNav } from "@/components/AdminNav";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { GenresContent } from "./GenresContent";
 
 export default function Genres() {
   return (
-    <div className="flex h-screen bg-[#1A1F2C]">
-      <AdminNav />
-      <main className="flex-1 p-8 overflow-auto">
-        <GenresContent />
-      </main>
-    </div>
+    <DashboardLayout 
+      title="Genres" 
+      description="Manage music genres for playlists"
+    >
+      <GenresContent />
+    </DashboardLayout>
   );
 }
