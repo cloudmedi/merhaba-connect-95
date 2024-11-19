@@ -1,6 +1,17 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Settings, Key, FileText } from "lucide-react";
+import { 
+  Settings, 
+  Key, 
+  FileText, 
+  Globe, 
+  Building2, 
+  Mail, 
+  Shield, 
+  Radio, 
+  Bell,
+  Wallet
+} from "lucide-react";
 
 const navItems = [
   {
@@ -8,6 +19,41 @@ const navItems = [
     href: "/super-admin/settings",
     icon: Settings,
     exact: true,
+  },
+  {
+    title: "Company Settings",
+    href: "/super-admin/settings/company",
+    icon: Building2,
+  },
+  {
+    title: "Localization",
+    href: "/super-admin/settings/localization",
+    icon: Globe,
+  },
+  {
+    title: "Billing & Licensing",
+    href: "/super-admin/settings/billing",
+    icon: Wallet,
+  },
+  {
+    title: "Email Settings",
+    href: "/super-admin/settings/email",
+    icon: Mail,
+  },
+  {
+    title: "Security",
+    href: "/super-admin/settings/security",
+    icon: Shield,
+  },
+  {
+    title: "Broadcasting",
+    href: "/super-admin/settings/broadcasting",
+    icon: Radio,
+  },
+  {
+    title: "Notifications",
+    href: "/super-admin/settings/notifications",
+    icon: Bell,
   },
   {
     title: "API Keys",
