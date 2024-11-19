@@ -2,23 +2,29 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  PlayCircle,
-  Monitor,
+  Library,
+  Radio,
   Calendar,
+  Building2,
+  Monitor,
   BarChart2,
+  Activity,
   Settings,
+  Menu,
+  ChevronLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
-import { ChevronLeft } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/manager" },
-  { icon: PlayCircle, label: "Playlists", href: "/manager/playlists" },
-  { icon: Monitor, label: "Devices", href: "/manager/devices" },
+  { icon: Library, label: "Media Library", href: "/manager/media" },
+  { icon: Radio, label: "Announcements", href: "/manager/announcements" },
   { icon: Calendar, label: "Schedule", href: "/manager/schedule" },
+  { icon: Building2, label: "Branches", href: "/manager/branches" },
+  { icon: Monitor, label: "Devices", href: "/manager/devices" },
   { icon: BarChart2, label: "Reports", href: "/manager/reports" },
+  { icon: Activity, label: "Activities", href: "/manager/activities" },
   { icon: Settings, label: "Settings", href: "/manager/settings" },
 ];
 
@@ -54,10 +60,10 @@ export function ManagerNav() {
               isCollapsed && "justify-center"
             )}
           >
-            <PlayCircle className="h-8 w-8 text-[#FFD700]" />
+            <Radio className="h-8 w-8 text-[#FFD700]" />
             {!isCollapsed && (
               <h1 className="text-xl font-semibold tracking-tight">
-                Branch Manager
+                Cloud Media
               </h1>
             )}
           </div>

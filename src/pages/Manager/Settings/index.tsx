@@ -4,7 +4,7 @@ export default function ManagerSettings() {
   return (
     <DashboardLayout
       title="Settings"
-      description="Manage your branch settings"
+      description="Manage system settings"
     >
       <div>Settings Content</div>
     </DashboardLayout>

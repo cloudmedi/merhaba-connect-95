@@ -4,7 +4,7 @@ export default function ManagerSchedule() {
   return (
     <DashboardLayout
       title="Schedule"
-      description="Manage your music schedule"
+      description="Manage your schedules"
     >
       <div>Schedule Content</div>
     </DashboardLayout>

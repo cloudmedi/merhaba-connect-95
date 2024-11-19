@@ -4,7 +4,7 @@ export default function ManagerReports() {
   return (
     <DashboardLayout
       title="Reports"
-      description="View system reports and analytics"
+      description="View system reports"
     >
       <div>Reports Content</div>
     </DashboardLayout>

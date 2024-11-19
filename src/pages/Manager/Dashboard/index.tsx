@@ -3,8 +3,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 export default function ManagerDashboard() {
   return (
     <DashboardLayout
-      title="Manager Dashboard"
-      description="Control your branch's music and view statistics"
+      title="Dashboard"
+      description="Overview of your system"
     >
       <div>Dashboard Content</div>
     </DashboardLayout>
