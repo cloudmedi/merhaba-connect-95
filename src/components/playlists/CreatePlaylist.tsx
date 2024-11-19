@@ -1,15 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Users, Tag, Grid2X2, Heart } from "lucide-react";
-import { PlaylistForm } from "./PlaylistForm";
-import { SongsTab } from "./SongsTab";
-import { UsersTab } from "./UsersTab";
-import { GenresTab } from "./GenresTab";
-import { CategoriesTab } from "./CategoriesTab";
-import { MoodsTab } from "./MoodsTab";
 import { useNavigate } from "react-router-dom";
+import { PlaylistForm } from "./PlaylistForm";
 import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
 
@@ -78,7 +71,7 @@ export function CreatePlaylist() {
   };
 
   return (
-    <div className="flex gap-6 p-6">
+    <div className="flex gap-6 p-6 bg-white">
       <PlaylistForm playlistData={playlistData} setPlaylistData={setPlaylistData} />
       
       <div className="flex-1">

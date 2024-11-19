@@ -75,7 +75,7 @@ export default function Playlists() {
         element={
           <div className="flex h-screen bg-white">
             <AdminNav />
-            <main className="flex-1 p-8 overflow-auto">
+            <main className="flex-1 p-8 overflow-auto bg-white">
               <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
                   <h1 className="text-2xl font-bold text-gray-900">Playlistler</h1>
@@ -162,7 +162,7 @@ export default function Playlists() {
         element={
           <div className="flex h-screen bg-white">
             <AdminNav />
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto bg-white">
               <CreatePlaylist />
             </main>
           </div>
