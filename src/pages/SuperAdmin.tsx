@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import Dashboard from "./SuperAdmin/Dashboard";
 import Users from "./SuperAdmin/Users";
 import Playlists from "./SuperAdmin/Playlists";
@@ -14,19 +15,21 @@ import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 
 export default function SuperAdmin() {
   return (
-    <Routes>
-      <Route index element={<Dashboard />} />
-      <Route path="users" element={<Users />} />
-      <Route path="playlists" element={<Playlists />} />
-      <Route path="playlists/create" element={<CreatePlaylist />} />
-      <Route path="music" element={<Music />} />
-      <Route path="genres" element={<Genres />} />
-      <Route path="categories" element={<Categories />} />
-      <Route path="moods" element={<Moods />} />
-      <Route path="notifications/*" element={<Notifications />} />
-      <Route path="settings/*" element={<Settings />} />
-      <Route path="reports" element={<Reports />} />
-      <Route path="performance" element={<Performance />} />
-    </Routes>
+    <DashboardLayout>
+      <Routes>
+        <Route index element={<Dashboard />} />
+        <Route path="users" element={<Users />} />
+        <Route path="playlists" element={<Playlists />} />
+        <Route path="playlists/create" element={<CreatePlaylist />} />
+        <Route path="music" element={<Music />} />
+        <Route path="genres" element={<Genres />} />
+        <Route path="categories" element={<Categories />} />
+        <Route path="moods" element={<Moods />} />
+        <Route path="notifications/*" element={<Notifications />} />
+        <Route path="settings/*" element={<Settings />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="performance" element={<Performance />} />
+      </Routes>
+    </DashboardLayout>
   );
 }

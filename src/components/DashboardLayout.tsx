@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 import { AdminNav } from "./AdminNav";
+import { ManagerNav } from "./ManagerNav";
+import { useLocation } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -8,9 +10,13 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, title, description }: DashboardLayoutProps) {
+  const location = useLocation();
+  const isManagerRoute = location.pathname.startsWith("/manager");
+  const Nav = isManagerRoute ? ManagerNav : AdminNav;
+
   return (
     <div className="flex min-h-screen bg-[#F8F9FC]">
-      <AdminNav />
+      <Nav />
       <main className="flex-1 overflow-auto w-full md:w-[calc(100%-16rem)] ml-0 md:ml-64 pt-16 md:pt-0">
         <div className="p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
