@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, MessageSquare, Edit, Trash } from "lucide-react";
@@ -17,7 +15,7 @@ interface NotificationTemplate {
 
 export function NotificationTemplates() {
   const { toast } = useToast();
-  const [templates, setTemplates] = useState<NotificationTemplate[]>([
+  const [templates] = useState<NotificationTemplate[]>([
     {
       id: 1,
       name: "System Maintenance",
