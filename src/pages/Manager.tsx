@@ -18,15 +18,15 @@ export default function Manager() {
         <div className="p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/media/*" element={<Media />} />
-              <Route path="/announcements/*" element={<Announcements />} />
-              <Route path="/schedule/*" element={<Schedule />} />
-              <Route path="/branches/*" element={<Branches />} />
-              <Route path="/devices/*" element={<Devices />} />
-              <Route path="/reports/*" element={<Reports />} />
-              <Route path="/activities/*" element={<Activities />} />
-              <Route path="/settings/*" element={<Settings />} />
+              <Route index element={<Dashboard />} />
+              <Route path="media/*" element={<Media />} />
+              <Route path="announcements/*" element={<Announcements />} />
+              <Route path="schedule/*" element={<Schedule />} />
+              <Route path="branches/*" element={<Branches />} />
+              <Route path="devices/*" element={<Devices />} />
+              <Route path="reports/*" element={<Reports />} />
+              <Route path="activities/*" element={<Activities />} />
+              <Route path="settings/*" element={<Settings />} />
             </Routes>
           </div>
         </div>
