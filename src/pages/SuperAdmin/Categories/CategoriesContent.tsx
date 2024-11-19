@@ -19,14 +19,21 @@ export function CategoriesContent() {
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <CategoriesHeader 
-        onNewCategory={() => {
-          setEditingCategory(null);
-          setNewCategory({ name: "", description: "" });
-          setIsDialogOpen(true);
-        }}
-      />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage your music categories</p>
+      </div>
+
+      <div className="flex justify-end">
+        <CategoriesHeader 
+          onNewCategory={() => {
+            setEditingCategory(null);
+            setNewCategory({ name: "", description: "" });
+            setIsDialogOpen(true);
+          }}
+        />
+      </div>
       
       <CategoriesTable 
         categories={categories}
