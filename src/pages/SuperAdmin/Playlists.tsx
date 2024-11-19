@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MoreVertical } from "lucide-react";
+import { Search, Plus, MoreVertical, Play } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 const managers = [
   { id: 1, name: "Manager 1", venue: "Sunny Chill House" },
@@ -37,7 +38,7 @@ const playlists = [
     status: "Active",
     createdAt: "2024-02-20",
     description: "Relaxing jazz hop beats",
-    artwork: null,
+    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
     selectedSongs: [],
     selectedUsers: [],
     selectedGenres: [],
@@ -51,6 +52,7 @@ const playlists = [
     assignedTo: ["Manager 3"],
     status: "Active",
     createdAt: "2024-02-19",
+    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
   },
   {
     id: 3,
@@ -59,16 +61,28 @@ const playlists = [
     assignedTo: ["Manager 1"],
     status: "Inactive",
     createdAt: "2024-02-18",
+    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
   },
 ];
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
+  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleEditPlaylist = (playlist: any) => {
     navigate("create", { state: { editMode: true, playlistData: playlist } });
+  };
+
+  const handlePlayPlaylist = (playlist: any) => {
+    setCurrentPlaylist(playlist);
+    setIsPlayerVisible(true);
+    toast({
+      title: "Now Playing",
+      description: `Playing ${playlist.title}`,
+    });
   };
 
   const PlaylistsContent = () => (
@@ -104,7 +118,7 @@ export default function Playlists() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
+                  <TableHead className="w-[300px]">Title</TableHead>
                   <TableHead>Venue</TableHead>
                   <TableHead>Assigned To</TableHead>
                   <TableHead>Status</TableHead>
@@ -115,7 +129,28 @@ export default function Playlists() {
               <TableBody>
                 {playlists.map((playlist) => (
                   <TableRow key={playlist.id}>
-                    <TableCell className="font-medium">{playlist.title}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="relative group">
+                          <img
+                            src={playlist.artwork}
+                            alt={playlist.title}
+                            className="w-12 h-12 rounded object-cover transition-opacity group-hover:opacity-50"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
+                              onClick={() => handlePlayPlaylist(playlist)}
+                            >
+                              <Play className="w-4 h-4 text-white" />
+                            </Button>
+                          </div>
+                        </div>
+                        <span className="font-medium">{playlist.title}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{playlist.venue}</TableCell>
                     <TableCell>{playlist.assignedTo.join(", ")}</TableCell>
                     <TableCell>
@@ -161,6 +196,9 @@ export default function Playlists() {
           </CardContent>
         </Card>
       </div>
+      {isPlayerVisible && currentPlaylist && (
+        <MusicPlayer playlist={currentPlaylist} onClose={() => setIsPlayerVisible(false)} />
+      )}
     </DashboardLayout>
   );
 
