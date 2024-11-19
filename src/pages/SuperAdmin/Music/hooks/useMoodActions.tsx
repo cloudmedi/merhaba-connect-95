@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Song } from "../types";
 
 export const useMoodActions = () => {
   const [isMoodDialogOpen, setIsMoodDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleAddMood = (selectedSongs: Song[]) => {
+  const handleAddMood = (selectedSongs: any[]) => {
     if (selectedSongs.length === 0) {
       toast({
         title: "No songs selected",
@@ -18,18 +17,9 @@ export const useMoodActions = () => {
     setIsMoodDialogOpen(true);
   };
 
-  const handleMoodConfirm = (moodId: number) => {
-    toast({
-      title: "Success",
-      description: "Mood updated successfully",
-    });
-    setIsMoodDialogOpen(false);
-  };
-
   return {
     isMoodDialogOpen,
     setIsMoodDialogOpen,
     handleAddMood,
-    handleMoodConfirm
   };
 };

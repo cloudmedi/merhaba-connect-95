@@ -9,7 +9,7 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
   return (
     <Button
       onClick={() => document.getElementById("music-upload")?.click()}
-      className="bg-[#FFD700] text-black hover:bg-[#E6C200] px-6"
+      className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
     >
       <Upload className="w-4 h-4 mr-2" />
       Upload Music
