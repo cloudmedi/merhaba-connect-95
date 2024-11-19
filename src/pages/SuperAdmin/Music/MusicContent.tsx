@@ -134,6 +134,10 @@ export function MusicContent() {
     });
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
