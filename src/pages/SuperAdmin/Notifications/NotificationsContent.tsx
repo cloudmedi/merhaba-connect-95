@@ -14,19 +14,19 @@ export function NotificationsContent() {
         <TabsTrigger value="history">History</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="bulk">
+      <TabsContent value="bulk" className="mt-6">
         <BulkNotifications />
       </TabsContent>
 
-      <TabsContent value="templates">
+      <TabsContent value="templates" className="mt-6">
         <NotificationTemplates />
       </TabsContent>
 
-      <TabsContent value="automation">
+      <TabsContent value="automation" className="mt-6">
         <AutomationRules />
       </TabsContent>
 
-      <TabsContent value="history">
+      <TabsContent value="history" className="mt-6">
         <NotificationHistory />
       </TabsContent>
     </Tabs>
