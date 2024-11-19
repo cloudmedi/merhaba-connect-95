@@ -18,22 +18,28 @@ export function BulkNotifications() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState("normal");
-  const [targetGroup, setTargetGroup] = useState("all");
+  const [targetGroup, setTargetGroup] = useState("");
 
   const handleSendNotification = () => {
-    if (!title || !message) {
+    if (!title || !message || !targetGroup) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Hata",
+        description: "Lütfen tüm gerekli alanları doldurun",
         variant: "destructive",
       });
       return;
     }
 
     toast({
-      title: "Success",
-      description: "Notifications sent successfully",
+      title: "Başarılı",
+      description: "Bildirimler başarıyla gönderildi",
     });
+
+    // Form'u sıfırla
+    setTitle("");
+    setMessage("");
+    setPriority("normal");
+    setTargetGroup("");
   };
 
   return (
@@ -41,24 +47,24 @@ export function BulkNotifications() {
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-lg font-semibold">
           <Bell className="h-5 w-5 text-[#9b87f5]" />
-          <h2>Send Bulk Notifications</h2>
+          <h2>Toplu Bildirim Gönder</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Title</label>
+              <label className="text-sm font-medium">Başlık</label>
               <Input
-                placeholder="Enter notification title"
+                placeholder="Bildirim başlığını girin"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">Message</label>
+              <label className="text-sm font-medium">Mesaj</label>
               <Textarea
-                placeholder="Enter notification message"
+                placeholder="Bildirim mesajını girin"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="h-32"
@@ -68,31 +74,32 @@ export function BulkNotifications() {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Target Group</label>
+              <label className="text-sm font-medium">Hedef Grup</label>
               <Select value={targetGroup} onValueChange={setTargetGroup}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select target group" />
+                  <SelectValue placeholder="Hedef grup seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
-                  <SelectItem value="admins">Administrators</SelectItem>
-                  <SelectItem value="managers">Store Managers</SelectItem>
-                  <SelectItem value="players">Music Players</SelectItem>
+                  <SelectItem value="all">Tüm Kullanıcılar</SelectItem>
+                  <SelectItem value="admins">Yöneticiler</SelectItem>
+                  <SelectItem value="managers">Mağaza Yöneticileri</SelectItem>
+                  <SelectItem value="players">Müzik Oynatıcıları</SelectItem>
+                  <SelectItem value="users">Normal Kullanıcılar</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Priority</label>
+              <label className="text-sm font-medium">Öncelik</label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder="Öncelik seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="low">Düşük</SelectItem>
                   <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">Yüksek</SelectItem>
+                  <SelectItem value="urgent">Acil</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -102,7 +109,7 @@ export function BulkNotifications() {
         <div className="flex justify-end">
           <Button onClick={handleSendNotification} className="bg-[#9b87f5] hover:bg-[#7E69AB]">
             <Send className="w-4 h-4 mr-2" />
-            Send Notification
+            Bildirimi Gönder
           </Button>
         </div>
       </div>
