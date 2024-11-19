@@ -12,6 +12,7 @@ import { useMusicActions } from "./hooks/useMusicActions";
 import { usePlaylistActions } from "./hooks/usePlaylistActions";
 import { useMoodActions } from "./hooks/useMoodActions";
 import * as musicMetadata from 'music-metadata-browser';
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 interface Song {
   id: number;
@@ -21,6 +22,7 @@ interface Song {
   genres: string[];
   duration: string;
   file: File;
+  artwork?: string;
   uploadDate: Date;
   playlists?: string[];
   mood?: string;
@@ -33,6 +35,7 @@ export function MusicContent() {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
   const itemsPerPage = 100;
   const { toast } = useToast();
 
@@ -84,6 +87,9 @@ export function MusicContent() {
           file: file,
           uploadDate: new Date(),
           playlists: [],
+          artwork: metadata.common.picture?.[0] ? 
+            URL.createObjectURL(new Blob([metadata.common.picture[0].data], { type: metadata.common.picture[0].format })) :
+            undefined
         });
       } catch (error) {
         console.error("Error parsing metadata:", error);
@@ -177,6 +183,10 @@ export function MusicContent() {
     }
   };
 
+  const handlePlaySong = (song: Song) => {
+    setCurrentlyPlaying(song);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -184,6 +194,8 @@ export function MusicContent() {
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
+            onCreatePlaylist={() => handleAddToPlaylist(selectedSongs)}
+            onDeleteSelected={() => {/* Implement delete action */}}
             onAddGenre={() => handleAddGenre(selectedSongs)}
             onChangeGenre={() => handleGenreChange(selectedSongs)}
             onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
@@ -193,7 +205,6 @@ export function MusicContent() {
             onChangeArtist={() => {/* Implement artist change */}}
             onChangeAlbum={() => {/* Implement album change */}}
             onApprove={() => {/* Implement approve action */}}
-            onDeleteSelected={() => {/* Implement delete action */}}
           />
         )}
       </div>
@@ -207,7 +218,7 @@ export function MusicContent() {
       />
       
       <MusicTable
-        songs={songs}
+        songs={filteredSongs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
@@ -215,7 +226,18 @@ export function MusicContent() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
+        onPlaySong={handlePlaySong}
       />
+
+      {currentlyPlaying && (
+        <MusicPlayer
+          playlist={{
+            title: `${currentlyPlaying.title} - ${currentlyPlaying.artist}`,
+            artwork: currentlyPlaying.artwork || "/placeholder.svg"
+          }}
+          onClose={() => setCurrentlyPlaying(null)}
+        />
+      )}
 
       <GenreChangeDialog 
         isOpen={isGenreDialogOpen}

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "./components/EmptyState";
 import { TablePagination } from "./components/TablePagination";
+import { TrackArtwork } from "@/components/music/TrackArtwork";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Song {
   id: number;
@@ -19,6 +21,7 @@ interface Song {
   genres: string[];
   duration: string;
   file: File;
+  artwork?: string;
 }
 
 interface MusicTableProps {
@@ -30,6 +33,7 @@ interface MusicTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
+  onPlaySong?: (song: Song) => void;
 }
 
 export function MusicTable({ 
@@ -40,8 +44,11 @@ export function MusicTable({
   currentPage,
   totalPages,
   onPageChange,
-  itemsPerPage
+  itemsPerPage,
+  onPlaySong
 }: MusicTableProps) {
+  const { toast } = useToast();
+
   if (songs.length === 0) {
     return <EmptyState />;
   }
@@ -49,6 +56,17 @@ export function MusicTable({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, songs.length);
   const currentSongs = songs.slice(startIndex, endIndex);
+
+  const handlePlaySong = (song: Song) => {
+    if (onPlaySong) {
+      onPlaySong(song);
+    } else {
+      toast({
+        title: "Now Playing",
+        description: `${song.title} by ${song.artist}`,
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -62,7 +80,7 @@ export function MusicTable({
                   onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
               </TableHead>
-              <TableHead>Title</TableHead>
+              <TableHead className="w-[250px]">Title</TableHead>
               <TableHead>Artist</TableHead>
               <TableHead>Album</TableHead>
               <TableHead>Genres</TableHead>
@@ -85,7 +103,16 @@ export function MusicTable({
                     onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
                   />
                 </TableCell>
-                <TableCell className="font-medium">{song.title}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <TrackArtwork
+                      artwork={song.artwork}
+                      title={song.title}
+                      onPlay={() => handlePlaySong(song)}
+                    />
+                    <span className="font-medium">{song.title}</span>
+                  </div>
+                </TableCell>
                 <TableCell>{song.artist}</TableCell>
                 <TableCell>{song.album}</TableCell>
                 <TableCell>{song.genres.join(", ") || "-"}</TableCell>
