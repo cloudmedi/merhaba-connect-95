@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Users, Tag, Grid2X2, Heart } from "lucide-react";
 import { PlaylistForm } from "./PlaylistForm";
 import { SongsTab } from "./SongsTab";
+import { useNavigate } from "react-router-dom";
 
 interface Song {
   id: number;
@@ -15,6 +16,7 @@ interface Song {
 
 export function CreatePlaylist() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [playlistData, setPlaylistData] = useState({
     title: "",
     description: "",
@@ -36,6 +38,8 @@ export function CreatePlaylist() {
       title: "Başarılı",
       description: "Playlist başarıyla oluşturuldu",
     });
+    
+    navigate("/super-admin/playlists");
   };
 
   const handleAddSong = (song: Song) => {
@@ -62,7 +66,7 @@ export function CreatePlaylist() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Yeni Playlist Oluştur</h1>
           <div className="space-x-2">
-            <Button variant="outline" onClick={() => window.history.back()}>
+            <Button variant="outline" onClick={() => navigate("/super-admin/playlists")}>
               İptal
             </Button>
             <Button onClick={handleCreatePlaylist}>

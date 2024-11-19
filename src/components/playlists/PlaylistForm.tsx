@@ -23,37 +23,37 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
   return (
     <div className="space-y-4 w-[300px]">
       <div>
-        <label className="text-sm font-medium">Playlist Name</label>
+        <label className="text-sm font-medium">Playlist Adı</label>
         <Input
-          placeholder="Enter playlist name"
+          placeholder="Playlist adını girin"
           value={playlistData.title}
           onChange={(e) => setPlaylistData((prev: any) => ({ ...prev, title: e.target.value }))}
         />
       </div>
       
       <div>
-        <label className="text-sm font-medium">Description</label>
+        <label className="text-sm font-medium">Açıklama</label>
         <Textarea
-          placeholder="Describe your playlist"
+          placeholder="Playlist açıklamasını girin"
           value={playlistData.description}
           onChange={(e) => setPlaylistData((prev: any) => ({ ...prev, description: e.target.value }))}
         />
       </div>
       
       <div>
-        <label className="text-sm font-medium">Artwork</label>
+        <label className="text-sm font-medium">Kapak Görseli</label>
         <div className="mt-2 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
              onClick={() => document.getElementById('artwork-upload')?.click()}>
           {playlistData.artwork ? (
             <img
               src={URL.createObjectURL(playlistData.artwork)}
-              alt="Playlist artwork"
+              alt="Playlist kapak görseli"
               className="w-full h-40 object-cover rounded"
             />
           ) : (
             <div className="h-40 flex flex-col items-center justify-center text-gray-500">
               <Upload className="w-8 h-8 mb-2" />
-              <span>Upload Artwork</span>
+              <span>Kapak Görseli Yükle</span>
             </div>
           )}
           <input
