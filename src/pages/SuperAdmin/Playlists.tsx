@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, MoreVertical } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { CreatePlaylistDialog } from "@/components/playlists/CreatePlaylistDialog";
+import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import {
   Table,
   TableBody,
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate, Routes, Route } from "react-router-dom";
 
 // Mock data - In a real app, this would come from an API
 const managers = [
@@ -57,30 +58,34 @@ const playlists = [
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleAssignPlaylist = (playlistId: number, managerId: number) => {
     toast({
-      title: "Playlist Assigned",
-      description: `Playlist has been assigned to Manager ${managerId}`,
+      title: "Playlist Atandı",
+      description: `Playlist, Yönetici ${managerId}'ye atandı`,
     });
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      <AdminNav />
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Playlists</h1>
-            <Button 
-              className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
-              onClick={() => setIsCreateDialogOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" /> Create New Playlist
-            </Button>
-          </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <div className="flex h-screen bg-white">
+            <AdminNav />
+            <main className="flex-1 p-8 overflow-auto">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                  <h1 className="text-2xl font-bold text-gray-900">Playlistler</h1>
+                  <Button 
+                    onClick={() => navigate("create")}
+                    className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+                  >
+                    <Plus className="w-4 h-4 mr-2" /> Yeni Playlist Oluştur
+                  </Button>
+                </div>
 
           <div className="mb-6 flex gap-4">
             <div className="relative flex-1">
@@ -147,13 +152,22 @@ export default function Playlists() {
               </Table>
             </CardContent>
           </Card>
-        </div>
-      </main>
-
-      <CreatePlaylistDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
+              </div>
+            </main>
+          </div>
+        }
       />
-    </div>
+      <Route
+        path="create"
+        element={
+          <div className="flex h-screen bg-white">
+            <AdminNav />
+            <main className="flex-1 overflow-auto">
+              <CreatePlaylist />
+            </main>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
