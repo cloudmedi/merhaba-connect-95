@@ -10,19 +10,21 @@ import Player from "./pages/Player";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/super-admin/*" element={<SuperAdmin />} />
-          <Route path="/manager/*" element={<Manager />} />
-          <Route path="/player/*" element={<Player />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/super-admin/*" element={<SuperAdmin />} />
+            <Route path="/manager/*" element={<Manager />} />
+            <Route path="/player/*" element={<Player />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}

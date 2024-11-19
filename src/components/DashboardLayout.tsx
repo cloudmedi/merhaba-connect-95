@@ -3,8 +3,6 @@ import { AdminNav } from "./AdminNav";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  title: string;
-  description?: string;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
