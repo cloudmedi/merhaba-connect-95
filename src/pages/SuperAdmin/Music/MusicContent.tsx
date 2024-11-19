@@ -17,6 +17,7 @@ interface Song {
   file: File;
   uploadDate: Date;
   playlists?: string[];
+  mood?: string;
 }
 
 export function MusicContent() {
@@ -134,6 +135,133 @@ export function MusicContent() {
     });
   };
 
+  const handleAddGenre = () => {
+    const newGenre = "New Genre"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, genres: [...song.genres, newGenre] }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Genre added to ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangeGenre = () => {
+    const newGenre = "Updated Genre"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, genres: [newGenre] }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Genre changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleAddPlaylist = () => {
+    const newPlaylist = "New Playlist"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, playlists: [...(song.playlists || []), newPlaylist] }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Added to playlist: ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangePlaylist = () => {
+    const newPlaylist = "Updated Playlist"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, playlists: [newPlaylist] }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Playlist changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleAddMood = () => {
+    const newMood = "Happy"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, mood: newMood }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Mood added to ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangeMood = () => {
+    const newMood = "Calm"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, mood: newMood }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Mood changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangeArtist = () => {
+    const newArtist = "New Artist"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, artist: newArtist }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Artist changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangeAlbum = () => {
+    const newAlbum = "New Album"; // In a real app, this would come from a dialog
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, album: newAlbum }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Album changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleApprove = () => {
+    toast({
+      title: "Success",
+      description: `${selectedSongs.length} songs have been approved`,
+    });
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -147,15 +275,15 @@ export function MusicContent() {
             selectedCount={selectedSongs.length}
             onCreatePlaylist={handleCreatePlaylist}
             onDeleteSelected={handleDeleteSelected}
-            onAddGenre={() => handleAction("Add Genre")}
-            onChangeGenre={() => handleAction("Change Genre")}
-            onAddPlaylist={() => handleAction("Add Playlist")}
-            onChangePlaylist={() => handleAction("Change Playlist")}
-            onAddMood={() => handleAction("Add Mood")}
-            onChangeMood={() => handleAction("Change Mood")}
-            onChangeArtist={() => handleAction("Change Artist")}
-            onChangeAlbum={() => handleAction("Change Album")}
-            onApprove={() => handleAction("Approve")}
+            onAddGenre={handleAddGenre}
+            onChangeGenre={handleChangeGenre}
+            onAddPlaylist={handleAddPlaylist}
+            onChangePlaylist={handleChangePlaylist}
+            onAddMood={handleAddMood}
+            onChangeMood={handleChangeMood}
+            onChangeArtist={handleChangeArtist}
+            onChangeAlbum={handleChangeAlbum}
+            onApprove={handleApprove}
           />
         )}
       </div>
