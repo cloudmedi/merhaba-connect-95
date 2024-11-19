@@ -25,6 +25,8 @@ export function MusicContent() {
   const [filterGenre, setFilterGenre] = useState<string>("all-genres");
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -90,6 +92,8 @@ export function MusicContent() {
       return 0;
     });
 
+  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedSongs(filteredSongs);
@@ -123,6 +127,10 @@ export function MusicContent() {
     });
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -151,6 +159,10 @@ export function MusicContent() {
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
       />
     </div>
   );

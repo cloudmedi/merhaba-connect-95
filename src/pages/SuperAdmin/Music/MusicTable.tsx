@@ -9,6 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Song {
   id: number;
@@ -25,9 +33,22 @@ interface MusicTableProps {
   selectedSongs: Song[];
   onSelectAll: (checked: boolean) => void;
   onSelectSong: (song: Song, checked: boolean) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
 }
 
-export function MusicTable({ songs, selectedSongs, onSelectAll, onSelectSong }: MusicTableProps) {
+export function MusicTable({ 
+  songs, 
+  selectedSongs, 
+  onSelectAll, 
+  onSelectSong,
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage
+}: MusicTableProps) {
   if (songs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[400px] text-gray-500">
@@ -38,49 +59,87 @@ export function MusicTable({ songs, selectedSongs, onSelectAll, onSelectSong }: 
     );
   }
 
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSongs = songs.slice(startIndex, endIndex);
+
   return (
-    <ScrollArea className="h-[calc(100vh-300px)] rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox 
-                checked={selectedSongs.length === songs.length}
-                onCheckedChange={(checked) => onSelectAll(checked as boolean)}
-              />
-            </TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Artist</TableHead>
-            <TableHead>Album</TableHead>
-            <TableHead>Genres</TableHead>
-            <TableHead className="text-right">Duration</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {songs.map((song) => (
-            <TableRow
-              key={song.id}
-              className={`cursor-pointer ${
-                selectedSongs.some((s) => s.id === song.id)
-                  ? "bg-purple-50"
-                  : ""
-              }`}
-            >
-              <TableCell>
+    <div className="space-y-4">
+      <ScrollArea className="h-[calc(100vh-400px)] rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
                 <Checkbox 
-                  checked={selectedSongs.some((s) => s.id === song.id)}
-                  onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
+                  checked={selectedSongs.length === songs.length}
+                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
-              </TableCell>
-              <TableCell className="font-medium">{song.title}</TableCell>
-              <TableCell>{song.artist}</TableCell>
-              <TableCell>{song.album}</TableCell>
-              <TableCell>{song.genres.join(", ") || "-"}</TableCell>
-              <TableCell className="text-right">{song.duration}</TableCell>
+              </TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Artist</TableHead>
+              <TableHead>Album</TableHead>
+              <TableHead>Genres</TableHead>
+              <TableHead className="text-right">Duration</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </ScrollArea>
+          </TableHeader>
+          <TableBody>
+            {currentSongs.map((song) => (
+              <TableRow
+                key={song.id}
+                className={`cursor-pointer ${
+                  selectedSongs.some((s) => s.id === song.id)
+                    ? "bg-purple-50"
+                    : ""
+                }`}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedSongs.some((s) => s.id === song.id)}
+                    onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">{song.title}</TableCell>
+                <TableCell>{song.artist}</TableCell>
+                <TableCell>{song.album}</TableCell>
+                <TableCell>{song.genres.join(", ") || "-"}</TableCell>
+                <TableCell className="text-right">{song.duration}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => onPageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  onClick={() => onPageChange(page)}
+                  isActive={currentPage === page}
+                  className="cursor-pointer"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => onPageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+    </div>
   );
 }
