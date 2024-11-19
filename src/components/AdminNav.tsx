@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Tag,
   Menu,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
@@ -22,6 +23,7 @@ const navItems = [
   { icon: FolderTree, label: "Categories", href: "/super-admin/categories" },
   { icon: Heart, label: "Moods", href: "/super-admin/moods" },
   { icon: ListMusic, label: "Playlists", href: "/super-admin/playlists" },
+  { icon: SettingsIcon, label: "Settings", href: "/super-admin/settings" },
 ];
 
 export function AdminNav() {
