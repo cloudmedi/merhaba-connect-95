@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "./SuperAdmin/Dashboard";
+import Users from "./SuperAdmin/Users";
 import Playlists from "./SuperAdmin/Playlists";
 import Music from "./SuperAdmin/Music";
 import Categories from "./SuperAdmin/Categories";
@@ -11,6 +12,7 @@ export default function SuperAdmin() {
   return (
     <Routes>
       <Route index element={<Dashboard />} />
+      <Route path="users" element={<Users />} />
       <Route path="playlists" element={<Playlists />} />
       <Route path="playlists/create" element={<CreatePlaylist />} />
       <Route path="music" element={<Music />} />
