@@ -125,8 +125,17 @@ export function MusicContent() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4">
         <MusicHeader onUpload={handleFileUpload} />
+        {selectedSongs.length > 0 && (
+          <div className="flex gap-4">
+            <MusicActions
+              selectedCount={selectedSongs.length}
+              onCreatePlaylist={handleCreatePlaylist}
+              onDeleteSelected={handleDeleteSelected}
+            />
+          </div>
+        )}
       </div>
       
       <MusicFilters
@@ -135,12 +144,6 @@ export function MusicContent() {
         onRecentChange={setSortByRecent}
         genres={Array.from(new Set(songs.flatMap(song => song.genres)))}
         playlists={Array.from(new Set(songs.flatMap(song => song.playlists || [])))}
-      />
-      
-      <MusicActions
-        selectedCount={selectedSongs.length}
-        onCreatePlaylist={handleCreatePlaylist}
-        onDeleteSelected={handleDeleteSelected}
       />
       
       <MusicTable
