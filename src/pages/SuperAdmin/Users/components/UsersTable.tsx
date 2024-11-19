@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, History, Lock, Key, Trash, RotateCcw } from "lucide-react";
+import { Eye, Pencil, History, Lock, Key, RotateCcw, Trash } from "lucide-react";
 
 interface User {
   id: string;
@@ -49,69 +49,71 @@ const mockUsers: User[] = [
 
 export function UsersTable() {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[200px]">NAME</TableHead>
-          <TableHead className="w-[200px]">EMAIL</TableHead>
-          <TableHead className="w-[200px]">COMPANY</TableHead>
-          <TableHead className="w-[100px]">ROLE</TableHead>
-          <TableHead className="w-[100px]">STATUS</TableHead>
-          <TableHead className="w-[100px]">LICENSE</TableHead>
-          <TableHead className="w-[100px]">EXPIRY</TableHead>
-          <TableHead className="w-[200px] text-right">ACTIONS</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {mockUsers.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.name}</TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{user.company}</TableCell>
-            <TableCell>{user.role}</TableCell>
-            <TableCell>
-              <Badge 
-                variant={user.status === 'active' ? 'default' : 'destructive'}
-                className={user.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'}
-              >
-                {user.status}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <Badge 
-                variant="secondary"
-                className="bg-blue-100 text-blue-800 hover:bg-blue-100"
-              >
-                {user.license}
-              </Badge>
-            </TableCell>
-            <TableCell>{user.expiry}</TableCell>
-            <TableCell className="text-right space-x-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <History className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Lock className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Key className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700">
-                <Trash className="h-4 w-4" />
-              </Button>
-            </TableCell>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>NAME</TableHead>
+            <TableHead>EMAIL</TableHead>
+            <TableHead>COMPANY</TableHead>
+            <TableHead>ROLE</TableHead>
+            <TableHead>STATUS</TableHead>
+            <TableHead>LICENSE</TableHead>
+            <TableHead>EXPIRY</TableHead>
+            <TableHead className="text-right">ACTIONS</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {mockUsers.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.company}</TableCell>
+              <TableCell>{user.role}</TableCell>
+              <TableCell>
+                <Badge 
+                  variant={user.status === 'active' ? 'default' : 'destructive'}
+                  className={user.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'}
+                >
+                  {user.status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge 
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-800 hover:bg-blue-100"
+                >
+                  {user.license}
+                </Badge>
+              </TableCell>
+              <TableCell>{user.expiry}</TableCell>
+              <TableCell className="text-right space-x-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <History className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Lock className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Key className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700">
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

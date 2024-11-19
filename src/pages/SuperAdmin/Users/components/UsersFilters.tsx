@@ -57,17 +57,6 @@ export function UsersFilters() {
           <SelectItem value="expired">Expired</SelectItem>
         </SelectContent>
       </Select>
-
-      <Select>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sort by Name" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="name">Sort by Name</SelectItem>
-          <SelectItem value="email">Sort by Email</SelectItem>
-          <SelectItem value="company">Sort by Company</SelectItem>
-        </SelectContent>
-      </Select>
     </div>
   );
 }
