@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis } from "recharts";
-import { Cpu, Memory, HardDrive } from "lucide-react";
+import { Cpu, Database, HardDrive } from "lucide-react";
 
 const mockData = Array.from({ length: 24 }, (_, i) => ({
   time: `${i}:00`,
@@ -31,7 +31,7 @@ export function ResourceUsage() {
         <Card className="p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-purple-100 rounded-full">
-              <Memory className="h-6 w-6 text-purple-600" />
+              <Database className="h-6 w-6 text-purple-600" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
