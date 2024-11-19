@@ -102,7 +102,9 @@ export function MusicContent() {
 
   return (
     <div className="space-y-8">
-      <MusicHeader onUpload={handleFileUpload} />
+      <div className="flex justify-end">
+        <MusicHeader onUpload={handleFileUpload} />
+      </div>
       
       <MusicActions
         selectedCount={selectedSongs.length}
