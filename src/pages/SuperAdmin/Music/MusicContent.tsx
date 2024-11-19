@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 import * as musicMetadata from 'music-metadata-browser';
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
+import { GenreChangeDialog } from "./components/GenreChangeDialog";
 
 interface Song {
   id: number;
@@ -27,6 +28,7 @@ export function MusicContent() {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGenreDialogOpen, setIsGenreDialogOpen] = useState(false);
   const itemsPerPage = 100;
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -80,6 +82,39 @@ export function MusicContent() {
     });
   };
 
+  const handleChangeGenre = () => {
+    if (selectedSongs.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select songs to change their genre",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsGenreDialogOpen(true);
+  };
+
+  const handleGenreConfirm = (genreId: number) => {
+    const genreMap: Record<number, string> = {
+      1: "Rock",
+      2: "Pop",
+      3: "Jazz",
+      4: "Classical",
+      5: "Hip Hop",
+      6: "Electronic",
+    };
+
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, genres: [genreMap[genreId]] }
+          : song
+      )
+    );
+    
+    setIsGenreDialogOpen(false);
+  };
+
   const filteredSongs = songs
     .filter(song => {
       if (filterGenre !== "all-genres" && !song.genres.includes(filterGenre)) return false;
@@ -128,13 +163,6 @@ export function MusicContent() {
     });
   };
 
-  const handleAction = (action: string) => {
-    toast({
-      title: "Action Triggered",
-      description: `${action} action for ${selectedSongs.length} songs`,
-    });
-  };
-
   const handleAddGenre = () => {
     const newGenre = "New Genre"; // In a real app, this would come from a dialog
     setSongs(prev => 
@@ -147,36 +175,6 @@ export function MusicContent() {
     toast({
       title: "Success",
       description: `Genre added to ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleChangeGenre = () => {
-    const newGenre = "Updated Genre"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, genres: [newGenre] }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Genre changed for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleAddPlaylist = () => {
-    const newPlaylist = "New Playlist"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, playlists: [...(song.playlists || []), newPlaylist] }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Added to playlist: ${selectedSongs.length} songs`,
     });
   };
 
@@ -207,21 +205,6 @@ export function MusicContent() {
     toast({
       title: "Success",
       description: `Mood added to ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleChangeMood = () => {
-    const newMood = "Calm"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, mood: newMood }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Mood changed for ${selectedSongs.length} songs`,
     });
   };
 
@@ -305,6 +288,12 @@ export function MusicContent() {
         totalPages={totalPages}
         onPageChange={handlePageChange}
         itemsPerPage={itemsPerPage}
+      />
+
+      <GenreChangeDialog 
+        isOpen={isGenreDialogOpen}
+        onClose={() => setIsGenreDialogOpen(false)}
+        onConfirm={handleGenreConfirm}
       />
     </div>
   );
