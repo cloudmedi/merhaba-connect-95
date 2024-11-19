@@ -27,16 +27,16 @@ export function CreatePlaylist() {
   const handleCreatePlaylist = () => {
     if (!playlistData.title) {
       toast({
-        title: "Hata",
-        description: "Lütfen playlist başlığını girin",
+        title: "Error",
+        description: "Please enter a playlist title",
         variant: "destructive",
       });
       return;
     }
 
     toast({
-      title: "Başarılı",
-      description: "Playlist başarıyla oluşturuldu",
+      title: "Success",
+      description: "Playlist created successfully",
     });
     
     navigate("/super-admin/playlists");
@@ -64,13 +64,13 @@ export function CreatePlaylist() {
       
       <div className="flex-1">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Yeni Playlist Oluştur</h1>
+          <h1 className="text-2xl font-bold">Create New Playlist</h1>
           <div className="space-x-2">
             <Button variant="outline" onClick={() => navigate("/super-admin/playlists")}>
-              İptal
+              Cancel
             </Button>
             <Button onClick={handleCreatePlaylist}>
-              Playlist Oluştur
+              Create Playlist
             </Button>
           </div>
         </div>
@@ -79,23 +79,23 @@ export function CreatePlaylist() {
           <TabsList>
             <TabsTrigger value="songs">
               <Music className="w-4 h-4 mr-2" />
-              Şarkılar
+              Songs
             </TabsTrigger>
             <TabsTrigger value="users">
               <Users className="w-4 h-4 mr-2" />
-              Kullanıcılar
+              Users
             </TabsTrigger>
             <TabsTrigger value="genres">
               <Tag className="w-4 h-4 mr-2" />
-              Türler
+              Genres
             </TabsTrigger>
             <TabsTrigger value="categories">
               <Grid2X2 className="w-4 h-4 mr-2" />
-              Kategoriler
+              Categories
             </TabsTrigger>
             <TabsTrigger value="moods">
               <Heart className="w-4 h-4 mr-2" />
-              Modlar
+              Moods
             </TabsTrigger>
           </TabsList>
 
@@ -109,25 +109,25 @@ export function CreatePlaylist() {
 
           <TabsContent value="users">
             <div className="p-4 text-center text-gray-500">
-              Kullanıcı seçimi yakında eklenecek
+              User selection coming soon
             </div>
           </TabsContent>
 
           <TabsContent value="genres">
             <div className="p-4 text-center text-gray-500">
-              Tür seçimi yakında eklenecek
+              Genre selection coming soon
             </div>
           </TabsContent>
 
           <TabsContent value="categories">
             <div className="p-4 text-center text-gray-500">
-              Kategori seçimi yakında eklenecek
+              Category selection coming soon
             </div>
           </TabsContent>
 
           <TabsContent value="moods">
             <div className="p-4 text-center text-gray-500">
-              Mod seçimi yakında eklenecek
+              Mood selection coming soon
             </div>
           </TabsContent>
         </Tabs>
