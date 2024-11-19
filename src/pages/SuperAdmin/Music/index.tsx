@@ -4,7 +4,7 @@ import { MusicContent } from "./MusicContent";
 export default function Music() {
   return (
     <DashboardLayout 
-      title="Music Library" 
+      title="Music Library"
       description="Manage your music collection"
     >
       <MusicContent />

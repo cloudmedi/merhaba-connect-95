@@ -22,7 +22,6 @@ import {
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Mock data - In a real app, this would come from an API
 const managers = [
   { id: 1, name: "Manager 1", venue: "Sunny Chill House" },
   { id: 2, name: "Manager 2", venue: "Beach Club" },
