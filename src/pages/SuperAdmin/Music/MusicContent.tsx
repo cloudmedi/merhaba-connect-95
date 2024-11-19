@@ -2,13 +2,23 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Upload, Trash2, PlaySquare } from "lucide-react";
+import { Upload, Trash2, PlaySquare, Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import * as musicMetadata from 'music-metadata-browser';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Song {
   id: number;
   title: string;
   artist: string;
+  album?: string;
   duration: string;
   file: File;
 }
@@ -19,17 +29,41 @@ export function MusicContent() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    const newSongs: Song[] = Array.from(files).map((file, index) => ({
-      id: Date.now() + index,
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      artist: "Unknown Artist",
-      duration: "0:00",
-      file: file,
-    }));
+    const newSongs: Song[] = [];
+
+    for (const file of Array.from(files)) {
+      try {
+        const metadata = await musicMetadata.parseBlob(file);
+        
+        newSongs.push({
+          id: Date.now() + newSongs.length,
+          title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
+          artist: metadata.common.artist || "Unknown Artist",
+          album: metadata.common.album,
+          duration: formatDuration(metadata.format.duration || 0),
+          file: file,
+        });
+      } catch (error) {
+        console.error("Error parsing metadata:", error);
+        newSongs.push({
+          id: Date.now() + newSongs.length,
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          artist: "Unknown Artist",
+          duration: "0:00",
+          file: file,
+        });
+      }
+    }
 
     setSongs((prev) => [...prev, ...newSongs]);
     toast({
@@ -100,29 +134,46 @@ export function MusicContent() {
       )}
 
       <ScrollArea className="h-[calc(100vh-200px)] rounded-md border">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {songs.map((song) => (
-            <div
-              key={song.id}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                selectedSongs.some((s) => s.id === song.id)
-                  ? "border-purple-500 bg-purple-50"
-                  : "hover:border-gray-300"
-              }`}
-              onClick={() => toggleSongSelection(song)}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <PlaySquare className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium">{song.title}</h3>
-                  <p className="text-sm text-gray-500">{song.artist}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {songs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Music2 className="w-12 h-12 mb-2" />
+            <p>No songs uploaded yet</p>
+            <p className="text-sm">Upload some music to get started</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Artist</TableHead>
+                <TableHead>Album</TableHead>
+                <TableHead className="text-right">Duration</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {songs.map((song) => (
+                <TableRow
+                  key={song.id}
+                  className={`cursor-pointer ${
+                    selectedSongs.some((s) => s.id === song.id)
+                      ? "bg-purple-50"
+                      : ""
+                  }`}
+                  onClick={() => toggleSongSelection(song)}
+                >
+                  <TableCell>
+                    <Music2 className="w-4 h-4 text-purple-600" />
+                  </TableCell>
+                  <TableCell className="font-medium">{song.title}</TableCell>
+                  <TableCell>{song.artist}</TableCell>
+                  <TableCell>{song.album || "-"}</TableCell>
+                  <TableCell className="text-right">{song.duration}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </ScrollArea>
     </div>
   );
