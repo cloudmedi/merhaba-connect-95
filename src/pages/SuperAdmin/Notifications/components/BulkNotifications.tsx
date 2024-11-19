@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, Send, Template, Users } from "lucide-react";
+import { Bell, Send, MessageSquare, Users } from "lucide-react";
 
 export function BulkNotifications() {
   const { toast } = useToast();
@@ -109,7 +109,7 @@ export function BulkNotifications() {
                   });
                 }}
               >
-                <Template className="w-4 h-4 mr-2" />
+                <MessageSquare className="w-4 h-4 mr-2" />
                 Load Template
               </Button>
               <Button

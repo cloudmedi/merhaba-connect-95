@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Template, Edit, Trash } from "lucide-react";
+import { Plus, MessageSquare, Edit, Trash } from "lucide-react";
 
 interface NotificationTemplate {
   id: number;
@@ -39,7 +39,7 @@ export function NotificationTemplates() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Template className="h-5 w-5 text-[#9b87f5]" />
+            <MessageSquare className="h-5 w-5 text-[#9b87f5]" />
             <h2>Notification Templates</h2>
           </div>
           <Button
