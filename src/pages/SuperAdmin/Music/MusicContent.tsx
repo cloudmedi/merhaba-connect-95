@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
-import { MusicFilters } from "./MusicFilters";
+import { MusicFilters } from "./components/MusicFilters";
 import { GenreChangeDialog } from "./components/GenreChangeDialog";
 import { AddGenreDialog } from "./components/AddGenreDialog";
 import { PlaylistDialog } from "./components/PlaylistDialog";
@@ -11,7 +11,6 @@ import { MoodDialog } from "./components/MoodDialog";
 import { useMusicActions } from "./hooks/useMusicActions";
 import { usePlaylistActions } from "./hooks/usePlaylistActions";
 import { useMoodActions } from "./hooks/useMoodActions";
-import * as musicMetadata from 'music-metadata-browser';
 import { MusicPlayer } from "@/components/MusicPlayer";
 
 interface Song {
@@ -26,16 +25,22 @@ interface Song {
   uploadDate: Date;
   playlists?: string[];
   mood?: string;
+  uploader?: string;
 }
 
 export function MusicContent() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
-  const [filterGenre, setFilterGenre] = useState<string>("all-genres");
-  const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
-  const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+  const [filters, setFilters] = useState({
+    artists: [],
+    albums: [],
+    uploaders: [],
+    genre: "",
+    mood: "",
+  });
+
   const itemsPerPage = 100;
   const { toast } = useToast();
 
@@ -62,11 +67,16 @@ export function MusicContent() {
     handleAddMood
   } = useMoodActions();
 
-  const formatDuration = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  const filteredSongs = songs.filter(song => {
+    if (filters.artists.length && !filters.artists.includes(song.artist)) return false;
+    if (filters.albums.length && !filters.albums.includes(song.album)) return false;
+    if (filters.uploaders.length && !filters.uploaders.includes(song.uploader || "")) return false;
+    if (filters.genre && !song.genres.includes(filters.genre)) return false;
+    if (filters.mood && song.mood !== filters.mood) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -114,59 +124,6 @@ export function MusicContent() {
     });
   };
 
-  const handlePlaylistConfirm = (playlistIds: number[]) => {
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, playlists: [...(song.playlists || []), ...playlistIds.map(String)] }
-          : song
-      )
-    );
-    
-    toast({
-      title: "Success",
-      description: `Songs added to ${playlistIds.length} playlists`,
-    });
-  };
-
-  const handleMoodConfirm = (moodId: number) => {
-    const moodMap: Record<number, string> = {
-      1: "Happy",
-      2: "Sad",
-      3: "Energetic",
-      4: "Calm",
-      5: "Romantic",
-    };
-
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, mood: moodMap[moodId] }
-          : song
-      )
-    );
-    
-    toast({
-      title: "Success",
-      description: `Mood updated to ${moodMap[moodId]} for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const filteredSongs = songs
-    .filter(song => {
-      if (filterGenre !== "all-genres" && !song.genres.includes(filterGenre)) return false;
-      if (filterPlaylist !== "all-playlists" && !song.playlists?.includes(filterPlaylist)) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortByRecent) {
-        return b.uploadDate.getTime() - a.uploadDate.getTime();
-      }
-      return 0;
-    });
-
-  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
-
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedSongs(filteredSongs);
@@ -189,45 +146,45 @@ export function MusicContent() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
-        <MusicHeader onUpload={handleFileUpload} />
-        {selectedSongs.length > 0 && (
-          <MusicActions
-            selectedCount={selectedSongs.length}
-            onCreatePlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onDeleteSelected={() => {/* Implement delete action */}}
-            onAddGenre={() => handleAddGenre(selectedSongs)}
-            onChangeGenre={() => handleGenreChange(selectedSongs)}
-            onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onChangePlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onAddMood={() => handleAddMood(selectedSongs)}
-            onChangeMood={() => handleAddMood(selectedSongs)}
-            onChangeArtist={() => {/* Implement artist change */}}
-            onChangeAlbum={() => {/* Implement album change */}}
-            onApprove={() => {/* Implement approve action */}}
+      <div className="flex items-start gap-8">
+        <div className="w-80 sticky top-4">
+          <MusicFilters onFilterChange={setFilters} />
+        </div>
+        
+        <div className="flex-1 space-y-8">
+          <div className="flex items-center justify-between gap-4">
+            <MusicHeader onUpload={handleFileUpload} />
+            {selectedSongs.length > 0 && (
+              <MusicActions
+                selectedCount={selectedSongs.length}
+                onCreatePlaylist={() => handleAddToPlaylist(selectedSongs)}
+                onDeleteSelected={() => {/* Implement delete action */}}
+                onAddGenre={() => handleAddGenre(selectedSongs)}
+                onChangeGenre={() => handleGenreChange(selectedSongs)}
+                onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
+                onChangePlaylist={() => handleAddToPlaylist(selectedSongs)}
+                onAddMood={() => handleAddMood(selectedSongs)}
+                onChangeMood={() => handleAddMood(selectedSongs)}
+                onChangeArtist={() => {/* Implement artist change */}}
+                onChangeAlbum={() => {/* Implement album change */}}
+                onApprove={() => {/* Implement approve action */}}
+              />
+            )}
+          </div>
+          
+          <MusicTable
+            songs={filteredSongs}
+            selectedSongs={selectedSongs}
+            onSelectAll={handleSelectAll}
+            onSelectSong={handleSelectSong}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            onPlaySong={handlePlaySong}
           />
-        )}
+        </div>
       </div>
-      
-      <MusicFilters
-        onGenreChange={setFilterGenre}
-        onPlaylistChange={setFilterPlaylist}
-        onRecentChange={setSortByRecent}
-        genres={Array.from(new Set(songs.flatMap(song => song.genres)))}
-        playlists={Array.from(new Set(songs.flatMap(song => song.playlists || [])))}
-      />
-      
-      <MusicTable
-        songs={filteredSongs}
-        selectedSongs={selectedSongs}
-        onSelectAll={handleSelectAll}
-        onSelectSong={handleSelectSong}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        onPlaySong={handlePlaySong}
-      />
 
       {currentlyPlaying && (
         <MusicPlayer
