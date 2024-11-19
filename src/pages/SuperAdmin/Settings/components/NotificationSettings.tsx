@@ -2,17 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
+import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
+import { NotificationToggle } from "./NotificationToggle";
 
 const formSchema = z.object({
   systemAlerts: z.boolean(),
@@ -24,6 +16,49 @@ const formSchema = z.object({
   reportGeneration: z.boolean(),
   userActivity: z.boolean(),
 });
+
+const notificationSettings = [
+  {
+    name: "systemAlerts",
+    label: "System Alerts",
+    description: "Receive notifications about system performance and issues",
+  },
+  {
+    name: "maintenanceNotices",
+    label: "Maintenance Notices",
+    description: "Get notified about scheduled maintenance and updates",
+  },
+  {
+    name: "billingNotifications",
+    label: "Billing Notifications",
+    description: "Receive updates about invoices and payments",
+  },
+  {
+    name: "playlistChanges",
+    label: "Playlist Changes",
+    description: "Get notified when playlists are modified",
+  },
+  {
+    name: "newDevices",
+    label: "New Device Alerts",
+    description: "Receive notifications when new devices are registered",
+  },
+  {
+    name: "securityAlerts",
+    label: "Security Alerts",
+    description: "Get notified about security-related events",
+  },
+  {
+    name: "reportGeneration",
+    label: "Report Generation",
+    description: "Receive notifications when reports are generated",
+  },
+  {
+    name: "userActivity",
+    label: "User Activity",
+    description: "Get notified about important user activities",
+  },
+];
 
 export function NotificationSettings() {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -49,175 +84,16 @@ export function NotificationSettings() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="systemAlerts"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">System Alerts</FormLabel>
-                  <FormDescription>
-                    Receive notifications about system performance and issues
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="maintenanceNotices"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Maintenance Notices</FormLabel>
-                  <FormDescription>
-                    Get notified about scheduled maintenance and updates
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="billingNotifications"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Billing Notifications</FormLabel>
-                  <FormDescription>
-                    Receive updates about invoices and payments
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="playlistChanges"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Playlist Changes</FormLabel>
-                  <FormDescription>
-                    Get notified when playlists are modified
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="newDevices"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">New Device Alerts</FormLabel>
-                  <FormDescription>
-                    Receive notifications when new devices are registered
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="securityAlerts"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Security Alerts</FormLabel>
-                  <FormDescription>
-                    Get notified about security-related events
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="reportGeneration"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Report Generation</FormLabel>
-                  <FormDescription>
-                    Receive notifications when reports are generated
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="userActivity"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">User Activity</FormLabel>
-                  <FormDescription>
-                    Get notified about important user activities
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          {notificationSettings.map((setting) => (
+            <NotificationToggle
+              key={setting.name}
+              name={setting.name as keyof z.infer<typeof formSchema>}
+              label={setting.label}
+              description={setting.description}
+              control={form.control}
+            />
+          ))}
         </div>
-
         <Button type="submit">Save Changes</Button>
       </form>
     </Form>

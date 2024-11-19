@@ -12,6 +12,7 @@ import {
   Menu,
   Settings as SettingsIcon,
   BarChart2,
+  Bell,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
@@ -24,6 +25,7 @@ const navItems = [
   { icon: FolderTree, label: "Categories", href: "/super-admin/categories" },
   { icon: Heart, label: "Moods", href: "/super-admin/moods" },
   { icon: ListMusic, label: "Playlists", href: "/super-admin/playlists" },
+  { icon: Bell, label: "Notifications", href: "/super-admin/notifications" },
   { icon: BarChart2, label: "Reports", href: "/super-admin/reports" },
   { icon: SettingsIcon, label: "Settings", href: "/super-admin/settings" },
 ];
