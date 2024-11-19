@@ -2,28 +2,29 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Library,
-  Radio,
+  Image,
+  MessageSquare,
   Calendar,
-  Building2,
-  Monitor,
-  BarChart2,
+  GitBranch,
+  Smartphone,
+  FileText,
   Activity,
   Settings,
   Menu,
   ChevronLeft,
+  Radio,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/manager" },
-  { icon: Library, label: "Media Library", href: "/manager/media" },
-  { icon: Radio, label: "Announcements", href: "/manager/announcements" },
+  { icon: Image, label: "Media Library", href: "/manager/media" },
+  { icon: MessageSquare, label: "Announcements", href: "/manager/announcements" },
   { icon: Calendar, label: "Schedule", href: "/manager/schedule" },
-  { icon: Building2, label: "Branches", href: "/manager/branches" },
-  { icon: Monitor, label: "Devices", href: "/manager/devices" },
-  { icon: BarChart2, label: "Reports", href: "/manager/reports" },
+  { icon: GitBranch, label: "Branches", href: "/manager/branches" },
+  { icon: Smartphone, label: "Devices", href: "/manager/devices" },
+  { icon: FileText, label: "Reports", href: "/manager/reports" },
   { icon: Activity, label: "Activities", href: "/manager/activities" },
   { icon: Settings, label: "Settings", href: "/manager/settings" },
 ];
