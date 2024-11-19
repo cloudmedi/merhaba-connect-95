@@ -26,7 +26,7 @@ export function MusicContent() {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 100; // Increased from 9 to 100
+  const itemsPerPage = 100; // Changed from 9 to 100
   const { toast } = useToast();
   const navigate = useNavigate();
 
