@@ -14,7 +14,8 @@ interface GenresTabProps {
   onUnselectGenre: (genreId: number) => void;
 }
 
-// Mock data - In a real app, this would come from an API
+// This would typically come from an API or global state management
+// For now, we'll use the same structure as the Genres page
 const availableGenres = [
   { id: 1, name: "Pop" },
   { id: 2, name: "Rock" },
