@@ -1,11 +1,13 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Filters } from "./types";
 
 interface MusicFiltersProps {
   onGenreChange: (genre: string) => void;
   onPlaylistChange: (playlist: string) => void;
   onRecentChange: (recent: boolean) => void;
+  onFilterChange: (filters: Filters) => void;
   genres: string[];
   playlists: string[];
 }
@@ -14,8 +16,9 @@ export function MusicFilters({
   onGenreChange,
   onPlaylistChange,
   onRecentChange,
-  genres,
-  playlists,
+  onFilterChange,
+  genres = [], // Provide default empty array
+  playlists = [], // Provide default empty array
 }: MusicFiltersProps) {
   return (
     <div className="flex flex-wrap gap-6 items-center p-4 bg-white rounded-lg border">

@@ -87,11 +87,33 @@ export function MusicContent() {
     setCurrentlyPlaying(song);
   };
 
+  const [genres, setGenres] = useState<string[]>([]);
+  const [playlists, setPlaylists] = useState<string[]>([]);
+
+  const handleGenreChange = (genre: string) => {
+    setFilters(prev => ({ ...prev, genre }));
+  };
+
+  const handlePlaylistChange = (playlist: string) => {
+    // Handle playlist change
+  };
+
+  const handleRecentChange = (recent: boolean) => {
+    // Handle recent change
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-start gap-8">
         <div className="w-80 sticky top-4">
-          <MusicFilters onFilterChange={setFilters} />
+          <MusicFilters 
+            genres={genres}
+            playlists={playlists}
+            onGenreChange={handleGenreChange}
+            onPlaylistChange={handlePlaylistChange}
+            onRecentChange={handleRecentChange}
+            onFilterChange={setFilters}
+          />
         </div>
         
         <div className="flex-1 space-y-8">
