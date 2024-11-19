@@ -28,19 +28,19 @@ export function GenresDialog({
 }: GenresDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white">
+      <DialogContent className="bg-[#242B3D] text-white border-none">
         <DialogHeader>
-          <DialogTitle className="text-gray-900">{editingGenre ? 'Edit Genre' : 'Create New Genre'}</DialogTitle>
+          <DialogTitle>{editingGenre ? 'Edit Genre' : 'Create New Genre'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="genreName" className="text-gray-700">Genre Name</Label>
+            <Label htmlFor="genreName" className="text-gray-300">Genre Name</Label>
             <Input
               id="genreName"
               value={newGenreName}
               onChange={(e) => setNewGenreName(e.target.value)}
               placeholder="Enter genre name"
-              className="bg-white border-gray-200"
+              className="bg-[#1A1F2C] border-gray-700 text-white"
             />
           </div>
           <Button 

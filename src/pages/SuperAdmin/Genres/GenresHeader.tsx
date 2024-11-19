@@ -9,8 +9,8 @@ export function GenresHeader({ onNewGenre }: GenresHeaderProps) {
   return (
     <div className="flex justify-between items-center mb-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Genres</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage music genres for playlists</p>
+        <h1 className="text-2xl font-bold text-white">Genres</h1>
+        <p className="text-sm text-gray-400 mt-1">Manage music genres for playlists</p>
       </div>
       <Button 
         onClick={onNewGenre}
