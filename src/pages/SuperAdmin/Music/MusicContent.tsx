@@ -29,7 +29,7 @@ export function MusicContent() {
   const [genres, setGenres] = useState<string[]>([]);
   const [playlists, setPlaylists] = useState<string[]>([]);
 
-  const itemsPerPage = 100;
+  const itemsPerPage = 10; // Changed to 10 to match the design
 
   const { handleFileUpload } = useFileUpload(setSongs);
 
@@ -38,7 +38,7 @@ export function MusicContent() {
     setIsGenreDialogOpen,
     isAddGenreDialogOpen,
     setIsAddGenreDialogOpen,
-    handleGenreDialogChange, // Renamed to avoid conflict
+    handleGenreDialogChange,
     handleAddGenre,
     handleGenreConfirm,
     handleAddGenreConfirm
@@ -102,9 +102,9 @@ export function MusicContent() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start gap-8">
-        <div className="w-80 sticky top-4">
+    <div className="space-y-6">
+      <div className="flex items-start gap-6">
+        <div className="w-64">
           <MusicFilters 
             genres={genres}
             playlists={playlists}
@@ -115,8 +115,8 @@ export function MusicContent() {
           />
         </div>
         
-        <div className="flex-1 space-y-8">
-          <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-6">
             <MusicHeader onUpload={handleFileUpload} />
             {selectedSongs.length > 0 && (
               <MusicActions
