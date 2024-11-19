@@ -4,7 +4,6 @@ import { GenresTable } from "./GenresTable";
 import { GenresDialog } from "./GenresDialog";
 import { Genre } from "./types";
 
-// Create a global variable to store genres that can be accessed from other components
 export const availableGenres: Genre[] = [
   { id: 1, name: "Pop" },
   { id: 2, name: "Rock" },
