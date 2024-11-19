@@ -21,6 +21,7 @@ export default function App() {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Route */}
             <Route path="/" element={<Index />} />
             
             {/* Super Admin Routes */}
@@ -34,6 +35,9 @@ export default function App() {
             
             {/* Player Routes */}
             <Route path="/player/*" element={<Player />} />
+            
+            {/* Fallback Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
