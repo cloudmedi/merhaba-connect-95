@@ -47,7 +47,7 @@ export function MusicTable({
   }
 
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, songs.length);
   const currentSongs = songs.slice(startIndex, endIndex);
 
   return (
@@ -95,6 +95,10 @@ export function MusicTable({
           </TableBody>
         </Table>
       </ScrollArea>
+
+      <div className="text-sm text-gray-500">
+        Showing {startIndex + 1}-{endIndex} of {songs.length} songs
+      </div>
 
       <TablePagination
         currentPage={currentPage}
