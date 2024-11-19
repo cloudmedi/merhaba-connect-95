@@ -1,7 +1,24 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, History, Lock, Key, RotateCcw, Trash } from "lucide-react";
+import { 
+  Eye, 
+  Pencil, 
+  History, 
+  Lock, 
+  Key, 
+  RotateCcw, 
+  Trash,
+  Check,
+  X 
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface User {
   id: string;
@@ -48,6 +65,59 @@ const mockUsers: User[] = [
 ];
 
 export function UsersTable() {
+  const { toast } = useToast();
+
+  const handleViewUser = (userId: string) => {
+    toast({
+      title: "View User Details",
+      description: `Viewing details for user ID: ${userId}`,
+    });
+  };
+
+  const handleEditUser = (userId: string) => {
+    toast({
+      title: "Edit User",
+      description: `Editing user ID: ${userId}`,
+    });
+  };
+
+  const handleViewHistory = (userId: string) => {
+    toast({
+      title: "View History",
+      description: `Viewing history for user ID: ${userId}`,
+    });
+  };
+
+  const handleToggleBlock = (userId: string, currentStatus: string) => {
+    const action = currentStatus === 'active' ? 'blocked' : 'unblocked';
+    toast({
+      title: `User ${action}`,
+      description: `User ID ${userId} has been ${action}`,
+    });
+  };
+
+  const handleResetPassword = (userId: string) => {
+    toast({
+      title: "Reset Password",
+      description: `Password reset initiated for user ID: ${userId}`,
+    });
+  };
+
+  const handleRenewLicense = (userId: string) => {
+    toast({
+      title: "Renew License",
+      description: `License renewal initiated for user ID: ${userId}`,
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    toast({
+      title: "Delete User",
+      description: `User ID ${userId} has been deleted`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -73,42 +143,141 @@ export function UsersTable() {
               <TableCell>
                 <Badge 
                   variant={user.status === 'active' ? 'default' : 'destructive'}
-                  className={user.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'}
+                  className={user.status === 'active' 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                    : 'bg-red-100 text-red-800 hover:bg-red-100'}
                 >
+                  {user.status === 'active' ? (
+                    <Check className="mr-1 h-3 w-3" />
+                  ) : (
+                    <X className="mr-1 h-3 w-3" />
+                  )}
                   {user.status}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge 
                   variant="secondary"
-                  className="bg-blue-100 text-blue-800 hover:bg-blue-100"
+                  className="bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20"
                 >
                   {user.license}
                 </Badge>
               </TableCell>
               <TableCell>{user.expiry}</TableCell>
               <TableCell className="text-right space-x-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <History className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Lock className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Key className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700">
-                  <Trash className="h-4 w-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleViewUser(user.id)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View Details</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleEditUser(user.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Edit User</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleViewHistory(user.id)}
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View History</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleToggleBlock(user.id, user.status)}
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{user.status === 'active' ? 'Block User' : 'Unblock User'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleResetPassword(user.id)}
+                      >
+                        <Key className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reset Password</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+                        onClick={() => handleRenewLicense(user.id)}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Renew License</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-500 hover:text-red-700"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete User</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </TableCell>
             </TableRow>
           ))}

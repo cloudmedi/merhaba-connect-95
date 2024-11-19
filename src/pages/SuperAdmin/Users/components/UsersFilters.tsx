@@ -1,8 +1,14 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { useState } from "react";
 
 export function UsersFilters() {
+  const [role, setRole] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [license, setLicense] = useState("all");
+  const [expiry, setExpiry] = useState("all");
+
   return (
     <div className="flex gap-4 items-center">
       <div className="relative w-[400px]">
@@ -13,7 +19,7 @@ export function UsersFilters() {
         />
       </div>
       
-      <Select>
+      <Select value={role} onValueChange={setRole}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Roles" />
         </SelectTrigger>
@@ -24,7 +30,7 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select>
+      <Select value={status} onValueChange={setStatus}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
@@ -35,7 +41,7 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select>
+      <Select value={license} onValueChange={setLicense}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Licenses" />
         </SelectTrigger>
@@ -46,7 +52,7 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select>
+      <Select value={expiry} onValueChange={setExpiry}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Expiry Dates" />
         </SelectTrigger>
