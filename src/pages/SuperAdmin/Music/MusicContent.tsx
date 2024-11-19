@@ -18,7 +18,8 @@ interface Song {
   id: number;
   title: string;
   artist: string;
-  album?: string;
+  album: string;
+  genres: string[];
   duration: string;
   file: File;
 }
@@ -44,12 +45,14 @@ export function MusicContent() {
     for (const file of Array.from(files)) {
       try {
         const metadata = await musicMetadata.parseBlob(file);
+        console.log('Metadata extracted:', metadata); // Debug log
         
         newSongs.push({
           id: Date.now() + newSongs.length,
           title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
           artist: metadata.common.artist || "Unknown Artist",
-          album: metadata.common.album,
+          album: metadata.common.album || "Unknown Album",
+          genres: metadata.common.genre || [],
           duration: formatDuration(metadata.format.duration || 0),
           file: file,
         });
@@ -59,6 +62,8 @@ export function MusicContent() {
           id: Date.now() + newSongs.length,
           title: file.name.replace(/\.[^/.]+$/, ""),
           artist: "Unknown Artist",
+          album: "Unknown Album",
+          genres: [],
           duration: "0:00",
           file: file,
         });
@@ -148,6 +153,7 @@ export function MusicContent() {
                 <TableHead>Title</TableHead>
                 <TableHead>Artist</TableHead>
                 <TableHead>Album</TableHead>
+                <TableHead>Genres</TableHead>
                 <TableHead className="text-right">Duration</TableHead>
               </TableRow>
             </TableHeader>
@@ -167,7 +173,8 @@ export function MusicContent() {
                   </TableCell>
                   <TableCell className="font-medium">{song.title}</TableCell>
                   <TableCell>{song.artist}</TableCell>
-                  <TableCell>{song.album || "-"}</TableCell>
+                  <TableCell>{song.album}</TableCell>
+                  <TableCell>{song.genres.join(", ") || "-"}</TableCell>
                   <TableCell className="text-right">{song.duration}</TableCell>
                 </TableRow>
               ))}
