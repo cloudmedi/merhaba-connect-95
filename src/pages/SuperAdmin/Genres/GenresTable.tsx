@@ -23,14 +23,14 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow className="border-b">
+            <TableRow className="border-b border-gray-200">
               <TableHead className="text-gray-600 w-[80%]">Name</TableHead>
               <TableHead className="text-gray-600 w-[20%] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {genres.map((genre) => (
-              <TableRow key={genre.id} className="border-b">
+              <TableRow key={genre.id} className="border-b border-gray-200">
                 <TableCell className="font-medium text-gray-900">{genre.name}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

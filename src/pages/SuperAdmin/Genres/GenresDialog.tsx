@@ -30,11 +30,11 @@ export function GenresDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="bg-white">
         <DialogHeader>
-          <DialogTitle>{editingGenre ? 'Edit Genre' : 'Create New Genre'}</DialogTitle>
+          <DialogTitle className="text-gray-900">{editingGenre ? 'Edit Genre' : 'Create New Genre'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="genreName">Genre Name</Label>
+            <Label htmlFor="genreName" className="text-gray-700">Genre Name</Label>
             <Input
               id="genreName"
               value={newGenreName}
