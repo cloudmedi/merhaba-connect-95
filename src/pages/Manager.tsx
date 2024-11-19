@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { ManagerNav } from "@/components/ManagerNav";
 import Dashboard from "./Manager/Dashboard";
 import Media from "./Manager/Media";
@@ -12,7 +13,7 @@ import Settings from "./Manager/Settings";
 
 export default function Manager() {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <ManagerNav />
       <main className="flex-1">
         <Routes>
