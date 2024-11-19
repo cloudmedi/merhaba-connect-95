@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { availableGenres } from "@/pages/SuperAdmin/Genres";
 
 interface Genre {
   id: number;
@@ -13,21 +14,6 @@ interface GenresTabProps {
   onSelectGenre: (genre: Genre) => void;
   onUnselectGenre: (genreId: number) => void;
 }
-
-// This would typically come from an API or global state management
-// For now, we'll use the same structure as the Genres page
-const availableGenres = [
-  { id: 1, name: "Pop" },
-  { id: 2, name: "Rock" },
-  { id: 3, name: "Jazz" },
-  { id: 4, name: "Hip Hop" },
-  { id: 5, name: "Classical" },
-  { id: 6, name: "Electronic" },
-  { id: 7, name: "R&B" },
-  { id: 8, name: "Country" },
-  { id: 9, name: "Blues" },
-  { id: 10, name: "Latin" },
-];
 
 export function GenresTab({ selectedGenres, onSelectGenre, onUnselectGenre }: GenresTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
