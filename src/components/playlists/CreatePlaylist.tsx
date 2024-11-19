@@ -6,6 +6,7 @@ import { Music, Users, Tag, Grid2X2, Heart } from "lucide-react";
 import { PlaylistForm } from "./PlaylistForm";
 import { SongsTab } from "./SongsTab";
 import { UsersTab } from "./UsersTab";
+import { GenresTab } from "./GenresTab";
 import { useNavigate } from "react-router-dom";
 
 interface Song {
@@ -22,6 +23,11 @@ interface User {
   avatar?: string;
 }
 
+interface Genre {
+  id: number;
+  name: string;
+}
+
 export function CreatePlaylist() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,6 +37,7 @@ export function CreatePlaylist() {
     artwork: null as File | null,
     selectedSongs: [] as Song[],
     selectedUsers: [] as User[],
+    selectedGenres: [] as Genre[],
   });
 
   const handleCreatePlaylist = () => {
@@ -52,26 +59,21 @@ export function CreatePlaylist() {
       return;
     }
 
+    if (playlistData.selectedGenres.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one genre",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Success",
       description: "Playlist created successfully",
     });
     
     navigate("/super-admin/playlists");
-  };
-
-  const handleAddUser = (user: User) => {
-    setPlaylistData(prev => ({
-      ...prev,
-      selectedUsers: [...prev.selectedUsers, user],
-    }));
-  };
-
-  const handleRemoveUser = (userId: number) => {
-    setPlaylistData(prev => ({
-      ...prev,
-      selectedUsers: prev.selectedUsers.filter(u => u.id !== userId),
-    }));
   };
 
   return (
@@ -132,15 +134,29 @@ export function CreatePlaylist() {
           <TabsContent value="users" className="mt-4">
             <UsersTab
               selectedUsers={playlistData.selectedUsers}
-              onSelectUser={handleAddUser}
-              onUnselectUser={handleRemoveUser}
+              onSelectUser={(user) => setPlaylistData(prev => ({
+                ...prev,
+                selectedUsers: [...prev.selectedUsers, user],
+              }))}
+              onUnselectUser={(userId) => setPlaylistData(prev => ({
+                ...prev,
+                selectedUsers: prev.selectedUsers.filter(u => u.id !== userId),
+              }))}
             />
           </TabsContent>
 
-          <TabsContent value="genres">
-            <div className="p-4 text-center text-gray-500">
-              Genre selection coming soon
-            </div>
+          <TabsContent value="genres" className="mt-4">
+            <GenresTab
+              selectedGenres={playlistData.selectedGenres}
+              onSelectGenre={(genre) => setPlaylistData(prev => ({
+                ...prev,
+                selectedGenres: [...prev.selectedGenres, genre],
+              }))}
+              onUnselectGenre={(genreId) => setPlaylistData(prev => ({
+                ...prev,
+                selectedGenres: prev.selectedGenres.filter(g => g.id !== genreId),
+              }))}
+            />
           </TabsContent>
 
           <TabsContent value="categories">
