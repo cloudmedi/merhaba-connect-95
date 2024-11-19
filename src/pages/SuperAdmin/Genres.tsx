@@ -3,7 +3,7 @@ import { AdminNav } from "@/components/AdminNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Table,
@@ -18,7 +18,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -30,6 +29,7 @@ interface Genre {
 export default function Genres() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [newGenreName, setNewGenreName] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleCreateGenre = () => {
@@ -49,6 +49,7 @@ export default function Genres() {
 
     setGenres([...genres, newGenre]);
     setNewGenreName("");
+    setIsDialogOpen(false);
     
     toast({
       title: "Success",
@@ -70,70 +71,80 @@ export default function Genres() {
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Genres</h1>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-[#FFD700] text-black hover:bg-[#E6C200]">
-                  <Plus className="w-4 h-4 mr-2" /> New Genre
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Genre</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <Label htmlFor="genreName">Genre Name</Label>
-                    <Input
-                      id="genreName"
-                      value={newGenreName}
-                      onChange={(e) => setNewGenreName(e.target.value)}
-                      placeholder="Enter genre name"
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleCreateGenre}
-                    className="w-full bg-[#FFD700] text-black hover:bg-[#E6C200]"
-                  >
-                    Create Genre
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Genres</h1>
+              <p className="text-sm text-gray-500 mt-1">Manage music genres for playlists</p>
+            </div>
+            <Button 
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+            >
+              <Plus className="w-4 h-4 mr-2" /> New Genre
+            </Button>
           </div>
 
-          <Card>
+          <Card className="shadow-sm">
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[80%]">Name</TableHead>
+                    <TableHead className="w-[20%] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {genres.map((genre) => (
                     <TableRow key={genre.id}>
-                      <TableCell>{genre.name}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => handleDeleteGenre(genre.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      <TableCell className="font-medium">{genre.name}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleDeleteGenre(genre.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
+                  {genres.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-center text-gray-500 py-8">
+                        No genres added yet. Click "New Genre" to create one.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </div>
       </main>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Genre</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="genreName">Genre Name</Label>
+              <Input
+                id="genreName"
+                value={newGenreName}
+                onChange={(e) => setNewGenreName(e.target.value)}
+                placeholder="Enter genre name"
+              />
+            </div>
+            <Button 
+              onClick={handleCreateGenre}
+              className="w-full bg-[#FFD700] text-black hover:bg-[#E6C200]"
+            >
+              Create Genre
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
