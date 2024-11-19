@@ -3,6 +3,7 @@ import Dashboard from "./SuperAdmin/Dashboard";
 import Playlists from "./SuperAdmin/Playlists";
 import Genres from "./SuperAdmin/Genres";
 import Categories from "./SuperAdmin/Categories";
+import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 
 export default function SuperAdmin() {
   return (
