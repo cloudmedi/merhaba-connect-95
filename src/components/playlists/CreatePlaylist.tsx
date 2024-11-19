@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Users, Tag, Grid2X2, Heart } from "lucide-react";
 import { PlaylistForm } from "./PlaylistForm";
 import { SongsTab } from "./SongsTab";
+import { UsersTab } from "./UsersTab";
 import { useNavigate } from "react-router-dom";
 
 interface Song {
@@ -12,6 +13,13 @@ interface Song {
   title: string;
   artist: string;
   duration: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
 }
 
 export function CreatePlaylist() {
@@ -22,6 +30,7 @@ export function CreatePlaylist() {
     description: "",
     artwork: null as File | null,
     selectedSongs: [] as Song[],
+    selectedUsers: [] as User[],
   });
 
   const handleCreatePlaylist = () => {
@@ -29,6 +38,15 @@ export function CreatePlaylist() {
       toast({
         title: "Error",
         description: "Please enter a playlist title",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playlistData.selectedUsers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one user",
         variant: "destructive",
       });
       return;
@@ -42,19 +60,17 @@ export function CreatePlaylist() {
     navigate("/super-admin/playlists");
   };
 
-  const handleAddSong = (song: Song) => {
-    if (!playlistData.selectedSongs.find(s => s.id === song.id)) {
-      setPlaylistData(prev => ({
-        ...prev,
-        selectedSongs: [...prev.selectedSongs, song],
-      }));
-    }
-  };
-
-  const handleRemoveSong = (songId: number) => {
+  const handleAddUser = (user: User) => {
     setPlaylistData(prev => ({
       ...prev,
-      selectedSongs: prev.selectedSongs.filter(s => s.id !== songId),
+      selectedUsers: [...prev.selectedUsers, user],
+    }));
+  };
+
+  const handleRemoveUser = (userId: number) => {
+    setPlaylistData(prev => ({
+      ...prev,
+      selectedUsers: prev.selectedUsers.filter(u => u.id !== userId),
     }));
   };
 
@@ -102,15 +118,23 @@ export function CreatePlaylist() {
           <TabsContent value="songs" className="mt-4">
             <SongsTab
               selectedSongs={playlistData.selectedSongs}
-              onAddSong={handleAddSong}
-              onRemoveSong={handleRemoveSong}
+              onAddSong={(song) => setPlaylistData(prev => ({
+                ...prev,
+                selectedSongs: [...prev.selectedSongs, song],
+              }))}
+              onRemoveSong={(songId) => setPlaylistData(prev => ({
+                ...prev,
+                selectedSongs: prev.selectedSongs.filter(s => s.id !== songId),
+              }))}
             />
           </TabsContent>
 
-          <TabsContent value="users">
-            <div className="p-4 text-center text-gray-500">
-              User selection coming soon
-            </div>
+          <TabsContent value="users" className="mt-4">
+            <UsersTab
+              selectedUsers={playlistData.selectedUsers}
+              onSelectUser={handleAddUser}
+              onUnselectUser={handleRemoveUser}
+            />
           </TabsContent>
 
           <TabsContent value="genres">
