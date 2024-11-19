@@ -3,7 +3,7 @@ import { GenresContent } from "./GenresContent";
 
 export default function Genres() {
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-background">
       <AdminNav />
       <main className="flex-1 p-8 overflow-auto bg-white">
         <GenresContent />

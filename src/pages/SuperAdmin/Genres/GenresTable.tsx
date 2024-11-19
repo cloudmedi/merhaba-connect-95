@@ -19,7 +19,7 @@ interface GenresTableProps {
 
 export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
   return (
-    <Card className="bg-white border shadow-sm">
+    <Card className="bg-white border border-gray-200 shadow-sm">
       <CardContent className="p-0">
         <Table>
           <TableHeader>
