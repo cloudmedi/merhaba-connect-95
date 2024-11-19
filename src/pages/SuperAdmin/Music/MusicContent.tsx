@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import * as musicMetadata from 'music-metadata-browser';
 import { MusicHeader } from "./MusicHeader";
@@ -7,6 +7,7 @@ import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { GenreChangeDialog } from "./components/GenreChangeDialog";
+import { useMusicActions } from "./hooks/useMusicActions";
 
 interface Song {
   id: number;
@@ -28,10 +29,18 @@ export function MusicContent() {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isGenreDialogOpen, setIsGenreDialogOpen] = useState(false);
   const itemsPerPage = 100;
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const {
+    isGenreDialogOpen,
+    setIsGenreDialogOpen,
+    handleAddPlaylist,
+    handleChangeMood,
+    handleGenreChange,
+    handleGenreConfirm
+  } = useMusicActions(songs, setSongs);
 
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -82,37 +91,58 @@ export function MusicContent() {
     });
   };
 
-  const handleChangeGenre = () => {
-    if (selectedSongs.length === 0) {
-      toast({
-        title: "No songs selected",
-        description: "Please select songs to change their genre",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsGenreDialogOpen(true);
+  const handleCreatePlaylist = () => {
+    navigate("/super-admin/playlists/create", {
+      state: { selectedSongs },
+    });
   };
 
-  const handleGenreConfirm = (genreId: number) => {
-    const genreMap: Record<number, string> = {
-      1: "Rock",
-      2: "Pop",
-      3: "Jazz",
-      4: "Classical",
-      5: "Hip Hop",
-      6: "Electronic",
-    };
+  const handleDeleteSelected = () => {
+    setSongs((prev) =>
+      prev.filter((song) => !selectedSongs.some((s) => s.id === song.id))
+    );
+    setSelectedSongs([]);
+    toast({
+      title: "Success",
+      description: "Selected songs deleted successfully",
+    });
+  };
 
+  const handleChangeArtist = () => {
+    const newArtist = "New Artist";
     setSongs(prev => 
       prev.map(song => 
         selectedSongs.some(s => s.id === song.id)
-          ? { ...song, genres: [genreMap[genreId]] }
+          ? { ...song, artist: newArtist }
           : song
       )
     );
-    
-    setIsGenreDialogOpen(false);
+    toast({
+      title: "Success",
+      description: `Artist changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleChangeAlbum = () => {
+    const newAlbum = "New Album";
+    setSongs(prev => 
+      prev.map(song => 
+        selectedSongs.some(s => s.id === song.id)
+          ? { ...song, album: newAlbum }
+          : song
+      )
+    );
+    toast({
+      title: "Success",
+      description: `Album changed for ${selectedSongs.length} songs`,
+    });
+  };
+
+  const handleApprove = () => {
+    toast({
+      title: "Success",
+      description: `${selectedSongs.length} songs have been approved`,
+    });
   };
 
   const filteredSongs = songs
@@ -146,109 +176,6 @@ export function MusicContent() {
     }
   };
 
-  const handleCreatePlaylist = () => {
-    navigate("/super-admin/playlists/create", {
-      state: { selectedSongs },
-    });
-  };
-
-  const handleDeleteSelected = () => {
-    setSongs((prev) =>
-      prev.filter((song) => !selectedSongs.some((s) => s.id === song.id))
-    );
-    setSelectedSongs([]);
-    toast({
-      title: "Success",
-      description: "Selected songs deleted successfully",
-    });
-  };
-
-  const handleAddGenre = () => {
-    const newGenre = "New Genre"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, genres: [...song.genres, newGenre] }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Genre added to ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleChangePlaylist = () => {
-    const newPlaylist = "Updated Playlist"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, playlists: [newPlaylist] }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Playlist changed for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleAddMood = () => {
-    const newMood = "Happy"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, mood: newMood }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Mood added to ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleChangeArtist = () => {
-    const newArtist = "New Artist"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, artist: newArtist }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Artist changed for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleChangeAlbum = () => {
-    const newAlbum = "New Album"; // In a real app, this would come from a dialog
-    setSongs(prev => 
-      prev.map(song => 
-        selectedSongs.some(s => s.id === song.id)
-          ? { ...song, album: newAlbum }
-          : song
-      )
-    );
-    toast({
-      title: "Success",
-      description: `Album changed for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleApprove = () => {
-    toast({
-      title: "Success",
-      description: `${selectedSongs.length} songs have been approved`,
-    });
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
@@ -258,11 +185,11 @@ export function MusicContent() {
             selectedCount={selectedSongs.length}
             onCreatePlaylist={handleCreatePlaylist}
             onDeleteSelected={handleDeleteSelected}
-            onAddGenre={handleAddGenre}
-            onChangeGenre={handleChangeGenre}
+            onAddGenre={() => handleGenreChange(selectedSongs)}
+            onChangeGenre={() => handleGenreChange(selectedSongs)}
             onAddPlaylist={handleAddPlaylist}
-            onChangePlaylist={handleChangePlaylist}
-            onAddMood={handleAddMood}
+            onChangePlaylist={handleAddPlaylist}
+            onAddMood={handleChangeMood}
             onChangeMood={handleChangeMood}
             onChangeArtist={handleChangeArtist}
             onChangeAlbum={handleChangeAlbum}
@@ -286,14 +213,14 @@ export function MusicContent() {
         onSelectSong={handleSelectSong}
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={handlePageChange}
+        onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
       />
 
       <GenreChangeDialog 
         isOpen={isGenreDialogOpen}
         onClose={() => setIsGenreDialogOpen(false)}
-        onConfirm={handleGenreConfirm}
+        onConfirm={(genreId) => handleGenreConfirm(genreId, selectedSongs)}
       />
     </div>
   );
