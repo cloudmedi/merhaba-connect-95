@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ExportButtons } from "@/components/ExportButtons";
 
 // Mock data - Replace with actual API data
 const generateMockData = (count: number) => {
@@ -56,6 +57,16 @@ export function ManagerActivityReport() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentData = filteredData.slice(startIndex, endIndex);
 
+  const columns = [
+    "manager",
+    "store",
+    "region",
+    "action",
+    "details",
+    "ipAddress",
+    "timestamp"
+  ];
+
   return (
     <Card>
       <div className="p-6 space-y-4">
@@ -77,24 +88,17 @@ export function ManagerActivityReport() {
                 <SelectItem value="custom">Custom Range</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Actions</SelectItem>
-                <SelectItem value="Login">Login</SelectItem>
-                <SelectItem value="Playlist Change">Playlist Change</SelectItem>
-                <SelectItem value="Settings Update">Settings Update</SelectItem>
-              </SelectContent>
-            </Select>
             <Input
               placeholder="Search managers, stores, regions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-80"
             />
-            <Button variant="outline">Export CSV</Button>
+            <ExportButtons
+              data={filteredData}
+              columns={columns}
+              fileName="manager-activity"
+            />
           </div>
         </div>
 

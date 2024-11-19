@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { TablePagination } from "../../Music/components/TablePagination";
+import { ExportButtons } from "@/components/ExportButtons";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,8 @@ export function PlaylistHistoryReport() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentData = filteredData.slice(startIndex, endIndex);
 
+  const columns = ["store", "region", "manager", "playlist", "action", "timestamp"];
+
   return (
     <Card>
       <div className="p-6 space-y-4">
@@ -76,7 +79,11 @@ export function PlaylistHistoryReport() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-80"
             />
-            <Button variant="outline">Export CSV</Button>
+            <ExportButtons
+              data={filteredData}
+              columns={columns}
+              fileName="playlist-history"
+            />
           </div>
         </div>
 

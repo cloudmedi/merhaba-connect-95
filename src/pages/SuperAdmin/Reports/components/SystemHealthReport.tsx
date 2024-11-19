@@ -2,17 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Signal, AlertTriangle, Clock } from "lucide-react";
 import { useState } from "react";
 import { TablePagination } from "../../Music/components/TablePagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Signal, AlertTriangle, Clock } from "lucide-react";
+import { ExportButtons } from "@/components/ExportButtons";
 
 interface PlayerStatus {
   id: string;
@@ -49,14 +43,14 @@ const generateMockData = (count: number): PlayerStatus[] => {
   }));
 };
 
-const playerStatuses = generateMockData(1000);
-
 export function SystemHealthReport() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [healthFilter, setHealthFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const playerStatuses = generateMockData(1000);
 
   const filteredData = playerStatuses.filter(
     (item) =>
@@ -72,10 +66,19 @@ export function SystemHealthReport() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentData = filteredData.slice(startIndex, endIndex);
 
-  const totalPlayers = playerStatuses.length;
-  const onlinePlayers = playerStatuses.filter((p) => p.status === "online").length;
-  const healthyPlayers = playerStatuses.filter((p) => p.health === "healthy").length;
-  const criticalPlayers = playerStatuses.filter((p) => p.health === "critical").length;
+  const columns = [
+    "storeName",
+    "region",
+    "status",
+    "health",
+    "version",
+    "cpu",
+    "memory",
+    "storage",
+    "networkLatency",
+    "lastRestart",
+    "errorLogs",
+  ];
 
   return (
     <Card>
@@ -87,10 +90,10 @@ export function SystemHealthReport() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Online Status</p>
                   <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                    {onlinePlayers}/{totalPlayers}
+                    {playerStatuses.filter((p) => p.status === "online").length}/{playerStatuses.length}
                   </h3>
                   <p className="text-xs text-emerald-600 mt-2">
-                    {Math.round((onlinePlayers / totalPlayers) * 100)}% connected
+                    {Math.round((playerStatuses.filter((p) => p.status === "online").length / playerStatuses.length) * 100)}% connected
                   </p>
                 </div>
                 <div className="p-3 bg-emerald-100 rounded-full">
@@ -106,10 +109,10 @@ export function SystemHealthReport() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">System Health</p>
                   <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                    {healthyPlayers}/{totalPlayers}
+                    {playerStatuses.filter((p) => p.health === "healthy").length}/{playerStatuses.length}
                   </h3>
                   <p className="text-xs text-emerald-600 mt-2">
-                    {Math.round((healthyPlayers / totalPlayers) * 100)}% healthy
+                    {Math.round((playerStatuses.filter((p) => p.health === "healthy").length / playerStatuses.length) * 100)}% healthy
                   </p>
                 </div>
                 <div className="p-3 bg-red-100 rounded-full">
@@ -125,7 +128,7 @@ export function SystemHealthReport() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Critical Issues</p>
                   <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                    {criticalPlayers}
+                    {playerStatuses.filter((p) => p.health === "critical").length}
                   </h3>
                   <p className="text-xs text-red-600 mt-2">
                     Requires immediate attention
@@ -187,7 +190,11 @@ export function SystemHealthReport() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full md:w-80"
             />
-            <Button variant="outline">Export Report</Button>
+            <ExportButtons
+              data={filteredData}
+              columns={columns}
+              fileName="system-health-report"
+            />
           </div>
         </div>
 

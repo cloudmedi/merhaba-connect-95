@@ -2,12 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Music2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { TablePagination } from "../../Music/components/TablePagination";
+import { ExportButtons } from "@/components/ExportButtons";
 
-// Mock data - Replace with actual API data
 const generateMockData = (count: number) => {
   return Array.from({ length: count }, (_, i) => ({
     id: i + 1,
@@ -41,6 +40,8 @@ export function ActivePlaylistsReport() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentData = filteredData.slice(startIndex, endIndex);
 
+  const columns = ["store", "region", "manager", "playlist", "activeSince", "status"];
+
   return (
     <Card>
       <div className="p-6 space-y-4">
@@ -56,7 +57,11 @@ export function ActivePlaylistsReport() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-80"
             />
-            <Button variant="outline">Export CSV</Button>
+            <ExportButtons
+              data={filteredData}
+              columns={columns}
+              fileName="active-playlists"
+            />
           </div>
         </div>
 
