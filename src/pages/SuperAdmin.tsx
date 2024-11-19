@@ -18,8 +18,6 @@ import {
   Upload,
   PlaySquare,
   FolderPlus,
-  Users2,
-  Library,
 } from "lucide-react";
 
 const userEngagementData = [
@@ -63,134 +61,132 @@ export default function SuperAdmin() {
   return (
     <div className="flex">
       <AdminNav />
-      <main className="flex-1 p-6 space-y-6">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <main className="flex-1 p-6 lg:p-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <h3 className="text-2xl font-bold">2,345</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Users</p>
+                    <h3 className="text-2xl font-bold text-gray-900">2,345</h3>
+                  </div>
+                  <div className="p-3 bg-purple-100 rounded-full">
+                    <Users className="h-6 w-6 text-purple-600" />
+                  </div>
                 </div>
-                <Users className="h-8 w-8 text-primary" />
-              </div>
-              <p className="text-xs text-green-500 mt-2">+12% from last month</p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-green-600 mt-2 flex items-center">
+                  <span className="flex items-center">↑ 12% from last month</span>
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Companies</p>
-                  <h3 className="text-2xl font-bold">45</h3>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Active Companies</p>
+                    <h3 className="text-2xl font-bold text-gray-900">45</h3>
+                  </div>
+                  <div className="p-3 bg-blue-100 rounded-full">
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                  </div>
                 </div>
-                <Building2 className="h-8 w-8 text-primary" />
-              </div>
-              <p className="text-xs text-green-500 mt-2">+5% from last month</p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-green-600 mt-2">↑ 5% from last month</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Tracks</p>
-                  <h3 className="text-2xl font-bold">3,567</h3>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Tracks</p>
+                    <h3 className="text-2xl font-bold text-gray-900">3,567</h3>
+                  </div>
+                  <div className="p-3 bg-pink-100 rounded-full">
+                    <Music2 className="h-6 w-6 text-pink-600" />
+                  </div>
                 </div>
-                <Music2 className="h-8 w-8 text-primary" />
+                <p className="text-xs text-green-600 mt-2">↑ 23% from last month</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="md:col-span-2 hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={userEngagementData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="name" stroke="#6b7280" />
+                      <YAxis stroke="#6b7280" />
+                      <Tooltip />
+                      <Bar dataKey="Active Users" fill="#8b5cf6" />
+                      <Bar dataKey="New Users" fill="#c084fc" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                </div>
+                <div className="space-y-3">
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors">
+                    <Upload className="h-5 w-5" />
+                    <span className="text-sm font-medium">Upload Music</span>
+                  </button>
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                    <PlaySquare className="h-5 w-5" />
+                    <span className="text-sm font-medium">Create Playlist</span>
+                  </button>
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-pink-50 text-pink-700 hover:bg-pink-100 transition-colors">
+                    <FolderPlus className="h-5 w-5" />
+                    <span className="text-sm font-medium">Add Category</span>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                <span className="text-sm text-gray-500">Last 24 hours</span>
               </div>
-              <p className="text-xs text-green-500 mt-2">+23% from last month</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="bg-blue-50">
-            <CardContent className="p-6 flex items-start space-x-4">
-              <Upload className="h-6 w-6 text-blue-600" />
-              <div>
-                <h3 className="font-semibold">Upload Music</h3>
-                <p className="text-sm text-muted-foreground">Add new tracks to library</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-green-50">
-            <CardContent className="p-6 flex items-start space-x-4">
-              <PlaySquare className="h-6 w-6 text-green-600" />
-              <div>
-                <h3 className="font-semibold">Create Playlist</h3>
-                <p className="text-sm text-muted-foreground">Organize your music</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-yellow-50">
-            <CardContent className="p-6 flex items-start space-x-4">
-              <FolderPlus className="h-6 w-6 text-yellow-600" />
-              <div>
-                <h3 className="font-semibold">New Category</h3>
-                <p className="text-sm text-muted-foreground">Organize content</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* User Engagement Chart */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">User Engagement</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={userEngagementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="Active Users" fill="#8884d8" />
-                  <Bar dataKey="New Users" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Recent Activity</h3>
-              <span className="text-sm text-muted-foreground">Last 24 hours</span>
-            </div>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-4">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      {activity.type === "upload" && <Upload className="h-4 w-4 text-primary" />}
-                      {activity.type === "playlist" && <PlaySquare className="h-4 w-4 text-primary" />}
-                      {activity.type === "user" && <Users className="h-4 w-4 text-primary" />}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium">{activity.title}</h4>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xs text-muted-foreground">by {activity.user}</span>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">{activity.time}</span>
+              <ScrollArea className="h-[300px] pr-4">
+                <div className="space-y-4">
+                  {recentActivities.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="p-2 rounded-full bg-purple-100">
+                        {activity.type === "upload" && <Upload className="h-4 w-4 text-purple-600" />}
+                        {activity.type === "playlist" && <PlaySquare className="h-4 w-4 text-purple-600" />}
+                        {activity.type === "user" && <Users className="h-4 w-4 text-purple-600" />}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900">{activity.title}</h4>
+                        <p className="text-sm text-gray-500">{activity.description}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-xs text-gray-400">by {activity.user}</span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-400">{activity.time}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
