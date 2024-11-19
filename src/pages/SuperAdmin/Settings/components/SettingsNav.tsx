@@ -8,7 +8,6 @@ import {
   Building2, 
   Mail, 
   Shield, 
-  Radio, 
   Bell,
   Wallet
 } from "lucide-react";
@@ -44,11 +43,6 @@ const navItems = [
     title: "Security",
     href: "/super-admin/settings/security",
     icon: Shield,
-  },
-  {
-    title: "Broadcasting",
-    href: "/super-admin/settings/broadcasting",
-    icon: Radio,
   },
   {
     title: "Notifications",

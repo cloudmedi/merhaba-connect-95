@@ -7,7 +7,6 @@ import { LocalizationSettings } from "./components/LocalizationSettings";
 import { BillingSettings } from "./components/BillingSettings";
 import { EmailSettings } from "./components/EmailSettings";
 import { SecuritySettings } from "./components/SecuritySettings";
-import { BroadcastingSettings } from "./components/BroadcastingSettings";
 import { NotificationSettings } from "./components/NotificationSettings";
 import { ApiKeys } from "./components/ApiKeys";
 import { SystemLogs } from "./components/SystemLogs";
@@ -30,7 +29,6 @@ export default function Settings() {
             <Route path="billing" element={<BillingSettings />} />
             <Route path="email" element={<EmailSettings />} />
             <Route path="security" element={<SecuritySettings />} />
-            <Route path="broadcasting" element={<BroadcastingSettings />} />
             <Route path="notifications" element={<NotificationSettings />} />
             <Route path="api-keys" element={<ApiKeys />} />
             <Route path="logs" element={<SystemLogs />} />
