@@ -9,6 +9,7 @@ import Genres from "./SuperAdmin/Genres";
 import Settings from "./SuperAdmin/Settings";
 import Reports from "./SuperAdmin/Reports";
 import Notifications from "./SuperAdmin/Notifications";
+import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 
 export default function SuperAdmin() {
@@ -25,6 +26,7 @@ export default function SuperAdmin() {
       <Route path="notifications/*" element={<Notifications />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="reports" element={<Reports />} />
+      <Route path="performance" element={<Performance />} />
     </Routes>
   );
 }
