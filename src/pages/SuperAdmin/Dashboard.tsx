@@ -60,61 +60,64 @@ export default function Dashboard() {
   return (
     <div className="flex">
       <AdminNav />
-      <main className="flex-1 p-6 lg:p-8 bg-gray-50">
+      <main className="flex-1 p-8 bg-[#F8F9FC]">
         <div className="max-w-7xl mx-auto space-y-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-sm text-gray-500">Welcome back, Admin</p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Total Users</p>
-                    <h3 className="text-2xl font-bold text-gray-900">2,345</h3>
+                    <p className="text-sm font-medium text-gray-500">Total Users</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">2,345</h3>
+                    <p className="text-xs text-emerald-600 mt-2 flex items-center">
+                      ↑ 12% from last month
+                    </p>
                   </div>
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <Users className="h-6 w-6 text-purple-600" />
+                  <div className="p-3 bg-[#9b87f5]/10 rounded-full">
+                    <Users className="h-6 w-6 text-[#9b87f5]" />
                   </div>
                 </div>
-                <p className="text-xs text-green-600 mt-2 flex items-center">
-                  <span className="flex items-center">↑ 12% from last month</span>
-                </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Active Companies</p>
-                    <h3 className="text-2xl font-bold text-gray-900">45</h3>
+                    <p className="text-sm font-medium text-gray-500">Active Companies</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">45</h3>
+                    <p className="text-xs text-emerald-600 mt-2">↑ 5% from last month</p>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">
                     <Building2 className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
-                <p className="text-xs text-green-600 mt-2">↑ 5% from last month</p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Total Tracks</p>
-                    <h3 className="text-2xl font-bold text-gray-900">3,567</h3>
+                    <p className="text-sm font-medium text-gray-500">Total Tracks</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">3,567</h3>
+                    <p className="text-xs text-emerald-600 mt-2">↑ 23% from last month</p>
                   </div>
                   <div className="p-3 bg-pink-100 rounded-full">
                     <Music2 className="h-6 w-6 text-pink-600" />
                   </div>
                 </div>
-                <p className="text-xs text-green-600 mt-2">↑ 23% from last month</p>
               </CardContent>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2 hover:shadow-lg transition-shadow">
+            <Card className="md:col-span-2 hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">User Engagement</h3>
                 <div className="h-[300px]">
@@ -124,21 +127,21 @@ export default function Dashboard() {
                       <XAxis dataKey="name" stroke="#6b7280" />
                       <YAxis stroke="#6b7280" />
                       <Tooltip />
-                      <Bar dataKey="Active Users" fill="#8b5cf6" />
-                      <Bar dataKey="New Users" fill="#c084fc" />
+                      <Bar dataKey="Active Users" fill="#9b87f5" />
+                      <Bar dataKey="New Users" fill="#7E69AB" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow">
+            <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
                 </div>
                 <div className="space-y-3">
-                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors">
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20 transition-colors">
                     <Upload className="h-5 w-5" />
                     <span className="text-sm font-medium">Upload Music</span>
                   </button>
@@ -155,7 +158,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
@@ -164,19 +167,34 @@ export default function Dashboard() {
               <ScrollArea className="h-[300px] pr-4">
                 <div className="space-y-4">
                   {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="p-2 rounded-full bg-purple-100">
-                        {activity.type === "upload" && <Upload className="h-4 w-4 text-purple-600" />}
-                        {activity.type === "playlist" && <PlaySquare className="h-4 w-4 text-purple-600" />}
-                        {activity.type === "user" && <Users className="h-4 w-4 text-purple-600" />}
+                    <div
+                      key={activity.id}
+                      className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="p-2 rounded-full bg-[#9b87f5]/10">
+                        {activity.type === "upload" && (
+                          <Upload className="h-4 w-4 text-[#9b87f5]" />
+                        )}
+                        {activity.type === "playlist" && (
+                          <PlaySquare className="h-4 w-4 text-[#9b87f5]" />
+                        )}
+                        {activity.type === "user" && (
+                          <Users className="h-4 w-4 text-[#9b87f5]" />
+                        )}
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">{activity.title}</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {activity.title}
+                        </h4>
                         <p className="text-sm text-gray-500">{activity.description}</p>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-gray-400">by {activity.user}</span>
+                          <span className="text-xs text-gray-400">
+                            by {activity.user}
+                          </span>
                           <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-400">{activity.time}</span>
+                          <span className="text-xs text-gray-400">
+                            {activity.time}
+                          </span>
                         </div>
                       </div>
                     </div>

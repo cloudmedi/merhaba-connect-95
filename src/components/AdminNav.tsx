@@ -25,48 +25,58 @@ export function AdminNav() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <nav className={cn(
-      "min-h-screen bg-[#1A1F2C] text-white transition-all duration-300",
-      isCollapsed ? "w-20" : "w-64"
-    )}>
-      <div className="sticky top-0 p-4">
-        <div className={cn(
-          "flex items-center gap-2 mb-8",
-          isCollapsed && "justify-center"
-        )}>
-          <Music2 className="h-6 w-6 text-purple-400" />
-          {!isCollapsed && <h1 className="text-xl font-semibold">Merhaba Music</h1>}
+    <nav
+      className={cn(
+        "min-h-screen bg-gradient-to-b from-[#1A1F2C] to-[#2C3444] text-white transition-all duration-300 relative",
+        isCollapsed ? "w-20" : "w-64"
+      )}
+    >
+      <div className="sticky top-0 p-6">
+        <div
+          className={cn(
+            "flex items-center gap-3 mb-8",
+            isCollapsed && "justify-center"
+          )}
+        >
+          <Music2 className="h-8 w-8 text-[#9b87f5]" />
+          {!isCollapsed && (
+            <h1 className="text-xl font-semibold tracking-tight">
+              Merhaba Music
+            </h1>
+          )}
         </div>
-        
+
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute right-[-12px] top-6 bg-[#1A1F2C] p-1 rounded-full hover:bg-purple-900 transition-colors"
+          className="absolute right-[-12px] top-8 bg-[#1A1F2C] p-1.5 rounded-full hover:bg-[#2C3444] transition-colors shadow-lg"
         >
-          <ChevronLeft className={cn(
-            "h-5 w-5 transition-transform",
-            isCollapsed && "rotate-180"
-          )} />
+          <ChevronLeft
+            className={cn(
+              "h-4 w-4 transition-transform text-[#9b87f5]",
+              isCollapsed && "rotate-180"
+            )}
+          />
         </button>
-        
-        <div className="space-y-1">
+
+        <div className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
-            
+
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all hover:bg-purple-900/50",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                   isActive
-                    ? "bg-purple-900 text-purple-200"
-                    : "text-gray-300",
+                    ? "bg-[#9b87f5]/20 text-[#9b87f5]"
+                    : "text-gray-300 hover:bg-white/10",
                   isCollapsed && "justify-center px-2"
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={cn("h-5 w-5", isActive && "text-[#9b87f5]")} />
                 {!isCollapsed && item.label}
               </Link>
             );
