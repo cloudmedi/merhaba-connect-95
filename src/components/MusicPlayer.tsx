@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipForward, SkipBack, Volume2, X } from "lucide-react";
@@ -14,6 +14,11 @@ interface MusicPlayerProps {
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState([75]);
+
+  // Update isPlaying when playlist changes
+  useEffect(() => {
+    setIsPlaying(true);
+  }, [playlist.title]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 animate-slide-in-up">
