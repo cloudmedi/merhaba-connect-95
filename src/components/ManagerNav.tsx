@@ -46,7 +46,7 @@ export function ManagerNav() {
 
       <nav
         className={cn(
-          "min-h-screen bg-gradient-to-b from-[#1A1F2C] to-[#2C3444] text-white transition-all duration-300 relative",
+          "min-h-screen bg-[#1A1F2C] text-white transition-all duration-300 relative",
           isCollapsed ? "w-20" : "w-64",
           "fixed md:relative",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
@@ -80,7 +80,7 @@ export function ManagerNav() {
             />
           </button>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
@@ -91,15 +91,15 @@ export function ManagerNav() {
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                     isActive
-                      ? "bg-[#FFD700]/20 text-[#FFD700]"
-                      : "text-gray-300 hover:bg-white/10",
+                      ? "bg-[#2C3444] text-white"
+                      : "text-gray-400 hover:text-white hover:bg-[#2C3444]",
                     isCollapsed && "justify-center px-2"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5", isActive && "text-[#FFD700]")} />
+                  <Icon className={cn("h-5 w-5", isActive && "text-white")} />
                   {!isCollapsed && item.label}
                 </Link>
               );
