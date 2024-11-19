@@ -8,6 +8,7 @@ import {
   Heart,
   ListMusic,
   ChevronLeft,
+  Tag,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -15,6 +16,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/super-admin" },
   { icon: Users, label: "Users", href: "/super-admin/users" },
   { icon: Music2, label: "Music", href: "/super-admin/music" },
+  { icon: Tag, label: "Genres", href: "/super-admin/genres" },
   { icon: FolderTree, label: "Categories", href: "/super-admin/categories" },
   { icon: Heart, label: "Moods", href: "/super-admin/moods" },
   { icon: ListMusic, label: "Playlists", href: "/super-admin/playlists" },
