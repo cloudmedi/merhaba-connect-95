@@ -13,32 +13,32 @@ interface PlaylistTabsProps {
 
 export function PlaylistTabs({ playlistData, setPlaylistData }: PlaylistTabsProps) {
   return (
-    <div className="bg-[#1A1F2C] p-6 rounded-lg">
+    <div className="bg-white rounded-lg border">
       <Tabs defaultValue="songs" className="w-full">
-        <TabsList className="w-full justify-start bg-[#2A2F3C] border-b border-[#3A3F4C]">
-          <TabsTrigger value="songs" className="data-[state=active]:bg-[#3A3F4C]">
-            <Music2 className="w-5 h-5 mr-2" />
+        <TabsList className="w-full justify-start bg-gray-50 border-b">
+          <TabsTrigger value="songs" className="data-[state=active]:bg-white">
+            <Music2 className="w-4 h-4 mr-2" />
             Songs
           </TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-[#3A3F4C]">
-            <Users className="w-5 h-5 mr-2" />
+          <TabsTrigger value="users" className="data-[state=active]:bg-white">
+            <Users className="w-4 h-4 mr-2" />
             Users
           </TabsTrigger>
-          <TabsTrigger value="genres" className="data-[state=active]:bg-[#3A3F4C]">
-            <Tag className="w-5 h-5 mr-2" />
+          <TabsTrigger value="genres" className="data-[state=active]:bg-white">
+            <Tag className="w-4 h-4 mr-2" />
             Genres
           </TabsTrigger>
-          <TabsTrigger value="categories" className="data-[state=active]:bg-[#3A3F4C]">
-            <Grid2X2 className="w-5 h-5 mr-2" />
+          <TabsTrigger value="categories" className="data-[state=active]:bg-white">
+            <Grid2X2 className="w-4 h-4 mr-2" />
             Categories
           </TabsTrigger>
-          <TabsTrigger value="moods" className="data-[state=active]:bg-[#3A3F4C]">
-            <Heart className="w-5 h-5 mr-2" />
+          <TabsTrigger value="moods" className="data-[state=active]:bg-white">
+            <Heart className="w-4 h-4 mr-2" />
             Moods
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-6">
+        <div className="p-6">
           <TabsContent value="songs">
             <SongsTab
               selectedSongs={playlistData.selectedSongs}
