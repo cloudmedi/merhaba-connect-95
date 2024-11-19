@@ -90,13 +90,22 @@ export function MoodsContent() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <MoodsHeader onNewMood={handleNewMood} />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Moods</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage music moods and emotions</p>
+      </div>
+
+      <div className="flex justify-end">
+        <MoodsHeader onNewMood={handleNewMood} />
+      </div>
+
       <MoodsTable
         moods={moods}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+      
       <MoodsDialog
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
