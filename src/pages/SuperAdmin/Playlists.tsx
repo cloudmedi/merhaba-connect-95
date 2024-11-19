@@ -4,6 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, MoreVertical } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -18,6 +26,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Mock data - In a real app, this would come from an API
+const managers = [
+  { id: 1, name: "Manager 1", venue: "Sunny Chill House" },
+  { id: 2, name: "Manager 2", venue: "Beach Club" },
+  { id: 3, name: "Manager 3", venue: "Mountain Resort" },
+];
 
 const playlists = [
   {
@@ -48,15 +63,35 @@ const playlists = [
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const { toast } = useToast();
+
+  const handleAssignPlaylist = (playlistId: number, managerId: number) => {
+    // In a real app, this would be an API call
+    toast({
+      title: "Playlist Assigned",
+      description: `Playlist has been assigned to Manager ${managerId}`,
+    });
+  };
+
+  const handleCreatePlaylist = () => {
+    toast({
+      title: "Create Playlist",
+      description: "This functionality will be implemented soon.",
+    });
+  };
 
   return (
     <div className="flex h-screen bg-white">
       <AdminNav />
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Playlists</h1>
-            <Button className="bg-[#FFD700] text-black hover:bg-[#E6C200]">
+            <Button 
+              className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+              onClick={handleCreatePlaylist}
+            >
               <Plus className="w-4 h-4 mr-2" /> Create New Playlist
             </Button>
           </div>
@@ -106,20 +141,45 @@ export default function Playlists() {
                       </TableCell>
                       <TableCell>{playlist.createdAt}</TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Assign Managers</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Dialog>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DialogTrigger asChild>
+                                <DropdownMenuItem>Assign Managers</DropdownMenuItem>
+                              </DialogTrigger>
+                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Assign Managers</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 mt-4">
+                              {managers.map((manager) => (
+                                <div key={manager.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
+                                  <div>
+                                    <p className="font-medium">{manager.name}</p>
+                                    <p className="text-sm text-gray-500">{manager.venue}</p>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => handleAssignPlaylist(playlist.id, manager.id)}
+                                  >
+                                    Assign
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))}

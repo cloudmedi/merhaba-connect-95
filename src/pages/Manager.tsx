@@ -1,7 +1,9 @@
 import { Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
+// Mock data - In a real app, this would come from an API
 const playlists = [
   {
     id: 1,
@@ -20,6 +22,15 @@ const playlists = [
 ];
 
 export default function Manager() {
+  const { toast } = useToast();
+
+  const handlePlayClick = (playlistId: number) => {
+    toast({
+      title: "Playing Playlist",
+      description: `Now playing playlist ${playlistId}`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -42,24 +53,11 @@ export default function Manager() {
         <div className="relative bg-[#8B4543] p-8 rounded-xl overflow-hidden mb-8">
           <div className="relative z-10 max-w-2xl">
             <p className="text-sm text-white/80 mb-2">Sunny Chill House</p>
-            <h1 className="text-4xl font-bold text-white mb-4">Chill Beats</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">Assigned Playlists</h1>
             <p className="text-lg text-white/90">
-              Feel the groove with tracks like "Conquer the Storm", "My Side," and
-              "Magic Ride." Let the soothing beats from Chill Beat Zone take you on a
-              journey through laid-back melodies and chill vibes, perfect for any
-              relaxing moment.
+              View and manage all the playlists assigned to you by the Super Admin.
+              Click on a playlist to start playing it in your venue.
             </p>
-          </div>
-          <div className="absolute right-8 bottom-8 w-32 h-32">
-            <img 
-              src="/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png" 
-              alt="Playlist Cover" 
-              className="w-full h-full object-cover rounded-lg shadow-lg"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 backdrop-blur-sm rounded-b-lg">
-              <p className="text-sm text-white text-center font-medium">Sunny</p>
-              <p className="text-xs text-white/80 text-center">Chill House</p>
-            </div>
           </div>
           <div className="absolute inset-0 bg-[url('/wave-pattern.svg')] opacity-10"></div>
         </div>
@@ -68,7 +66,7 @@ export default function Manager() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-semibold text-black">Assigned Playlists</h2>
+              <h2 className="text-xl font-semibold text-black">Your Playlists</h2>
               <p className="text-sm text-gray-500">Playlists assigned by Super Admin</p>
             </div>
             <div className="relative">
@@ -91,7 +89,10 @@ export default function Manager() {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center text-black hover:bg-[#E6C200] transition-colors">
+                    <button 
+                      onClick={() => handlePlayClick(playlist.id)}
+                      className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center text-black hover:bg-[#E6C200] transition-colors"
+                    >
                       ▶
                     </button>
                   </div>
@@ -111,10 +112,10 @@ export default function Manager() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
           <div className="flex items-center space-x-4">
-            <button className="w-8 h-8 bg-gray-100 rounded">⬛</button>
+            <div className="w-8 h-8 bg-gray-100 rounded"></div>
             <div>
-              <p className="font-medium text-black">Playlist name</p>
-              <p className="text-sm text-gray-500">ARTIST NAME</p>
+              <p className="font-medium text-black">Select a playlist</p>
+              <p className="text-sm text-gray-500">No playlist playing</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
