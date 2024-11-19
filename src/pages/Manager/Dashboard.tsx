@@ -1,14 +1,10 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipForward, SkipBack, Volume2 } from "lucide-react";
+import { Play, SkipBack, SkipForward } from "lucide-react";
 import { useState } from "react";
-import { Slider } from "@/components/ui/slider";
 
 export default function ManagerDashboard() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState([75]);
-
   return (
     <DashboardLayout
       title="Manager Dashboard"
@@ -17,40 +13,28 @@ export default function ManagerDashboard() {
       <div className="grid gap-6">
         {/* Now Playing Card */}
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-semibold">Now Playing</h2>
               <p className="text-sm text-gray-500">Current playlist: Morning Vibes</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <SkipBack className="h-4 w-4" />
               </Button>
               <Button 
                 size="icon"
-                className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
-                onClick={() => setIsPlaying(!isPlaying)}
+                className="bg-[#FFD700] hover:bg-[#E6C200] text-black rounded-full w-12 h-12"
               >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
+                <Play className="h-6 w-6" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <SkipForward className="h-4 w-4" />
               </Button>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Volume2 className="h-4 w-4" />
-            <Slider
-              value={volume}
-              onValueChange={setVolume}
-              max={100}
-              step={1}
-              className="w-48"
-            />
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="bg-[#FFD700] h-2 rounded-full w-3/4"></div>
           </div>
         </Card>
 
