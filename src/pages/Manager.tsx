@@ -7,37 +7,15 @@ const playlists = [
     id: 1,
     title: "Jazz Hop Cafe",
     venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
+    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
+    assignedBy: "Super Admin"
   },
   {
     id: 2,
     title: "Slap House Jam",
     venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
-  },
-  {
-    id: 3,
-    title: "Colombia - Salsa",
-    venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
-  },
-  {
-    id: 4,
-    title: "Cafe Bossa",
-    venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
-  },
-  {
-    id: 5,
-    title: "Life is Good",
-    venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
-  },
-  {
-    id: 6,
-    title: "Fashion Week",
-    venue: "Sunny Chill House",
-    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png"
+    image: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
+    assignedBy: "Super Admin"
   }
 ];
 
@@ -90,13 +68,13 @@ export default function Manager() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-semibold text-black">Cafe Channel</h2>
-              <p className="text-sm text-gray-500">Time to get jazzy</p>
+              <h2 className="text-xl font-semibold text-black">Assigned Playlists</h2>
+              <p className="text-sm text-gray-500">Playlists assigned by Super Admin</p>
             </div>
             <div className="relative">
               <Input 
                 type="search" 
-                placeholder="Search" 
+                placeholder="Search playlists" 
                 className="pl-10 bg-white border-gray-200 w-64 focus:ring-[#FFD700] focus:border-[#FFD700]"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -121,6 +99,7 @@ export default function Manager() {
                 <div className="p-3">
                   <h3 className="font-medium text-black">{playlist.title}</h3>
                   <p className="text-sm text-gray-500">{playlist.venue}</p>
+                  <p className="text-xs text-gray-400 mt-1">Assigned by {playlist.assignedBy}</p>
                 </div>
               </Card>
             ))}
