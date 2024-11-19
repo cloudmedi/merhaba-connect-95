@@ -26,6 +26,8 @@ export function MusicContent() {
     genre: "",
     mood: "",
   });
+  const [genres, setGenres] = useState<string[]>([]);
+  const [playlists, setPlaylists] = useState<string[]>([]);
 
   const itemsPerPage = 100;
 
@@ -36,7 +38,7 @@ export function MusicContent() {
     setIsGenreDialogOpen,
     isAddGenreDialogOpen,
     setIsAddGenreDialogOpen,
-    handleGenreChange,
+    handleGenreDialogChange, // Renamed to avoid conflict
     handleAddGenre,
     handleGenreConfirm,
     handleAddGenreConfirm
@@ -87,9 +89,6 @@ export function MusicContent() {
     setCurrentlyPlaying(song);
   };
 
-  const [genres, setGenres] = useState<string[]>([]);
-  const [playlists, setPlaylists] = useState<string[]>([]);
-
   const handleGenreChange = (genre: string) => {
     setFilters(prev => ({ ...prev, genre }));
   };
@@ -125,7 +124,7 @@ export function MusicContent() {
                 onCreatePlaylist={() => handleAddToPlaylist(selectedSongs)}
                 onDeleteSelected={() => {/* Implement delete action */}}
                 onAddGenre={() => handleAddGenre(selectedSongs)}
-                onChangeGenre={() => handleGenreChange(selectedSongs)}
+                onChangeGenre={() => handleGenreDialogChange(selectedSongs)}
                 onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
                 onChangePlaylist={() => handleAddToPlaylist(selectedSongs)}
                 onAddMood={() => handleAddMood(selectedSongs)}

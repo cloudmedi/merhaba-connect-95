@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genres: string[];
-  duration: string;
-  file: File;
-  uploadDate: Date;
-  playlists?: string[];
-  mood?: string;
-}
+import { Song } from "../types";
 
 export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.SetStateAction<Song[]>>) => {
   const { toast } = useToast();
@@ -33,7 +21,7 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     });
   };
 
-  const handleGenreChange = (selectedSongs: Song[]) => {
+  const handleGenreDialogChange = (selectedSongs: Song[]) => {
     if (selectedSongs.length === 0) {
       toast({
         title: "No songs selected",
@@ -113,7 +101,7 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     setIsAddGenreDialogOpen,
     handleAddPlaylist,
     handleChangeMood,
-    handleGenreChange,
+    handleGenreDialogChange,
     handleAddGenre,
     handleGenreConfirm,
     handleAddGenreConfirm
