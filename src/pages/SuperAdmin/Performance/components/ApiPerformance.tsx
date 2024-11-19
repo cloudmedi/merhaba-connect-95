@@ -21,14 +21,13 @@ const mockEndpoints = [
 export function ApiPerformance() {
   return (
     <div className="space-y-6">
-      {/* API İstek Hacmi Grafiği */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-6">API İstek Hacmi (24s)</h3>
-        <div className="h-[400px]"> {/* Grafik yüksekliğini artırdık */}
+      <Card className="p-6 bg-white">
+        <h3 className="text-lg font-semibold mb-6">API Request Volume (24h)</h3>
+        <div className="h-[300px]">
           <ChartContainer
             config={{
-              requests: { color: "#8B5CF6", label: "İstekler" },
-              errors: { color: "#EF4444", label: "Hatalar" },
+              requests: { color: "#3b82f6" },
+              errors: { color: "#ef4444" },
             }}
           >
             <BarChart 
@@ -37,23 +36,27 @@ export function ApiPerformance() {
             >
               <XAxis 
                 dataKey="time" 
-                tick={{ fontSize: 12 }}
+                stroke="#94a3b8"
+                tick={{ fill: '#64748b', fontSize: 12 }}
+                tickLine={{ stroke: '#94a3b8' }}
                 interval={2}
               />
               <YAxis 
-                tick={{ fontSize: 12 }}
+                stroke="#94a3b8"
+                tick={{ fill: '#64748b', fontSize: 12 }}
+                tickLine={{ stroke: '#94a3b8' }}
                 width={60}
               />
               <ChartTooltip />
               <Bar 
                 dataKey="requests" 
-                fill="#8B5CF6" 
+                fill="#3b82f6"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
               />
               <Bar 
                 dataKey="errors" 
-                fill="#EF4444" 
+                fill="#ef4444"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
               />
@@ -62,18 +65,17 @@ export function ApiPerformance() {
         </div>
       </Card>
 
-      {/* Endpoint Performans Tablosu */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Endpoint Performansı</h3>
+      <Card className="p-6 bg-white">
+        <h3 className="text-lg font-semibold mb-4">Endpoint Performance</h3>
         <ScrollArea className="h-[300px]">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[200px]">Endpoint</TableHead>
-                <TableHead className="text-right">Ort. Yanıt Süresi</TableHead>
-                <TableHead className="text-right">Toplam İstek</TableHead>
-                <TableHead className="text-right">Hata Sayısı</TableHead>
-                <TableHead className="text-right">Hata Oranı</TableHead>
+                <TableHead className="text-right">Avg Response Time</TableHead>
+                <TableHead className="text-right">Total Requests</TableHead>
+                <TableHead className="text-right">Error Count</TableHead>
+                <TableHead className="text-right">Error Rate</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
