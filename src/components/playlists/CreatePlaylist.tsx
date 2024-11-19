@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { PlaylistForm } from "./PlaylistForm";
 import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
@@ -41,6 +40,7 @@ interface Mood {
 export function CreatePlaylist() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [playlistData, setPlaylistData] = useState({
     title: "",
     description: "",
@@ -51,6 +51,15 @@ export function CreatePlaylist() {
     selectedCategories: [] as Category[],
     selectedMoods: [] as Mood[],
   });
+
+  useEffect(() => {
+    if (location.state?.selectedSongs) {
+      setPlaylistData(prev => ({
+        ...prev,
+        selectedSongs: location.state.selectedSongs
+      }));
+    }
+  }, [location.state]);
 
   const handleCreatePlaylist = () => {
     if (!playlistData.title) {
