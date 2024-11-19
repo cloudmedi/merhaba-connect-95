@@ -127,8 +127,11 @@ export function MusicContent() {
     });
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleAction = (action: string) => {
+    toast({
+      title: "Action Triggered",
+      description: `${action} action for ${selectedSongs.length} songs`,
+    });
   };
 
   return (
@@ -136,13 +139,20 @@ export function MusicContent() {
       <div className="flex items-center justify-between gap-4">
         <MusicHeader onUpload={handleFileUpload} />
         {selectedSongs.length > 0 && (
-          <div className="flex gap-4">
-            <MusicActions
-              selectedCount={selectedSongs.length}
-              onCreatePlaylist={handleCreatePlaylist}
-              onDeleteSelected={handleDeleteSelected}
-            />
-          </div>
+          <MusicActions
+            selectedCount={selectedSongs.length}
+            onCreatePlaylist={handleCreatePlaylist}
+            onDeleteSelected={handleDeleteSelected}
+            onAddGenre={() => handleAction("Add Genre")}
+            onChangeGenre={() => handleAction("Change Genre")}
+            onAddPlaylist={() => handleAction("Add Playlist")}
+            onChangePlaylist={() => handleAction("Change Playlist")}
+            onAddMood={() => handleAction("Add Mood")}
+            onChangeMood={() => handleAction("Change Mood")}
+            onChangeArtist={() => handleAction("Change Artist")}
+            onChangeAlbum={() => handleAction("Change Album")}
+            onApprove={() => handleAction("Approve")}
+          />
         )}
       </div>
       
