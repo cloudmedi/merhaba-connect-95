@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import * as musicMetadata from 'music-metadata-browser';
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { GenreChangeDialog } from "./components/GenreChangeDialog";
 import { AddGenreDialog } from "./components/AddGenreDialog";
+import { PlaylistDialog } from "./components/PlaylistDialog";
+import { MoodDialog } from "./components/MoodDialog";
 import { useMusicActions } from "./hooks/useMusicActions";
+import { usePlaylistActions } from "./hooks/usePlaylistActions";
+import { useMoodActions } from "./hooks/useMoodActions";
+import * as musicMetadata from 'music-metadata-browser';
 
 interface Song {
   id: number;
@@ -32,20 +35,29 @@ export function MusicContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const {
     isGenreDialogOpen,
     setIsGenreDialogOpen,
     isAddGenreDialogOpen,
     setIsAddGenreDialogOpen,
-    handleAddPlaylist,
-    handleChangeMood,
     handleGenreChange,
     handleAddGenre,
     handleGenreConfirm,
     handleAddGenreConfirm
   } = useMusicActions(songs, setSongs);
+
+  const {
+    isPlaylistDialogOpen,
+    setIsPlaylistDialogOpen,
+    handleAddToPlaylist
+  } = usePlaylistActions();
+
+  const {
+    isMoodDialogOpen,
+    setIsMoodDialogOpen,
+    handleAddMood
+  } = useMoodActions();
 
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -96,57 +108,41 @@ export function MusicContent() {
     });
   };
 
-  const handleCreatePlaylist = () => {
-    navigate("/super-admin/playlists/create", {
-      state: { selectedSongs },
-    });
-  };
-
-  const handleDeleteSelected = () => {
-    setSongs((prev) =>
-      prev.filter((song) => !selectedSongs.some((s) => s.id === song.id))
-    );
-    setSelectedSongs([]);
-    toast({
-      title: "Success",
-      description: "Selected songs deleted successfully",
-    });
-  };
-
-  const handleChangeArtist = () => {
-    const newArtist = "New Artist";
+  const handlePlaylistConfirm = (playlistIds: number[]) => {
     setSongs(prev => 
       prev.map(song => 
         selectedSongs.some(s => s.id === song.id)
-          ? { ...song, artist: newArtist }
+          ? { ...song, playlists: [...(song.playlists || []), ...playlistIds.map(String)] }
           : song
       )
     );
+    
     toast({
       title: "Success",
-      description: `Artist changed for ${selectedSongs.length} songs`,
+      description: `Songs added to ${playlistIds.length} playlists`,
     });
   };
 
-  const handleChangeAlbum = () => {
-    const newAlbum = "New Album";
+  const handleMoodConfirm = (moodId: number) => {
+    const moodMap: Record<number, string> = {
+      1: "Happy",
+      2: "Sad",
+      3: "Energetic",
+      4: "Calm",
+      5: "Romantic",
+    };
+
     setSongs(prev => 
       prev.map(song => 
         selectedSongs.some(s => s.id === song.id)
-          ? { ...song, album: newAlbum }
+          ? { ...song, mood: moodMap[moodId] }
           : song
       )
     );
+    
     toast({
       title: "Success",
-      description: `Album changed for ${selectedSongs.length} songs`,
-    });
-  };
-
-  const handleApprove = () => {
-    toast({
-      title: "Success",
-      description: `${selectedSongs.length} songs have been approved`,
+      description: `Mood updated to ${moodMap[moodId]} for ${selectedSongs.length} songs`,
     });
   };
 
@@ -188,17 +184,16 @@ export function MusicContent() {
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
-            onCreatePlaylist={handleCreatePlaylist}
-            onDeleteSelected={handleDeleteSelected}
             onAddGenre={() => handleAddGenre(selectedSongs)}
             onChangeGenre={() => handleGenreChange(selectedSongs)}
-            onAddPlaylist={handleAddPlaylist}
-            onChangePlaylist={handleAddPlaylist}
-            onAddMood={handleChangeMood}
-            onChangeMood={handleChangeMood}
-            onChangeArtist={handleChangeArtist}
-            onChangeAlbum={handleChangeAlbum}
-            onApprove={handleApprove}
+            onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
+            onChangePlaylist={() => handleAddToPlaylist(selectedSongs)}
+            onAddMood={() => handleAddMood(selectedSongs)}
+            onChangeMood={() => handleAddMood(selectedSongs)}
+            onChangeArtist={() => {/* Implement artist change */}}
+            onChangeAlbum={() => {/* Implement album change */}}
+            onApprove={() => {/* Implement approve action */}}
+            onDeleteSelected={() => {/* Implement delete action */}}
           />
         )}
       </div>
@@ -212,7 +207,7 @@ export function MusicContent() {
       />
       
       <MusicTable
-        songs={filteredSongs}
+        songs={songs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
@@ -232,6 +227,18 @@ export function MusicContent() {
         isOpen={isAddGenreDialogOpen}
         onClose={() => setIsAddGenreDialogOpen(false)}
         onConfirm={(genreIds) => handleAddGenreConfirm(genreIds, selectedSongs)}
+      />
+
+      <PlaylistDialog
+        isOpen={isPlaylistDialogOpen}
+        onClose={() => setIsPlaylistDialogOpen(false)}
+        onConfirm={handlePlaylistConfirm}
+      />
+
+      <MoodDialog
+        isOpen={isMoodDialogOpen}
+        onClose={() => setIsMoodDialogOpen(false)}
+        onConfirm={handleMoodConfirm}
       />
     </div>
   );
