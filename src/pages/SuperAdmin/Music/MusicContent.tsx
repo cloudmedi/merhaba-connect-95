@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Upload, Trash2, PlaySquare, Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import * as musicMetadata from 'music-metadata-browser';
 import {
   Table,
@@ -45,7 +46,7 @@ export function MusicContent() {
     for (const file of Array.from(files)) {
       try {
         const metadata = await musicMetadata.parseBlob(file);
-        console.log('Metadata extracted:', metadata); // Debug log
+        console.log('Metadata extracted:', metadata);
         
         newSongs.push({
           id: Date.now() + newSongs.length,
@@ -77,12 +78,20 @@ export function MusicContent() {
     });
   };
 
-  const toggleSongSelection = (song: Song) => {
-    setSelectedSongs((prev) =>
-      prev.some((s) => s.id === song.id)
-        ? prev.filter((s) => s.id !== song.id)
-        : [...prev, song]
-    );
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedSongs(songs);
+    } else {
+      setSelectedSongs([]);
+    }
+  };
+
+  const handleSelectSong = (song: Song, checked: boolean) => {
+    if (checked) {
+      setSelectedSongs((prev) => [...prev, song]);
+    } else {
+      setSelectedSongs((prev) => prev.filter((s) => s.id !== song.id));
+    }
   };
 
   const handleCreatePlaylist = () => {
@@ -149,7 +158,12 @@ export function MusicContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12">
+                  <Checkbox 
+                    checked={selectedSongs.length === songs.length}
+                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                  />
+                </TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Artist</TableHead>
                 <TableHead>Album</TableHead>
@@ -166,10 +180,12 @@ export function MusicContent() {
                       ? "bg-purple-50"
                       : ""
                   }`}
-                  onClick={() => toggleSongSelection(song)}
                 >
                   <TableCell>
-                    <Music2 className="w-4 h-4 text-purple-600" />
+                    <Checkbox 
+                      checked={selectedSongs.some((s) => s.id === song.id)}
+                      onCheckedChange={(checked) => handleSelectSong(song, checked as boolean)}
+                    />
                   </TableCell>
                   <TableCell className="font-medium">{song.title}</TableCell>
                   <TableCell>{song.artist}</TableCell>
