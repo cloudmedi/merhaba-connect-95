@@ -25,7 +25,7 @@ export function MusicFilters({
             <SelectValue placeholder="Filter by genre" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Genres</SelectItem>
+            <SelectItem value="all-genres">All Genres</SelectItem>
             {genres.map((genre) => (
               <SelectItem key={genre} value={genre}>
                 {genre}
@@ -41,7 +41,7 @@ export function MusicFilters({
             <SelectValue placeholder="Filter by playlist" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Playlists</SelectItem>
+            <SelectItem value="all-playlists">All Playlists</SelectItem>
             {playlists.map((playlist) => (
               <SelectItem key={playlist} value={playlist}>
                 {playlist}

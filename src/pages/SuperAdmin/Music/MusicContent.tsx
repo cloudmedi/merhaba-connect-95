@@ -22,8 +22,8 @@ interface Song {
 export function MusicContent() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
-  const [filterGenre, setFilterGenre] = useState<string>("");
-  const [filterPlaylist, setFilterPlaylist] = useState<string>("");
+  const [filterGenre, setFilterGenre] = useState<string>("all-genres");
+  const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -79,8 +79,8 @@ export function MusicContent() {
 
   const filteredSongs = songs
     .filter(song => {
-      if (filterGenre && !song.genres.includes(filterGenre)) return false;
-      if (filterPlaylist && !song.playlists?.includes(filterPlaylist)) return false;
+      if (filterGenre !== "all-genres" && !song.genres.includes(filterGenre)) return false;
+      if (filterPlaylist !== "all-playlists" && !song.playlists?.includes(filterPlaylist)) return false;
       return true;
     })
     .sort((a, b) => {
