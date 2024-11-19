@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity, Signal, Clock, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface PlayerStatus {
   id: string;
@@ -28,13 +30,14 @@ const mockPlayerStatuses: PlayerStatus[] = [
     version: "1.2.0",
     health: "warning",
   },
-  // ... more mock data
 ];
 
 export function SystemStats() {
+  const navigate = useNavigate();
   const totalPlayers = mockPlayerStatuses.length;
   const onlinePlayers = mockPlayerStatuses.filter(p => p.status === "online").length;
   const healthyPlayers = mockPlayerStatuses.filter(p => p.health === "healthy").length;
+  const recentIssues = mockPlayerStatuses.filter(p => p.health !== "healthy").slice(0, 5);
   
   return (
     <div className="space-y-6">
@@ -96,11 +99,17 @@ export function SystemStats() {
       <Card className="hover:shadow-lg transition-shadow bg-white border-none shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Player Status</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Recent Issues</h3>
+            <Button 
+              variant="outline"
+              onClick={() => navigate("/super-admin/reports")}
+            >
+              View All Stores
+            </Button>
           </div>
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-4">
-              {mockPlayerStatuses.map((player) => (
+              {recentIssues.map((player) => (
                 <div
                   key={player.id}
                   className="flex items-center justify-between p-4 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
