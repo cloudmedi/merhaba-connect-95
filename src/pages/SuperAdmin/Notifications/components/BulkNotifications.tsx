@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, Send, MessageSquare, Users } from "lucide-react";
+import { Bell, Send } from "lucide-react";
+import { useState } from "react";
 
 export function BulkNotifications() {
   const { toast } = useToast();
@@ -30,7 +30,6 @@ export function BulkNotifications() {
       return;
     }
 
-    // API call would go here
     toast({
       title: "Success",
       description: "Notifications sent successfully",
@@ -96,35 +95,6 @@ export function BulkNotifications() {
                   <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  toast({
-                    title: "Load Template",
-                    description: "Template loading feature coming soon",
-                  });
-                }}
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Load Template
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  toast({
-                    title: "Select Recipients",
-                    description: "Advanced recipient selection coming soon",
-                  });
-                }}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Select Recipients
-              </Button>
             </div>
           </div>
         </div>
