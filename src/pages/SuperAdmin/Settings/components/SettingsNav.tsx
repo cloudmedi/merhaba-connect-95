@@ -10,7 +10,8 @@ import {
   Shield, 
   Bell,
   Wallet,
-  Database
+  Database,
+  History
 } from "lucide-react";
 
 const navItems = [
@@ -59,6 +60,11 @@ const navItems = [
     title: "System Logs",
     href: "/super-admin/settings/logs",
     icon: FileText,
+  },
+  {
+    title: "Audit Logs",
+    href: "/super-admin/settings/audit-logs",
+    icon: History,
   },
   {
     title: "Backup & Restore",
