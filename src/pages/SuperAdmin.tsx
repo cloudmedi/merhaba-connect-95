@@ -7,6 +7,7 @@ import Categories from "./SuperAdmin/Categories";
 import Moods from "./SuperAdmin/Moods";
 import Genres from "./SuperAdmin/Genres";
 import Settings from "./SuperAdmin/Settings";
+import Reports from "./SuperAdmin/Reports";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 
 export default function SuperAdmin() {
@@ -21,6 +22,7 @@ export default function SuperAdmin() {
       <Route path="categories" element={<Categories />} />
       <Route path="moods" element={<Moods />} />
       <Route path="settings/*" element={<Settings />} />
+      <Route path="reports" element={<Reports />} />
     </Routes>
   );
 }
