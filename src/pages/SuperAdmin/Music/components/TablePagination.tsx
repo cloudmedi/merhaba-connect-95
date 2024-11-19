@@ -105,7 +105,7 @@ export function TablePagination({
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm text-muted-foreground">
-        Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} songs
+        Showing {startIndex + 1}-{endIndex} of {totalItems} songs
       </div>
       {totalPages > 1 && (
         <Pagination>

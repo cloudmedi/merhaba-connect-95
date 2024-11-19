@@ -96,10 +96,6 @@ export function MusicTable({
         </Table>
       </ScrollArea>
 
-      <div className="text-sm text-gray-500">
-        Showing {startIndex + 1}-{endIndex} of {songs.length} songs
-      </div>
-
       <TablePagination
         currentPage={currentPage}
         totalPages={totalPages}
