@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
-import { MusicFilters } from "./components/MusicFilters";
+import { MusicFilters } from "./MusicFilters";
 import { GenreChangeDialog } from "./components/GenreChangeDialog";
 import { AddGenreDialog } from "./components/AddGenreDialog";
 import { PlaylistDialog } from "./components/PlaylistDialog";
@@ -12,28 +11,15 @@ import { useMusicActions } from "./hooks/useMusicActions";
 import { usePlaylistActions } from "./hooks/usePlaylistActions";
 import { useMoodActions } from "./hooks/useMoodActions";
 import { MusicPlayer } from "@/components/MusicPlayer";
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genres: string[];
-  duration: string;
-  file: File;
-  artwork?: string;
-  uploadDate: Date;
-  playlists?: string[];
-  mood?: string;
-  uploader?: string;
-}
+import { useFileUpload } from "./hooks/useFileUpload";
+import { Song, Filters } from "./types";
 
 export function MusicContent() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     artists: [],
     albums: [],
     uploaders: [],
@@ -42,7 +28,8 @@ export function MusicContent() {
   });
 
   const itemsPerPage = 100;
-  const { toast } = useToast();
+
+  const { handleFileUpload } = useFileUpload(setSongs);
 
   const {
     isGenreDialogOpen,
@@ -58,13 +45,15 @@ export function MusicContent() {
   const {
     isPlaylistDialogOpen,
     setIsPlaylistDialogOpen,
-    handleAddToPlaylist
+    handleAddToPlaylist,
+    handlePlaylistConfirm
   } = usePlaylistActions();
 
   const {
     isMoodDialogOpen,
     setIsMoodDialogOpen,
-    handleAddMood
+    handleAddMood,
+    handleMoodConfirm
   } = useMoodActions();
 
   const filteredSongs = songs.filter(song => {
@@ -77,52 +66,6 @@ export function MusicContent() {
   });
 
   const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    const newSongs: Song[] = [];
-
-    for (const file of Array.from(files)) {
-      try {
-        const metadata = await musicMetadata.parseBlob(file);
-        newSongs.push({
-          id: Date.now() + newSongs.length,
-          title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
-          artist: metadata.common.artist || "Unknown Artist",
-          album: metadata.common.album || "Unknown Album",
-          genres: metadata.common.genre || [],
-          duration: formatDuration(metadata.format.duration || 0),
-          file: file,
-          uploadDate: new Date(),
-          playlists: [],
-          artwork: metadata.common.picture?.[0] ? 
-            URL.createObjectURL(new Blob([metadata.common.picture[0].data], { type: metadata.common.picture[0].format })) :
-            undefined
-        });
-      } catch (error) {
-        console.error("Error parsing metadata:", error);
-        newSongs.push({
-          id: Date.now() + newSongs.length,
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          artist: "Unknown Artist",
-          album: "Unknown Album",
-          genres: [],
-          duration: "0:00",
-          file: file,
-          uploadDate: new Date(),
-          playlists: [],
-        });
-      }
-    }
-
-    setSongs((prev) => [...prev, ...newSongs]);
-    toast({
-      title: "Success",
-      description: `${files.length} songs uploaded successfully`,
-    });
-  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
