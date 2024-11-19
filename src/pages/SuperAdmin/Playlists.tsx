@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -64,10 +65,14 @@ const playlists = [
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newPlaylist, setNewPlaylist] = useState({
+    title: "",
+    venue: "",
+  });
   const { toast } = useToast();
 
   const handleAssignPlaylist = (playlistId: number, managerId: number) => {
-    // In a real app, this would be an API call
     toast({
       title: "Playlist Assigned",
       description: `Playlist has been assigned to Manager ${managerId}`,
@@ -75,10 +80,31 @@ export default function Playlists() {
   };
 
   const handleCreatePlaylist = () => {
+    if (!newPlaylist.title || !newPlaylist.venue) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // In a real app, this would be an API call
+    const playlist = {
+      id: playlists.length + 1,
+      ...newPlaylist,
+      assignedTo: [],
+      status: "Active",
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
     toast({
-      title: "Create Playlist",
-      description: "This functionality will be implemented soon.",
+      title: "Success",
+      description: "Playlist created successfully",
     });
+
+    setIsCreateDialogOpen(false);
+    setNewPlaylist({ title: "", venue: "" });
   };
 
   return (
@@ -88,12 +114,46 @@ export default function Playlists() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Playlists</h1>
-            <Button 
-              className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
-              onClick={handleCreatePlaylist}
-            >
-              <Plus className="w-4 h-4 mr-2" /> Create New Playlist
-            </Button>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Create New Playlist
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Playlist</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Playlist Title</label>
+                    <Input
+                      placeholder="Enter playlist title"
+                      value={newPlaylist.title}
+                      onChange={(e) => setNewPlaylist(prev => ({...prev, title: e.target.value}))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Venue</label>
+                    <Input
+                      placeholder="Enter venue"
+                      value={newPlaylist.venue}
+                      onChange={(e) => setNewPlaylist(prev => ({...prev, venue: e.target.value}))}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+                    onClick={handleCreatePlaylist}
+                  >
+                    Create Playlist
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="mb-6 flex gap-4">
