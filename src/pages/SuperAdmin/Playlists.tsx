@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MoreVertical, Play } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import { PlaylistsTable } from "./components/PlaylistsTable";
@@ -53,14 +53,12 @@ export default function Playlists() {
   const { toast } = useToast();
 
   const handlePlayPlaylist = (playlist: any) => {
-    if (currentPlaylist?.id !== playlist.id) {
-      setCurrentPlaylist(playlist);
-      setIsPlayerVisible(true);
-      toast({
-        title: "Now Playing",
-        description: `Playing ${playlist.title}`,
-      });
-    }
+    setCurrentPlaylist(playlist);
+    setIsPlayerVisible(true);
+    toast({
+      title: "Now Playing",
+      description: `Playing ${playlist.title}`,
+    });
   };
 
   const PlaylistsContent = () => (
@@ -101,6 +99,7 @@ export default function Playlists() {
       </div>
       {isPlayerVisible && currentPlaylist && (
         <MusicPlayer 
+          key={currentPlaylist.id}
           playlist={currentPlaylist} 
           onClose={() => {
             setIsPlayerVisible(false);
