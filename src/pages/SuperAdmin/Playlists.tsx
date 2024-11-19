@@ -36,6 +36,13 @@ const playlists = [
     assignedTo: ["Manager 1", "Manager 2"],
     status: "Active",
     createdAt: "2024-02-20",
+    description: "Relaxing jazz hop beats",
+    artwork: null,
+    selectedSongs: [],
+    selectedUsers: [],
+    selectedGenres: [],
+    selectedCategories: [],
+    selectedMoods: [],
   },
   {
     id: 2,
@@ -60,11 +67,8 @@ export default function Playlists() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleAssignPlaylist = (playlistId: number, managerId: number) => {
-    toast({
-      title: "Playlist Atandı",
-      description: `Playlist, Yönetici ${managerId}'ye atandı`,
-    });
+  const handleEditPlaylist = (playlist: any) => {
+    navigate("create", { state: { editMode: true, playlistData: playlist } });
   };
 
   const PlaylistsContent = () => (
@@ -134,7 +138,9 @@ export default function Playlists() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditPlaylist(playlist)}>
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600">
                             Delete
                           </DropdownMenuItem>

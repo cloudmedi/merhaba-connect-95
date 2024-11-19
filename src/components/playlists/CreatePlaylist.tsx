@@ -52,8 +52,12 @@ export function CreatePlaylist() {
     selectedMoods: [] as Mood[],
   });
 
+  const isEditMode = location.state?.editMode;
+
   useEffect(() => {
-    if (location.state?.selectedSongs) {
+    if (location.state?.playlistData) {
+      setPlaylistData(location.state.playlistData);
+    } else if (location.state?.selectedSongs) {
       setPlaylistData(prev => ({
         ...prev,
         selectedSongs: location.state.selectedSongs
@@ -61,7 +65,7 @@ export function CreatePlaylist() {
     }
   }, [location.state]);
 
-  const handleCreatePlaylist = () => {
+  const handleCreateOrUpdatePlaylist = () => {
     if (!playlistData.title) {
       toast({
         title: "Error",
@@ -73,7 +77,7 @@ export function CreatePlaylist() {
 
     toast({
       title: "Success",
-      description: "Playlist created successfully",
+      description: isEditMode ? "Playlist updated successfully" : "Playlist created successfully",
     });
     
     navigate("/super-admin/playlists");
@@ -86,7 +90,8 @@ export function CreatePlaylist() {
       <div className="flex-1">
         <PlaylistHeader
           onCancel={() => navigate("/super-admin/playlists")}
-          onCreate={handleCreatePlaylist}
+          onCreate={handleCreateOrUpdatePlaylist}
+          isEditMode={isEditMode}
         />
 
         <PlaylistTabs
