@@ -7,6 +7,7 @@ import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { GenreChangeDialog } from "./components/GenreChangeDialog";
+import { AddGenreDialog } from "./components/AddGenreDialog";
 import { useMusicActions } from "./hooks/useMusicActions";
 
 interface Song {
@@ -36,10 +37,14 @@ export function MusicContent() {
   const {
     isGenreDialogOpen,
     setIsGenreDialogOpen,
+    isAddGenreDialogOpen,
+    setIsAddGenreDialogOpen,
     handleAddPlaylist,
     handleChangeMood,
     handleGenreChange,
-    handleGenreConfirm
+    handleAddGenre,
+    handleGenreConfirm,
+    handleAddGenreConfirm
   } = useMusicActions(songs, setSongs);
 
   const formatDuration = (seconds: number): string => {
@@ -185,7 +190,7 @@ export function MusicContent() {
             selectedCount={selectedSongs.length}
             onCreatePlaylist={handleCreatePlaylist}
             onDeleteSelected={handleDeleteSelected}
-            onAddGenre={() => handleGenreChange(selectedSongs)}
+            onAddGenre={() => handleAddGenre(selectedSongs)}
             onChangeGenre={() => handleGenreChange(selectedSongs)}
             onAddPlaylist={handleAddPlaylist}
             onChangePlaylist={handleAddPlaylist}
@@ -221,6 +226,12 @@ export function MusicContent() {
         isOpen={isGenreDialogOpen}
         onClose={() => setIsGenreDialogOpen(false)}
         onConfirm={(genreId) => handleGenreConfirm(genreId, selectedSongs)}
+      />
+
+      <AddGenreDialog
+        isOpen={isAddGenreDialogOpen}
+        onClose={() => setIsAddGenreDialogOpen(false)}
+        onConfirm={(genreIds) => handleAddGenreConfirm(genreIds, selectedSongs)}
       />
     </div>
   );

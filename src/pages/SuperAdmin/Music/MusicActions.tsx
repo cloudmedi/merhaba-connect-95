@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { PlaySquare, Trash2, MoreHorizontal } from "lucide-react";
+import { PlaySquare, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

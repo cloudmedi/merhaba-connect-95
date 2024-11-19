@@ -17,6 +17,7 @@ interface Song {
 export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.SetStateAction<Song[]>>) => {
   const { toast } = useToast();
   const [isGenreDialogOpen, setIsGenreDialogOpen] = useState(false);
+  const [isAddGenreDialogOpen, setIsAddGenreDialogOpen] = useState(false);
 
   const handleAddPlaylist = () => {
     toast({
@@ -44,16 +45,32 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     setIsGenreDialogOpen(true);
   };
 
-  const handleGenreConfirm = (genreId: number, selectedSongs: Song[]) => {
-    const genreMap: Record<number, string> = {
-      1: "Rock",
-      2: "Pop",
-      3: "Jazz",
-      4: "Classical",
-      5: "Hip Hop",
-      6: "Electronic",
-    };
+  const handleAddGenre = (selectedSongs: Song[]) => {
+    if (selectedSongs.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select songs to add genres",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAddGenreDialogOpen(true);
+  };
 
+  const genreMap: Record<number, string> = {
+    1: "Rock",
+    2: "Pop",
+    3: "Jazz",
+    4: "Classical",
+    5: "Hip Hop",
+    6: "Electronic",
+    7: "R&B",
+    8: "Country",
+    9: "Blues",
+    10: "Folk",
+  };
+
+  const handleGenreConfirm = (genreId: number, selectedSongs: Song[]) => {
     setSongs(prev => 
       prev.map(song => 
         selectedSongs.some(s => s.id === song.id)
@@ -70,12 +87,35 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     });
   };
 
+  const handleAddGenreConfirm = (genreIds: number[], selectedSongs: Song[]) => {
+    setSongs(prev => 
+      prev.map(song => {
+        if (selectedSongs.some(s => s.id === song.id)) {
+          const newGenres = [...new Set([...song.genres, ...genreIds.map(id => genreMap[id])])];
+          return { ...song, genres: newGenres };
+        }
+        return song;
+      })
+    );
+    
+    setIsAddGenreDialogOpen(false);
+    
+    toast({
+      title: "Success",
+      description: `Genres added to ${selectedSongs.length} songs`,
+    });
+  };
+
   return {
     isGenreDialogOpen,
     setIsGenreDialogOpen,
+    isAddGenreDialogOpen,
+    setIsAddGenreDialogOpen,
     handleAddPlaylist,
     handleChangeMood,
     handleGenreChange,
-    handleGenreConfirm
+    handleAddGenre,
+    handleGenreConfirm,
+    handleAddGenreConfirm
   };
 };
