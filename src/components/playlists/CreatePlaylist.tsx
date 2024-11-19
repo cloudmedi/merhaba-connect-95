@@ -7,6 +7,7 @@ import { PlaylistForm } from "./PlaylistForm";
 import { SongsTab } from "./SongsTab";
 import { UsersTab } from "./UsersTab";
 import { GenresTab } from "./GenresTab";
+import { CategoriesTab } from "./CategoriesTab";
 import { useNavigate } from "react-router-dom";
 
 interface Song {
@@ -28,6 +29,12 @@ interface Genre {
   name: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+}
+
 export function CreatePlaylist() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,6 +45,7 @@ export function CreatePlaylist() {
     selectedSongs: [] as Song[],
     selectedUsers: [] as User[],
     selectedGenres: [] as Genre[],
+    selectedCategories: [] as Category[],
   });
 
   const handleCreatePlaylist = () => {
@@ -63,6 +71,15 @@ export function CreatePlaylist() {
       toast({
         title: "Error",
         description: "Please select at least one genre",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playlistData.selectedCategories.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one category",
         variant: "destructive",
       });
       return;
@@ -159,10 +176,18 @@ export function CreatePlaylist() {
             />
           </TabsContent>
 
-          <TabsContent value="categories">
-            <div className="p-4 text-center text-gray-500">
-              Category selection coming soon
-            </div>
+          <TabsContent value="categories" className="mt-4">
+            <CategoriesTab
+              selectedCategories={playlistData.selectedCategories}
+              onSelectCategory={(category) => setPlaylistData(prev => ({
+                ...prev,
+                selectedCategories: [...prev.selectedCategories, category],
+              }))}
+              onUnselectCategory={(categoryId) => setPlaylistData(prev => ({
+                ...prev,
+                selectedCategories: prev.selectedCategories.filter(c => c.id !== categoryId),
+              }))}
+            />
           </TabsContent>
 
           <TabsContent value="moods">
