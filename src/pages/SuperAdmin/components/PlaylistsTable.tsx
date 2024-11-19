@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreVertical, Play } from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import { TrackArtwork } from "@/components/music/TrackArtwork";
 import {
   Table,
   TableBody,
@@ -42,23 +43,11 @@ export function PlaylistsTable({ playlists, onPlay, onEdit }: PlaylistsTableProp
               <TableRow key={playlist.id} className="hover:bg-gray-50/50">
                 <TableCell>
                   <div className="flex items-center gap-4">
-                    <div className="relative group">
-                      <img
-                        src={playlist.artwork}
-                        alt={playlist.title}
-                        className="w-12 h-12 rounded-lg object-cover transition-opacity group-hover:opacity-75"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
-                          onClick={() => onPlay(playlist)}
-                        >
-                          <Play className="w-4 h-4 text-white" />
-                        </Button>
-                      </div>
-                    </div>
+                    <TrackArtwork
+                      artwork={playlist.artwork}
+                      title={playlist.title}
+                      onPlay={() => onPlay(playlist)}
+                    />
                     <span className="font-medium text-gray-900">{playlist.title}</span>
                   </div>
                 </TableCell>
