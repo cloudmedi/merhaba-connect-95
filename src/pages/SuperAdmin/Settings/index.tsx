@@ -10,6 +10,7 @@ import { SecuritySettings } from "./components/SecuritySettings";
 import { NotificationSettings } from "./components/NotificationSettings";
 import { ApiKeys } from "./components/ApiKeys";
 import { SystemLogs } from "./components/SystemLogs";
+import { BackupSettings } from "./components/BackupSettings";
 
 export default function Settings() {
   return (
@@ -32,6 +33,7 @@ export default function Settings() {
             <Route path="notifications" element={<NotificationSettings />} />
             <Route path="api-keys" element={<ApiKeys />} />
             <Route path="logs" element={<SystemLogs />} />
+            <Route path="backup" element={<BackupSettings />} />
           </Routes>
         </div>
       </div>
