@@ -3,19 +3,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivePlaylistsReport } from "./components/ActivePlaylistsReport";
 import { PlaylistHistoryReport } from "./components/PlaylistHistoryReport";
 import { ManagerActivityReport } from "./components/ManagerActivityReport";
+import { SystemHealthReport } from "./components/SystemHealthReport";
 
 export default function Reports() {
   return (
     <DashboardLayout
-      title="Reports"
-      description="View store playlists and manager activity reports"
+      title="System Reports"
+      description="Detailed system health, player status, and activity reports"
     >
-      <Tabs defaultValue="active-playlists" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="system-health" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-4">
+          <TabsTrigger value="system-health">System Health</TabsTrigger>
           <TabsTrigger value="active-playlists">Active Playlists</TabsTrigger>
           <TabsTrigger value="playlist-history">Playlist History</TabsTrigger>
           <TabsTrigger value="manager-activity">Manager Activity</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="system-health">
+          <SystemHealthReport />
+        </TabsContent>
 
         <TabsContent value="active-playlists">
           <ActivePlaylistsReport />
