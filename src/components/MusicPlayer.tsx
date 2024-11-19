@@ -22,7 +22,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   }, [playlist?.title]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
         <div className="flex items-center space-x-4">
           <img
