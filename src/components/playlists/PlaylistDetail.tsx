@@ -115,7 +115,8 @@ export function PlaylistDetail() {
         <MusicPlayer
           playlist={{
             title: playlist.title,
-            artwork: playlist.artwork
+            artwork: playlist.artwork,
+            songs: playlist.songs
           }}
           onClose={() => setIsPlaying(false)}
         />
