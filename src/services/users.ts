@@ -117,7 +117,7 @@ export const userService = {
       .from('users')
       .update({ isActive })
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
     
     if (error) throw error;

@@ -5,6 +5,8 @@ import { User } from "@/types/auth";
 import { toast } from "sonner";
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
+import { userService } from "@/services/users";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface UserActionsProps {
   user: User;
@@ -12,6 +14,18 @@ interface UserActionsProps {
 
 export function UserActions({ user }: UserActionsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: () => userService.toggleUserStatus(user.id, !user.isActive),
+    onSuccess: () => {
+      toast.success(`Kullanıcı ${user.isActive ? 'pasif' : 'aktif'} duruma getirildi`);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      toast.error("Kullanıcı durumu güncellenirken hata oluştu: " + error);
+    },
+  });
 
   const handleViewUser = () => {
     toast.info("View user details coming soon");
@@ -22,7 +36,7 @@ export function UserActions({ user }: UserActionsProps) {
   };
 
   const handleToggleBlock = () => {
-    toast.info(`User ${user.isActive ? 'blocked' : 'unblocked'} coming soon`);
+    toggleStatusMutation.mutate();
   };
 
   const handleNavigateToManager = () => {
@@ -93,8 +107,9 @@ export function UserActions({ user }: UserActionsProps) {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
+              className={`h-8 w-8 ${toggleStatusMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'text-gray-500 hover:text-[#9b87f5]'}`}
               onClick={handleToggleBlock}
+              disabled={toggleStatusMutation.isPending}
             >
               <Lock className="h-4 w-4" />
             </Button>
