@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipForward, SkipBack, Volume2, X } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, X } from "lucide-react";
 
 interface MusicPlayerProps {
   playlist: {
@@ -20,6 +20,8 @@ interface MusicPlayerProps {
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState([75]);
+  const [isMuted, setIsMuted] = useState(false);
+  const [previousVolume, setPreviousVolume] = useState([75]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const progressInterval = useRef<number>();
@@ -76,6 +78,25 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
     setProgress(value[0]);
   };
 
+  const handleVolumeToggle = () => {
+    if (isMuted) {
+      setVolume(previousVolume);
+      setIsMuted(false);
+    } else {
+      setPreviousVolume(volume);
+      setVolume([0]);
+      setIsMuted(true);
+    }
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    setVolume(value);
+    setIsMuted(value[0] === 0);
+    if (value[0] > 0) {
+      setPreviousVolume(value);
+    }
+  };
+
   const currentSong = playlist.songs?.[currentSongIndex];
 
   return (
@@ -86,7 +107,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
           onValueChange={handleProgressChange}
           max={100}
           step={0.1}
-          className="h-0.5 cursor-pointer"
+          className="h-1.5 cursor-pointer"
         />
         
         <div className="flex items-center justify-between">
@@ -136,10 +157,21 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
 
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Volume2 className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleVolumeToggle}
+                className="h-8 w-8"
+              >
+                {isMuted || volume[0] === 0 ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </Button>
               <Slider
                 value={volume}
-                onValueChange={setVolume}
+                onValueChange={handleVolumeChange}
                 max={100}
                 step={1}
                 className="w-32"
