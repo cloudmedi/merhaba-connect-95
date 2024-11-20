@@ -1,14 +1,14 @@
 import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function Settings() {
+export default function Performance() {
   return (
     <ManagerLayout
-      title="Settings"
-      description="Manage system settings"
+      title="Performance"
+      description="View system performance metrics"
     >
       <div className="space-y-6">
         <div className="rounded-lg bg-gray-100 p-8 text-center text-gray-500">
-          Settings management coming soon
+          Performance metrics coming soon
         </div>
       </div>
     </ManagerLayout>

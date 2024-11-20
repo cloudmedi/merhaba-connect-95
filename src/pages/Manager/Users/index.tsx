@@ -1,14 +1,14 @@
 import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function Settings() {
+export default function Users() {
   return (
     <ManagerLayout
-      title="Settings"
-      description="Manage system settings"
+      title="Users"
+      description="Manage system users"
     >
       <div className="space-y-6">
         <div className="rounded-lg bg-gray-100 p-8 text-center text-gray-500">
-          Settings management coming soon
+          Users management coming soon
         </div>
       </div>
     </ManagerLayout>
