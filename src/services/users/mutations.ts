@@ -4,6 +4,17 @@ import { toast } from "sonner";
 
 export const createUser = async (userData: CreateUserData) => {
   try {
+    // First check if user already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', userData.email)
+      .single();
+
+    if (existingUser) {
+      throw new Error('A user with this email already exists');
+    }
+
     // Create company first
     const { data: company, error: companyError } = await supabase
       .from('companies')
