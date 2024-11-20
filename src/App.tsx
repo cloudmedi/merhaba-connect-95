@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import SuperAdmin from "./pages/SuperAdmin";
-import Player from "./pages/Player";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import Manager from "./pages/Manager";
 
@@ -27,9 +26,6 @@ export default function App() {
             
             {/* Manager Routes */}
             <Route path="/manager/*" element={<Manager />} />
-            
-            {/* Player Routes */}
-            <Route path="/player/*" element={<Player />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
