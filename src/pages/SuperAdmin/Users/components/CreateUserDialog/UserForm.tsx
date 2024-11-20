@@ -22,8 +22,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    // Since our FormValues type now matches CreateUserData, we can safely pass it
-    onSubmit(values as CreateUserData);
+    onSubmit(values);
   };
 
   return (
