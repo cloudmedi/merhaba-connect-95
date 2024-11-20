@@ -1,33 +1,31 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  Users,
+  LayoutGrid,
   Music,
+  Megaphone,
+  Calendar,
   GitBranch,
-  Heart,
-  Radio,
-  Bell,
-  Activity,
+  Monitor,
   BarChart2,
+  Bell,
   Settings,
   Menu,
   ChevronLeft,
+  Radio,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/manager" },
-  { icon: Users, label: "Users", href: "/manager/users" },
-  { icon: Music, label: "Music", href: "/manager/music" },
-  { icon: GitBranch, label: "Genres", href: "/manager/genres" },
-  { icon: GitBranch, label: "Categories", href: "/manager/categories" },
-  { icon: Heart, label: "Moods", href: "/manager/moods" },
-  { icon: Radio, label: "Playlists", href: "/manager/playlists" },
-  { icon: Bell, label: "Notifications", href: "/manager/notifications" },
-  { icon: Activity, label: "Performance", href: "/manager/performance" },
+  { icon: LayoutGrid, label: "Dashboard", href: "/manager" },
+  { icon: Music, label: "Media Library", href: "/manager/media" },
+  { icon: Megaphone, label: "Announcements", href: "/manager/announcements" },
+  { icon: Calendar, label: "Schedule", href: "/manager/schedule" },
+  { icon: GitBranch, label: "Branches", href: "/manager/branches" },
+  { icon: Monitor, label: "Devices", href: "/manager/devices" },
   { icon: BarChart2, label: "Reports", href: "/manager/reports" },
+  { icon: Bell, label: "Activities", href: "/manager/activities" },
   { icon: Settings, label: "Settings", href: "/manager/settings" },
 ];
 
@@ -49,7 +47,7 @@ export function ManagerNav() {
 
       <nav
         className={cn(
-          "min-h-screen bg-[#1A1F2C] text-white transition-all duration-300 relative",
+          "min-h-screen bg-white border-r border-gray-200 text-gray-700 transition-all duration-300 relative",
           isCollapsed ? "w-20" : "w-64",
           "fixed md:relative",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
@@ -63,21 +61,21 @@ export function ManagerNav() {
               isCollapsed && "justify-center"
             )}
           >
-            <Radio className="h-8 w-8 text-[#FFD700]" />
+            <Radio className="h-8 w-8 text-blue-600" />
             {!isCollapsed && (
               <h1 className="text-xl font-semibold tracking-tight">
-                Merhaba Music
+                Cloud Media
               </h1>
             )}
           </div>
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute right-[-12px] top-8 bg-[#1A1F2C] p-1.5 rounded-full hover:bg-[#2C3444] transition-colors shadow-lg hidden md:block"
+            className="absolute right-[-12px] top-8 bg-white border border-gray-200 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm hidden md:block"
           >
             <ChevronLeft
               className={cn(
-                "h-4 w-4 transition-transform text-[#FFD700]",
+                "h-4 w-4 transition-transform text-gray-600",
                 isCollapsed && "rotate-180"
               )}
             />
@@ -96,13 +94,13 @@ export function ManagerNav() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                     isActive
-                      ? "bg-[#2C3444] text-white"
-                      : "text-gray-400 hover:text-white hover:bg-[#2C3444]",
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-blue-50",
                     isCollapsed && "justify-center px-2"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5", isActive && "text-white")} />
+                  <Icon className={cn("h-5 w-5", isActive && "text-blue-600")} />
                   {!isCollapsed && item.label}
                 </Link>
               );
