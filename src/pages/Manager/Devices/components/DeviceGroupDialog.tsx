@@ -80,13 +80,13 @@ export function DeviceGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Cihaz Grubu Oluştur</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 overflow-hidden">
-          <div className="space-y-2">
+        <div className="flex flex-col flex-grow overflow-hidden space-y-4">
+          <div>
             <label className="text-sm font-medium">Grup Adı</label>
             <Input
               placeholder="Grup adı girin"
@@ -95,7 +95,7 @@ export function DeviceGroupDialog({
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <label className="text-sm font-medium">Açıklama</label>
             <Textarea
               placeholder="Grup açıklaması girin"
@@ -104,44 +104,46 @@ export function DeviceGroupDialog({
             />
           </div>
 
-          <div className="space-y-2 flex-1 overflow-hidden">
-            <label className="text-sm font-medium">
+          <div className="flex-grow flex flex-col min-h-0">
+            <label className="text-sm font-medium mb-2">
               Cihazlar ({selectedDevices.length} seçili)
             </label>
-            <div className="relative">
+            <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Cihaz ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 mb-2"
+                className="pl-10"
               />
             </div>
-            <ScrollArea className="flex-1 h-[300px] border rounded-md">
-              <div className="p-4 space-y-2">
-                {filteredDevices.map((device) => (
-                  <div 
-                    key={device.id} 
-                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
-                    onClick={() => toggleDevice(device.id)}
-                  >
-                    <Checkbox
-                      checked={selectedDevices.includes(device.id)}
-                      onCheckedChange={() => toggleDevice(device.id)}
-                    />
-                    <div>
-                      <p className="font-medium">{device.branchName}</p>
-                      <p className="text-sm text-gray-500">{device.location}</p>
+            <div className="flex-grow min-h-0 border rounded-md">
+              <ScrollArea className="h-full">
+                <div className="p-4 space-y-2">
+                  {filteredDevices.map((device) => (
+                    <div 
+                      key={device.id} 
+                      className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                      onClick={() => toggleDevice(device.id)}
+                    >
+                      <Checkbox
+                        checked={selectedDevices.includes(device.id)}
+                        onCheckedChange={() => toggleDevice(device.id)}
+                      />
+                      <div>
+                        <p className="font-medium">{device.branchName}</p>
+                        <p className="text-sm text-gray-500">{device.location}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {filteredDevices.length === 0 && (
-                  <div className="text-center text-gray-500 py-4">
-                    Sonuç bulunamadı
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+                  ))}
+                  {filteredDevices.length === 0 && (
+                    <div className="text-center text-gray-500 py-4">
+                      Sonuç bulunamadı
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
         </div>
 
