@@ -1,8 +1,9 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./formSchema";
+import { Crown, Clock } from "lucide-react";
 
 interface LicenseInfoProps {
   form: UseFormReturn<FormValues>;
@@ -10,7 +11,7 @@ interface LicenseInfoProps {
 
 export function LicenseInfo({ form }: LicenseInfoProps) {
   return (
-    <>
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="license.type"
@@ -24,10 +25,19 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="trial">Trial</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="trial" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>Trial</span>
+                </SelectItem>
+                <SelectItem value="premium" className="flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  <span>Premium</span>
+                </SelectItem>
               </SelectContent>
             </Select>
+            <FormDescription>
+              Trial licenses are valid for 30 days, Premium licenses can be customized
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -43,6 +53,7 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
+              <FormDescription>License activation date</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -57,6 +68,7 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
+              <FormDescription>License expiration date</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -77,10 +89,11 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
                 onChange={e => field.onChange(parseInt(e.target.value))}
               />
             </FormControl>
+            <FormDescription>Number of concurrent users allowed</FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 }

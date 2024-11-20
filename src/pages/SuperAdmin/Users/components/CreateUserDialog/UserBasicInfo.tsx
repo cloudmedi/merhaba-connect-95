@@ -1,4 +1,4 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./formSchema";
@@ -9,7 +9,7 @@ interface UserBasicInfoProps {
 
 export function UserBasicInfo({ form }: UserBasicInfoProps) {
   return (
-    <>
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="firstName"
@@ -19,6 +19,7 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
             <FormControl>
               <Input placeholder="Enter first name" {...field} />
             </FormControl>
+            <FormDescription>Enter the user's first name as it appears on official documents</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -33,6 +34,7 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
             <FormControl>
               <Input placeholder="Enter last name" {...field} />
             </FormControl>
+            <FormDescription>Enter the user's last name as it appears on official documents</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -45,8 +47,13 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="Enter email" {...field} />
+              <Input 
+                type="email" 
+                placeholder="Enter business email" 
+                {...field} 
+              />
             </FormControl>
+            <FormDescription>This email will be used for login and communications</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -61,10 +68,11 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
             <FormControl>
               <Input placeholder="Enter company name" {...field} />
             </FormControl>
+            <FormDescription>Enter the full registered company name</FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 }
