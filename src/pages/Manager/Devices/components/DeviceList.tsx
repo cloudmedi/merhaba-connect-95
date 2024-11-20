@@ -5,9 +5,8 @@ import { DeviceRow } from "./DeviceRow";
 import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
-import { DeviceGrouping } from "./DeviceGrouping";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
-import { useToast } from "@/components/ui/use-toast";
+import { DeviceGroupManagement, DeviceGroup } from "./DeviceGroupManagement";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -35,19 +34,13 @@ const generateMockDevices = (count: number) => {
 const mockDevices = generateMockDevices(500);
 
 export function DeviceList() {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [deviceGroups, setDeviceGroups] = useState<Array<{
-    id: string;
-    name: string;
-    deviceIds: string[];
-    description?: string;
-  }>>([]);
+  const [deviceGroups, setDeviceGroups] = useState<DeviceGroup[]>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
@@ -91,34 +84,8 @@ export function DeviceList() {
     }));
   };
 
-  const handleCreateGroup = (group: { id: string; name: string; deviceIds: string[]; description?: string }) => {
+  const handleCreateGroup = (group: DeviceGroup) => {
     setDeviceGroups(prev => [...prev, group]);
-    toast({
-      title: "Group Created",
-      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
-    });
-  };
-
-  const handleBulkPower = () => {
-    toast({
-      title: "Success",
-      description: `Power command sent to ${selectedDevices.length} devices`,
-    });
-  };
-
-  const handleBulkReset = () => {
-    toast({
-      title: "Success",
-      description: `Reset command sent to ${selectedDevices.length} devices`,
-    });
-  };
-
-  const handleBulkDelete = () => {
-    toast({
-      title: "Success",
-      description: `${selectedDevices.length} devices deleted`,
-    });
-    setSelectedDevices([]);
   };
 
   return (
@@ -130,7 +97,7 @@ export function DeviceList() {
         lastUpdated={new Date().toLocaleString()}
       />
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <DeviceFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -145,8 +112,8 @@ export function DeviceList() {
           columns={[]}
         />
         
-        <div className="flex items-center gap-2">
-          <DeviceGrouping
+        <div className="flex items-center gap-2 flex-wrap">
+          <DeviceGroupManagement
             selectedDevices={selectedDevices}
             onCreateGroup={handleCreateGroup}
           />
