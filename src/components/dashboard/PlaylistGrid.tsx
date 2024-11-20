@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { type Playlist } from "@/data/playlists";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { Play, ArrowRight } from "lucide-react";
+import { Play } from "lucide-react";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useNavigate } from "react-router-dom";
 
@@ -29,7 +29,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   }
 
   const handlePlaylistClick = (playlist: Playlist) => {
-    navigate(`/playlists/${playlist.id}`);
+    navigate(`/player/playlists/${playlist.id}`);
   };
 
   return (
@@ -42,17 +42,19 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         {playlists.map((playlist) => (
           <div 
             key={playlist.id} 
-            className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => handlePlaylistClick(playlist)}
+            className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
           >
-            <div className="aspect-square relative overflow-hidden">
+            <div 
+              className="aspect-square relative overflow-hidden cursor-pointer"
+              onClick={() => handlePlaylistClick(playlist)}
+            >
               <img
                 src={playlist.artwork}
                 alt={playlist.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -61,11 +63,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
                     className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform transition-all"
                   >
                     <Play className="w-6 h-6" />
-                  </button>
-                  <button
-                    className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform transition-all"
-                  >
-                    <ArrowRight className="w-6 h-6" />
                   </button>
                 </div>
               </div>
