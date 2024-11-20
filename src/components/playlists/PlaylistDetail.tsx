@@ -2,10 +2,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
+import { PushPlaylistDialog } from "./PushPlaylistDialog";
 
 export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
 
   // Mock data - replace with actual data fetching
   const playlist = {
@@ -54,7 +57,10 @@ export function PlaylistDetail() {
               <span>•</span>
               <span>{playlist.duration}</span>
             </div>
-            <Button className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8">
+            <Button 
+              onClick={() => setIsPushDialogOpen(true)}
+              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
+            >
               Push
             </Button>
           </div>
@@ -86,6 +92,12 @@ export function PlaylistDetail() {
           </ScrollArea>
         </div>
       </div>
+
+      <PushPlaylistDialog
+        isOpen={isPushDialogOpen}
+        onClose={() => setIsPushDialogOpen(false)}
+        playlistTitle={playlist.title}
+      />
     </div>
   );
 }
