@@ -8,11 +8,11 @@ export const formSchema = z.object({
   role: z.enum(["admin", "manager"]),
   license: z.object({
     type: z.enum(["trial", "premium"]),
-    startDate: z.string().min(1),
-    endDate: z.string().min(1),
+    startDate: z.string(),
+    endDate: z.string(),
     quantity: z.number().min(1)
   })
-});
+}).required();
 
 export type FormValues = z.infer<typeof formSchema>;
 

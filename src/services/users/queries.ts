@@ -9,7 +9,21 @@ export const getUsersQuery = async (filters?: {
 }) => {
   let query = supabase
     .from('profiles')
-    .select('*, companies(id, name, subscription_status, subscription_ends_at)')
+    .select(`
+      *,
+      companies!profiles_company_id_fkey (
+        id,
+        name,
+        subscription_status,
+        subscription_ends_at
+      ),
+      licenses!licenses_user_id_fkey (
+        type,
+        start_date,
+        end_date,
+        quantity
+      )
+    `)
     .eq('role', 'manager');
 
   if (filters?.search) {
@@ -31,8 +45,9 @@ export const getUsersQuery = async (filters?: {
     const futureDate = thirtyDaysFromNow.toISOString();
 
     if (filters.expiry === 'this-month') {
-      query = query.gte('companies.subscription_ends_at', today)
-                  .lte('companies.subscription_ends_at', futureDate);
+      query = query
+        .gte('companies.subscription_ends_at', today)
+        .lte('companies.subscription_ends_at', futureDate);
     } else if (filters.expiry === 'expired') {
       query = query.lt('companies.subscription_ends_at', today);
     }
