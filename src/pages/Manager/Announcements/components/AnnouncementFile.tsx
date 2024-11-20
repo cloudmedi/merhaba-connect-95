@@ -13,7 +13,7 @@ interface AnnouncementFileProps {
     scheduledTime: string;
   };
   onRemove: () => void;
-  onUpdateSettings: (settings: Partial<typeof AnnouncementFileProps.file>) => void;
+  onUpdateSettings: (settings: any) => void;
 }
 
 export function AnnouncementFile({ file, onRemove, onUpdateSettings }: AnnouncementFileProps) {
@@ -43,7 +43,7 @@ export function AnnouncementFile({ file, onRemove, onUpdateSettings }: Announcem
           songInterval: file.songInterval,
           scheduledTime: file.scheduledTime
         }}
-        onUpdate={(settings) => onUpdateSettings({ ...file, ...settings })}
+        onUpdate={onUpdateSettings}
       />
     </div>
   );

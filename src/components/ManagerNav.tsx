@@ -7,7 +7,8 @@ import {
   Calendar,
   Bell,
   Settings,
-  Building2
+  Building2,
+  Volume2
 } from "lucide-react";
 
 const navItems = [
@@ -48,7 +49,7 @@ const navItems = [
   },
   {
     title: "Announcements",
-    icon: Bell,
+    icon: Volume2,
     href: "/manager/announcements",
   },
   {
