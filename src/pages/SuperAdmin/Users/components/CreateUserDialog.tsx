@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,6 +15,13 @@ const formSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  role: z.enum(["admin", "manager"]),
+  license: z.object({
+    type: z.enum(["trial", "premium"]),
+    startDate: z.string(),
+    endDate: z.string(),
+    quantity: z.number().min(1)
+  })
 });
 
 interface CreateUserDialogProps {
@@ -30,19 +38,19 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       lastName: "",
       email: "",
       companyName: "",
+      role: "manager",
+      license: {
+        type: "trial",
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        quantity: 1
+      }
     },
   });
 
   const createUserMutation = useMutation({
     mutationFn: (values: z.infer<typeof formSchema>) => {
-      return userService.createUser({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        role: 'manager',
-        isActive: true,
-        companyId: values.companyName, // Normalde company tablosundan seçilecek
-      });
+      return userService.createUser(values);
     },
     onSuccess: () => {
       toast.success("User created successfully");
@@ -63,7 +71,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create Manager User</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Create User</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -118,6 +126,99 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter company name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="license.type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>License Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select license type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="trial">Trial</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="license.startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="license.endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="license.quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Licenses</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="1"
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
