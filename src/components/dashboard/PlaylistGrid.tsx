@@ -2,15 +2,29 @@ import { useState } from "react";
 import { type Playlist } from "@/data/playlists";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Play } from "lucide-react";
+import CatalogLoader from "@/components/loaders/CatalogLoader";
 
 interface PlaylistGridProps {
   title: string;
   description?: string;
   playlists: Playlist[];
+  isLoading?: boolean;
 }
 
-export function PlaylistGrid({ title, description, playlists }: PlaylistGridProps) {
+export function PlaylistGrid({ title, description, playlists, isLoading = false }: PlaylistGridProps) {
   const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          {description && <p className="text-sm text-gray-500">{description}</p>}
+        </div>
+        <CatalogLoader foregroundColor="#e5e7eb" backgroundColor="#f3f4f6" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

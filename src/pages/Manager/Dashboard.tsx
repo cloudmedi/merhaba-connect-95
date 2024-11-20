@@ -3,8 +3,26 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { businessHoursPlaylists, eveningPlaylists, weekendPlaylists } from "@/data/playlists";
+import { useQuery } from "@tanstack/react-query";
+
+// Simulate API call
+const fetchPlaylists = () => 
+  new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        businessHours: businessHoursPlaylists,
+        evening: eveningPlaylists,
+        weekend: weekendPlaylists
+      });
+    }, 1500); // Simulate loading delay
+  });
 
 export default function ManagerDashboard() {
+  const { data: playlists, isLoading } = useQuery({
+    queryKey: ['playlists'],
+    queryFn: () => fetchPlaylists(),
+  });
+
   return (
     <div className="p-6 space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -26,19 +44,22 @@ export default function ManagerDashboard() {
         <PlaylistGrid 
           title="Business Hours" 
           description="Active during business hours"
-          playlists={businessHoursPlaylists}
+          playlists={playlists?.businessHours || []}
+          isLoading={isLoading}
         />
         
         <PlaylistGrid 
           title="Evening Ambience" 
           description="Perfect for evening atmosphere"
-          playlists={eveningPlaylists}
+          playlists={playlists?.evening || []}
+          isLoading={isLoading}
         />
         
         <PlaylistGrid 
           title="Weekend Selection" 
           description="Special weekend playlists"
-          playlists={weekendPlaylists}
+          playlists={playlists?.weekend || []}
+          isLoading={isLoading}
         />
       </div>
     </div>
