@@ -25,7 +25,8 @@ export function PlaylistDetail() {
       id: i + 1,
       title: `Song Title ${i + 1}`,
       artist: `Artist ${Math.floor(i / 8) + 1}`,
-      duration: "3:30"
+      duration: "3:30",
+      file_url: `/mock-songs/song-${i + 1}.mp3` // Added mock file_url
     }))
   };
 
