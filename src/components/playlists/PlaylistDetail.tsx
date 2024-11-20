@@ -1,14 +1,16 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Music2 } from "lucide-react";
+import { ArrowLeft, Music2, Play } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Mock data - replace with actual data fetching
   const playlist = {
@@ -41,11 +43,21 @@ export function PlaylistDetail() {
         </div>
 
         <div className="flex items-start gap-8">
-          <img 
-            src={playlist.artwork} 
-            alt={playlist.title}
-            className="w-32 h-32 rounded-lg object-cover"
-          />
+          <div className="relative group">
+            <img 
+              src={playlist.artwork} 
+              alt={playlist.title}
+              className="w-32 h-32 rounded-lg object-cover"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
+              <button
+                onClick={() => setIsPlaying(true)}
+                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+              >
+                <Play className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
           <div className="space-y-3">
             <h1 className="text-2xl font-semibold text-gray-900">{playlist.title}</h1>
             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -98,6 +110,16 @@ export function PlaylistDetail() {
         onClose={() => setIsPushDialogOpen(false)}
         playlistTitle={playlist.title}
       />
+
+      {isPlaying && (
+        <MusicPlayer
+          playlist={{
+            title: playlist.title,
+            artwork: playlist.artwork
+          }}
+          onClose={() => setIsPlaying(false)}
+        />
+      )}
     </div>
   );
 }
