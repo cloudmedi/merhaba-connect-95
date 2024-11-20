@@ -22,9 +22,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (data: FormValues) => {
-    // Since we've validated the form data matches CreateUserData shape,
-    // we can safely cast it
-    onSubmit(data as unknown as CreateUserData);
+    onSubmit(data);
   };
 
   return (
