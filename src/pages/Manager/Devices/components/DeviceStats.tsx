@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Signal, AlertTriangle, Clock } from "lucide-react";
+import { Signal, AlertTriangle, Clock, Activity } from "lucide-react";
 
 interface DeviceStatsProps {
   totalDevices: number;

@@ -6,6 +6,7 @@ import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
+import { useToast } from "@/hooks/use-toast";
 
 // Keep the existing mock data generation
 const generateMockDevices = (count: number) => {
@@ -33,6 +34,7 @@ const generateMockDevices = (count: number) => {
 const mockDevices = generateMockDevices(500);
 
 export function DeviceList() {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -172,3 +174,4 @@ export function DeviceList() {
     </div>
   );
 }
+
