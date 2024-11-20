@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Music2, PlayCircle } from "lucide-react";
+import { Music2, PlayCircle, Building2 } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ export default function Index() {
         <p className="text-muted-foreground">Professional music management solution for businesses</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-3 gap-6 mt-8">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -28,6 +28,25 @@ export default function Index() {
               onClick={() => navigate("/super-admin")}
             >
               Access Super Admin
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Manager Panel
+            </CardTitle>
+            <CardDescription>Branch management dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              className="w-full"
+              variant="secondary"
+              onClick={() => navigate("/manager")}
+            >
+              Access Manager Panel
             </Button>
           </CardContent>
         </Card>

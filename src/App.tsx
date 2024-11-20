@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import SuperAdmin from "./pages/SuperAdmin";
 import Player from "./pages/Player";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import Manager from "./pages/Manager";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,9 @@ export default function App() {
             {/* Super Admin Routes */}
             <Route path="/super-admin/login" element={<SuperAdminLogin />} />
             <Route path="/super-admin/*" element={<SuperAdmin />} />
+            
+            {/* Manager Routes */}
+            <Route path="/manager/*" element={<Manager />} />
             
             {/* Player Routes */}
             <Route path="/player/*" element={<Player />} />
