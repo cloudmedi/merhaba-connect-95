@@ -15,7 +15,7 @@ export const formSchema = z.object({
   })
 }) as z.ZodType<CreateUserData>;
 
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = CreateUserData;
 
 export const defaultValues: FormValues = {
   firstName: "",
