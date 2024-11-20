@@ -1,13 +1,19 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export function UsersFilters() {
-  const [role, setRole] = useState("all");
-  const [status, setStatus] = useState("all");
-  const [license, setLicense] = useState("all");
-  const [expiry, setExpiry] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const updateFilter = (key: string, value: string) => {
+    if (value) {
+      searchParams.set(key, value);
+    } else {
+      searchParams.delete(key);
+    }
+    setSearchParams(searchParams);
+  };
 
   return (
     <div className="flex gap-4 items-center">
@@ -16,10 +22,15 @@ export function UsersFilters() {
         <Input 
           placeholder="Search users by name, email or company..." 
           className="pl-10"
+          value={searchParams.get('search') || ''}
+          onChange={(e) => updateFilter('search', e.target.value)}
         />
       </div>
       
-      <Select value={role} onValueChange={setRole}>
+      <Select 
+        value={searchParams.get('role') || 'all'} 
+        onValueChange={(value) => updateFilter('role', value)}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Roles" />
         </SelectTrigger>
@@ -30,7 +41,10 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select value={status} onValueChange={setStatus}>
+      <Select 
+        value={searchParams.get('status') || 'all'}
+        onValueChange={(value) => updateFilter('status', value)}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
@@ -41,7 +55,10 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select value={license} onValueChange={setLicense}>
+      <Select 
+        value={searchParams.get('license') || 'all'}
+        onValueChange={(value) => updateFilter('license', value)}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Licenses" />
         </SelectTrigger>
@@ -52,7 +69,10 @@ export function UsersFilters() {
         </SelectContent>
       </Select>
 
-      <Select value={expiry} onValueChange={setExpiry}>
+      <Select 
+        value={searchParams.get('expiry') || 'all'}
+        onValueChange={(value) => updateFilter('expiry', value)}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Expiry Dates" />
         </SelectTrigger>

@@ -36,39 +36,61 @@ export const userService = {
     return data;
   },
 
-  async getUsers() {
-    const { data, error } = await supabase
+  async getUsers(filters?: {
+    search?: string;
+    role?: string;
+    status?: string;
+    license?: string;
+    expiry?: string;
+  }) {
+    let query = supabase
       .from('users')
-      .select('*')
-      .order('createdAt', { ascending: false });
+      .select(`
+        *,
+        companies (
+          id,
+          name,
+          subscriptionStatus,
+          subscriptionEndsAt
+        )
+      `)
+      .eq('role', 'manager');
 
+    if (filters?.search) {
+      query = query.or(`
+        firstName.ilike.%${filters.search}%,
+        lastName.ilike.%${filters.search}%,
+        email.ilike.%${filters.search}%,
+        companies.name.ilike.%${filters.search}%
+      `);
+    }
+
+    if (filters?.status) {
+      query = query.eq('isActive', filters.status === 'active');
+    }
+
+    if (filters?.license) {
+      query = query.eq('companies.subscriptionStatus', filters.license);
+    }
+
+    if (filters?.expiry) {
+      const today = new Date();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+      switch (filters.expiry) {
+        case 'this-month':
+          query = query.and(`subscriptionEndsAt.gte.${today.toISOString()},subscriptionEndsAt.lte.${thirtyDaysFromNow.toISOString()}`);
+          break;
+        case 'expired':
+          query = query.lt('subscriptionEndsAt', today.toISOString());
+          break;
+      }
+    }
+
+    const { data, error } = await query;
+    
     if (error) throw error;
     return data;
-  },
-
-  async updateUser(id: string, updates: Partial<User>) {
-    const { data, error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  async deleteUser(id: string) {
-    // Önce auth user'ı sil
-    const { error: authError } = await supabase.auth.admin.deleteUser(id);
-    if (authError) throw authError;
-
-    // Sonra users tablosundan sil
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
   }
 };
