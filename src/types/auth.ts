@@ -22,7 +22,7 @@ export interface User {
   };
 }
 
-export interface CreateUserData {
+export type CreateUserData = {
   email: string;
   firstName: string;
   lastName: string;
