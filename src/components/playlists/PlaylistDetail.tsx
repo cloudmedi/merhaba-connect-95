@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 
 export function PlaylistDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   // Mock data - replace with actual data fetching
   const playlist = {
@@ -29,13 +30,13 @@ export function PlaylistDetail() {
       <div className="min-h-screen bg-white rounded-lg shadow-sm">
         <div className="p-6 space-y-8">
           <div className="flex items-center gap-2 text-gray-500">
-            <Link 
-              to="/manager/playlists" 
+            <button 
+              onClick={() => navigate("/manager/playlists")}
               className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Media Library
-            </Link>
+            </button>
           </div>
 
           <div className="flex items-start gap-8">
