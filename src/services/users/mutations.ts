@@ -1,15 +1,19 @@
 import { supabase } from '../supabase';
 import { CreateUserData, User } from '@/types/auth';
-import { companyService } from '../company';
-import { licenseService } from '../license';
 
 export const createUser = async (userData: CreateUserData) => {
   // 1. Create company
-  const company = await companyService.createCompany({
-    name: userData.companyName,
-    subscriptionStatus: userData.license.type,
-    subscriptionEndsAt: userData.license.endDate,
-  });
+  const { data: company, error: companyError } = await supabase
+    .from('companies')
+    .insert({
+      name: userData.companyName,
+      subscription_status: userData.license.type,
+      subscription_ends_at: new Date(userData.license.endDate).toISOString()
+    })
+    .select()
+    .single();
+
+  if (companyError) throw companyError;
 
   // 2. Create Supabase auth user
   const { data: authUser, error: authError } = await supabase.auth.signUp({
@@ -19,47 +23,44 @@ export const createUser = async (userData: CreateUserData) => {
       data: {
         firstName: userData.firstName,
         lastName: userData.lastName,
-        role: userData.role,
-        companyId: company.id,
+        role: userData.role
       }
     }
   });
 
   if (authError) throw authError;
 
-  // 3. Create user record
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .insert({
-      id: authUser.user!.id,
-      email: userData.email,
-      first_name: userData.firstName,
-      last_name: userData.lastName,
-      role: userData.role,
-      company_id: company.id,
-      company_name: userData.companyName,
-      is_active: true
+  // 3. Create profile record
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      company_id: company.id
     })
+    .eq('id', authUser.user!.id)
     .select()
     .single();
 
-  if (userError) throw userError;
+  if (profileError) throw profileError;
 
   // 4. Create license
-  await licenseService.createLicense({
-    userId: user.id,
-    type: userData.license.type,
-    startDate: userData.license.startDate,
-    endDate: userData.license.endDate,
-    quantity: userData.license.quantity
-  });
+  const { error: licenseError } = await supabase
+    .from('licenses')
+    .insert({
+      user_id: profile.id,
+      type: userData.license.type,
+      start_date: new Date(userData.license.startDate).toISOString(),
+      end_date: new Date(userData.license.endDate).toISOString(),
+      quantity: userData.license.quantity
+    });
 
-  return user;
+  if (licenseError) throw licenseError;
+
+  return profile;
 };
 
 export const updateUser = async (id: string, updates: Partial<User>) => {
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .update(updates)
     .eq('id', id)
     .select()
@@ -70,20 +71,16 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
 };
 
 export const deleteUser = async (id: string) => {
-  const { error } = await supabase
-    .from('users')
-    .delete()
-    .eq('id', id);
-  
+  const { error } = await supabase.auth.admin.deleteUser(id);
   if (error) throw error;
 };
 
 export const toggleUserStatus = async (id: string, isActive: boolean) => {
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .update({ is_active: isActive })
     .eq('id', id)
-    .select('*')
+    .select()
     .single();
   
   if (error) throw error;
@@ -92,12 +89,12 @@ export const toggleUserStatus = async (id: string, isActive: boolean) => {
 
 export const renewLicense = async (userId: string) => {
   const { data, error } = await supabase
-    .from('users')
+    .from('licenses')
     .update({ 
-      license: 'premium',
-      expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      type: 'premium',
+      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     })
-    .eq('id', userId)
+    .eq('user_id', userId)
     .select()
     .single();
   
