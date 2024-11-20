@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CreateUserData } from "@/types/auth";
 
 export const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -12,7 +13,7 @@ export const formSchema = z.object({
     endDate: z.string(),
     quantity: z.number().min(1)
   })
-});
+}) satisfies z.ZodType<CreateUserData>;
 
 export type FormValues = z.infer<typeof formSchema>;
 
