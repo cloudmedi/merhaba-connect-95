@@ -57,7 +57,9 @@ export const getUsersQuery = async (filters?: {
     }
   }
 
-  return query;
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
 };
 
 export const getUserById = async (id: string) => {

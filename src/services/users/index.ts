@@ -9,8 +9,7 @@ export const userService = {
     license?: string;
     expiry?: string;
   }) => {
-    const { data, error } = await getUsersQuery(filters);
-    if (error) throw error;
+    const data = await getUsersQuery(filters);
     return data;
   },
   getUserById,
