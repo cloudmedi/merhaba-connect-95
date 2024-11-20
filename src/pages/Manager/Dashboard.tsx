@@ -53,96 +53,138 @@ const businessHoursPlaylists: Playlist[] = [
     genre: "Electronic",
     mood: "Upbeat",
     artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800"
+  },
+  {
+    id: 7,
+    title: "Morning Motivation",
+    genre: "Pop",
+    mood: "Energetic",
+    artwork: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800"
+  },
+  {
+    id: 8,
+    title: "Work Flow",
+    genre: "Electronic",
+    mood: "Focused",
+    artwork: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"
   }
 ];
 
 const eveningPlaylists: Playlist[] = [
   {
-    id: 7,
+    id: 9,
     title: "Sunset Lounge",
     genre: "Deep House",
     mood: "Relaxed",
     artwork: "https://images.unsplash.com/photo-1504898770365-14faca6a7320?w=800"
   },
   {
-    id: 8,
+    id: 10,
     title: "Evening Jazz",
     genre: "Jazz",
     mood: "Sophisticated",
     artwork: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800"
   },
   {
-    id: 9,
+    id: 11,
     title: "Night Vibes",
     genre: "Electronic",
     mood: "Energetic",
     artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800"
   },
   {
-    id: 10,
+    id: 12,
     title: "Dinner Time",
     genre: "Classical",
     mood: "Elegant",
     artwork: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800"
   },
   {
-    id: 11,
+    id: 13,
     title: "Late Night Mood",
     genre: "Soul",
     mood: "Romantic",
     artwork: "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=800"
   },
   {
-    id: 12,
+    id: 14,
     title: "Closing Hours",
     genre: "Ambient",
     mood: "Calm",
     artwork: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800"
+  },
+  {
+    id: 15,
+    title: "Evening Elegance",
+    genre: "Classical",
+    mood: "Sophisticated",
+    artwork: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=800"
+  },
+  {
+    id: 16,
+    title: "Night Club",
+    genre: "House",
+    mood: "Energetic",
+    artwork: "https://images.unsplash.com/photo-15767442549210-869c28713e42?w=800"
   }
 ];
 
 const weekendPlaylists: Playlist[] = [
   {
-    id: 13,
+    id: 17,
     title: "Weekend Brunch",
     genre: "Pop",
     mood: "Happy",
     artwork: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
   },
   {
-    id: 14,
+    id: 18,
     title: "Saturday Vibes",
     genre: "House",
     mood: "Energetic",
     artwork: "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800"
   },
   {
-    id: 15,
+    id: 19,
     title: "Sunday Chill",
     genre: "Lo-Fi",
     mood: "Relaxed",
     artwork: "https://images.unsplash.com/photo-1515552726023-7125c8d07fb3?w=800"
   },
   {
-    id: 16,
+    id: 20,
     title: "Weekend Party",
     genre: "Dance",
     mood: "Upbeat",
     artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800"
   },
   {
-    id: 17,
+    id: 21,
     title: "Lazy Sunday",
     genre: "Jazz",
     mood: "Calm",
     artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800"
   },
   {
-    id: 18,
+    id: 22,
     title: "Weekend Special",
     genre: "Mix",
     mood: "Dynamic",
     artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800"
+  },
+  {
+    id: 23,
+    title: "Weekend Lounge",
+    genre: "Deep House",
+    mood: "Relaxed",
+    artwork: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800"
+  },
+  {
+    id: 24,
+    title: "Sunday Sessions",
+    genre: "Electronic",
+    mood: "Energetic",
+    artwork: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800"
   }
 ];
 
