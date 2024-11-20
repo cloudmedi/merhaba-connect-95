@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, X } from "lucide-react";
+import { PlayerControls } from "./music/PlayerControls";
+import { VolumeControl } from "./music/VolumeControl";
+import { TrackInfo } from "./music/TrackInfo";
+import { ProgressBar } from "./music/ProgressBar";
 
 interface MusicPlayerProps {
   playlist: {
@@ -30,6 +34,9 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
 
   useEffect(() => {
     if (playlist?.songs?.[currentSongIndex]) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       audioRef.current = new Audio(playlist.songs[currentSongIndex].file_url);
       audioRef.current.volume = volume[0] / 100;
       
@@ -134,85 +141,29 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="flex flex-col max-w-screen-2xl mx-auto space-y-2">
-        <Slider
-          value={[progress]}
-          onValueChange={handleProgressChange}
-          max={100}
-          step={0.1}
-          className="h-1.5 cursor-pointer"
-        />
+        <ProgressBar progress={progress} onProgressChange={handleProgressChange} />
         
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <img
-              src={playlist.artwork || "/placeholder.svg"}
-              alt={playlist.title}
-              className="w-12 h-12 rounded object-cover"
-            />
-            <div>
-              <p className="font-medium text-black">
-                {currentSong?.title || playlist.title}
-              </p>
-              <p className="text-sm text-gray-500">
-                {currentSong?.artist || "Unknown Artist"}
-              </p>
-            </div>
-          </div>
+          <TrackInfo
+            artwork={playlist.artwork}
+            title={currentSong?.title || playlist.title}
+            artist={currentSong?.artist || "Unknown Artist"}
+          />
           
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handlePrevious}
-            >
-              <SkipBack className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="icon"
-              className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
-              onClick={() => setIsPlaying(!isPlaying)}
-            >
-              {isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleNext}
-            >
-              <SkipForward className="h-4 w-4" />
-            </Button>
-          </div>
+          <PlayerControls
+            isPlaying={isPlaying}
+            onPrevious={handlePrevious}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            onNext={handleNext}
+          />
 
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleVolumeToggle}
-                className="h-8 w-8"
-              >
-                {isMuted || volume[0] === 0 ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </Button>
-              <Slider
-                value={volume}
-                onValueChange={handleVolumeChange}
-                max={100}
-                step={1}
-                className="w-32"
-              />
-            </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <VolumeControl
+            volume={volume}
+            isMuted={isMuted}
+            onVolumeToggle={handleVolumeToggle}
+            onVolumeChange={handleVolumeChange}
+            onClose={onClose}
+          />
         </div>
       </div>
     </div>

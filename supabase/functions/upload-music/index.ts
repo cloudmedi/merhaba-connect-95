@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import * as mm from 'https://esm.sh/music-metadata-browser'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,13 +8,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Get the form data from the request
     const formData = await req.formData()
     const file = formData.get('file') as File
 
@@ -30,6 +29,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Extract metadata from the audio file
+    const arrayBuffer = await file.arrayBuffer()
+    const metadata = await mm.parseBlob(new Blob([arrayBuffer], { type: file.type }))
+
+    console.log('Extracted metadata:', metadata)
+
     // Upload to Bunny CDN
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
@@ -41,12 +46,6 @@ serve(async (req) => {
 
     const fileName = `${crypto.randomUUID()}-${file.name}`
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`
-
-    console.log('Uploading to Bunny CDN:', {
-      url: bunnyUrl,
-      fileName,
-      fileType: file.type
-    })
 
     // Upload file to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
@@ -71,17 +70,45 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    console.log('User authenticated:', user.id)
+    // Extract relevant metadata
+    const songData = {
+      title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
+      artist: metadata.common.artist || null,
+      album: metadata.common.album || null,
+      genre: metadata.common.genre || [],
+      duration: Math.round(metadata.format.duration || 0),
+      file_url: bunnyUrl,
+      bunny_id: fileName,
+      artwork_url: null,
+      created_by: user.id
+    }
 
-    // Save file metadata to Supabase
-    const { data: songData, error: insertError } = await supabase
+    // If there's cover art, upload it to storage
+    if (metadata.common.picture && metadata.common.picture.length > 0) {
+      const picture = metadata.common.picture[0]
+      const artworkFileName = `${crypto.randomUUID()}.${picture.format.split('/')[1]}`
+      
+      const { data: artworkData, error: artworkError } = await supabase.storage
+        .from('music')
+        .upload(
+          `artwork/${artworkFileName}`, 
+          new Blob([picture.data], { type: picture.format }),
+          { contentType: picture.format }
+        )
+
+      if (!artworkError && artworkData) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('music')
+          .getPublicUrl(`artwork/${artworkFileName}`)
+        
+        songData.artwork_url = publicUrl
+      }
+    }
+
+    // Save song metadata to Supabase
+    const { data: savedSong, error: insertError } = await supabase
       .from('songs')
-      .insert({
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        file_url: bunnyUrl,
-        bunny_id: fileName,
-        created_by: user.id
-      })
+      .insert(songData)
       .select()
       .single()
 
@@ -92,13 +119,13 @@ serve(async (req) => {
 
     console.log('Successfully uploaded song:', {
       fileName,
-      songData
+      songData: savedSong
     })
 
     return new Response(
       JSON.stringify({ 
         message: 'Upload successful',
-        song: songData
+        song: savedSong
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
