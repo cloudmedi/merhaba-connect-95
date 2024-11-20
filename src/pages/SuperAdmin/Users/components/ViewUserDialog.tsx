@@ -8,6 +8,20 @@ interface ViewUserDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    return format(date, 'dd MMM yyyy');
+  } catch (error) {
+    return 'Invalid date';
+  }
+};
+
 export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,17 +72,13 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
             <div>
               <h4 className="text-sm font-medium text-gray-500">License Start Date</h4>
               <p className="mt-1">
-                {user.license?.startDate 
-                  ? format(new Date(user.license.startDate), 'dd MMM yyyy')
-                  : 'N/A'}
+                {formatDate(user.license?.startDate)}
               </p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">License End Date</h4>
               <p className="mt-1">
-                {user.license?.endDate 
-                  ? format(new Date(user.license.endDate), 'dd MMM yyyy')
-                  : 'N/A'}
+                {formatDate(user.license?.endDate)}
               </p>
             </div>
           </div>
@@ -77,13 +87,13 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
             <div>
               <h4 className="text-sm font-medium text-gray-500">Created At</h4>
               <p className="mt-1">
-                {format(new Date(user.createdAt), 'dd MMM yyyy')}
+                {formatDate(user.createdAt)}
               </p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">Updated At</h4>
               <p className="mt-1">
-                {format(new Date(user.updatedAt), 'dd MMM yyyy')}
+                {formatDate(user.updatedAt)}
               </p>
             </div>
           </div>
