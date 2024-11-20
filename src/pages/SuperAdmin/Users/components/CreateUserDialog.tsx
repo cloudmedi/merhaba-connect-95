@@ -28,26 +28,15 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       role: "manager",
       license: {
         type: "trial",
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
         quantity: 1,
       },
     },
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (values: CreateUserFormValues) => {
-      return userService.createUser({
-        ...values,
-        license: {
-          ...values.license,
-          start_date: values.license.startDate.toISOString(),
-          end_date: values.license.endDate.toISOString(),
-          type: values.license.type,
-          quantity: values.license.quantity,
-        },
-      });
-    },
+    mutationFn: userService.createUser,
     onSuccess: () => {
       toast.success("User created successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });

@@ -8,12 +8,8 @@ export const createUserFormSchema = z.object({
   role: z.enum(["admin", "manager"]),
   license: z.object({
     type: z.enum(["trial", "premium"]),
-    startDate: z.date({
-      required_error: "Please select a start date",
-    }),
-    endDate: z.date({
-      required_error: "Please select an end date",
-    }),
+    start_date: z.string(),
+    end_date: z.string(),
     quantity: z.number().min(1, "Must have at least 1 license"),
   }),
 });

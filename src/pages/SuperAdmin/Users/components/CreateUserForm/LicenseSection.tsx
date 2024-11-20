@@ -53,7 +53,7 @@ export function LicenseSection({ form }: LicenseSectionProps) {
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="license.startDate"
+          name="license.start_date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>License Start Date</FormLabel>
@@ -68,15 +68,15 @@ export function LicenseSection({ form }: LicenseSectionProps) {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) => field.onChange(date?.toISOString())}
                     initialFocus
                   />
                 </PopoverContent>
@@ -88,7 +88,7 @@ export function LicenseSection({ form }: LicenseSectionProps) {
 
         <FormField
           control={form.control}
-          name="license.endDate"
+          name="license.end_date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>License End Date</FormLabel>
@@ -103,15 +103,15 @@ export function LicenseSection({ form }: LicenseSectionProps) {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                      {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) => field.onChange(date?.toISOString())}
                     initialFocus
                   />
                 </PopoverContent>

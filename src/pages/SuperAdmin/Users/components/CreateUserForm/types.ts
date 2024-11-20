@@ -6,8 +6,8 @@ export interface CreateUserFormValues {
   role: "admin" | "manager";
   license: {
     type: "trial" | "premium";
-    startDate: Date;
-    endDate: Date;
+    start_date: string;
+    end_date: string;
     quantity: number;
   };
 }
