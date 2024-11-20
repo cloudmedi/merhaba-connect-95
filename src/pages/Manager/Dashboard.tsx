@@ -31,7 +31,7 @@ export default function ManagerDashboard() {
   });
 
   return (
-    <div className="p-6 md:p-8">
+    <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Assigned Playlists</h1>
