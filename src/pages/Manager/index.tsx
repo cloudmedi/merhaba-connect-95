@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import ManagerDashboard from "./Dashboard";
 import { ManagerNav } from "@/components/ManagerNav";
+import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 
 export default function Manager() {
   return (
@@ -11,6 +12,7 @@ export default function Manager() {
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<ManagerDashboard />} />
+              <Route path="playlists/:id" element={<PlaylistDetail />} />
               {/* Other routes will be added here */}
             </Routes>
           </div>
