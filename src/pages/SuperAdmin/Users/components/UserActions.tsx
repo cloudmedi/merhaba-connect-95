@@ -10,23 +10,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/users";
 import { toast } from "sonner";
+import { User } from "@/types/auth";
 
 interface UserActionsProps {
-  user: {
-    id: string;
-    email: string;
-    firstName: string | null;
-    lastName: string | null;
-    role: string;
-    isActive: boolean;
-    company?: {
-      name: string;
-    };
-    license?: {
-      type: string;
-      endDate: string | null;
-    };
-  };
+  user: User;
 }
 
 export function UserActions({ user }: UserActionsProps) {
@@ -41,12 +28,12 @@ export function UserActions({ user }: UserActionsProps) {
   const deleteUserMutation = useMutation({
     mutationFn: () => userService.deleteUser(user.id),
     onSuccess: () => {
-      toast.success("Kullanıcı başarıyla silindi");
+      toast.success("User deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowDeleteDialog(false);
     },
     onError: (error: Error) => {
-      toast.error("Kullanıcı silinirken bir hata oluştu: " + error.message);
+      toast.error("Failed to delete user: " + error.message);
     },
   });
 
@@ -55,28 +42,28 @@ export function UserActions({ user }: UserActionsProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Menüyü aç</span>
+            <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
-            Görüntüle
+            View
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-            Düzenle
+            Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowRenewDialog(true)}>
-            Lisansı Yenile
+            Renew License
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
-            Geçmiş
+            History
           </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-red-600"
             onClick={() => setShowDeleteDialog(true)}
           >
-            Sil
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -85,9 +72,6 @@ export function UserActions({ user }: UserActionsProps) {
         user={user}
         open={showRenewDialog}
         onOpenChange={setShowRenewDialog}
-        onRenew={() => {
-          // Logic for renewing the license can be implemented here if needed.
-        }}
       />
 
       <ViewUserDialog
@@ -111,18 +95,18 @@ export function UserActions({ user }: UserActionsProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu işlem geri alınamaz. Kullanıcı ve ilişkili tüm veriler kalıcı olarak silinecektir.
+              This action cannot be undone. The user and all associated data will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteUserMutation.mutate()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

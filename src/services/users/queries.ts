@@ -16,6 +16,12 @@ export const getUsersQuery = async (filters?: {
         name,
         subscription_status,
         subscription_ends_at
+      ),
+      licenses (
+        type,
+        start_date,
+        end_date,
+        quantity
       )
     `)
     .eq('role', 'manager');
