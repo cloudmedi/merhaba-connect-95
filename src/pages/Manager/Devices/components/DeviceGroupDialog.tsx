@@ -80,12 +80,12 @@ export function DeviceGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Cihaz Grubu Oluştur</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 flex-1 overflow-hidden">
           <div className="space-y-2">
             <label className="text-sm font-medium">Grup Adı</label>
             <Input
@@ -104,7 +104,7 @@ export function DeviceGroupDialog({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1 overflow-hidden">
             <label className="text-sm font-medium">
               Cihazlar ({selectedDevices.length} seçili)
             </label>
@@ -117,10 +117,14 @@ export function DeviceGroupDialog({
                 className="pl-10 mb-2"
               />
             </div>
-            <ScrollArea className="h-[300px] border rounded-md p-4">
-              <div className="space-y-4">
+            <ScrollArea className="flex-1 h-[300px] border rounded-md">
+              <div className="p-4 space-y-2">
                 {filteredDevices.map((device) => (
-                  <div key={device.id} className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md">
+                  <div 
+                    key={device.id} 
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                    onClick={() => toggleDevice(device.id)}
+                  >
                     <Checkbox
                       checked={selectedDevices.includes(device.id)}
                       onCheckedChange={() => toggleDevice(device.id)}
@@ -141,7 +145,7 @@ export function DeviceGroupDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={() => {
             onOpenChange(false);
             setSearchTerm("");
