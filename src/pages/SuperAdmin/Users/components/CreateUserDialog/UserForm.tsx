@@ -6,7 +6,7 @@ import { CreateUserData } from "@/types/auth";
 import { UserBasicInfo } from "./UserBasicInfo";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { LicenseInfo } from "./LicenseInfo";
-import { formSchema, defaultValues } from "./formSchema";
+import { formSchema, FormValues, defaultValues } from "./formSchema";
 
 interface UserFormProps {
   onSubmit: (data: CreateUserData) => void;
@@ -15,14 +15,18 @@ interface UserFormProps {
 }
 
 export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
-  const form = useForm<CreateUserData>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
 
+  const handleSubmit = (data: FormValues) => {
+    onSubmit(data as CreateUserData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <UserBasicInfo form={form} />
         <UserRoleSelect form={form} />
         <LicenseInfo form={form} />

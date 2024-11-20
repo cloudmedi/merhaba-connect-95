@@ -17,8 +17,11 @@ export const getUsersQuery = (filters?: {
         subscription_status,
         subscription_ends_at
       )
-    `)
-    .eq('role', 'manager');
+    `);
+
+  if (filters?.role) {
+    query = query.eq('role', filters.role);
+  }
 
   if (filters?.search) {
     query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
