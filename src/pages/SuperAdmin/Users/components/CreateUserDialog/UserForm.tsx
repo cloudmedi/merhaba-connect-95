@@ -21,7 +21,15 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    onSubmit(values as CreateUserData);
+    const formData: CreateUserData = {
+      email: values.email,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      companyName: values.companyName,
+      role: values.role,
+      license: values.license
+    };
+    onSubmit(formData);
   };
 
   return (
