@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import SuperAdmin from "./pages/SuperAdmin";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import Manager from "./pages/Manager";
+import { PlaylistDetail } from "./components/playlists/PlaylistDetail";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export default function App() {
             
             {/* Manager Routes */}
             <Route path="/manager/*" element={<Manager />} />
+            <Route path="/manager/playlists/:id" element={<PlaylistDetail />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
