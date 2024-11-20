@@ -6,13 +6,6 @@ import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  duration: string;
-}
-
 export function CreatePlaylist() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,7 +13,7 @@ export function CreatePlaylist() {
     title: "",
     description: "",
     artwork: null as File | null,
-    selectedSongs: [] as Song[],
+    selectedSongs: [],
     selectedUsers: [],
     selectedGenres: [],
     selectedCategories: [],
@@ -76,7 +69,7 @@ export function CreatePlaylist() {
 
       // Add songs to playlist if any selected
       if (playlistData.selectedSongs.length > 0) {
-        const playlistSongs = playlistData.selectedSongs.map((song, index) => ({
+        const playlistSongs = playlistData.selectedSongs.map((song: any, index: number) => ({
           playlist_id: data.id,
           song_id: song.id,
           position: index

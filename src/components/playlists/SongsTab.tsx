@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Music } from "lucide-react";
 
 interface Song {
-  id: string; // Changed from number to string for UUID
+  id: number;
   title: string;
   artist: string;
   duration: string;
@@ -13,16 +13,16 @@ interface Song {
 interface SongsTabProps {
   selectedSongs: Song[];
   onAddSong: (song: Song) => void;
-  onRemoveSong: (songId: string) => void; // Changed from number to string
+  onRemoveSong: (songId: number) => void;
 }
 
 export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock available songs data with UUID-like strings
+  // Mock available songs data
   const availableSongs: Song[] = [
-    { id: "123e4567-e89b-12d3-a456-426614174000", title: "Summer Vibes", artist: "John Doe", duration: "3:45" },
-    { id: "987fcdeb-51a2-43d8-b4c6-987654321000", title: "Chill Beats", artist: "Jane Smith", duration: "4:20" },
+    { id: 1, title: "Summer Vibes", artist: "John Doe", duration: "3:45" },
+    { id: 2, title: "Chill Beats", artist: "Jane Smith", duration: "4:20" },
   ];
 
   return (
