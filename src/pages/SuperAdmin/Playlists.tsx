@@ -10,8 +10,15 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Playlist } from "@/types/api";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
-interface PlaylistResponse extends Omit<Playlist, 'company' | 'profiles'> {
+interface PlaylistResponse {
+  id: string;
+  name: string;
+  description?: string;
+  artwork_url?: string;
+  created_at: string;
+  is_public: boolean;
   company: { name: string } | null;
   profiles: { first_name: string; last_name: string }[] | null;
 }
@@ -37,7 +44,7 @@ export default function Playlists() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as PlaylistResponse[];
+      return data as unknown as PlaylistResponse[];
     }
   });
 
