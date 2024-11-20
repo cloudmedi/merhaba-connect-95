@@ -5,7 +5,11 @@ export interface User {
   lastName: string;
   role: 'super_admin' | 'manager';
   companyId?: string;
+  companyName?: string;
   isActive: boolean;
+  avatar?: string;
+  license?: 'trial' | 'premium';
+  expiryDate?: string;
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;

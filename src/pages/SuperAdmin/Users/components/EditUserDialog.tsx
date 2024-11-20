@@ -50,7 +50,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       onOpenChange(false);
     },
     onError: (error) => {
-      toast.error("Failed to update user: " + error.message);
+      toast.error("Failed to update user: " + error);
     },
   });
 
