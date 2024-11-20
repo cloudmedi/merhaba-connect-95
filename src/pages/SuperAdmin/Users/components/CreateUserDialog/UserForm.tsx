@@ -18,11 +18,16 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
+    mode: "onChange"
   });
 
   const handleSubmit = (values: FormValues) => {
-    const userData = mapFormToCreateUserData(values);
-    onSubmit(userData);
+    try {
+      const userData = mapFormToCreateUserData(values);
+      onSubmit(userData);
+    } catch (error) {
+      console.error("Form validation failed:", error);
+    }
   };
 
   return (
@@ -39,7 +44,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
           <Button 
             type="submit" 
             className="bg-[#9b87f5] hover:bg-[#7E69AB]"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !form.formState.isValid}
           >
             {isSubmitting ? "Creating..." : "Create User"}
           </Button>

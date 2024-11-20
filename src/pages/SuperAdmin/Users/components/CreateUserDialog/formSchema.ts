@@ -2,15 +2,15 @@ import { z } from "zod";
 import { CreateUserData } from "@/types/auth";
 
 export const formSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters").nonempty(),
+  lastName: z.string().min(2, "Last name must be at least 2 characters").nonempty(),
+  email: z.string().email("Invalid email address").nonempty(),
+  companyName: z.string().min(2, "Company name must be at least 2 characters").nonempty(),
   role: z.enum(["admin", "manager"]),
   license: z.object({
     type: z.enum(["trial", "premium"]),
-    startDate: z.string(),
-    endDate: z.string(),
+    startDate: z.string().nonempty(),
+    endDate: z.string().nonempty(),
     quantity: z.number().min(1)
   })
 });
@@ -32,6 +32,10 @@ export const defaultValues: FormValues = {
 };
 
 export const mapFormToCreateUserData = (values: FormValues): CreateUserData => {
+  if (!values.firstName || !values.lastName || !values.email || !values.companyName || !values.role || !values.license) {
+    throw new Error("Missing required fields");
+  }
+
   return {
     firstName: values.firstName,
     lastName: values.lastName,
