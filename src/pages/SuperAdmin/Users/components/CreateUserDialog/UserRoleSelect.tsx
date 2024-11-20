@@ -15,11 +15,11 @@ export function UserRoleSelect({ form }: UserRoleSelectProps) {
       name="role"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Role</FormLabel>
+          <FormLabel>Rol</FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select role" />
+                <SelectValue placeholder="Rol seçiniz" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -29,12 +29,12 @@ export function UserRoleSelect({ form }: UserRoleSelectProps) {
               </SelectItem>
               <SelectItem value="manager" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span>Manager</span>
+                <span>Yönetici</span>
               </SelectItem>
             </SelectContent>
           </Select>
           <FormDescription>
-            Admins have full access while managers have limited permissions
+            Admin tüm yetkilere sahipken, yöneticilerin sınırlı yetkileri vardır
           </FormDescription>
           <FormMessage />
         </FormItem>

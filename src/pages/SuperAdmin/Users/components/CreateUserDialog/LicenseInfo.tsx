@@ -17,17 +17,17 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
         name="license.type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>License Type</FormLabel>
+            <FormLabel>Lisans Tipi</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select license type" />
+                  <SelectValue placeholder="Lisans tipi seçiniz" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
                 <SelectItem value="trial" className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>Trial</span>
+                  <span>Deneme</span>
                 </SelectItem>
                 <SelectItem value="premium" className="flex items-center gap-2">
                   <Crown className="h-4 w-4" />
@@ -36,7 +36,7 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
               </SelectContent>
             </Select>
             <FormDescription>
-              Trial licenses are valid for 30 days, Premium licenses can be customized
+              Deneme sürümü 30 gün geçerlidir, Premium lisans özelleştirilebilir
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -49,11 +49,11 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
           name="license.startDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Start Date</FormLabel>
+              <FormLabel>Başlangıç Tarihi</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
-              <FormDescription>License activation date</FormDescription>
+              <FormDescription>Lisansın aktif olacağı tarih</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -64,11 +64,11 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
           name="license.endDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>End Date</FormLabel>
+              <FormLabel>Bitiş Tarihi</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
-              <FormDescription>License expiration date</FormDescription>
+              <FormDescription>Lisansın sona ereceği tarih</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -80,7 +80,7 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
         name="license.quantity"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Number of Licenses</FormLabel>
+            <FormLabel>Lisans Sayısı</FormLabel>
             <FormControl>
               <Input 
                 type="number" 
@@ -89,7 +89,7 @@ export function LicenseInfo({ form }: LicenseInfoProps) {
                 onChange={e => field.onChange(parseInt(e.target.value))}
               />
             </FormControl>
-            <FormDescription>Number of concurrent users allowed</FormDescription>
+            <FormDescription>Aynı anda kullanılabilecek lisans sayısı</FormDescription>
             <FormMessage />
           </FormItem>
         )}

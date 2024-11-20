@@ -2,7 +2,6 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateUserData } from "@/types/auth";
 import { UserBasicInfo } from "./UserBasicInfo";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { LicenseInfo } from "./LicenseInfo";
@@ -10,7 +9,7 @@ import { formSchema, FormValues, defaultValues } from "./formSchema";
 import { Loader2 } from "lucide-react";
 
 interface UserFormProps {
-  onSubmit: (data: CreateUserData) => void;
+  onSubmit: (data: FormValues) => void;
   isSubmitting: boolean;
   onCancel: () => void;
 }
@@ -22,27 +21,9 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
     mode: "onChange"
   });
 
-  const handleSubmit = (data: FormValues) => {
-    const userData: CreateUserData = {
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      companyName: data.companyName,
-      role: data.role,
-      license: {
-        type: data.license.type,
-        startDate: data.license.startDate,
-        endDate: data.license.endDate,
-        quantity: data.license.quantity
-      }
-    };
-    
-    onSubmit(userData);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-6">
           <UserBasicInfo form={form} />
           <UserRoleSelect form={form} />
@@ -51,7 +32,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={onCancel} type="button">
-            Cancel
+            İptal
           </Button>
           <Button 
             type="submit" 
@@ -61,10 +42,10 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                Oluşturuluyor...
               </>
             ) : (
-              'Create User'
+              'Kullanıcı Oluştur'
             )}
           </Button>
         </div>

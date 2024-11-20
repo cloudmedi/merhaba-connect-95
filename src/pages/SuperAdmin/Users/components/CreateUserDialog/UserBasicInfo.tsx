@@ -2,6 +2,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "./formSchema";
+import { User, Mail, Building2 } from "lucide-react";
 
 interface UserBasicInfoProps {
   form: UseFormReturn<FormValues>;
@@ -10,35 +11,43 @@ interface UserBasicInfoProps {
 export function UserBasicInfo({ form }: UserBasicInfoProps) {
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="firstName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>First Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter first name" {...field} />
-            </FormControl>
-            <FormDescription>Enter the user's first name as it appears on official documents</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="firstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ad</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <User className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input placeholder="Adınız" className="pl-8" {...field} />
+                </div>
+              </FormControl>
+              <FormDescription>Kullanıcının adını giriniz</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <FormField
-        control={form.control}
-        name="lastName"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Last Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter last name" {...field} />
-            </FormControl>
-            <FormDescription>Enter the user's last name as it appears on official documents</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+        <FormField
+          control={form.control}
+          name="lastName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Soyad</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <User className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input placeholder="Soyadınız" className="pl-8" {...field} />
+                </div>
+              </FormControl>
+              <FormDescription>Kullanıcının soyadını giriniz</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}
@@ -47,13 +56,12 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input 
-                type="email" 
-                placeholder="Enter business email" 
-                {...field} 
-              />
+              <div className="relative">
+                <Mail className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                <Input type="email" placeholder="ornek@sirket.com" className="pl-8" {...field} />
+              </div>
             </FormControl>
-            <FormDescription>This email will be used for login and communications</FormDescription>
+            <FormDescription>Bu email adresi giriş için kullanılacaktır</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -64,11 +72,14 @@ export function UserBasicInfo({ form }: UserBasicInfoProps) {
         name="companyName"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Company Name</FormLabel>
+            <FormLabel>Şirket Adı</FormLabel>
             <FormControl>
-              <Input placeholder="Enter company name" {...field} />
+              <div className="relative">
+                <Building2 className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                <Input placeholder="Şirket adını giriniz" className="pl-8" {...field} />
+              </div>
             </FormControl>
-            <FormDescription>Enter the full registered company name</FormDescription>
+            <FormDescription>Resmi şirket adını giriniz</FormDescription>
             <FormMessage />
           </FormItem>
         )}
