@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { useAudioPlayer } from "./music/useAudioPlayer";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, X } from "lucide-react";
 import { PlayerControls } from "./music/PlayerControls";
 import { VolumeControl } from "./music/VolumeControl";
 import { TrackInfo } from "./music/TrackInfo";
 import { ProgressBar } from "./music/ProgressBar";
-import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface MusicPlayerProps {
   playlist: {
@@ -22,19 +24,107 @@ interface MusicPlayerProps {
 }
 
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
+  const { toast } = useToast();
+  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState([75]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  
-  const {
-    isPlaying,
-    setIsPlaying,
-    progress,
-    setProgress,
-    audioRef,
-    isLoading
-  } = useAudioPlayer(playlist.songs, currentSongIndex);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressInterval = useRef<number>();
+
+  useEffect(() => {
+    if (playlist?.songs?.[currentSongIndex]) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      
+      const audio = new Audio();
+      audio.src = playlist.songs[currentSongIndex].file_url;
+      audio.volume = volume[0] / 100;
+      
+      audio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        toast({
+          title: "Error",
+          description: "Failed to load audio file. Please try again.",
+          variant: "destructive"
+        });
+      });
+
+      audio.addEventListener('loadeddata', () => {
+        if (isPlaying) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Error playing audio:", error);
+              toast({
+                title: "Error",
+                description: "Failed to play audio. Please try again.",
+                variant: "destructive"
+              });
+            });
+          }
+        }
+      });
+      
+      audioRef.current = audio;
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, [playlist?.songs, currentSongIndex]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume[0] / 100;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (isPlaying && audioRef.current) {
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Error playing audio:", error);
+          toast({
+            title: "Error",
+            description: "Failed to play audio. Please try again.",
+            variant: "destructive"
+          });
+        });
+      }
+      
+      progressInterval.current = window.setInterval(() => {
+        if (audioRef.current) {
+          const currentProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+          setProgress(currentProgress);
+
+          if (audioRef.current.ended) {
+            handleNext();
+          }
+        }
+      }, 100);
+    } else if (audioRef.current) {
+      audioRef.current.pause();
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    }
+
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, [isPlaying]);
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
@@ -71,10 +161,6 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
       setVolume([0]);
       setIsMuted(true);
     }
-    
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? previousVolume[0] / 100 : 0;
-    }
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -82,10 +168,6 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
     setIsMuted(value[0] === 0);
     if (value[0] > 0) {
       setPreviousVolume(value);
-    }
-    
-    if (audioRef.current) {
-      audioRef.current.volume = value[0] / 100;
     }
   };
 
@@ -103,18 +185,12 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
             artist={currentSong?.artist || "Unknown Artist"}
           />
           
-          <div className="flex items-center gap-4">
-            {isLoading ? (
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            ) : (
-              <PlayerControls
-                isPlaying={isPlaying}
-                onPrevious={handlePrevious}
-                onPlayPause={() => setIsPlaying(!isPlaying)}
-                onNext={handleNext}
-              />
-            )}
-          </div>
+          <PlayerControls
+            isPlaying={isPlaying}
+            onPrevious={handlePrevious}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            onNext={handleNext}
+          />
 
           <VolumeControl
             volume={volume}
