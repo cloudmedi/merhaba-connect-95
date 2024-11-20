@@ -21,13 +21,9 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
     mode: "onChange"
   });
 
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <UserBasicInfo form={form} />
         <UserRoleSelect form={form} />
         <LicenseInfo form={form} />
