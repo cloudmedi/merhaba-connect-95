@@ -9,21 +9,17 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressInterval = useRef<number>();
 
   useEffect(() => {
     if (!audioUrl) return;
 
-    const audio = new Audio();
-    audio.preload = "metadata";
-    
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+
     const handleCanPlay = () => {
       setIsLoading(false);
       setDuration(audio.duration);
       setError(null);
-      if (isPlaying) {
-        audio.play().catch(handlePlayError);
-      }
     };
 
     const handleLoadStart = () => {
@@ -33,24 +29,12 @@ export function useAudioPlayer(audioUrl: string | undefined) {
 
     const handleError = () => {
       setIsLoading(false);
-      const errorMessage = "Ses dosyası yüklenemedi. Lütfen başka bir format veya tarayıcı deneyin.";
-      setError(errorMessage);
+      setError("Ses dosyası yüklenemedi");
+      setIsPlaying(false);
       toast({
         variant: "destructive",
         title: "Hata",
-        description: errorMessage,
-      });
-      setIsPlaying(false);
-    };
-
-    const handlePlayError = (error: Error) => {
-      console.error("Oynatma hatası:", error);
-      setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
-      setIsPlaying(false);
-      toast({
-        variant: "destructive",
-        title: "Oynatma Hatası",
-        description: "Ses oynatılamıyor. Lütfen tekrar deneyin.",
+        description: "Ses dosyası yüklenemedi",
       });
     };
 
@@ -70,9 +54,6 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
-    audio.src = audioUrl;
-    audioRef.current = audio;
-
     return () => {
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('loadstart', handleLoadStart);
@@ -80,39 +61,21 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
-      audio.src = '';
       setIsPlaying(false);
       setProgress(0);
       setError(null);
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-      }
     };
-  }, [audioUrl, toast, isPlaying]);
+  }, [audioUrl, toast]);
 
-  const togglePlay = async () => {
+  const togglePlay = () => {
     if (!audioRef.current) return;
 
-    try {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          await playPromise;
-        }
-      }
-      setIsPlaying(!isPlaying);
-    } catch (error) {
-      console.error("Oynatma hatası:", error);
-      setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
-      setIsPlaying(false);
-      toast({
-        variant: "destructive",
-        title: "Oynatma Hatası",
-        description: "Ses oynatılamıyor. Lütfen tekrar deneyin.",
-      });
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
     }
+    setIsPlaying(!isPlaying);
   };
 
   const seek = (value: number) => {
