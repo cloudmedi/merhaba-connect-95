@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerReports() {
+export default function Reports() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Reports"
       description="View system reports"
     >
       <div>Reports Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }

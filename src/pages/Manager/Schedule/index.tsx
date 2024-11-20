@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerSchedule() {
+export default function Schedule() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Schedule"
       description="Manage your schedules"
     >
       <div>Schedule Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }

@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerAnnouncements() {
+export default function Announcements() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Announcements"
       description="Manage system announcements"
     >
       <div>Announcements Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }

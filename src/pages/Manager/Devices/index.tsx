@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerDevices() {
+export default function Devices() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Devices"
       description="Manage connected devices"
     >
       <div>Devices Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }

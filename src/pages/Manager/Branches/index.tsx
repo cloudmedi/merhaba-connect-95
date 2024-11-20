@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerBranches() {
+export default function Branches() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Branches"
       description="Manage your branches"
     >
       <div>Branches Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }

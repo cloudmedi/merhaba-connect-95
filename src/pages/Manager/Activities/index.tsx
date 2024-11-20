@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
-export default function ManagerActivities() {
+export default function Activities() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Activities"
       description="Monitor system activities"
     >
       <div>Activities Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }
