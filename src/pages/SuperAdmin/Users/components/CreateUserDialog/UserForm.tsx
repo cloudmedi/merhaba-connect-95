@@ -27,7 +27,12 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
       lastName: values.lastName,
       companyName: values.companyName,
       role: values.role,
-      license: values.license
+      license: {
+        type: values.license.type,
+        startDate: values.license.startDate,
+        endDate: values.license.endDate,
+        quantity: values.license.quantity
+      }
     };
     onSubmit(formData);
   };

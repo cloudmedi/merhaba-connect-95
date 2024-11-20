@@ -12,7 +12,7 @@ export const formSchema = z.object({
     endDate: z.string(),
     quantity: z.number().min(1)
   })
-}).required();
+});
 
 export type FormValues = z.infer<typeof formSchema>;
 
