@@ -4,6 +4,50 @@ import { companyService } from './company';
 import { licenseService } from './license';
 
 export const userService = {
+  async getUsers(filters?: {
+    search?: string;
+    role?: string;
+    status?: string;
+    license?: string;
+    expiry?: string;
+  }) {
+    let query = supabase
+      .from('users')
+      .select('*, company:company_id(id, name, subscription_status, subscription_ends_at)')
+      .eq('role', 'manager');
+
+    if (filters?.search) {
+      query = query.or(`firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+    }
+
+    if (filters?.status) {
+      query = query.eq('is_active', filters.status === 'active');
+    }
+
+    if (filters?.license) {
+      query = query.eq('company.subscription_status', filters.license);
+    }
+
+    if (filters?.expiry) {
+      const today = new Date().toISOString();
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const futureDate = thirtyDaysFromNow.toISOString();
+
+      if (filters.expiry === 'this-month') {
+        query = query.gte('company.subscription_ends_at', today)
+                    .lte('company.subscription_ends_at', futureDate);
+      } else if (filters.expiry === 'expired') {
+        query = query.lt('company.subscription_ends_at', today);
+      }
+    }
+
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    return data;
+  },
+
   async createUser(userData: CreateUserData) {
     // 1. Create company
     const company = await companyService.createCompany({
@@ -34,12 +78,12 @@ export const userService = {
       .insert({
         id: authUser.user!.id,
         email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
         role: userData.role,
-        companyId: company.id,
-        companyName: userData.companyName,
-        isActive: true
+        company_id: company.id,
+        company_name: userData.companyName,
+        is_active: true
       })
       .select()
       .single();
@@ -56,61 +100,6 @@ export const userService = {
     });
 
     return user;
-  },
-
-  async getUsers(filters?: {
-    search?: string;
-    role?: string;
-    status?: string;
-    license?: string;
-    expiry?: string;
-  }) {
-    let query = supabase
-      .from('users')
-      .select(`
-        *,
-        companies (
-          id,
-          name,
-          subscriptionStatus,
-          subscriptionEndsAt
-        )
-      `)
-      .eq('role', 'manager');
-
-    if (filters?.search) {
-      query = query.or(`firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%,companies.name.ilike.%${filters.search}%`);
-    }
-
-    if (filters?.status) {
-      query = query.eq('isActive', filters.status === 'active');
-    }
-
-    if (filters?.license) {
-      query = query.eq('companies.subscriptionStatus', filters.license);
-    }
-
-    if (filters?.expiry) {
-      const today = new Date().toISOString();
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      const futureDate = thirtyDaysFromNow.toISOString();
-
-      switch (filters.expiry) {
-        case 'this-month':
-          query = query.gte('companies.subscriptionEndsAt', today)
-                      .lte('companies.subscriptionEndsAt', futureDate);
-          break;
-        case 'expired':
-          query = query.lt('companies.subscriptionEndsAt', today);
-          break;
-      }
-    }
-
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    return data;
   },
 
   async updateUser(id: string, updates: Partial<User>) {
