@@ -36,20 +36,30 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
     if (playlist?.songs?.[currentSongIndex]) {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = '';
       }
+      
       audioRef.current = new Audio(playlist.songs[currentSongIndex].file_url);
       audioRef.current.volume = volume[0] / 100;
       
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+      });
+      
       if (isPlaying) {
-        audioRef.current.play().catch(error => {
-          console.error("Error playing audio:", error);
-        });
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Error playing audio:", error);
+          });
+        }
       }
     }
 
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = '';
         audioRef.current = null;
       }
     };
@@ -63,9 +73,12 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
 
   useEffect(() => {
     if (isPlaying && audioRef.current) {
-      audioRef.current.play().catch(error => {
-        console.error("Error playing audio:", error);
-      });
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Error playing audio:", error);
+        });
+      }
       
       progressInterval.current = window.setInterval(() => {
         if (audioRef.current) {
