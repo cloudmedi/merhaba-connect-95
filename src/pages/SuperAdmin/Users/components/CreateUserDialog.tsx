@@ -1,13 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { userService } from "@/services/users";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+const formSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+});
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -15,128 +22,122 @@ interface CreateUserDialogProps {
 }
 
 export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const queryClient = useQueryClient();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      companyName: "",
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: (values: z.infer<typeof formSchema>) => {
+      return userService.createUser({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        role: 'manager',
+        isActive: true,
+        companyId: values.companyName, // Normalde company tablosundan seçilecek
+      });
+    },
+    onSuccess: () => {
+      toast.success("User created successfully");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      form.reset();
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error("Failed to create user: " + error.message);
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    createUserMutation.mutate(values);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create User</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Create Manager User</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Name</label>
-            <Input placeholder="Enter name" />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
-            <Input type="email" placeholder="Enter email" />
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Company</label>
-            <Input placeholder="Enter company name" />
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter first name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Role</label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter last name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-4">
-            <h3 className="font-semibold">License Information</h3>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">License Type</label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select license type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="trial">Trial License (14 days)</SelectItem>
-                  <SelectItem value="premium">Premium License</SelectItem>
-                </SelectContent>
-              </Select>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter company name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-[#9b87f5] hover:bg-[#7E69AB]"
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending ? "Creating..." : "Create User"}
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Start Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "dd.MM.yyyy") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">End Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "dd.MM.yyyy") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Number of Licenses</label>
-              <Input type="number" min="1" placeholder="Enter number of licenses" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-[#9b87f5] hover:bg-[#7E69AB]">
-            Save
-          </Button>
-        </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
