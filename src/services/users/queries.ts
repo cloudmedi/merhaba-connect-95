@@ -9,7 +9,15 @@ export const getUsersQuery = (filters?: {
 }) => {
   let query = supabase
     .from('users')
-    .select('*, company:company_id(*)');
+    .select(`
+      *,
+      company:company_id (
+        id,
+        name,
+        subscription_status,
+        subscription_ends_at
+      )
+    `);
 
   if (filters?.role) {
     query = query.eq('role', filters.role);

@@ -15,6 +15,20 @@ export interface User {
   updatedAt: string;
 }
 
+export interface CreateUserData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  role: 'admin' | 'manager';
+  license: {
+    type: 'trial' | 'premium';
+    startDate: string;
+    endDate: string;
+    quantity: number;
+  };
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -109,16 +123,3 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface CreateUserData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  role: 'admin' | 'manager';
-  license: {
-    type: 'trial' | 'premium';
-    startDate: string;
-    endDate: string;
-    quantity: number;
-  };
-}
