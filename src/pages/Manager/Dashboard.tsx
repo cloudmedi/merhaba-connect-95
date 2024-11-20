@@ -5,9 +5,15 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { businessHoursPlaylists, eveningPlaylists, weekendPlaylists } from "@/data/playlists";
 import { useQuery } from "@tanstack/react-query";
 
+interface PlaylistsData {
+  businessHours: typeof businessHoursPlaylists;
+  evening: typeof eveningPlaylists;
+  weekend: typeof weekendPlaylists;
+}
+
 // Simulate API call
-const fetchPlaylists = () => 
-  new Promise((resolve) => {
+const fetchPlaylists = async (): Promise<PlaylistsData> => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         businessHours: businessHoursPlaylists,
@@ -16,11 +22,12 @@ const fetchPlaylists = () =>
       });
     }, 1500); // Simulate loading delay
   });
+};
 
 export default function ManagerDashboard() {
-  const { data: playlists, isLoading } = useQuery({
+  const { data: playlists, isLoading } = useQuery<PlaylistsData>({
     queryKey: ['playlists'],
-    queryFn: () => fetchPlaylists(),
+    queryFn: fetchPlaylists,
   });
 
   return (
