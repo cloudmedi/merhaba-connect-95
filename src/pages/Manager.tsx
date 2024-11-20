@@ -1,25 +1,29 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./Manager/Dashboard";
-import Media from "./Manager/Media";
-import Announcements from "./Manager/Announcements";
-import Schedule from "./Manager/Schedule";
-import Branches from "./Manager/Branches";
-import Devices from "./Manager/Devices";
+import Users from "./Manager/Users";
+import Music from "./Manager/Music";
+import Genres from "./Manager/Genres";
+import Categories from "./Manager/Categories";
+import Moods from "./Manager/Moods";
+import Playlists from "./Manager/Playlists";
+import Notifications from "./Manager/Notifications";
+import Performance from "./Manager/Performance";
 import Reports from "./Manager/Reports";
-import Activities from "./Manager/Activities";
 import Settings from "./Manager/Settings";
 
 export default function Manager() {
   return (
     <Routes>
       <Route index element={<Dashboard />} />
-      <Route path="media/*" element={<Media />} />
-      <Route path="announcements/*" element={<Announcements />} />
-      <Route path="schedule/*" element={<Schedule />} />
-      <Route path="branches/*" element={<Branches />} />
-      <Route path="devices/*" element={<Devices />} />
+      <Route path="users/*" element={<Users />} />
+      <Route path="music/*" element={<Music />} />
+      <Route path="genres/*" element={<Genres />} />
+      <Route path="categories/*" element={<Categories />} />
+      <Route path="moods/*" element={<Moods />} />
+      <Route path="playlists/*" element={<Playlists />} />
+      <Route path="notifications/*" element={<Notifications />} />
+      <Route path="performance/*" element={<Performance />} />
       <Route path="reports/*" element={<Reports />} />
-      <Route path="activities/*" element={<Activities />} />
       <Route path="settings/*" element={<Settings />} />
       <Route path="*" element={<Navigate to="/manager" replace />} />
     </Routes>

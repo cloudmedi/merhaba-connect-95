@@ -1,14 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  LayoutGrid,
-  Music2,
+  LayoutDashboard,
+  Users,
+  Music,
+  GitBranch,
+  Heart,
   Radio,
-  Calendar,
-  Building2,
-  Smartphone,
-  BarChart2,
   Bell,
+  Activity,
+  BarChart2,
   Settings,
   Menu,
   ChevronLeft,
@@ -17,14 +18,16 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 
 const navItems = [
-  { icon: LayoutGrid, label: "Dashboard", href: "/manager" },
-  { icon: Music2, label: "Media Library", href: "/manager/media" },
-  { icon: Radio, label: "Announcements", href: "/manager/announcements" },
-  { icon: Calendar, label: "Schedule", href: "/manager/schedule" },
-  { icon: Building2, label: "Branches", href: "/manager/branches" },
-  { icon: Smartphone, label: "Devices", href: "/manager/devices" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/manager" },
+  { icon: Users, label: "Users", href: "/manager/users" },
+  { icon: Music, label: "Music", href: "/manager/music" },
+  { icon: GitBranch, label: "Genres", href: "/manager/genres" },
+  { icon: GitBranch, label: "Categories", href: "/manager/categories" },
+  { icon: Heart, label: "Moods", href: "/manager/moods" },
+  { icon: Radio, label: "Playlists", href: "/manager/playlists" },
+  { icon: Bell, label: "Notifications", href: "/manager/notifications" },
+  { icon: Activity, label: "Performance", href: "/manager/performance" },
   { icon: BarChart2, label: "Reports", href: "/manager/reports" },
-  { icon: Bell, label: "Activities", href: "/manager/activities" },
   { icon: Settings, label: "Settings", href: "/manager/settings" },
 ];
 
@@ -46,7 +49,7 @@ export function ManagerNav() {
 
       <nav
         className={cn(
-          "min-h-screen bg-white border-r text-gray-600 transition-all duration-300 relative",
+          "min-h-screen bg-[#1A1F2C] text-white transition-all duration-300 relative",
           isCollapsed ? "w-20" : "w-64",
           "fixed md:relative",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
@@ -60,21 +63,21 @@ export function ManagerNav() {
               isCollapsed && "justify-center"
             )}
           >
-            <Radio className="h-8 w-8 text-blue-600" />
+            <Radio className="h-8 w-8 text-[#FFD700]" />
             {!isCollapsed && (
-              <h1 className="text-xl font-semibold tracking-tight text-gray-900">
-                Cloud Media
+              <h1 className="text-xl font-semibold tracking-tight">
+                Merhaba Music
               </h1>
             )}
           </div>
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute right-[-12px] top-8 bg-white p-1.5 rounded-full hover:bg-gray-50 transition-colors border shadow-sm hidden md:block"
+            className="absolute right-[-12px] top-8 bg-[#1A1F2C] p-1.5 rounded-full hover:bg-[#2C3444] transition-colors shadow-lg hidden md:block"
           >
             <ChevronLeft
               className={cn(
-                "h-4 w-4 transition-transform text-gray-600",
+                "h-4 w-4 transition-transform text-[#FFD700]",
                 isCollapsed && "rotate-180"
               )}
             />
@@ -93,13 +96,13 @@ export function ManagerNav() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                     isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-600 hover:text-blue-600 hover:bg-blue-50",
+                      ? "bg-[#2C3444] text-white"
+                      : "text-gray-400 hover:text-white hover:bg-[#2C3444]",
                     isCollapsed && "justify-center px-2"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5", isActive && "text-blue-600")} />
+                  <Icon className={cn("h-5 w-5", isActive && "text-white")} />
                   {!isCollapsed && item.label}
                 </Link>
               );
