@@ -56,6 +56,12 @@ export function DeviceList() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-muted-foreground">
+          Total Devices: <span className="font-medium">{mockDevices.length}</span>
+        </p>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
