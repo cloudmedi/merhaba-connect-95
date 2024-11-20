@@ -5,9 +5,28 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { CreateEventDialog } from "./components/CreateEventDialog";
+import { ScheduleEvent } from "./types";
+import { exportEvents } from "./utils/eventUtils";
+import { Download } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Schedule() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+
+  const handleEventDrop = (info: any) => {
+    const updatedEvent = {
+      ...info.event.extendedProps,
+      id: info.event.id,
+      title: info.event.title,
+      start: info.event.start,
+      end: info.event.end,
+    };
+
+    setEvents(events.map(event => 
+      event.id === updatedEvent.id ? updatedEvent : event
+    ));
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -16,12 +35,31 @@ export default function Schedule() {
           <h1 className="text-2xl font-semibold text-gray-900">Schedule</h1>
           <p className="text-sm text-gray-500">Manage your playlists and announcements schedule</p>
         </div>
-        <Button 
-          onClick={() => setIsCreateEventOpen(true)}
-          className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
-        >
-          + Create Event
-        </Button>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => exportEvents(events, 'ics')}>
+                Export as ICS
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportEvents(events, 'csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button 
+            onClick={() => setIsCreateEventOpen(true)}
+            className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
+          >
+            + Create Event
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -40,30 +78,30 @@ export default function Schedule() {
           allDaySlot={false}
           slotDuration="01:00:00"
           editable={true}
+          droppable={true}
+          eventDrop={handleEventDrop}
           selectable={true}
           selectMirror={true}
           dayMaxEvents={true}
           weekends={true}
           nowIndicator={true}
-          slotLabelFormat={{
-            hour: 'numeric',
-            minute: '2-digit',
-            meridiem: 'short'
-          }}
-          eventTimeFormat={{
-            hour: 'numeric',
-            minute: '2-digit',
-            meridiem: 'short'
-          }}
-          select={(info) => {
-            setIsCreateEventOpen(true);
-          }}
+          events={events.map(event => ({
+            id: event.id,
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            backgroundColor: event.color.primary,
+            borderColor: event.color.primary,
+            textColor: event.color.text,
+            extendedProps: event
+          }))}
         />
       </div>
 
       <CreateEventDialog 
         open={isCreateEventOpen} 
         onOpenChange={setIsCreateEventOpen}
+        existingEvents={events}
       />
     </div>
   );
