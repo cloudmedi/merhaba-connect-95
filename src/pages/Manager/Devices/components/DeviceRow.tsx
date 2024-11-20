@@ -1,18 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Power, RefreshCw, Clock, Edit, Trash2 } from "lucide-react";
+import { Power, RefreshCw, Clock, Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { DeviceScheduleDialog } from "./DeviceScheduleDialog";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EditDeviceDialog } from "./EditDeviceDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DeviceProps {
   device: {
     id: string;
     branchName: string;
-    location: string; // Added location field
+    location: string;
+    category: string;
     status: string;
     ip: string;
     lastSeen: string;
@@ -27,9 +29,16 @@ interface DeviceProps {
       powerOff: string;
     };
   };
+  isSelected: boolean;
+  onSelect: (checked: boolean) => void;
+  sortConfig: {
+    key: string;
+    direction: 'asc' | 'desc';
+  };
+  onSort: (key: string) => void;
 }
 
-export function DeviceRow({ device }: DeviceProps) {
+export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: DeviceProps) {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
@@ -41,12 +50,27 @@ export function DeviceRow({ device }: DeviceProps) {
     toast.success("Device deleted successfully");
   };
 
+  const SortButton = ({ column }: { column: string }) => (
+    <Button
+      variant="ghost"
+      onClick={() => onSort(column)}
+      className="h-8 w-8 p-0 hover:bg-gray-100"
+    >
+      <ArrowUpDown className="h-4 w-4" />
+    </Button>
+  );
+
   return (
     <Card className="hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm border-none">
       <div className="p-4">
         <div className="flex items-center justify-between">
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <div className="flex items-center gap-2">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={onSelect}
+                className="mr-2"
+              />
               <Badge 
                 variant={device.status === "online" ? "default" : "secondary"}
                 className={`${
@@ -57,34 +81,34 @@ export function DeviceRow({ device }: DeviceProps) {
               >
                 {device.status === "online" ? "Online" : "Offline"}
               </Badge>
-              <h3 className="font-semibold text-lg">{device.branchName}</h3>
+              <div className="flex items-center gap-1">
+                <h3 className="font-semibold text-lg">{device.branchName}</h3>
+                <SortButton column="branchName" />
+              </div>
               <span className="text-sm text-gray-500">({device.location})</span>
+              <SortButton column="location" />
             </div>
             
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">
               <div className="flex items-center gap-2">
+                <span className="text-gray-400">Category:</span>
+                <span className="capitalize">{device.category}</span>
+                <SortButton column="category" />
+              </div>
+              <div className="flex items-center gap-2">
                 <span className="text-gray-400">IP:</span>
                 <span>{device.ip}</span>
+                <SortButton column="ip" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">OS:</span>
-                <span>{device.systemInfo.os}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Memory:</span>
-                <span>{device.systemInfo.memory}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Storage:</span>
-                <span>{device.systemInfo.storage}</span>
+                <span className="text-gray-400">Last Seen:</span>
+                <span>{device.lastSeen}</span>
+                <SortButton column="lastSeen" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Version:</span>
                 <span>{device.systemInfo.version}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Schedule:</span>
-                <span>{device.schedule.powerOn} - {device.schedule.powerOff}</span>
+                <SortButton column="version" />
               </div>
             </div>
           </div>

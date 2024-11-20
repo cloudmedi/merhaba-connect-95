@@ -1,23 +1,19 @@
-import { Card } from "@/components/ui/card";
-import { DeviceRow } from "./DeviceRow";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { DeviceRow } from "./DeviceRow";
+import { DeviceStats } from "./DeviceStats";
+import { DeviceFilters } from "./DeviceFilters";
+import { BulkActions } from "./BulkActions";
+import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 
-// Mock data for demonstration
+// Keep the existing mock data generation
 const generateMockDevices = (count: number) => {
   return Array.from({ length: count }, (_, i) => ({
     id: `${i + 1}`,
     branchName: `Branch ${i + 1}`,
-    location: `Location ${i + 1}`, // Added location
+    location: `Region ${Math.floor(i / 100) + 1}`,
+    category: i % 3 === 0 ? "player" : i % 3 === 1 ? "display" : "controller",
     status: i % 3 === 0 ? "online" : "offline",
     ip: `192.168.1.${100 + i}`,
     lastSeen: "2024-03-20T10:00:00",
@@ -39,83 +35,139 @@ const mockDevices = generateMockDevices(500);
 export function DeviceList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  }>({ key: '', direction: 'asc' });
+  
   const itemsPerPage = 10;
 
   const filteredDevices = mockDevices.filter(
     (device) =>
-      device.branchName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (statusFilter === "all" || device.status === statusFilter)
+      (device.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        device.location.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (statusFilter === "all" || device.status === statusFilter) &&
+      (categoryFilter === "all" || device.category === categoryFilter) &&
+      (locationFilter === "all" || device.location.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
-  const totalPages = Math.ceil(filteredDevices.length / itemsPerPage);
-  const currentDevices = filteredDevices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const sortedDevices = [...filteredDevices].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    const aValue = a[sortConfig.key];
+    const bValue = b[sortConfig.key];
+    
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalItems = sortedDevices.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentDevices = sortedDevices.slice(startIndex, endIndex);
+
+  const onlineDevices = mockDevices.filter(d => d.status === "online").length;
+  const offlineDevices = mockDevices.length - onlineDevices;
+
+  const handleSort = (key: string) => {
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
+  const handleBulkPower = () => {
+    // Implement bulk power action
+    toast.success(`Power command sent to ${selectedDevices.length} devices`);
+  };
+
+  const handleBulkReset = () => {
+    // Implement bulk reset action
+    toast.success(`Reset command sent to ${selectedDevices.length} devices`);
+  };
+
+  const handleBulkDelete = () => {
+    // Implement bulk delete action
+    toast.success(`${selectedDevices.length} devices deleted`);
+    setSelectedDevices([]);
+  };
+
+  const columns = [
+    "branchName",
+    "location",
+    "category",
+    "status",
+    "ip",
+    "lastSeen",
+    "version",
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-muted-foreground">
-          Total Devices: <span className="font-medium">{mockDevices.length}</span>
-        </p>
-      </div>
+      <DeviceStats
+        totalDevices={mockDevices.length}
+        onlineDevices={onlineDevices}
+        offlineDevices={offlineDevices}
+        lastUpdated={new Date().toLocaleString()}
+      />
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search branches..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Devices</SelectItem>
-            <SelectItem value="online">Online</SelectItem>
-            <SelectItem value="offline">Offline</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <DeviceFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+        locationFilter={locationFilter}
+        onLocationFilterChange={setLocationFilter}
+        onExport={() => {}}
+        data={filteredDevices}
+        columns={columns}
+      />
+
+      <BulkActions
+        selectedDevices={selectedDevices}
+        onPowerAll={handleBulkPower}
+        onResetAll={handleBulkReset}
+        onDeleteAll={handleBulkDelete}
+      />
 
       <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
         <ScrollArea className="h-[600px] rounded-lg">
           <div className="space-y-2 p-4">
             {currentDevices.map((device) => (
-              <DeviceRow key={device.id} device={device} />
+              <DeviceRow
+                key={device.id}
+                device={device}
+                isSelected={selectedDevices.includes(device.id)}
+                onSelect={(checked) => {
+                  setSelectedDevices(prev =>
+                    checked
+                      ? [...prev, device.id]
+                      : prev.filter(id => id !== device.id)
+                  );
+                }}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+              />
             ))}
           </div>
         </ScrollArea>
         
-        <div className="flex items-center justify-between p-4 border-t">
-          <div className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of{" "}
-            {filteredDevices.length} devices
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+        />
       </Card>
     </div>
   );
