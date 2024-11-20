@@ -9,57 +9,94 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 import { Mood } from "./types";
 
 interface MoodsDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingMood: Mood | null;
-  newMoodName: string;
-  setNewMoodName: (name: string) => void;
-  newMoodDescription: string;
-  setNewMoodDescription: (description: string) => void;
-  newMoodIcon: string;
-  setNewMoodIcon: (icon: string) => void;
-  onSave: () => void;
+  mood: Mood | null;
+  onSubmit: (mood: Partial<Mood>) => void;
 }
 
+const AVAILABLE_ICONS = [
+  { value: "😊", label: "Happy" },
+  { value: "😢", label: "Sad" },
+  { value: "😌", label: "Relaxed" },
+  { value: "😠", label: "Angry" },
+  { value: "❤️", label: "Love" },
+  { value: "💔", label: "Heartbreak" },
+];
+
 export function MoodsDialog({
-  isOpen,
+  open,
   onOpenChange,
-  editingMood,
-  newMoodName,
-  setNewMoodName,
-  newMoodDescription,
-  setNewMoodDescription,
-  newMoodIcon,
-  setNewMoodIcon,
-  onSave,
+  mood,
+  onSubmit,
 }: MoodsDialogProps) {
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    icon: AVAILABLE_ICONS[0].value,
+  });
+
+  useEffect(() => {
+    if (mood) {
+      setFormData({
+        name: mood.name,
+        description: mood.description || "",
+        icon: mood.icon || AVAILABLE_ICONS[0].value,
+      });
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+        icon: AVAILABLE_ICONS[0].value,
+      });
+    }
+  }, [mood]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(mood ? { ...mood, ...formData } : formData);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingMood ? "Edit Mood" : "Create New Mood"}
+            {mood ? "Edit Mood" : "Create New Mood"}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="icon">Icon</Label>
-            <Input
-              id="icon"
-              value={newMoodIcon}
-              onChange={(e) => setNewMoodIcon(e.target.value)}
-              placeholder="Enter mood icon"
-            />
+            <Select
+              value={formData.icon}
+              onValueChange={(value) => setFormData({ ...formData, icon: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an icon" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_ICONS.map((icon) => (
+                  <SelectItem key={icon.value} value={icon.value}>
+                    <span className="flex items-center gap-2">
+                      {icon.value} {icon.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              value={newMoodName}
-              onChange={(e) => setNewMoodName(e.target.value)}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Enter mood name"
             />
           </div>
@@ -67,20 +104,17 @@ export function MoodsDialog({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={newMoodDescription}
-              onChange={(e) => setNewMoodDescription(e.target.value)}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Enter mood description"
             />
           </div>
-        </div>
-        <DialogFooter>
-          <Button
-            onClick={onSave}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            Save
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+              {mood ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

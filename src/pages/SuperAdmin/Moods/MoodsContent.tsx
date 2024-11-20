@@ -1,117 +1,98 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { MoodsHeader } from "./MoodsHeader";
 import { MoodsTable } from "./MoodsTable";
 import { MoodsDialog } from "./MoodsDialog";
 import { Mood } from "./types";
-
-const initialMoods: Mood[] = [
-  { id: 1, name: "Happy", description: "Upbeat and cheerful", icon: "😊" },
-  { id: 2, name: "Sad", description: "Melancholic and emotional", icon: "😢" },
-  { id: 3, name: "Energetic", description: "Dynamic and lively", icon: "⚡" },
-  { id: 4, name: "Relaxed", description: "Calm and peaceful", icon: "😌" },
-];
+import { moodService } from "@/services/moods";
 
 export function MoodsContent() {
   const { toast } = useToast();
-  const [moods, setMoods] = useState<Mood[]>(initialMoods);
+  const [moods, setMoods] = useState<Mood[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMood, setEditingMood] = useState<Mood | null>(null);
-  const [newMoodName, setNewMoodName] = useState("");
-  const [newMoodDescription, setNewMoodDescription] = useState("");
-  const [newMoodIcon, setNewMoodIcon] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleNewMood = () => {
-    setEditingMood(null);
-    setNewMoodName("");
-    setNewMoodDescription("");
-    setNewMoodIcon("");
-    setIsDialogOpen(true);
+  const fetchMoods = async () => {
+    try {
+      const data = await moodService.getMoods();
+      setMoods(data);
+    } catch (error) {
+      console.error('Error fetching moods:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    if (!newMoodName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a mood name",
-        variant: "destructive",
-      });
-      return;
-    }
+  useEffect(() => {
+    fetchMoods();
+  }, []);
 
-    if (editingMood) {
-      setMoods(
-        moods.map((mood) =>
-          mood.id === editingMood.id
-            ? {
-                ...mood,
-                name: newMoodName,
-                description: newMoodDescription,
-                icon: newMoodIcon,
-              }
-            : mood
-        )
-      );
+  const handleCreate = async (newMood: Pick<Mood, "name" | "description" | "icon">) => {
+    try {
+      await moodService.createMood(newMood);
+      setIsDialogOpen(false);
+      fetchMoods();
+      toast({
+        title: "Success",
+        description: "Mood created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating mood:', error);
+    }
+  };
+
+  const handleEdit = async (updatedMood: Mood) => {
+    try {
+      const { id, name, description, icon } = updatedMood;
+      await moodService.updateMood(id, { name, description, icon });
+      setIsDialogOpen(false);
+      setEditingMood(null);
+      fetchMoods();
       toast({
         title: "Success",
         description: "Mood updated successfully",
       });
-    } else {
-      const newMood: Mood = {
-        id: Math.max(...moods.map((m) => m.id), 0) + 1,
-        name: newMoodName,
-        description: newMoodDescription,
-        icon: newMoodIcon,
-      };
-      setMoods([...moods, newMood]);
+    } catch (error) {
+      console.error('Error updating mood:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await moodService.deleteMood(id);
+      fetchMoods();
       toast({
         title: "Success",
-        description: "New mood created successfully",
+        description: "Mood deleted successfully",
       });
+    } catch (error) {
+      console.error('Error deleting mood:', error);
     }
-
-    setIsDialogOpen(false);
-  };
-
-  const handleEdit = (mood: Mood) => {
-    setEditingMood(mood);
-    setNewMoodName(mood.name);
-    setNewMoodDescription(mood.description);
-    setNewMoodIcon(mood.icon);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    setMoods(moods.filter((mood) => mood.id !== id));
-    toast({
-      title: "Success",
-      description: "Mood deleted successfully",
-    });
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-end">
-        <MoodsHeader onNewMood={handleNewMood} />
-      </div>
-
+      <MoodsHeader onNewMood={() => {
+        setEditingMood(null);
+        setIsDialogOpen(true);
+      }} />
+      
       <MoodsTable
         moods={moods}
-        onEdit={handleEdit}
+        isLoading={isLoading}
+        onEdit={(mood) => {
+          setEditingMood(mood);
+          setIsDialogOpen(true);
+        }}
         onDelete={handleDelete}
       />
       
       <MoodsDialog
-        isOpen={isDialogOpen}
+        open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        editingMood={editingMood}
-        newMoodName={newMoodName}
-        setNewMoodName={setNewMoodName}
-        newMoodDescription={newMoodDescription}
-        setNewMoodDescription={setNewMoodDescription}
-        newMoodIcon={newMoodIcon}
-        setNewMoodIcon={setNewMoodIcon}
-        onSave={handleSave}
+        mood={editingMood}
+        onSubmit={editingMood ? handleEdit : handleCreate}
       />
     </div>
   );

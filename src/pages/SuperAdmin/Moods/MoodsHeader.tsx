@@ -7,9 +7,11 @@ interface MoodsHeaderProps {
 
 export function MoodsHeader({ onNewMood }: MoodsHeaderProps) {
   return (
-    <Button onClick={onNewMood} className="bg-[#FFD700] text-black hover:bg-[#E6C200]">
-      <Plus className="w-4 h-4 mr-2" />
-      New Mood
-    </Button>
+    <div className="flex justify-between items-center">
+      <Button onClick={onNewMood} className="bg-[#FFD700] text-black hover:bg-[#E6C200]">
+        <Plus className="w-4 h-4 mr-2" />
+        New Mood
+      </Button>
+    </div>
   );
 }
