@@ -22,7 +22,7 @@ export const createUser = async (userData: CreateUserFormValues) => {
       .insert({
         name: userData.companyName,
         subscription_status: userData.license.type,
-        subscription_ends_at: userData.license.endDate.toISOString()
+        subscription_ends_at: userData.license.end_date
       })
       .select()
       .single();
@@ -55,8 +55,8 @@ export const createUser = async (userData: CreateUserFormValues) => {
       .insert({
         user_id: profile.id,
         type: userData.license.type,
-        start_date: userData.license.startDate.toISOString(),
-        end_date: userData.license.endDate.toISOString(),
+        start_date: userData.license.start_date,
+        end_date: userData.license.end_date,
         quantity: userData.license.quantity
       });
 

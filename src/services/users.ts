@@ -62,7 +62,7 @@ export const userService = {
     const company = await companyService.createCompany({
       name: userData.companyName,
       subscriptionStatus: userData.license.type,
-      subscriptionEndsAt: userData.license.endDate.toISOString(),
+      subscriptionEndsAt: userData.license.end_date,
     });
 
     // 2. Create Supabase auth user
@@ -103,8 +103,8 @@ export const userService = {
     await licenseService.createLicense({
       userId: user.id,
       type: userData.license.type,
-      startDate: userData.license.startDate.toISOString(),
-      endDate: userData.license.endDate.toISOString(),
+      start_date: userData.license.start_date,
+      end_date: userData.license.end_date,
       quantity: userData.license.quantity
     });
 
