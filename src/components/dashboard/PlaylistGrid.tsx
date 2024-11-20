@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type Playlist } from "@/data/playlists";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { Play } from "lucide-react";
 
 interface PlaylistGridProps {
   title: string;
@@ -32,27 +33,9 @@ export function PlaylistGrid({ title, description, playlists }: PlaylistGridProp
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300">
                 <button
                   onClick={() => setCurrentPlaylist(playlist)}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 transform"
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 transform"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <Play className="w-6 h-6" />
                 </button>
               </div>
             </div>
