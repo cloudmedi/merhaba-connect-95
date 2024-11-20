@@ -5,9 +5,9 @@ import { DeviceRow } from "./DeviceRow";
 import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
-import { DeviceGroupManagement } from "./DeviceGroupManagement";
-import { useToast } from "@/components/ui/use-toast";
+import { DeviceGrouping } from "./DeviceGrouping";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
+import { useToast } from "@/components/ui/use-toast";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -64,24 +64,25 @@ export function DeviceList() {
       (locationFilter === "all" || device.location.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
-  const totalItems = filteredDevices.length;
+  const sortedDevices = [...filteredDevices].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    const aValue = a[sortConfig.key];
+    const bValue = b[sortConfig.key];
+    
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalItems = sortedDevices.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const currentDevices = filteredDevices.slice(startIndex, endIndex);
+  const currentDevices = sortedDevices.slice(startIndex, endIndex);
 
-  const handleCreateGroup = (group: { name: string; description: string; deviceIds: string[] }) => {
-    const newGroup = {
-      id: crypto.randomUUID(),
-      ...group
-    };
-    
-    setDeviceGroups(prev => [...prev, newGroup]);
-    toast({
-      title: "Success",
-      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
-    });
-  };
+  const onlineDevices = mockDevices.filter(d => d.status === "online").length;
+  const offlineDevices = mockDevices.length - onlineDevices;
 
   const handleSort = (key: string) => {
     setSortConfig(current => ({
@@ -90,12 +91,42 @@ export function DeviceList() {
     }));
   };
 
+  const handleCreateGroup = (group: { id: string; name: string; deviceIds: string[]; description?: string }) => {
+    setDeviceGroups(prev => [...prev, group]);
+    toast({
+      title: "Group Created",
+      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
+    });
+  };
+
+  const handleBulkPower = () => {
+    toast({
+      title: "Success",
+      description: `Power command sent to ${selectedDevices.length} devices`,
+    });
+  };
+
+  const handleBulkReset = () => {
+    toast({
+      title: "Success",
+      description: `Reset command sent to ${selectedDevices.length} devices`,
+    });
+  };
+
+  const handleBulkDelete = () => {
+    toast({
+      title: "Success",
+      description: `${selectedDevices.length} devices deleted`,
+    });
+    setSelectedDevices([]);
+  };
+
   return (
     <div className="space-y-4">
       <DeviceStats
         totalDevices={mockDevices.length}
-        onlineDevices={mockDevices.filter(d => d.status === "online").length}
-        offlineDevices={mockDevices.length - mockDevices.filter(d => d.status === "online").length}
+        onlineDevices={onlineDevices}
+        offlineDevices={offlineDevices}
         lastUpdated={new Date().toLocaleString()}
       />
 
@@ -115,18 +146,15 @@ export function DeviceList() {
         />
         
         <div className="flex items-center gap-2">
-          <DeviceGroupManagement
+          <DeviceGrouping
             selectedDevices={selectedDevices}
             onCreateGroup={handleCreateGroup}
           />
           <BulkActions
             selectedDevices={selectedDevices}
-            onPowerAll={() => toast({ title: "Success", description: "Power command sent" })}
-            onResetAll={() => toast({ title: "Success", description: "Reset command sent" })}
-            onDeleteAll={() => {
-              setSelectedDevices([]);
-              toast({ title: "Success", description: "Devices deleted" });
-            }}
+            onPowerAll={handleBulkPower}
+            onResetAll={handleBulkReset}
+            onDeleteAll={handleBulkDelete}
           />
         </div>
       </div>
