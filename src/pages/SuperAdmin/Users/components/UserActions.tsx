@@ -7,6 +7,7 @@ import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { userService } from "@/services/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface UserActionsProps {
   user: User;
@@ -24,6 +25,17 @@ export function UserActions({ user }: UserActionsProps) {
     },
     onError: (error) => {
       toast.error("Kullanıcı durumu güncellenirken hata oluştu: " + error);
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: () => userService.deleteUser(user.id),
+    onSuccess: () => {
+      toast.success("Kullanıcı başarıyla silindi");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      toast.error("Kullanıcı silinirken hata oluştu: " + error);
     },
   });
 
@@ -45,10 +57,6 @@ export function UserActions({ user }: UserActionsProps) {
 
   const handleRenewLicense = () => {
     toast.info("Renew license coming soon");
-  };
-
-  const handleDeleteUser = () => {
-    toast.info("Delete user coming soon");
   };
 
   return (
@@ -151,21 +159,35 @@ export function UserActions({ user }: UserActionsProps) {
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-red-500 hover:text-red-700"
-              onClick={handleDeleteUser}
+              disabled={deleteUserMutation.isPending}
             >
               <Trash className="h-4 w-4" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Delete User</p>
-          </TooltipContent>
-        </Tooltip>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+              <AlertDialogDescription>
+                Bu işlem geri alınamaz. Kullanıcıyı silmek istediğinizden emin misiniz?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>İptal</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => deleteUserMutation.mutate()}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </TooltipProvider>
 
       <EditUserDialog 
