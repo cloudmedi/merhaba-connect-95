@@ -22,7 +22,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (data: FormValues) => {
-    onSubmit(data);
+    onSubmit(data as CreateUserData);
   };
 
   return (
