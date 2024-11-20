@@ -4,6 +4,7 @@ import { PlayerControls } from "./music/PlayerControls";
 import { VolumeControl } from "./music/VolumeControl";
 import { TrackInfo } from "./music/TrackInfo";
 import { ProgressBar } from "./music/ProgressBar";
+import { Loader2 } from "lucide-react";
 
 interface MusicPlayerProps {
   playlist: {
@@ -31,7 +32,8 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
     setIsPlaying,
     progress,
     setProgress,
-    audioRef
+    audioRef,
+    isLoading
   } = useAudioPlayer(playlist.songs, currentSongIndex);
 
   const handleNext = () => {
@@ -101,12 +103,18 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
             artist={currentSong?.artist || "Unknown Artist"}
           />
           
-          <PlayerControls
-            isPlaying={isPlaying}
-            onPrevious={handlePrevious}
-            onPlayPause={() => setIsPlaying(!isPlaying)}
-            onNext={handleNext}
-          />
+          <div className="flex items-center gap-4">
+            {isLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            ) : (
+              <PlayerControls
+                isPlaying={isPlaying}
+                onPrevious={handlePrevious}
+                onPlayPause={() => setIsPlaying(!isPlaying)}
+                onNext={handleNext}
+              />
+            )}
+          </div>
 
           <VolumeControl
             volume={volume}

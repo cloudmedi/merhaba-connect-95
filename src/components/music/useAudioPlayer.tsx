@@ -15,49 +15,73 @@ export function useAudioPlayer(songs: Song[] | undefined, currentSongIndex: numb
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number>();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!songs?.[currentSongIndex]) return;
 
+    // Cleanup previous audio instance
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.remove();
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    }
+
     const audio = new Audio();
+    audio.preload = "auto"; // Ensure audio preloading
     
-    const handleError = (e: ErrorEvent) => {
-      console.error('Audio error:', e);
+    const handleError = () => {
+      console.error('Audio error:', audio.error);
       setIsPlaying(false);
+      setIsLoading(false);
       toast({
         title: "Error",
-        description: "Failed to load audio file",
+        description: "Failed to load audio file. Please try again.",
         variant: "destructive",
       });
     };
 
     const handleLoadedMetadata = () => {
+      setIsLoading(false);
       if (isPlaying) {
         audio.play().catch(error => {
           console.error("Error playing audio:", error);
           setIsPlaying(false);
           toast({
             title: "Playback Error",
-            description: "Failed to play audio",
+            description: "Failed to play audio. Please try again.",
             variant: "destructive",
           });
         });
       }
     };
 
+    const handleCanPlayThrough = () => {
+      setIsLoading(false);
+    };
+
     audio.addEventListener('error', handleError);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('canplaythrough', handleCanPlayThrough);
     
     // Set the source after adding event listeners
-    audio.src = songs[currentSongIndex].file_url;
-    audioRef.current = audio;
+    try {
+      audio.src = songs[currentSongIndex].file_url;
+      audioRef.current = audio;
+    } catch (error) {
+      console.error("Error setting audio source:", error);
+      handleError();
+    }
 
     return () => {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough);
       audio.pause();
       audio.src = '';
-      audio.remove();
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
@@ -67,7 +91,7 @@ export function useAudioPlayer(songs: Song[] | undefined, currentSongIndex: numb
   useEffect(() => {
     if (!audioRef.current) return;
 
-    if (isPlaying) {
+    if (isPlaying && !isLoading) {
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
@@ -75,7 +99,7 @@ export function useAudioPlayer(songs: Song[] | undefined, currentSongIndex: numb
           setIsPlaying(false);
           toast({
             title: "Playback Error",
-            description: "Failed to play audio",
+            description: "Failed to play audio. Please try again.",
             variant: "destructive",
           });
         });
@@ -87,7 +111,9 @@ export function useAudioPlayer(songs: Song[] | undefined, currentSongIndex: numb
         }
       }, 100);
     } else {
-      audioRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
@@ -98,13 +124,14 @@ export function useAudioPlayer(songs: Song[] | undefined, currentSongIndex: numb
         clearInterval(progressInterval.current);
       }
     };
-  }, [isPlaying, toast]);
+  }, [isPlaying, isLoading, toast]);
 
   return {
     isPlaying,
     setIsPlaying,
     progress,
     setProgress,
-    audioRef
+    audioRef,
+    isLoading
   };
 }
