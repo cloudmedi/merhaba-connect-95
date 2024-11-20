@@ -20,7 +20,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
           {description && <p className="text-sm text-gray-500">{description}</p>}
         </div>
         <CatalogLoader foregroundColor="#e5e7eb" backgroundColor="#f3f4f6" />
@@ -29,7 +29,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   }
 
   const handlePlaylistClick = (playlist: Playlist) => {
-    navigate(`/player/playlists/${playlist.id}`);
+    navigate(`/manager/playlists/${playlist.id}`);
   };
 
   return (
