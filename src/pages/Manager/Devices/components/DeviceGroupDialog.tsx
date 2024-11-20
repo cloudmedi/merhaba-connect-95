@@ -11,22 +11,39 @@ import { DeviceGroup } from "./DeviceGroupManagement";
 interface DeviceGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedDevices: string[];
   onCreateGroup: (group: DeviceGroup) => void;
 }
+
+interface Device {
+  id: string;
+  branchName: string;
+  location: string;
+}
+
+// Mock data - replace with your actual device data
+const mockDevices: Device[] = Array.from({ length: 10 }, (_, i) => ({
+  id: `${i + 1}`,
+  branchName: `Branch ${i + 1}`,
+  location: `Location ${i + 1}`,
+}));
 
 export function DeviceGroupDialog({
   open,
   onOpenChange,
-  selectedDevices,
   onCreateGroup,
 }: DeviceGroupDialogProps) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
   const handleCreateGroup = () => {
     if (!groupName) {
       toast.error("Lütfen grup adı girin");
+      return;
+    }
+
+    if (selectedDevices.length === 0) {
+      toast.error("Lütfen en az bir cihaz seçin");
       return;
     }
 
@@ -42,11 +59,20 @@ export function DeviceGroupDialog({
     onOpenChange(false);
     setGroupName("");
     setDescription("");
+    setSelectedDevices([]);
+  };
+
+  const toggleDevice = (deviceId: string) => {
+    setSelectedDevices(prev =>
+      prev.includes(deviceId)
+        ? prev.filter(id => id !== deviceId)
+        : [...prev, deviceId]
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Cihaz Grubu Oluştur</DialogTitle>
         </DialogHeader>
@@ -72,15 +98,23 @@ export function DeviceGroupDialog({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Seçili Cihazlar ({selectedDevices.length})
+              Cihazlar ({selectedDevices.length} seçili)
             </label>
-            <ScrollArea className="h-[200px] border rounded-md p-4">
-              {selectedDevices.map((deviceId) => (
-                <div key={deviceId} className="flex items-center space-x-2 py-2">
-                  <Checkbox checked disabled />
-                  <span className="text-sm">Cihaz {deviceId}</span>
-                </div>
-              ))}
+            <ScrollArea className="h-[300px] border rounded-md p-4">
+              <div className="space-y-4">
+                {mockDevices.map((device) => (
+                  <div key={device.id} className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md">
+                    <Checkbox
+                      checked={selectedDevices.includes(device.id)}
+                      onCheckedChange={() => toggleDevice(device.id)}
+                    />
+                    <div>
+                      <p className="font-medium">{device.branchName}</p>
+                      <p className="text-sm text-gray-500">{device.location}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </ScrollArea>
           </div>
         </div>
@@ -89,7 +123,9 @@ export function DeviceGroupDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             İptal
           </Button>
-          <Button onClick={handleCreateGroup}>Grup Oluştur</Button>
+          <Button onClick={handleCreateGroup}>
+            Grup Oluştur ({selectedDevices.length})
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
