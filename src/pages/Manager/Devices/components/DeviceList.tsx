@@ -5,9 +5,11 @@ import { DeviceRow } from "./DeviceRow";
 import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
-import { DeviceGrouping } from "./DeviceGrouping";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { useToast } from "@/components/ui/use-toast";
+import { DeviceGroupDialog } from "./DeviceGroupDialog";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -42,6 +44,7 @@ export function DeviceList() {
   const [locationFilter, setLocationFilter] = useState("all");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [deviceGroups, setDeviceGroups] = useState<Array<{
     id: string;
     name: string;
@@ -64,25 +67,24 @@ export function DeviceList() {
       (locationFilter === "all" || device.location.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
-  const sortedDevices = [...filteredDevices].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-    
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-    
-    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const totalItems = sortedDevices.length;
+  const totalItems = filteredDevices.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const currentDevices = sortedDevices.slice(startIndex, endIndex);
+  const currentDevices = filteredDevices.slice(startIndex, endIndex);
 
-  const onlineDevices = mockDevices.filter(d => d.status === "online").length;
-  const offlineDevices = mockDevices.length - onlineDevices;
+  const handleCreateGroup = (group: { name: string; description: string; deviceIds: string[] }) => {
+    const newGroup = {
+      id: crypto.randomUUID(),
+      ...group
+    };
+    
+    setDeviceGroups(prev => [...prev, newGroup]);
+    toast({
+      title: "Success",
+      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
+    });
+  };
 
   const handleSort = (key: string) => {
     setSortConfig(current => ({
@@ -91,42 +93,12 @@ export function DeviceList() {
     }));
   };
 
-  const handleCreateGroup = (group: { id: string; name: string; deviceIds: string[]; description?: string }) => {
-    setDeviceGroups(prev => [...prev, group]);
-    toast({
-      title: "Group Created",
-      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
-    });
-  };
-
-  const handleBulkPower = () => {
-    toast({
-      title: "Success",
-      description: `Power command sent to ${selectedDevices.length} devices`,
-    });
-  };
-
-  const handleBulkReset = () => {
-    toast({
-      title: "Success",
-      description: `Reset command sent to ${selectedDevices.length} devices`,
-    });
-  };
-
-  const handleBulkDelete = () => {
-    toast({
-      title: "Success",
-      description: `${selectedDevices.length} devices deleted`,
-    });
-    setSelectedDevices([]);
-  };
-
   return (
     <div className="space-y-4">
       <DeviceStats
         totalDevices={mockDevices.length}
-        onlineDevices={onlineDevices}
-        offlineDevices={offlineDevices}
+        onlineDevices={mockDevices.filter(d => d.status === "online").length}
+        offlineDevices={mockDevices.length - mockDevices.filter(d => d.status === "online").length}
         lastUpdated={new Date().toLocaleString()}
       />
 
@@ -146,15 +118,23 @@ export function DeviceList() {
         />
         
         <div className="flex items-center gap-2">
-          <DeviceGrouping
-            selectedDevices={selectedDevices}
-            onCreateGroup={handleCreateGroup}
-          />
+          <Button
+            variant="outline"
+            onClick={() => setIsGroupDialogOpen(true)}
+            disabled={selectedDevices.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Create Group ({selectedDevices.length})
+          </Button>
           <BulkActions
             selectedDevices={selectedDevices}
-            onPowerAll={handleBulkPower}
-            onResetAll={handleBulkReset}
-            onDeleteAll={handleBulkDelete}
+            onPowerAll={() => toast({ title: "Success", description: "Power command sent" })}
+            onResetAll={() => toast({ title: "Success", description: "Reset command sent" })}
+            onDeleteAll={() => {
+              setSelectedDevices([]);
+              toast({ title: "Success", description: "Devices deleted" });
+            }}
           />
         </div>
       </div>
@@ -190,6 +170,13 @@ export function DeviceList() {
           totalItems={totalItems}
         />
       </Card>
+
+      <DeviceGroupDialog
+        isOpen={isGroupDialogOpen}
+        onClose={() => setIsGroupDialogOpen(false)}
+        selectedDevices={selectedDevices}
+        onCreateGroup={handleCreateGroup}
+      />
     </div>
   );
 }
