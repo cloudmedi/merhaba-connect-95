@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { type Playlist } from "@/data/playlists";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Play } from "lucide-react";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useNavigate } from "react-router-dom";
+import type { GridPlaylist } from "./types";
 
 interface PlaylistGridProps {
   title: string;
   description?: string;
-  playlists: Playlist[];
+  playlists: GridPlaylist[];
   isLoading?: boolean;
 }
 
 export function PlaylistGrid({ title, description, playlists, isLoading = false }: PlaylistGridProps) {
-  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -28,7 +28,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
     );
   }
 
-  const handlePlaylistClick = (playlist: Playlist) => {
+  const handlePlaylistClick = (playlist: GridPlaylist) => {
     navigate(`/manager/playlists/${playlist.id}`);
   };
 

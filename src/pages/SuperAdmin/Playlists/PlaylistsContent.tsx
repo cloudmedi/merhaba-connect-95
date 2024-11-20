@@ -7,6 +7,7 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Playlist } from "@/types/api";
+import type { GridPlaylist } from "@/components/dashboard/types";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,7 +26,7 @@ export function PlaylistsContent() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Playlist[];
+      return data as unknown as Playlist[];
     }
   });
 
@@ -33,7 +34,7 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist) => ({
+  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => ({
     id: playlist.id,
     title: playlist.name,
     artwork: playlist.artwork_url || "/placeholder.svg",
