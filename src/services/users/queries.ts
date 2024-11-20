@@ -9,15 +9,7 @@ export const getUsersQuery = (filters?: {
 }) => {
   let query = supabase
     .from('users')
-    .select(`
-      *,
-      company:companies(
-        id,
-        name,
-        subscription_status,
-        subscription_ends_at
-      )
-    `);
+    .select('*, company:company_id(id, name, subscription_status, subscription_ends_at)');
 
   if (filters?.role) {
     query = query.eq('role', filters.role);
@@ -31,7 +23,7 @@ export const getUsersQuery = (filters?: {
     query = query.eq('is_active', filters.status === 'active');
   }
 
-  if (filters?.license) {
+  if (filters?.license && filters?.license !== 'all') {
     query = query.eq('company.subscription_status', filters.license);
   }
 
