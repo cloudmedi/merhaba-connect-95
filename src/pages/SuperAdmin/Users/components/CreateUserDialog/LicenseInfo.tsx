@@ -2,10 +2,10 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { CreateUserData } from "@/types/auth";
+import { FormValues } from "./formSchema";
 
 interface LicenseInfoProps {
-  form: UseFormReturn<CreateUserData>;
+  form: UseFormReturn<FormValues>;
 }
 
 export function LicenseInfo({ form }: LicenseInfoProps) {

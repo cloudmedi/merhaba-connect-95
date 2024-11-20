@@ -1,10 +1,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { CreateUserData } from "@/types/auth";
+import { FormValues } from "./formSchema";
 
 interface UserRoleSelectProps {
-  form: UseFormReturn<CreateUserData>;
+  form: UseFormReturn<FormValues>;
 }
 
 export function UserRoleSelect({ form }: UserRoleSelectProps) {

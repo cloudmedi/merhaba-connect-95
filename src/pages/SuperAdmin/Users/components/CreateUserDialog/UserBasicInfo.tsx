@@ -1,10 +1,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { CreateUserData } from "@/types/auth";
+import { FormValues } from "./formSchema";
 
 interface UserBasicInfoProps {
-  form: UseFormReturn<CreateUserData>;
+  form: UseFormReturn<FormValues>;
 }
 
 export function UserBasicInfo({ form }: UserBasicInfoProps) {
