@@ -18,7 +18,7 @@ export default function Manager() {
               <Route index element={<ManagerDashboard />} />
               <Route path="playlists/:id" element={<PlaylistDetail />} />
               <Route path="announcements" element={<Announcements />} />
-              <Route path="devices" element={<Devices />} />
+              <Route path="devices/*" element={<Devices />} />
             </Routes>
           </div>
         </main>
