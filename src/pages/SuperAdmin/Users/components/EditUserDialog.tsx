@@ -14,7 +14,6 @@ const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
 });
 
 interface EditUserDialogProps {
@@ -28,10 +27,9 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       email: user.email,
-      companyName: user.companyName || "",
     },
   });
 
@@ -41,7 +39,6 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
-        companyName: values.companyName,
       });
     },
     onSuccess: () => {
@@ -103,20 +100,6 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="Enter email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="companyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter company name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

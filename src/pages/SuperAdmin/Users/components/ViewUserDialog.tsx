@@ -20,7 +20,11 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="text-sm font-medium text-gray-500">Full Name</h4>
-              <p className="mt-1">{`${user.firstName} ${user.lastName}`}</p>
+              <p className="mt-1">
+                {user.firstName && user.lastName 
+                  ? `${user.firstName} ${user.lastName}`
+                  : 'N/A'}
+              </p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">Email</h4>
@@ -31,7 +35,7 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="text-sm font-medium text-gray-500">Company</h4>
-              <p className="mt-1">{user.companyName || 'N/A'}</p>
+              <p className="mt-1">{user.company?.name || 'N/A'}</p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">Role</h4>
@@ -46,25 +50,25 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">License</h4>
-              <p className="mt-1 capitalize">{user.license || 'N/A'}</p>
+              <p className="mt-1 capitalize">{user.license?.type || 'N/A'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-500">License Expiry</h4>
+              <h4 className="text-sm font-medium text-gray-500">License Start Date</h4>
               <p className="mt-1">
-                {user.expiryDate 
-                  ? format(new Date(user.expiryDate), 'dd MMM yyyy')
+                {user.license?.startDate 
+                  ? format(new Date(user.license.startDate), 'dd MMM yyyy')
                   : 'N/A'}
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Last Login</h4>
+              <h4 className="text-sm font-medium text-gray-500">License End Date</h4>
               <p className="mt-1">
-                {user.lastLoginAt 
-                  ? format(new Date(user.lastLoginAt), 'dd MMM yyyy HH:mm')
-                  : 'Never'}
+                {user.license?.endDate 
+                  ? format(new Date(user.license.endDate), 'dd MMM yyyy')
+                  : 'N/A'}
               </p>
             </div>
           </div>

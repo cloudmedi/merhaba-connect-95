@@ -15,7 +15,7 @@ export function UserTableRow({ user }: UserTableRowProps) {
       <TableCell className="p-4">
         <UserAvatar user={user} />
       </TableCell>
-      <TableCell className="p-4">{user.companyName}</TableCell>
+      <TableCell className="p-4">{user.company?.name || 'N/A'}</TableCell>
       <TableCell className="p-4">{user.role}</TableCell>
       <TableCell className="p-4">
         <UserStatus user={user} />
@@ -25,10 +25,10 @@ export function UserTableRow({ user }: UserTableRowProps) {
           variant="secondary"
           className="bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20"
         >
-          {user.license || 'N/A'}
+          {user.license?.type || 'N/A'}
         </Badge>
       </TableCell>
-      <TableCell className="p-4">{user.expiryDate || 'N/A'}</TableCell>
+      <TableCell className="p-4">{user.license?.endDate || 'N/A'}</TableCell>
       <TableCell className="p-4 text-right space-x-1">
         <UserActions user={user} />
       </TableCell>

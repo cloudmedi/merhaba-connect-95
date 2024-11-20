@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Company, Branch, Device, Playlist, Song, Announcement, Schedule } from '@/types/auth';
+import { Company, Branch, Device, Playlist, Song, Announcement, Schedule } from '@/types/api';
 
 // Company Services
 export const companyService = {
