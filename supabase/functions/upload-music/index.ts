@@ -32,7 +32,7 @@ serve(async (req) => {
     )
 
     // Upload to Bunny CDN
-    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME')
+    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
 
