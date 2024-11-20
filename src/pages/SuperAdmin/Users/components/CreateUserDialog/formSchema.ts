@@ -13,9 +13,9 @@ export const formSchema = z.object({
     endDate: z.string(),
     quantity: z.number().min(1)
   })
-}) satisfies z.ZodType<CreateUserData>;
+}) as z.ZodType<CreateUserData>;
 
-export type FormValues = CreateUserData;
+export type FormValues = z.infer<typeof formSchema>;
 
 export const defaultValues: FormValues = {
   firstName: "",
