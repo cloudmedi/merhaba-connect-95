@@ -1,18 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genres: string[];
-  duration: string;
-  file: File;
-  uploadDate: Date;
-  playlists?: string[];
-  mood?: string;
-}
+import type { Song } from "./useMusicLibrary";
 
 export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.SetStateAction<Song[]>>) => {
   const { toast } = useToast();
@@ -74,7 +62,7 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     setSongs(prev => 
       prev.map(song => 
         selectedSongs.some(s => s.id === song.id)
-          ? { ...song, genres: [genreMap[genreId]] }
+          ? { ...song, genre: [genreMap[genreId]] }
           : song
       )
     );
@@ -91,8 +79,8 @@ export const useMusicActions = (songs: Song[], setSongs: React.Dispatch<React.Se
     setSongs(prev => 
       prev.map(song => {
         if (selectedSongs.some(s => s.id === song.id)) {
-          const newGenres = [...new Set([...song.genres, ...genreIds.map(id => genreMap[id])])];
-          return { ...song, genres: newGenres };
+          const newGenres = [...new Set([...(song.genre || []), ...genreIds.map(id => genreMap[id])])];
+          return { ...song, genre: newGenres };
         }
         return song;
       })
