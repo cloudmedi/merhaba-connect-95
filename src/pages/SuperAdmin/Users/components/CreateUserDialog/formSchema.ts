@@ -3,10 +3,10 @@ import { CreateUserData } from "@/types/auth";
 
 const licenseSchema = z.object({
   type: z.enum(['trial', 'premium']),
-  startDate: z.string(),
-  endDate: z.string(),
-  quantity: z.number().min(1)
-});
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  quantity: z.number().min(1, "At least 1 license is required")
+}).required();
 
 export const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -15,8 +15,9 @@ export const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   role: z.enum(['admin', 'manager']),
   license: licenseSchema
-}) as z.ZodType<CreateUserData>;
+}).required();
 
+// Ensure the schema matches CreateUserData exactly
 export type FormValues = CreateUserData;
 
 export const defaultValues: FormValues = {
