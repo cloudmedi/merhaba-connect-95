@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Search } from "lucide-react";
 
 // Mock data for demonstration
 const generateMockDevices = (count: number) => {
@@ -54,13 +55,16 @@ export function DeviceList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <Input
-          placeholder="Search branches..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search branches..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
@@ -73,16 +77,16 @@ export function DeviceList() {
         </Select>
       </div>
 
-      <Card className="p-6">
-        <ScrollArea className="h-[600px]">
-          <div className="space-y-4">
+      <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
+        <ScrollArea className="h-[600px] rounded-lg">
+          <div className="space-y-2 p-4">
             {currentDevices.map((device) => (
               <DeviceRow key={device.id} device={device} />
             ))}
           </div>
         </ScrollArea>
         
-        <div className="flex items-center justify-between mt-4 border-t pt-4">
+        <div className="flex items-center justify-between p-4 border-t">
           <div className="text-sm text-muted-foreground">
             Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
             {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of{" "}
@@ -92,14 +96,14 @@ export function DeviceList() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
               Previous
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
             >
               Next
             </button>
