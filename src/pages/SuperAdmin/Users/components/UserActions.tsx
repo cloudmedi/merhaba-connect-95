@@ -1,190 +1,132 @@
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Eye, Pencil, History, Lock, Users, RotateCcw, Trash } from "lucide-react";
-import { User } from "@/types/auth";
-import { EditUserDialog } from "./EditUserDialog";
-import { ViewUserDialog } from "./ViewUserDialog";
-import { UserHistoryDialog } from "./UserHistoryDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { useState } from "react";
 import { LicenseRenewalDialog } from "./LicenseRenewalDialog";
-import { useUserActions } from "./hooks/useUserActions";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ViewUserDialog } from "./ViewUserDialog";
+import { EditUserDialog } from "./EditUserDialog";
+import { UserHistoryDialog } from "./UserHistoryDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { userService } from "@/services/users";
+import { toast } from "sonner";
 
 interface UserActionsProps {
-  user: User;
+  user: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+    isActive: boolean;
+    company?: {
+      name: string;
+    };
+    license?: {
+      type: string;
+      endDate: string | null;
+    };
+  };
 }
 
 export function UserActions({ user }: UserActionsProps) {
-  const {
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isViewDialogOpen,
-    setIsViewDialogOpen,
-    isHistoryDialogOpen,
-    setIsHistoryDialogOpen,
-    isRenewalDialogOpen,
-    setIsRenewalDialogOpen,
-    toggleStatusMutation,
-    deleteUserMutation,
-    handleNavigateToManager,
-    handleRenewLicense,
-  } = useUserActions(user);
+  const [showRenewDialog, setShowRenewDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  const queryClient = useQueryClient();
+
+  const deleteUserMutation = useMutation({
+    mutationFn: () => userService.deleteUser(user.id),
+    onSuccess: () => {
+      toast.success("Kullanıcı başarıyla silindi");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowDeleteDialog(false);
+    },
+    onError: (error: Error) => {
+      toast.error("Kullanıcı silinirken bir hata oluştu: " + error.message);
+    },
+  });
 
   return (
     <>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={() => setIsViewDialogOpen(true)}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>View Details</p>
-          </TooltipContent>
-        </Tooltip>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Menüyü aç</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
+            Görüntüle
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+            Düzenle
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowRenewDialog(true)}>
+            Lisansı Yenile
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
+            Geçmiş
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-red-600"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            Sil
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={() => setIsEditDialogOpen(true)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Edit User</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={() => setIsHistoryDialogOpen(true)}
-            >
-              <History className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>View History</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={`h-8 w-8 ${toggleStatusMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'text-gray-500 hover:text-[#9b87f5]'}`}
-              onClick={() => toggleStatusMutation.mutate()}
-              disabled={toggleStatusMutation.isPending}
-            >
-              <Lock className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{user.isActive ? 'Block User' : 'Unblock User'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={handleNavigateToManager}
-              disabled={user.role !== 'manager'}
-            >
-              <Users className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Go to Manager Page</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={() => setIsRenewalDialogOpen(true)}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Renew License</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 text-red-500 hover:text-red-700"
-              disabled={deleteUserMutation.isPending}
-            >
-              <Trash className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
-              <AlertDialogDescription>
-                Bu işlem geri alınamaz. Kullanıcıyı silmek istediğinizden emin misiniz?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>İptal</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={() => deleteUserMutation.mutate()}
-                className="bg-red-500 hover:bg-red-600"
-              >
-                {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </TooltipProvider>
-
-      <EditUserDialog 
+      <LicenseRenewalDialog
         user={user}
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        open={showRenewDialog}
+        onOpenChange={setShowRenewDialog}
+        onRenew={() => {
+          // Logic for renewing the license can be implemented here if needed.
+        }}
       />
 
       <ViewUserDialog
         user={user}
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+      />
+
+      <EditUserDialog
+        user={user}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
 
       <UserHistoryDialog
         user={user}
-        open={isHistoryDialogOpen}
-        onOpenChange={setIsHistoryDialogOpen}
+        open={showHistoryDialog}
+        onOpenChange={setShowHistoryDialog}
       />
 
-      <LicenseRenewalDialog
-        user={user}
-        open={isRenewalDialogOpen}
-        onOpenChange={setIsRenewalDialogOpen}
-        onRenew={handleRenewLicense}
-      />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu işlem geri alınamaz. Kullanıcı ve ilişkili tüm veriler kalıcı olarak silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteUserMutation.mutate()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
