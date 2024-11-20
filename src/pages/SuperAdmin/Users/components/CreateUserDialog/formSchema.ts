@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const licenseSchema = z.object({
-  type: z.enum(['trial', 'premium']).required(),
+  type: z.enum(['trial', 'premium']),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   quantity: z.number().min(1, "At least 1 license is required")
