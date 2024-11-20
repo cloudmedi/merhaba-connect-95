@@ -1,8 +1,8 @@
 export interface User {
   id: string;
   email: string;
-  firstName: string | null;
-  lastName: string | null;
+  firstName: string;
+  lastName: string;
   role: 'super_admin' | 'manager' | 'admin';
   companyId?: string;
   isActive: boolean;

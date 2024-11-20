@@ -22,7 +22,20 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    onSubmit(values as CreateUserData);
+    const formattedValues: CreateUserData = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      companyName: values.companyName,
+      role: values.role,
+      license: {
+        type: values.license.type,
+        startDate: values.license.startDate,
+        endDate: values.license.endDate,
+        quantity: values.license.quantity
+      }
+    };
+    onSubmit(formattedValues);
   };
 
   return (
