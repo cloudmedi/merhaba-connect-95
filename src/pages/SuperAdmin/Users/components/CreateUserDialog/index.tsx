@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { UserForm } from "./UserForm";
-import { mapFormToCreateUserData } from "./formSchema";
+import { FormValues, mapFormToCreateUserData } from "./formSchema";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -14,8 +14,9 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const queryClient = useQueryClient();
 
   const createUserMutation = useMutation({
-    mutationFn: async (values: ReturnType<typeof mapFormToCreateUserData>) => {
-      return userService.createUser(values);
+    mutationFn: async (values: FormValues) => {
+      const userData = mapFormToCreateUserData(values);
+      return userService.createUser(userData);
     },
     onSuccess: () => {
       toast.success("User created successfully");
@@ -34,10 +35,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           <DialogTitle className="text-xl font-semibold">Create User</DialogTitle>
         </DialogHeader>
         <UserForm 
-          onSubmit={(values) => {
-            const userData = mapFormToCreateUserData(values);
-            createUserMutation.mutate(userData);
-          }}
+          onSubmit={(values) => createUserMutation.mutate(values)}
           isSubmitting={createUserMutation.isPending}
           onCancel={() => onOpenChange(false)}
         />

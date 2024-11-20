@@ -17,7 +17,7 @@ export const createUser = async (userData: CreateUserData) => {
     if (companyError) throw new Error('Failed to create company: ' + companyError.message);
 
     // 2. Create auth user
-    const { data: authUser, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
       password: 'temp123!', // Temporary password
       options: {
@@ -29,7 +29,7 @@ export const createUser = async (userData: CreateUserData) => {
       }
     });
 
-    if (authError || !authUser.user) throw new Error('Failed to create auth user: ' + authError?.message);
+    if (authError || !authData.user) throw new Error('Failed to create auth user: ' + authError?.message);
 
     // 3. Update profile
     const { error: profileError } = await supabase
@@ -42,7 +42,7 @@ export const createUser = async (userData: CreateUserData) => {
         role: userData.role,
         is_active: true
       })
-      .eq('id', authUser.user.id);
+      .eq('id', authData.user.id);
 
     if (profileError) throw new Error('Failed to update profile: ' + profileError.message);
 
@@ -50,7 +50,7 @@ export const createUser = async (userData: CreateUserData) => {
     const { error: licenseError } = await supabase
       .from('licenses')
       .insert({
-        user_id: authUser.user.id,
+        user_id: authData.user.id,
         type: userData.license.type,
         start_date: new Date(userData.license.startDate).toISOString(),
         end_date: new Date(userData.license.endDate).toISOString(),
@@ -60,7 +60,7 @@ export const createUser = async (userData: CreateUserData) => {
     if (licenseError) throw new Error('Failed to create license: ' + licenseError.message);
 
     return {
-      id: authUser.user.id,
+      id: authData.user.id,
       ...userData
     };
   } catch (error) {
