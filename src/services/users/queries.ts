@@ -11,13 +11,13 @@ export const getUsersQuery = async (filters?: {
     .from('profiles')
     .select(`
       *,
-      companies!profiles_company_id_fkey (
+      companies (
         id,
         name,
         subscription_status,
         subscription_ends_at
       ),
-      licenses!licenses_user_id_fkey (
+      licenses (
         type,
         start_date,
         end_date,

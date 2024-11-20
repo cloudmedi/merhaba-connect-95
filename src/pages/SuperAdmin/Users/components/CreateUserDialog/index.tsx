@@ -14,9 +14,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const queryClient = useQueryClient();
 
   const createUserMutation = useMutation({
-    mutationFn: (values: CreateUserData) => {
-      return userService.createUser(values);
-    },
+    mutationFn: (values: CreateUserData) => userService.createUser(values),
     onSuccess: () => {
       toast.success("User created successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });
