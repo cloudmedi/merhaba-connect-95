@@ -28,7 +28,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8">
         <div className="flex items-center gap-2 text-gray-500">
           <Link 
-            to="/player/playlists" 
+            to="/manager/playlists" 
             className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -71,7 +71,7 @@ export function PlaylistDetail() {
             {playlist.songs.map((song, index) => (
               <div 
                 key={song.id}
-                className="grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100 group"
+                className="grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100"
               >
                 <div className="col-span-1 text-gray-400">{index + 1}</div>
                 <div className="col-span-5 font-medium text-gray-900 flex items-center gap-2">
