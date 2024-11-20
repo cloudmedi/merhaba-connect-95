@@ -83,9 +83,10 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
 
 export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
   try {
+    // Check if profile exists first
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('*')
+      .select()
       .eq('id', userId)
       .single();
 
@@ -98,6 +99,7 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
       throw new Error('Kullanıcı bulunamadı');
     }
 
+    // Delete the profile
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
