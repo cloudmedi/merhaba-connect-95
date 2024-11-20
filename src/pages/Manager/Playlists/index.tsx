@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { ManagerLayout } from "@/components/layouts/ManagerLayout";
 
 export default function ManagerPlaylists() {
   return (
-    <DashboardLayout
+    <ManagerLayout
       title="Playlists"
       description="Manage your music playlists"
     >
       <div>Playlists Content</div>
-    </DashboardLayout>
+    </ManagerLayout>
   );
 }
