@@ -5,6 +5,7 @@ import { User } from "@/types/auth";
 import { EditUserDialog } from "./EditUserDialog";
 import { ViewUserDialog } from "./ViewUserDialog";
 import { UserHistoryDialog } from "./UserHistoryDialog";
+import { LicenseRenewalDialog } from "./LicenseRenewalDialog";
 import { useUserActions } from "./hooks/useUserActions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -20,6 +21,8 @@ export function UserActions({ user }: UserActionsProps) {
     setIsViewDialogOpen,
     isHistoryDialogOpen,
     setIsHistoryDialogOpen,
+    isRenewalDialogOpen,
+    setIsRenewalDialogOpen,
     toggleStatusMutation,
     deleteUserMutation,
     handleNavigateToManager,
@@ -117,7 +120,7 @@ export function UserActions({ user }: UserActionsProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={handleRenewLicense}
+              onClick={() => setIsRenewalDialogOpen(true)}
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -174,6 +177,13 @@ export function UserActions({ user }: UserActionsProps) {
         user={user}
         open={isHistoryDialogOpen}
         onOpenChange={setIsHistoryDialogOpen}
+      />
+
+      <LicenseRenewalDialog
+        user={user}
+        open={isRenewalDialogOpen}
+        onOpenChange={setIsRenewalDialogOpen}
+        onRenew={handleRenewLicense}
       />
     </>
   );

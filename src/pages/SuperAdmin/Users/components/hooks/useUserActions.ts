@@ -9,6 +9,7 @@ export function useUserActions(user: User) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -50,8 +51,20 @@ export function useUserActions(user: User) {
     toast.success("Yönetici paneline yönlendiriliyorsunuz");
   };
 
-  const handleRenewLicense = () => {
-    toast.info("Renew license coming soon");
+  const renewLicenseMutation = useMutation({
+    mutationFn: () => userService.renewLicense(user.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  const handleRenewLicense = async () => {
+    try {
+      await renewLicenseMutation.mutateAsync();
+    } catch (error) {
+      console.error('Failed to renew license:', error);
+      throw error;
+    }
   };
 
   return {
@@ -61,6 +74,8 @@ export function useUserActions(user: User) {
     setIsViewDialogOpen,
     isHistoryDialogOpen,
     setIsHistoryDialogOpen,
+    isRenewalDialogOpen,
+    setIsRenewalDialogOpen,
     toggleStatusMutation,
     deleteUserMutation,
     handleNavigateToManager,

@@ -122,5 +122,20 @@ export const userService = {
     
     if (error) throw error;
     return data;
+  },
+
+  async renewLicense(userId: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ 
+        license: 'premium',
+        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
   }
 };
