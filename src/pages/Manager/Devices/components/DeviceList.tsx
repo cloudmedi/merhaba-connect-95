@@ -5,11 +5,9 @@ import { DeviceRow } from "./DeviceRow";
 import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
-import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
+import { DeviceGroupManagement } from "./DeviceGroupManagement";
 import { useToast } from "@/components/ui/use-toast";
-import { DeviceGroupDialog } from "./DeviceGroupDialog";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -44,7 +42,6 @@ export function DeviceList() {
   const [locationFilter, setLocationFilter] = useState("all");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [deviceGroups, setDeviceGroups] = useState<Array<{
     id: string;
     name: string;
@@ -118,15 +115,10 @@ export function DeviceList() {
         />
         
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsGroupDialogOpen(true)}
-            disabled={selectedDevices.length === 0}
-            className="flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Create Group ({selectedDevices.length})
-          </Button>
+          <DeviceGroupManagement
+            selectedDevices={selectedDevices}
+            onCreateGroup={handleCreateGroup}
+          />
           <BulkActions
             selectedDevices={selectedDevices}
             onPowerAll={() => toast({ title: "Success", description: "Power command sent" })}
@@ -170,13 +162,6 @@ export function DeviceList() {
           totalItems={totalItems}
         />
       </Card>
-
-      <DeviceGroupDialog
-        isOpen={isGroupDialogOpen}
-        onClose={() => setIsGroupDialogOpen(false)}
-        selectedDevices={selectedDevices}
-        onCreateGroup={handleCreateGroup}
-      />
     </div>
   );
 }
