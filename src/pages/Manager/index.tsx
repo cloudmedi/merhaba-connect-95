@@ -5,7 +5,6 @@ import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 import { ManagerHeader } from "@/components/ManagerHeader";
 import Announcements from "./Announcements";
 import Devices from "./Devices";
-import Schedule from "./Schedule";
 
 export default function Manager() {
   return (
@@ -20,7 +19,6 @@ export default function Manager() {
               <Route path="playlists/:id" element={<PlaylistDetail />} />
               <Route path="announcements" element={<Announcements />} />
               <Route path="devices/*" element={<Devices />} />
-              <Route path="schedule" element={<Schedule />} />
             </Routes>
           </div>
         </main>
