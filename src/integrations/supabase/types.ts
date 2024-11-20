@@ -223,32 +223,41 @@ export type Database = {
       }
       playlists: {
         Row: {
+          artwork_url: string | null
           company_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
+          genre_id: string | null
           id: string
           is_public: boolean | null
+          mood_id: string | null
           name: string
           updated_at: string | null
         }
         Insert: {
+          artwork_url?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          genre_id?: string | null
           id?: string
           is_public?: boolean | null
+          mood_id?: string | null
           name: string
           updated_at?: string | null
         }
         Update: {
+          artwork_url?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          genre_id?: string | null
           id?: string
           is_public?: boolean | null
+          mood_id?: string | null
           name?: string
           updated_at?: string | null
         }
@@ -265,6 +274,20 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_genre_id_fkey"
+            columns: ["genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "moods"
             referencedColumns: ["id"]
           },
         ]

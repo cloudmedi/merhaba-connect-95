@@ -3,47 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import { PlaylistsTable } from "./components/PlaylistsTable";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Routes, Route, useNavigate } from "react-router-dom";
-
-const playlists = [
-  {
-    id: 1,
-    title: "Jazz Hop Cafe",
-    venue: "Sunny Chill House",
-    assignedTo: ["Manager 1", "Manager 2"],
-    status: "Active",
-    createdAt: "2024-02-20",
-    description: "Relaxing jazz hop beats",
-    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
-    selectedSongs: [],
-    selectedUsers: [],
-    selectedGenres: [],
-    selectedCategories: [],
-    selectedMoods: [],
-  },
-  {
-    id: 2,
-    title: "Slap House Jam",
-    venue: "Sunny Chill House",
-    assignedTo: ["Manager 3"],
-    status: "Active",
-    createdAt: "2024-02-19",
-    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
-  },
-  {
-    id: 3,
-    title: "Colombia - Salsa",
-    venue: "Sunny Chill House",
-    assignedTo: ["Manager 1"],
-    status: "Inactive",
-    createdAt: "2024-02-18",
-    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,15 +17,51 @@ export default function Playlists() {
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: playlists, isLoading } = useQuery({
+    queryKey: ['playlists'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          company:company_id(name),
+          profiles:created_by(first_name, last_name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const deletePlaylistMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('playlists')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+    }
+  });
 
   const handlePlayPlaylist = (playlist: any) => {
     setCurrentPlaylist(playlist);
     setIsPlayerVisible(true);
     toast({
       title: "Now Playing",
-      description: `Playing ${playlist.title}`,
+      description: `Playing ${playlist.name}`,
     });
   };
+
+  const filteredPlaylists = playlists?.filter(playlist => 
+    playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   const PlaylistsContent = () => (
     <DashboardLayout 
@@ -72,7 +74,7 @@ export default function Playlists() {
             onClick={() => navigate("create")}
             className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
           >
-            <Plus className="w-4 h-4 mr-2" /> Yeni Playlist Oluştur
+            <Plus className="w-4 h-4 mr-2" /> Create New Playlist
           </Button>
         </div>
 
@@ -90,17 +92,22 @@ export default function Playlists() {
         </div>
 
         <PlaylistsTable 
-          playlists={playlists}
+          playlists={filteredPlaylists}
           onPlay={handlePlayPlaylist}
           onEdit={(playlist) => navigate("create", { 
             state: { editMode: true, playlistData: playlist } 
           })}
+          onDelete={(id) => deletePlaylistMutation.mutate(id)}
+          isLoading={isLoading}
         />
       </div>
       {isPlayerVisible && currentPlaylist && (
         <MusicPlayer 
           key={currentPlaylist.id}
-          playlist={currentPlaylist} 
+          playlist={{
+            title: currentPlaylist.name,
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg"
+          }}
           onClose={() => {
             setIsPlayerVisible(false);
             setCurrentPlaylist(null);

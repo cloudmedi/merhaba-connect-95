@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Play } from "lucide-react";
 import { TrackArtwork } from "@/components/music/TrackArtwork";
 import {
   Table,
@@ -17,14 +17,71 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
-interface PlaylistsTableProps {
-  playlists: any[];
-  onPlay: (playlist: any) => void;
-  onEdit: (playlist: any) => void;
+interface Playlist {
+  id: string;
+  name: string;
+  description?: string;
+  artwork_url?: string;
+  created_at: string;
+  is_public: boolean;
+  company?: {
+    name: string;
+  };
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  }[];
 }
 
-export function PlaylistsTable({ playlists, onPlay, onEdit }: PlaylistsTableProps) {
+interface PlaylistsTableProps {
+  playlists: Playlist[];
+  onPlay: (playlist: Playlist) => void;
+  onEdit: (playlist: Playlist) => void;
+  onDelete: (id: string) => void;
+  isLoading?: boolean;
+}
+
+export function PlaylistsTable({ 
+  playlists, 
+  onPlay, 
+  onEdit, 
+  onDelete,
+  isLoading 
+}: PlaylistsTableProps) {
+  const { toast } = useToast();
+
+  const handleDelete = async (id: string) => {
+    try {
+      await onDelete(id);
+      toast({
+        title: "Success",
+        description: "Playlist deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete playlist",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white border-none shadow-sm">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="h-8 bg-gray-100 rounded animate-pulse" />
+            <div className="h-20 bg-gray-100 rounded animate-pulse" />
+            <div className="h-20 bg-gray-100 rounded animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-white border-none shadow-sm">
       <CardContent className="p-0">
@@ -34,7 +91,7 @@ export function PlaylistsTable({ playlists, onPlay, onEdit }: PlaylistsTableProp
               <TableRow className="hover:bg-transparent">
                 <TableHead className="min-w-[200px] font-medium">Title</TableHead>
                 <TableHead className="min-w-[150px] hidden md:table-cell font-medium">Venue</TableHead>
-                <TableHead className="min-w-[200px] hidden md:table-cell font-medium">Assigned To</TableHead>
+                <TableHead className="min-w-[200px] hidden md:table-cell font-medium">Created By</TableHead>
                 <TableHead className="min-w-[100px] font-medium">Status</TableHead>
                 <TableHead className="min-w-[120px] hidden md:table-cell font-medium">Created At</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -46,29 +103,35 @@ export function PlaylistsTable({ playlists, onPlay, onEdit }: PlaylistsTableProp
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <TrackArtwork
-                        artwork={playlist.artwork}
-                        title={playlist.title}
+                        artwork={playlist.artwork_url || "/placeholder.svg"}
+                        title={playlist.name}
                         onPlay={() => onPlay(playlist)}
                       />
-                      <span className="font-medium text-gray-900">{playlist.title}</span>
+                      <span className="font-medium text-gray-900">{playlist.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-gray-600">{playlist.venue}</TableCell>
                   <TableCell className="hidden md:table-cell text-gray-600">
-                    {playlist.assignedTo.join(", ")}
+                    {playlist.company?.name || "N/A"}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-gray-600">
+                    {playlist.profiles?.[0]
+                      ? `${playlist.profiles[0].first_name} ${playlist.profiles[0].last_name}`
+                      : "N/A"}
                   </TableCell>
                   <TableCell>
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                        playlist.status === "Active"
+                        playlist.is_public
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {playlist.status}
+                      {playlist.is_public ? "Public" : "Private"}
                     </span>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-gray-600">{playlist.createdAt}</TableCell>
+                  <TableCell className="hidden md:table-cell text-gray-600">
+                    {new Date(playlist.created_at).toLocaleDateString()}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -86,7 +149,10 @@ export function PlaylistsTable({ playlists, onPlay, onEdit }: PlaylistsTableProp
                         >
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600 cursor-pointer">
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(playlist.id)}
+                          className="text-red-600 cursor-pointer"
+                        >
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
