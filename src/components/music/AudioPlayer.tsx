@@ -28,9 +28,17 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
     );
   }
 
+  const handleSeek = (values: number[]) => {
+    seek(values[0]);
+  };
+
+  const handleVolumeChange = (values: number[]) => {
+    setVolume(values[0]);
+  };
+
   return (
     <div className="space-y-2">
-      <ProgressBar progress={progress} onProgressChange={seek} />
+      <ProgressBar progress={progress} onProgressChange={handleSeek} />
       <div className="flex items-center justify-between">
         <PlayerControls
           isPlaying={isPlaying}
@@ -42,7 +50,8 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
           volume={[75]}
           isMuted={false}
           onVolumeToggle={() => {}}
-          onVolumeChange={(value) => setVolume(value[0])}
+          onVolumeChange={handleVolumeChange}
+          onClose={() => {}}
         />
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { X } from "lucide-react";
 import { TrackInfo } from "./music/TrackInfo";
 import { AudioPlayer } from "./music/AudioPlayer";
 
