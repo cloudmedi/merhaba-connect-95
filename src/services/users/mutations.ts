@@ -92,29 +92,28 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
 
     if (fetchError) {
       console.error('Fetch profile error:', fetchError);
-      throw new Error('Kullanıcı bulunamadı');
+      throw new Error('User not found');
     }
 
     if (!profile) {
-      throw new Error('Kullanıcı bulunamadı');
+      throw new Error('User not found');
     }
 
     // Delete the profile
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', userId)
-      .throwOnError();
+      .eq('id', userId);
 
     if (deleteError) {
       console.error('Delete profile error:', deleteError);
-      throw new Error('Kullanıcı silinirken bir hata oluştu');
+      throw new Error('Failed to delete user');
     }
 
     return { success: true };
   } catch (error: any) {
     console.error('Failed to delete user:', error);
-    throw new Error(error.message || 'Kullanıcı silinirken bir hata oluştu');
+    throw new Error(error.message || 'Failed to delete user');
   }
 };
 
