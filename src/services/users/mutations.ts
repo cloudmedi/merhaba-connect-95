@@ -84,16 +84,17 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
 export const deleteUser = async (userId: string) => {
   try {
     // Delete profile (this will cascade delete licenses due to FK constraint)
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
+    const { error } = await supabase.auth.admin.deleteUser(userId);
 
-    if (profileError) throw profileError;
+    if (error) {
+      console.error('Delete user error:', error);
+      throw error;
+    }
 
     return { success: true };
   } catch (error: any) {
-    toast.error("Failed to delete user: " + error.message);
+    console.error('Failed to delete user:', error);
+    toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
     throw error;
   }
 };

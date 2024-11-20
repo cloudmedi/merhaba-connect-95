@@ -28,12 +28,12 @@ export function UserActions({ user }: UserActionsProps) {
   const deleteUserMutation = useMutation({
     mutationFn: () => userService.deleteUser(user.id),
     onSuccess: () => {
-      toast.success("User deleted successfully");
+      toast.success("Kullanıcı başarıyla silindi");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowDeleteDialog(false);
     },
     onError: (error: Error) => {
-      toast.error("Failed to delete user: " + error.message);
+      toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
     },
   });
 
@@ -48,22 +48,22 @@ export function UserActions({ user }: UserActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
-            View
+            Görüntüle
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-            Edit
+            Düzenle
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowRenewDialog(true)}>
-            Renew License
+            Lisansı Yenile
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
-            History
+            Geçmiş
           </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-red-600"
             onClick={() => setShowDeleteDialog(true)}
           >
-            Delete
+            Sil
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -95,18 +95,18 @@ export function UserActions({ user }: UserActionsProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The user and all associated data will be permanently deleted.
+              Bu işlem geri alınamaz. Kullanıcı ve ilişkili tüm veriler kalıcı olarak silinecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteUserMutation.mutate()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
