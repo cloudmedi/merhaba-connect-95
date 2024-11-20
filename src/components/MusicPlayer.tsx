@@ -6,7 +6,6 @@ import { PlayerControls } from "./music/PlayerControls";
 import { VolumeControl } from "./music/VolumeControl";
 import { TrackInfo } from "./music/TrackInfo";
 import { ProgressBar } from "./music/ProgressBar";
-import { useToast } from "@/hooks/use-toast";
 
 interface MusicPlayerProps {
   playlist: {
@@ -24,7 +23,6 @@ interface MusicPlayerProps {
 }
 
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
-  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
   const [isMuted, setIsMuted] = useState(false);
@@ -41,36 +39,21 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
         audioRef.current.src = '';
       }
       
-      const audio = new Audio();
-      audio.src = playlist.songs[currentSongIndex].file_url;
-      audio.volume = volume[0] / 100;
+      audioRef.current = new Audio(playlist.songs[currentSongIndex].file_url);
+      audioRef.current.volume = volume[0] / 100;
       
-      audio.addEventListener('error', (e) => {
+      audioRef.current.addEventListener('error', (e) => {
         console.error('Audio error:', e);
-        toast({
-          title: "Error",
-          description: "Failed to load audio file. Please try again.",
-          variant: "destructive"
-        });
-      });
-
-      audio.addEventListener('loadeddata', () => {
-        if (isPlaying) {
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.error("Error playing audio:", error);
-              toast({
-                title: "Error",
-                description: "Failed to play audio. Please try again.",
-                variant: "destructive"
-              });
-            });
-          }
-        }
       });
       
-      audioRef.current = audio;
+      if (isPlaying) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Error playing audio:", error);
+          });
+        }
+      }
     }
 
     return () => {
@@ -94,11 +77,6 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error("Error playing audio:", error);
-          toast({
-            title: "Error",
-            description: "Failed to play audio. Please try again.",
-            variant: "destructive"
-          });
         });
       }
       

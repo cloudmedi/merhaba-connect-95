@@ -31,9 +31,9 @@ serve(async (req) => {
 
     // Extract metadata from the audio file
     const arrayBuffer = await file.arrayBuffer()
-    const metadata = await mm.parseBlob(new Blob([arrayBuffer]))
+    const metadata = await mm.parseBlob(new Blob([arrayBuffer], { type: file.type }))
 
-    console.log('Extracted metadata:', JSON.stringify(metadata, null, 2))
+    console.log('Extracted metadata:', metadata)
 
     // Upload to Bunny CDN
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
@@ -54,7 +54,7 @@ serve(async (req) => {
         'AccessKey': bunnyApiKey,
         'Content-Type': file.type,
       },
-      body: arrayBuffer,
+      body: file,
     })
 
     if (!uploadResponse.ok) {
@@ -70,7 +70,7 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Extract relevant metadata with fallbacks
+    // Extract relevant metadata
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
@@ -83,7 +83,7 @@ serve(async (req) => {
       created_by: user.id
     }
 
-    // If there's cover art, upload it to Supabase Storage
+    // If there's cover art, upload it to storage
     if (metadata.common.picture && metadata.common.picture.length > 0) {
       const picture = metadata.common.picture[0]
       const artworkFileName = `${crypto.randomUUID()}.${picture.format.split('/')[1]}`
