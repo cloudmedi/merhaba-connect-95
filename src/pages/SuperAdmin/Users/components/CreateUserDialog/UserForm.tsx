@@ -22,21 +22,8 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    // Ensure all required fields are present before submitting
-    const formattedValues: CreateUserData = {
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      companyName: values.companyName,
-      role: values.role,
-      license: {
-        type: values.license.type,
-        startDate: values.license.startDate,
-        endDate: values.license.endDate,
-        quantity: values.license.quantity
-      }
-    };
-    onSubmit(formattedValues);
+    // Values are already type-safe due to zodResolver and formSchema
+    onSubmit(values);
   };
 
   return (
