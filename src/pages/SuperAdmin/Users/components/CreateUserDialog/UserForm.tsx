@@ -22,7 +22,8 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (data: FormValues) => {
-    onSubmit(data);
+    // Since we've validated with zod, we know the data matches CreateUserData
+    onSubmit(data as CreateUserData);
   };
 
   return (
