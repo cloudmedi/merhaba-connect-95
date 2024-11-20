@@ -1,4 +1,5 @@
 import { ManagerLayout } from "@/components/layouts/ManagerLayout";
+import { RecentActivities } from "@/components/dashboard/RecentActivities";
 
 export default function Activities() {
   return (
@@ -6,7 +7,9 @@ export default function Activities() {
       title="Activities"
       description="Monitor system activities"
     >
-      <div>Activities Content</div>
+      <div className="space-y-6">
+        <RecentActivities />
+      </div>
     </ManagerLayout>
   );
 }
