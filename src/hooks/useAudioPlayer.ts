@@ -36,9 +36,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       const errorMessage = "Ses dosyası yüklenemedi. Lütfen başka bir format veya tarayıcı deneyin.";
       setError(errorMessage);
       toast({
+        variant: "destructive",
         title: "Hata",
         description: errorMessage,
-        variant: "destructive"
       });
       setIsPlaying(false);
     };
@@ -48,9 +48,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
       setIsPlaying(false);
       toast({
+        variant: "destructive",
         title: "Oynatma Hatası",
         description: "Ses oynatılamıyor. Lütfen tekrar deneyin.",
-        variant: "destructive"
       });
     };
 
@@ -88,7 +88,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
         clearInterval(progressInterval.current);
       }
     };
-  }, [audioUrl, toast]);
+  }, [audioUrl, toast, isPlaying]);
 
   const togglePlay = async () => {
     if (!audioRef.current) return;
@@ -107,6 +107,11 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       console.error("Oynatma hatası:", error);
       setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
       setIsPlaying(false);
+      toast({
+        variant: "destructive",
+        title: "Oynatma Hatası",
+        description: "Ses oynatılamıyor. Lütfen tekrar deneyin.",
+      });
     }
   };
 
