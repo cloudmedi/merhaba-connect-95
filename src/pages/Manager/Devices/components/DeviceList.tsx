@@ -71,7 +71,7 @@ export function DeviceList() {
       (locationFilter === "all" || device.location.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
-  const sortedDevices = [...filteredDevices].sort((a, b) => {
+  const sortedDevices = [...filteredDevices].sort((a: any, b: any) => {
     if (!sortConfig.key) return 0;
     
     const aValue = a[sortConfig.key];
