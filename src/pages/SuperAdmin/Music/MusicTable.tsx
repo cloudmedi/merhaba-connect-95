@@ -20,17 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genres: string[];
-  duration: string;
-  file: File;
-  artwork?: string;
-}
+import type { Song } from "./hooks/useMusicLibrary";
 
 interface MusicTableProps {
   songs: Song[];
@@ -42,6 +32,7 @@ interface MusicTableProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   onPlaySong?: (song: Song) => void;
+  isLoading?: boolean;
 }
 
 export function MusicTable({ 
@@ -53,9 +44,14 @@ export function MusicTable({
   totalPages,
   onPageChange,
   itemsPerPage,
-  onPlaySong
+  onPlaySong,
+  isLoading
 }: MusicTableProps) {
   const { toast } = useToast();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (songs.length === 0) {
     return <EmptyState />;
@@ -71,9 +67,16 @@ export function MusicTable({
     } else {
       toast({
         title: "Now Playing",
-        description: `${song.title} by ${song.artist}`,
+        description: `${song.title} by ${song.artist || 'Unknown Artist'}`,
       });
     }
+  };
+
+  const formatDuration = (duration: number | null | undefined) => {
+    if (!duration) return "0:00";
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -111,17 +114,17 @@ export function MusicTable({
                 <TableCell>
                   <div className="flex items-center gap-4">
                     <TrackArtwork
-                      artwork={song.artwork}
+                      artwork={song.artwork_url}
                       title={song.title}
                       onPlay={() => handlePlaySong(song)}
                     />
                     <span className="font-medium text-gray-900">{song.title}</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-gray-600">{song.artist}</TableCell>
-                <TableCell className="text-gray-600">{song.album}</TableCell>
-                <TableCell className="text-gray-600">{song.genres.join(", ") || "-"}</TableCell>
-                <TableCell className="text-right text-gray-600">{song.duration}</TableCell>
+                <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>
+                <TableCell className="text-gray-600">{song.album || '-'}</TableCell>
+                <TableCell className="text-gray-600">{song.genre ? song.genre.join(", ") : "-"}</TableCell>
+                <TableCell className="text-right text-gray-600">{formatDuration(song.duration)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

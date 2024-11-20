@@ -5,13 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Song {
   id: string;
   title: string;
-  artist?: string;
-  album?: string;
-  genre?: string[];
-  duration?: number;
+  artist?: string | null;
+  album?: string | null;
+  genre?: string[] | null;
+  duration?: number | null;
   file_url: string;
-  artwork_url?: string;
+  artwork_url?: string | null;
   created_at: string;
+  bunny_id?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
 }
 
 export const useMusicLibrary = () => {
@@ -47,13 +50,9 @@ export const useMusicLibrary = () => {
     });
 
   const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
-  const paginatedSongs = filteredSongs.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return {
-    songs: paginatedSongs,
+    songs: filteredSongs,
     isLoading,
     filterGenre,
     setFilterGenre,

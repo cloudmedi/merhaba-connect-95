@@ -11,9 +11,8 @@ import { MoodDialog } from "./components/MoodDialog";
 import { useMusicActions } from "./hooks/useMusicActions";
 import { usePlaylistActions } from "./hooks/usePlaylistActions";
 import { useMoodActions } from "./hooks/useMoodActions";
-import { useMusicLibrary } from "./hooks/useMusicLibrary";
+import { useMusicLibrary, type Song } from "./hooks/useMusicLibrary";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import type { Song } from "./hooks/useMusicLibrary";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
@@ -140,7 +139,7 @@ export function MusicContent() {
               id: parseInt(currentlyPlaying.id),
               title: currentlyPlaying.title,
               artist: currentlyPlaying.artist || "Unknown Artist",
-              duration: "0:00"
+              duration: currentlyPlaying.duration?.toString() || "0:00"
             }]
           }}
           onClose={() => setCurrentlyPlaying(null)}
