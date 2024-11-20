@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./Manager/Dashboard";
 import Media from "./Manager/Media";
 import Announcements from "./Manager/Announcements";
@@ -21,6 +21,7 @@ export default function Manager() {
       <Route path="reports/*" element={<Reports />} />
       <Route path="activities/*" element={<Activities />} />
       <Route path="settings/*" element={<Settings />} />
+      <Route path="*" element={<Navigate to="/manager" replace />} />
     </Routes>
   );
 }
