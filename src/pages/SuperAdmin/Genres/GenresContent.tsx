@@ -51,8 +51,10 @@ export function GenresContent() {
 
   const handleEdit = async (updatedGenre: Genre) => {
     try {
-      const { id, name, description } = updatedGenre;
-      await genreService.updateGenre(id, { name, description });
+      await genreService.updateGenre(updatedGenre.id, { 
+        name: updatedGenre.name, 
+        description: updatedGenre.description 
+      });
       setIsDialogOpen(false);
       setEditingGenre(null);
       fetchGenres();

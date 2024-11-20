@@ -39,7 +39,7 @@ export const genreService = {
     return data;
   },
 
-  async updateGenre(id: number, updates: { name?: string; description?: string }) {
+  async updateGenre(id: string, updates: { name?: string; description?: string }) {
     const { data, error } = await supabase
       .from('genres')
       .update(updates)
@@ -59,7 +59,7 @@ export const genreService = {
     return data;
   },
 
-  async deleteGenre(id: number) {
+  async deleteGenre(id: string) {
     const { error } = await supabase
       .from('genres')
       .delete()
