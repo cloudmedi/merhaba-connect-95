@@ -81,9 +81,8 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
   return data;
 };
 
-export const deleteUser = async (userId: string) => {
+export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
   try {
-    // First check if user exists
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
@@ -99,11 +98,11 @@ export const deleteUser = async (userId: string) => {
       throw new Error('Kullanıcı bulunamadı');
     }
 
-    // Delete from profiles table
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', userId);
+      .eq('id', userId)
+      .throwOnError();
 
     if (deleteError) {
       console.error('Delete profile error:', deleteError);
@@ -113,8 +112,7 @@ export const deleteUser = async (userId: string) => {
     return { success: true };
   } catch (error: any) {
     console.error('Failed to delete user:', error);
-    toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
-    throw error;
+    throw new Error(error.message || 'Kullanıcı silinirken bir hata oluştu');
   }
 };
 
