@@ -18,7 +18,7 @@ export function PlaylistDetail() {
     songs: Array.from({ length: 45 }, (_, i) => ({
       id: i + 1,
       title: `Song Title ${i + 1}`,
-      artist: `Artist ${Math.floor(i / 5) + 1}`,
+      artist: `Artist ${Math.floor(i / 8) + 1}`,
       duration: "3:30"
     }))
   };
