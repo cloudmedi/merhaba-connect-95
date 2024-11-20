@@ -77,6 +77,90 @@ export type Database = {
           },
         ]
       }
+      playlist_songs: {
+        Row: {
+          created_at: string | null
+          playlist_id: string
+          position: number
+          song_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          playlist_id: string
+          position: number
+          song_id: string
+        }
+        Update: {
+          created_at?: string | null
+          playlist_id?: string
+          position?: number
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_id: string | null
@@ -117,6 +201,59 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      songs: {
+        Row: {
+          album: string | null
+          artist: string | null
+          artwork_url: string | null
+          bunny_id: string | null
+          created_at: string | null
+          created_by: string | null
+          duration: number | null
+          file_url: string
+          genre: string[] | null
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          album?: string | null
+          artist?: string | null
+          artwork_url?: string | null
+          bunny_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          file_url: string
+          genre?: string[] | null
+          id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          album?: string | null
+          artist?: string | null
+          artwork_url?: string | null
+          bunny_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration?: number | null
+          file_url?: string
+          genre?: string[] | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
