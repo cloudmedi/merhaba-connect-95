@@ -1,47 +1,13 @@
-export interface User {
-  id: string;
-  email: string;
+export interface CreateUserData {
   firstName: string;
   lastName: string;
-  role: 'super_admin' | 'manager' | 'admin';
-  companyId?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  company?: {
-    id: string;
-    name: string;
-    subscriptionStatus: string;
-    subscriptionEndsAt: string | null;
-  };
-  license?: {
-    type: string;
-    startDate: string;
-    endDate: string | null;
-    quantity: number;
-  };
-}
-
-export type CreateUserData = {
   email: string;
-  firstName: string;
-  lastName: string;
   companyName: string;
-  role: 'admin' | 'manager';
+  role: "admin" | "manager";
   license: {
-    type: 'trial' | 'premium';
+    type: "trial" | "premium";
     startDate: string;
     endDate: string;
     quantity: number;
   };
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
 }

@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +11,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Playlist } from "@/types/api";
 
+interface PlaylistResponse extends Omit<Playlist, 'company' | 'profiles'> {
+  company: { name: string } | null;
+  profiles: { first_name: string; last_name: string }[] | null;
+}
+
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
-  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistResponse | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -33,7 +37,7 @@ export default function Playlists() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Playlist[];
+      return data as PlaylistResponse[];
     }
   });
 
@@ -51,7 +55,7 @@ export default function Playlists() {
     }
   });
 
-  const handlePlayPlaylist = (playlist: Playlist) => {
+  const handlePlayPlaylist = (playlist: PlaylistResponse) => {
     setCurrentPlaylist(playlist);
     setIsPlayerVisible(true);
     toast({
