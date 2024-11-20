@@ -17,7 +17,6 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
         id="music-upload"
         type="file"
         accept="audio/*"
-        multiple
         className="hidden"
         onChange={onUpload}
       />
