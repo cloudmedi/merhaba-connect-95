@@ -12,6 +12,7 @@ interface DeviceProps {
   device: {
     id: string;
     branchName: string;
+    location: string; // Added location field
     status: string;
     ip: string;
     lastSeen: string;
@@ -57,6 +58,7 @@ export function DeviceRow({ device }: DeviceProps) {
                 {device.status === "online" ? "Online" : "Offline"}
               </Badge>
               <h3 className="font-semibold text-lg">{device.branchName}</h3>
+              <span className="text-sm text-gray-500">({device.location})</span>
             </div>
             
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">

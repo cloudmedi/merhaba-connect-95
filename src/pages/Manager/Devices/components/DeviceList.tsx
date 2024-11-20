@@ -17,6 +17,7 @@ const generateMockDevices = (count: number) => {
   return Array.from({ length: count }, (_, i) => ({
     id: `${i + 1}`,
     branchName: `Branch ${i + 1}`,
+    location: `Location ${i + 1}`, // Added location
     status: i % 3 === 0 ? "online" : "offline",
     ip: `192.168.1.${100 + i}`,
     lastSeen: "2024-03-20T10:00:00",
