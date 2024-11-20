@@ -8,6 +8,7 @@ import { User } from "@/types/auth";
 export function useUserActions(user: User) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -53,19 +54,16 @@ export function useUserActions(user: User) {
     toast.info("Renew license coming soon");
   };
 
-  const handleViewHistory = () => {
-    toast.info("View history coming soon");
-  };
-
   return {
     isEditDialogOpen,
     setIsEditDialogOpen,
     isViewDialogOpen,
     setIsViewDialogOpen,
+    isHistoryDialogOpen,
+    setIsHistoryDialogOpen,
     toggleStatusMutation,
     deleteUserMutation,
     handleNavigateToManager,
     handleRenewLicense,
-    handleViewHistory,
   };
 }

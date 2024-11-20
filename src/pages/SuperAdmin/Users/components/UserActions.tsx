@@ -4,6 +4,7 @@ import { Eye, Pencil, History, Lock, Users, RotateCcw, Trash } from "lucide-reac
 import { User } from "@/types/auth";
 import { EditUserDialog } from "./EditUserDialog";
 import { ViewUserDialog } from "./ViewUserDialog";
+import { UserHistoryDialog } from "./UserHistoryDialog";
 import { useUserActions } from "./hooks/useUserActions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -17,11 +18,12 @@ export function UserActions({ user }: UserActionsProps) {
     setIsEditDialogOpen,
     isViewDialogOpen,
     setIsViewDialogOpen,
+    isHistoryDialogOpen,
+    setIsHistoryDialogOpen,
     toggleStatusMutation,
     deleteUserMutation,
     handleNavigateToManager,
     handleRenewLicense,
-    handleViewHistory,
   } = useUserActions(user);
 
   return (
@@ -65,7 +67,7 @@ export function UserActions({ user }: UserActionsProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={handleViewHistory}
+              onClick={() => setIsHistoryDialogOpen(true)}
             >
               <History className="h-4 w-4" />
             </Button>
@@ -166,6 +168,12 @@ export function UserActions({ user }: UserActionsProps) {
         user={user}
         open={isViewDialogOpen}
         onOpenChange={setIsViewDialogOpen}
+      />
+
+      <UserHistoryDialog
+        user={user}
+        open={isHistoryDialogOpen}
+        onOpenChange={setIsHistoryDialogOpen}
       />
     </>
   );
