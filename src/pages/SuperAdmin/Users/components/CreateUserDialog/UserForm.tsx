@@ -35,7 +35,6 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
       }
     };
     onSubmit(formData);
-    form.reset();
   };
 
   return (

@@ -12,9 +12,13 @@ export const formSchema = z.object({
     endDate: z.string(),
     quantity: z.number().min(1)
   })
-}).required();
+});
 
 export type FormValues = z.infer<typeof formSchema>;
+
+const today = new Date();
+const thirtyDaysFromNow = new Date(today);
+thirtyDaysFromNow.setDate(today.getDate() + 30);
 
 export const defaultValues: FormValues = {
   firstName: "",
@@ -24,8 +28,8 @@ export const defaultValues: FormValues = {
   role: "manager",
   license: {
     type: "trial",
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate: today.toISOString().split('T')[0],
+    endDate: thirtyDaysFromNow.toISOString().split('T')[0],
     quantity: 1
   }
 };
