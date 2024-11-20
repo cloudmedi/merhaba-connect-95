@@ -11,7 +11,7 @@ export const getUsersQuery = (filters?: {
     .from('profiles')
     .select(`
       *,
-      company:companies!profiles_company_id_fkey (
+      companies!profiles_company_id_fkey (
         id,
         name,
         subscription_status,
@@ -35,7 +35,7 @@ export const getUsersQuery = (filters?: {
   }
 
   if (filters?.license) {
-    query = query.eq('company.subscription_status', filters.license);
+    query = query.eq('companies.subscription_status', filters.license);
   }
 
   if (filters?.expiry) {
@@ -46,10 +46,10 @@ export const getUsersQuery = (filters?: {
 
     if (filters.expiry === 'this-month') {
       query = query
-        .gte('company.subscription_ends_at', today)
-        .lte('company.subscription_ends_at', futureDate);
+        .gte('companies.subscription_ends_at', today)
+        .lte('companies.subscription_ends_at', futureDate);
     } else if (filters.expiry === 'expired') {
-      query = query.lt('company.subscription_ends_at', today);
+      query = query.lt('companies.subscription_ends_at', today);
     }
   }
 
