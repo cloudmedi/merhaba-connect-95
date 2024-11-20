@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
 import { Play, Pause, SkipForward, SkipBack, Volume2, X } from "lucide-react";
 
 interface MusicPlayerProps {
@@ -39,9 +38,9 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
             handleNext();
             return 0;
           }
-          return prev + 0.1;
+          return prev + 0.05;
         });
-      }, 100);
+      }, 50);
     } else {
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
@@ -87,7 +86,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
           onValueChange={handleProgressChange}
           max={100}
           step={0.1}
-          className="h-1"
+          className="h-0.5 cursor-pointer"
         />
         
         <div className="flex items-center justify-between">
