@@ -3,7 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { UserForm } from "./UserForm";
-import { FormValues, mapFormToCreateUserData } from "./formSchema";
+import { FormValues } from "./formSchema";
+import { CreateUserData } from "@/types/auth";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -15,7 +16,14 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const createUserMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const userData = mapFormToCreateUserData(values);
+      const userData: CreateUserData = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        companyName: values.companyName,
+        role: values.role,
+        license: values.license
+      };
       return userService.createUser(userData);
     },
     onSuccess: () => {
