@@ -1,36 +1,40 @@
 import { AuthResponse, LoginCredentials } from "@/types/auth";
+import { supabase } from './supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
+  async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
+    const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
 
-    if (!response.ok) {
+    if (error) throw error;
+
+    if (!user || !session) {
       throw new Error('Login failed');
     }
 
-    return response.json();
+    return {
+      user: {
+        id: user.id,
+        email: user.email!,
+        firstName: user.user_metadata.firstName || '',
+        lastName: user.user_metadata.lastName || '',
+        role: user.user_metadata.role,
+        companyId: user.user_metadata.companyId,
+        isActive: true,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at || user.created_at
+      },
+      token: session.access_token
+    };
   },
 
   async logout(): Promise<void> {
-    const token = localStorage.getItem('token');
-    
-    if (!token) return;
-
-    await fetch(`${API_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     localStorage.removeItem('token');
   },
 
