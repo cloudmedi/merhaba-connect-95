@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 
 interface PlaybackSettingsType {
   playbackType: "smooth" | "immediate";
-  interval?: number;
-  songInterval?: number;
-  scheduledTime?: string;
+  interval: number;
+  songInterval: number;
+  scheduledTime: string;
 }
 
 interface PlaybackSettingsProps {
@@ -44,7 +44,7 @@ export function PlaybackSettings({ settings, onUpdate }: PlaybackSettingsProps) 
             <Input
               type="number"
               min="1"
-              value={settings.interval || ""}
+              value={settings.interval}
               onChange={(e) => onUpdate({ 
                 ...settings, 
                 interval: parseInt(e.target.value) 
@@ -58,7 +58,7 @@ export function PlaybackSettings({ settings, onUpdate }: PlaybackSettingsProps) 
             <Input
               type="number"
               min="1"
-              value={settings.songInterval || ""}
+              value={settings.songInterval}
               onChange={(e) => onUpdate({ 
                 ...settings, 
                 songInterval: parseInt(e.target.value) 
@@ -74,7 +74,7 @@ export function PlaybackSettings({ settings, onUpdate }: PlaybackSettingsProps) 
           <Label>Planlanan Saat</Label>
           <Input
             type="time"
-            value={settings.scheduledTime || ""}
+            value={settings.scheduledTime}
             onChange={(e) => onUpdate({ 
               ...settings, 
               scheduledTime: e.target.value 

@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Upload, X } from "lucide-react";
 import { PlaybackSettings } from "./PlaybackSettings";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CreateCampaignDialogProps {
   open: boolean;
@@ -17,6 +19,15 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedDays, setSelectedDays] = useState({
+    monday: false,
+    tuesday: false,
+    wednesday: false,
+    thursday: false,
+    friday: false,
+    saturday: false,
+    sunday: false,
+  });
   const [playbackSettings, setPlaybackSettings] = useState({
     playbackType: "smooth" as "smooth" | "immediate",
     interval: 30,
@@ -35,9 +46,21 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
     setFiles(files.filter((_, i) => i !== index));
   };
 
+  const handleDayChange = (day: keyof typeof selectedDays) => {
+    setSelectedDays(prev => ({
+      ...prev,
+      [day]: !prev[day]
+    }));
+  };
+
   const handleSubmit = () => {
     if (!name || files.length === 0 || !startDate || !endDate) {
       toast.error("Lütfen tüm gerekli alanları doldurun");
+      return;
+    }
+
+    if (!Object.values(selectedDays).some(day => day)) {
+      toast.error("En az bir gün seçmelisiniz");
       return;
     }
 
@@ -45,6 +68,16 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
     toast.success("Kampanya başarıyla oluşturuldu");
     onOpenChange(false);
   };
+
+  const days = [
+    { key: 'monday', label: 'Pazartesi' },
+    { key: 'tuesday', label: 'Salı' },
+    { key: 'wednesday', label: 'Çarşamba' },
+    { key: 'thursday', label: 'Perşembe' },
+    { key: 'friday', label: 'Cuma' },
+    { key: 'saturday', label: 'Cumartesi' },
+    { key: 'sunday', label: 'Pazar' },
+  ] as const;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,30 +116,24 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
           </div>
 
           <div>
-            <Label>Anonslar</Label>
-            <div className="mt-2 space-y-4">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{file.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveFile(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+            <Label>Kampanya Günleri</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+              {days.map(({ key, label }) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={key}
+                    checked={selectedDays[key]}
+                    onCheckedChange={() => handleDayChange(key)}
+                  />
+                  <Label htmlFor={key} className="cursor-pointer">{label}</Label>
                 </div>
               ))}
+            </div>
+          </div>
 
+          <div>
+            <Label>Anonslar</Label>
+            <div className="mt-2">
               <div 
                 className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
                 onClick={() => document.getElementById('file-upload')?.click()}
@@ -122,6 +149,34 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
                   onChange={handleFileUpload}
                 />
               </div>
+
+              {files.length > 0 && (
+                <ScrollArea className="h-[200px] mt-4 rounded-md border">
+                  <div className="p-4 space-y-2">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium">{file.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleRemoveFile(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
             </div>
           </div>
 
