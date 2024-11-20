@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { CreateUserData } from "@/types/auth";
 
 const licenseSchema = z.object({
   type: z.enum(['trial', 'premium']),
@@ -15,11 +14,10 @@ export const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   role: z.enum(['admin', 'manager']),
   license: licenseSchema
-});
+}).required();
 
 export type FormValues = z.infer<typeof formSchema>;
 
-// Since we're using Zod for runtime validation, we don't need compile-time type checking
 export const defaultValues: FormValues = {
   firstName: "",
   lastName: "",

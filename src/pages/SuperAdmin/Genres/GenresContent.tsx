@@ -3,7 +3,7 @@ import { GenresHeader } from "./GenresHeader";
 import { GenresTable } from "./GenresTable";
 import { GenresDialog } from "./GenresDialog";
 import { Genre } from "./types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { genreService } from "@/services/genres";
 
 export function GenresContent() {

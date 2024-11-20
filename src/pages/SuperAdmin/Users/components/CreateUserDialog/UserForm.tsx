@@ -22,7 +22,21 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (data: FormValues) => {
-    onSubmit(data as CreateUserData);
+    // Ensure all required fields are present before submitting
+    const userData: CreateUserData = {
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      companyName: data.companyName,
+      role: data.role,
+      license: {
+        type: data.license.type,
+        startDate: data.license.startDate,
+        endDate: data.license.endDate,
+        quantity: data.license.quantity
+      }
+    };
+    onSubmit(userData);
   };
 
   return (
