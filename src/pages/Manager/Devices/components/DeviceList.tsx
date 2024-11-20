@@ -7,7 +7,6 @@ import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { DeviceGroupManagement, DeviceGroup } from "./DeviceGroupManagement";
-import { toast } from "sonner";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -48,22 +47,6 @@ export function DeviceList() {
   }>({ key: '', direction: 'asc' });
   
   const itemsPerPage = 10;
-
-  const handleBulkPower = () => {
-    // Implementation for bulk power action
-    toast.success(`Power command sent to ${selectedDevices.length} devices`);
-  };
-
-  const handleBulkReset = () => {
-    // Implementation for bulk reset action
-    toast.success(`Reset command sent to ${selectedDevices.length} devices`);
-  };
-
-  const handleBulkDelete = () => {
-    // Implementation for bulk delete action
-    setSelectedDevices([]);
-    toast.success(`${selectedDevices.length} devices have been deleted`);
-  };
 
   const filteredDevices = mockDevices.filter(
     (device) =>
