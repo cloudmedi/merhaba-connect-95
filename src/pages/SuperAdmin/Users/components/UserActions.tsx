@@ -2,77 +2,27 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Eye, Pencil, History, Lock, Users, RotateCcw, Trash } from "lucide-react";
 import { User } from "@/types/auth";
-import { toast } from "sonner";
-import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
-import { userService } from "@/services/users";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ViewUserDialog } from "./ViewUserDialog";
+import { useUserActions } from "./hooks/useUserActions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useNavigate } from "react-router-dom";
 
 interface UserActionsProps {
   user: User;
 }
 
 export function UserActions({ user }: UserActionsProps) {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: () => userService.toggleUserStatus(user.id, !user.isActive),
-    onSuccess: () => {
-      toast.success(`Kullanıcı ${user.isActive ? 'pasif' : 'aktif'} duruma getirildi`);
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (error) => {
-      toast.error("Kullanıcı durumu güncellenirken hata oluştu: " + error);
-    },
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: () => userService.deleteUser(user.id),
-    onSuccess: () => {
-      toast.success("Kullanıcı başarıyla silindi");
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (error) => {
-      toast.error("Kullanıcı silinirken hata oluştu: " + error);
-    },
-  });
-
-  const handleViewUser = () => {
-    toast.info("View user details coming soon");
-  };
-
-  const handleViewHistory = () => {
-    toast.info("View history coming soon");
-  };
-
-  const handleToggleBlock = () => {
-    toggleStatusMutation.mutate();
-  };
-
-  const handleNavigateToManager = () => {
-    if (user.role !== 'manager') {
-      toast.error("Bu kullanıcı bir yönetici değil");
-      return;
-    }
-
-    // Simulate login as manager
-    localStorage.setItem('managerView', JSON.stringify({
-      id: user.id,
-      email: user.email,
-      companyId: user.companyId
-    }));
-
-    navigate(`/manager`);
-    toast.success("Yönetici paneline yönlendiriliyorsunuz");
-  };
-
-  const handleRenewLicense = () => {
-    toast.info("Renew license coming soon");
-  };
+  const {
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    toggleStatusMutation,
+    deleteUserMutation,
+    handleNavigateToManager,
+    handleRenewLicense,
+    handleViewHistory,
+  } = useUserActions(user);
 
   return (
     <>
@@ -83,7 +33,7 @@ export function UserActions({ user }: UserActionsProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-gray-500 hover:text-[#9b87f5]"
-              onClick={handleViewUser}
+              onClick={() => setIsViewDialogOpen(true)}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -131,7 +81,7 @@ export function UserActions({ user }: UserActionsProps) {
               variant="ghost" 
               size="icon" 
               className={`h-8 w-8 ${toggleStatusMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'text-gray-500 hover:text-[#9b87f5]'}`}
-              onClick={handleToggleBlock}
+              onClick={() => toggleStatusMutation.mutate()}
               disabled={toggleStatusMutation.isPending}
             >
               <Lock className="h-4 w-4" />
@@ -210,6 +160,12 @@ export function UserActions({ user }: UserActionsProps) {
         user={user}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
+      />
+
+      <ViewUserDialog
+        user={user}
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
       />
     </>
   );
