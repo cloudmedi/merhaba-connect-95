@@ -1,73 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GenresHeader } from "./GenresHeader";
 import { GenresTable } from "./GenresTable";
 import { GenresDialog } from "./GenresDialog";
 import { Genre } from "./types";
 import { useToast } from "@/components/ui/use-toast";
-
-const initialGenres: Genre[] = [
-  {
-    id: 1,
-    name: "Pop",
-    description: "Popular contemporary music",
-    songCount: 150,
-    createdAt: "2024-02-20",
-  },
-  {
-    id: 2,
-    name: "Rock",
-    description: "Guitar-driven music with strong beats",
-    songCount: 120,
-    createdAt: "2024-02-19",
-  },
-  {
-    id: 3,
-    name: "Jazz",
-    description: "Improvisational music with complex harmonies",
-    songCount: 80,
-    createdAt: "2024-02-18",
-  },
-];
+import { genreService } from "@/services/genres";
 
 export function GenresContent() {
-  const [genres, setGenres] = useState<Genre[]>(initialGenres);
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const { toast } = useToast();
 
-  const handleCreate = (newGenre: Omit<Genre, "id" | "songCount" | "createdAt">) => {
-    const genre: Genre = {
-      ...newGenre,
-      id: genres.length + 1,
-      songCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setGenres([...genres, genre]);
-    setIsDialogOpen(false);
-    toast({
-      title: "Success",
-      description: "Genre created successfully",
-    });
+  const fetchGenres = async () => {
+    try {
+      const data = await genreService.getGenres();
+      setGenres(data);
+    } catch (error) {
+      console.error('Error fetching genres:', error);
+    }
   };
 
-  const handleEdit = (updatedGenre: Genre) => {
-    setGenres(genres.map(genre => 
-      genre.id === updatedGenre.id ? updatedGenre : genre
-    ));
-    setIsDialogOpen(false);
-    setEditingGenre(null);
-    toast({
-      title: "Success",
-      description: "Genre updated successfully",
-    });
+  useEffect(() => {
+    fetchGenres();
+  }, []);
+
+  const handleCreate = async (newGenre: Omit<Genre, "id" | "songCount" | "createdAt">) => {
+    try {
+      await genreService.createGenre(newGenre);
+      setIsDialogOpen(false);
+      fetchGenres();
+      toast({
+        title: "Success",
+        description: "Genre created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating genre:', error);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setGenres(genres.filter(genre => genre.id !== id));
-    toast({
-      title: "Success",
-      description: "Genre deleted successfully",
-    });
+  const handleEdit = async (updatedGenre: Genre) => {
+    try {
+      const { id, name, description } = updatedGenre;
+      await genreService.updateGenre(id, { name, description });
+      setIsDialogOpen(false);
+      setEditingGenre(null);
+      fetchGenres();
+      toast({
+        title: "Success",
+        description: "Genre updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating genre:', error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await genreService.deleteGenre(id);
+      fetchGenres();
+      toast({
+        title: "Success",
+        description: "Genre deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting genre:', error);
+    }
   };
 
   return (
