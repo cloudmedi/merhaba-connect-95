@@ -6,6 +6,7 @@ import { PlayerControls } from "./music/PlayerControls";
 import { VolumeControl } from "./music/VolumeControl";
 import { TrackInfo } from "./music/TrackInfo";
 import { ProgressBar } from "./music/ProgressBar";
+import { useToast } from "@/hooks/use-toast";
 
 interface MusicPlayerProps {
   playlist: {
@@ -31,55 +32,75 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number>();
+  const { toast } = useToast();
 
+  // Initialize audio when component mounts or playlist changes
   useEffect(() => {
     if (playlist?.songs?.[currentSongIndex]) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
+      const audio = new Audio();
       
-      audioRef.current = new Audio(playlist.songs[currentSongIndex].file_url);
-      audioRef.current.volume = volume[0] / 100;
-      
-      audioRef.current.addEventListener('error', (e) => {
+      audio.addEventListener('error', (e) => {
         console.error('Audio error:', e);
+        toast({
+          title: "Error",
+          description: "Failed to load audio file",
+          variant: "destructive",
+        });
       });
-      
-      if (isPlaying) {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Error playing audio:", error);
-          });
-        }
-      }
-    }
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-        audioRef.current = null;
-      }
-    };
+      audio.addEventListener('loadedmetadata', () => {
+        audio.volume = volume[0] / 100;
+        if (isPlaying) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Error playing audio:", error);
+              toast({
+                title: "Playback Error",
+                description: "Failed to play audio",
+                variant: "destructive",
+              });
+            });
+          }
+        }
+      });
+
+      audio.src = playlist.songs[currentSongIndex].file_url;
+      audioRef.current = audio;
+
+      return () => {
+        audio.pause();
+        audio.src = '';
+        audio.remove();
+      };
+    }
   }, [playlist?.songs, currentSongIndex]);
 
+  // Handle volume changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume[0] / 100;
     }
   }, [volume, isMuted]);
 
+  // Handle play/pause
   useEffect(() => {
-    if (isPlaying && audioRef.current) {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error("Error playing audio:", error);
+          setIsPlaying(false);
+          toast({
+            title: "Playback Error",
+            description: "Failed to play audio",
+            variant: "destructive",
+          });
         });
       }
-      
+
       progressInterval.current = window.setInterval(() => {
         if (audioRef.current) {
           const currentProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
@@ -90,7 +111,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
           }
         }
       }, 100);
-    } else if (audioRef.current) {
+    } else {
       audioRef.current.pause();
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
