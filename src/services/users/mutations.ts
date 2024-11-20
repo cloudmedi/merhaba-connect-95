@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
-import { CreateUserData, User } from "@/types/auth";
+import { CreateUserFormValues } from "@/pages/SuperAdmin/Users/components/CreateUserForm/types";
 import { toast } from "sonner";
 
-export const createUser = async (userData: CreateUserData) => {
+export const createUser = async (userData: CreateUserFormValues) => {
   try {
     // First check if user already exists
     const { data: existingUser } = await supabase
@@ -21,7 +21,7 @@ export const createUser = async (userData: CreateUserData) => {
       .insert({
         name: userData.companyName,
         subscription_status: userData.license.type,
-        subscription_ends_at: userData.license.endDate
+        subscription_ends_at: userData.license.endDate.toISOString()
       })
       .select()
       .single();
@@ -54,8 +54,8 @@ export const createUser = async (userData: CreateUserData) => {
       .insert({
         user_id: profile.id,
         type: userData.license.type,
-        start_date: userData.license.startDate,
-        end_date: userData.license.endDate,
+        start_date: userData.license.startDate.toISOString(),
+        end_date: userData.license.endDate.toISOString(),
         quantity: userData.license.quantity
       });
 

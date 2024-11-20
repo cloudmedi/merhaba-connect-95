@@ -28,8 +28,8 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       role: "manager",
       license: {
         type: "trial",
-        start_date: new Date(),
-        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
         quantity: 1,
       },
     },
@@ -41,8 +41,10 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         ...values,
         license: {
           ...values.license,
-          start_date: values.license.start_date.toISOString(),
-          end_date: values.license.end_date.toISOString(),
+          start_date: values.license.startDate.toISOString(),
+          end_date: values.license.endDate.toISOString(),
+          type: values.license.type,
+          quantity: values.license.quantity,
         },
       });
     },
