@@ -5,13 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 
-interface Branch {
-  id: string;
-  name: string;
-  location: string;
+interface BranchSelectionStepProps {
+  selectedBranches: string[];
+  onBranchesChange: (branches: string[]) => void;
+  onNext: () => void;
+  onBack: () => void;
+  onCreate: () => void;
 }
 
-const SAMPLE_BRANCHES: Branch[] = [
+const SAMPLE_BRANCHES = [
   { id: "1", name: "Downtown Mall", location: "City Center" },
   { id: "2", name: "Airport Terminal", location: "Airport District" },
   { id: "3", name: "Central Plaza", location: "Business District" },
@@ -19,16 +21,10 @@ const SAMPLE_BRANCHES: Branch[] = [
   { id: "5", name: "Metro Station", location: "Transit Hub" },
 ];
 
-interface BranchSelectionStepProps {
-  selectedBranches: string[];
-  onBranchesChange: (branches: string[]) => void;
-  onBack: () => void;
-  onCreate: () => void;
-}
-
 export function BranchSelectionStep({ 
   selectedBranches, 
   onBranchesChange,
+  onNext,
   onBack,
   onCreate 
 }: BranchSelectionStepProps) {
@@ -76,7 +72,7 @@ export function BranchSelectionStep({
               onClick={handleSelectAll}
               className="ml-4"
             >
-              Select All
+              {selectedBranches.length === SAMPLE_BRANCHES.length ? "Deselect All" : "Select All"}
             </Button>
           </div>
 
@@ -114,11 +110,11 @@ export function BranchSelectionStep({
           Back
         </Button>
         <Button 
-          onClick={onCreate}
+          onClick={onNext}
           disabled={selectedBranches.length === 0}
           className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
         >
-          Create Event
+          Next
         </Button>
       </div>
     </div>

@@ -2,31 +2,53 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EventCategory } from "../types";
 
 interface EventDetailsStepProps {
-  eventData: {
+  formData: {
     title: string;
-    playlist: string;
+    playlistId: string;
     startDate: string;
     startTime: string;
     endDate: string;
     endTime: string;
+    category: EventCategory;
   };
-  setEventData: (data: any) => void;
+  onFormDataChange: (data: Partial<EventDetailsStepProps['formData']>) => void;
   onNext: () => void;
   onCancel: () => void;
 }
 
-export function EventDetailsStep({ eventData, setEventData, onNext, onCancel }: EventDetailsStepProps) {
+export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel }: EventDetailsStepProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Event Title</Label>
         <Input
           placeholder="Enter event title"
-          value={eventData.title}
-          onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
+          value={formData.title}
+          onChange={(e) => onFormDataChange({ title: e.target.value })}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Event Category</Label>
+        <Select
+          value={formData.category}
+          onValueChange={(value: EventCategory) => onFormDataChange({ category: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Marketing">Marketing</SelectItem>
+            <SelectItem value="Special Promotion">Special Promotion</SelectItem>
+            <SelectItem value="Holiday Music">Holiday Music</SelectItem>
+            <SelectItem value="Regular Playlist">Regular Playlist</SelectItem>
+            <SelectItem value="Background Music">Background Music</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -36,8 +58,8 @@ export function EventDetailsStep({ eventData, setEventData, onNext, onCancel }: 
           <Input
             placeholder="Search playlists..."
             className="pl-10"
-            value={eventData.playlist}
-            onChange={(e) => setEventData({ ...eventData, playlist: e.target.value })}
+            value={formData.playlistId}
+            onChange={(e) => onFormDataChange({ playlistId: e.target.value })}
           />
         </div>
       </div>
@@ -47,16 +69,16 @@ export function EventDetailsStep({ eventData, setEventData, onNext, onCancel }: 
           <Label>Start Date</Label>
           <Input
             type="date"
-            value={eventData.startDate}
-            onChange={(e) => setEventData({ ...eventData, startDate: e.target.value })}
+            value={formData.startDate}
+            onChange={(e) => onFormDataChange({ startDate: e.target.value })}
           />
         </div>
         <div className="space-y-2">
           <Label>Start Time</Label>
           <Input
             type="time"
-            value={eventData.startTime}
-            onChange={(e) => setEventData({ ...eventData, startTime: e.target.value })}
+            value={formData.startTime}
+            onChange={(e) => onFormDataChange({ startTime: e.target.value })}
           />
         </div>
       </div>
@@ -66,16 +88,16 @@ export function EventDetailsStep({ eventData, setEventData, onNext, onCancel }: 
           <Label>End Date</Label>
           <Input
             type="date"
-            value={eventData.endDate}
-            onChange={(e) => setEventData({ ...eventData, endDate: e.target.value })}
+            value={formData.endDate}
+            onChange={(e) => onFormDataChange({ endDate: e.target.value })}
           />
         </div>
         <div className="space-y-2">
           <Label>End Time</Label>
           <Input
             type="time"
-            value={eventData.endTime}
-            onChange={(e) => setEventData({ ...eventData, endTime: e.target.value })}
+            value={formData.endTime}
+            onChange={(e) => onFormDataChange({ endTime: e.target.value })}
           />
         </div>
       </div>
@@ -84,7 +106,11 @@ export function EventDetailsStep({ eventData, setEventData, onNext, onCancel }: 
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button onClick={onNext} className="bg-[#6E59A5] hover:bg-[#5a478a] text-white">
+        <Button 
+          onClick={onNext} 
+          className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
+          disabled={!formData.title || !formData.playlistId || !formData.startDate || !formData.startTime || !formData.endDate || !formData.endTime}
+        >
           Next
         </Button>
       </div>

@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EventDetailsStep } from "./EventDetailsStep";
 import { BranchSelectionStep } from "./BranchSelectionStep";
@@ -8,7 +7,7 @@ import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent } from "../types";
+import { ScheduleEvent, EventCategory } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
@@ -17,27 +16,55 @@ interface CreateEventDialogProps {
   existingEvents: ScheduleEvent[];
 }
 
+interface EventFormData {
+  title: string;
+  playlistId: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  category: EventCategory;
+  branches: string[];
+  notifications: { type: 'email' | 'system' | 'both'; timing: number; }[];
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number;
+    endDate?: Date;
+  };
+}
+
 export function CreateEventDialog({ open, onOpenChange, existingEvents }: CreateEventDialogProps) {
   const [currentTab, setCurrentTab] = useState("details");
-  const [eventData, setEventData] = useState<Partial<ScheduleEvent>>({
+  const [formData, setFormData] = useState<EventFormData>({
     title: "",
+    playlistId: "",
+    startDate: "",
+    startTime: "",
+    endDate: "",
+    endTime: "",
     category: "Regular Playlist",
-    color: {
-      primary: "#9b87f5",
-      secondary: "#E5DEFF",
-      text: "#1A1F2C"
-    },
+    branches: [],
     notifications: [],
-    branches: []
   });
 
   const handleCreate = async () => {
-    if (!eventData.start || !eventData.end) {
-      toast.error("Please select event start and end times");
-      return;
-    }
+    const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
-    const conflicts = checkEventConflicts(eventData as ScheduleEvent, existingEvents);
+    const eventData: ScheduleEvent = {
+      id: crypto.randomUUID(),
+      title: formData.title,
+      start: startDateTime,
+      end: endDateTime,
+      playlistId: formData.playlistId,
+      category: formData.category,
+      color: getEventColor(formData.category),
+      branches: formData.branches,
+      notifications: formData.notifications,
+      recurrence: formData.recurrence,
+    };
+
+    const conflicts = checkEventConflicts(eventData, existingEvents);
     if (conflicts.length > 0) {
       toast.error("Event conflicts detected", {
         description: "This event overlaps with existing events",
@@ -45,25 +72,35 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
       return;
     }
 
-    // Handle event creation logic here
     toast.success("Event created successfully");
     onOpenChange(false);
     resetForm();
   };
 
   const resetForm = () => {
-    setEventData({
+    setFormData({
       title: "",
+      playlistId: "",
+      startDate: "",
+      startTime: "",
+      endDate: "",
+      endTime: "",
       category: "Regular Playlist",
-      color: {
-        primary: "#9b87f5",
-        secondary: "#E5DEFF",
-        text: "#1A1F2C"
-      },
+      branches: [],
       notifications: [],
-      branches: []
     });
     setCurrentTab("details");
+  };
+
+  const getEventColor = (category: EventCategory) => {
+    const colors = {
+      'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
+      'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },
+      'Holiday Music': { primary: '#0EA5E9', secondary: '#D3E4FD', text: '#1A1F2C' },
+      'Regular Playlist': { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' },
+      'Background Music': { primary: '#8E9196', secondary: '#F1F0FB', text: '#1A1F2C' }
+    };
+    return colors[category];
   };
 
   return (
@@ -85,16 +122,17 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
           <div className="mt-4">
             <TabsContent value="details">
               <EventDetailsStep 
-                eventData={eventData}
-                setEventData={setEventData}
+                formData={formData}
+                onFormDataChange={(data) => setFormData({ ...formData, ...data })}
                 onNext={() => setCurrentTab("recurrence")}
+                onCancel={() => onOpenChange(false)}
               />
             </TabsContent>
 
             <TabsContent value="recurrence">
               <RecurrenceStep
-                eventData={eventData}
-                setEventData={setEventData}
+                formData={formData}
+                onFormDataChange={(data) => setFormData({ ...formData, ...data })}
                 onNext={() => setCurrentTab("notifications")}
                 onBack={() => setCurrentTab("details")}
               />
@@ -102,8 +140,8 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
 
             <TabsContent value="notifications">
               <NotificationStep
-                eventData={eventData}
-                setEventData={setEventData}
+                formData={formData}
+                onFormDataChange={(data) => setFormData({ ...formData, ...data })}
                 onNext={() => setCurrentTab("branches")}
                 onBack={() => setCurrentTab("recurrence")}
               />
@@ -111,18 +149,17 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
 
             <TabsContent value="branches">
               <BranchSelectionStep
-                selectedBranches={eventData.branches || []}
-                onBranchesChange={(branches) => 
-                  setEventData(prev => ({ ...prev, branches }))
-                }
+                selectedBranches={formData.branches}
+                onBranchesChange={(branches) => setFormData({ ...formData, branches })}
                 onNext={() => setCurrentTab("preview")}
                 onBack={() => setCurrentTab("notifications")}
+                onCreate={handleCreate}
               />
             </TabsContent>
 
             <TabsContent value="preview">
               <PreviewStep
-                eventData={eventData as ScheduleEvent}
+                formData={formData}
                 onBack={() => setCurrentTab("branches")}
                 onCreate={handleCreate}
               />
