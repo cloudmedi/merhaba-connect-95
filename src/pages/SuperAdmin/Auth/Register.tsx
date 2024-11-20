@@ -39,8 +39,7 @@ export default function SuperAdminRegister() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // 1. Create auth user with metadata
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const { data: { user }, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -52,13 +51,31 @@ export default function SuperAdminRegister() {
         }
       });
 
-      if (signUpError) throw signUpError;
-
-      if (!authData.user) {
-        throw new Error("Failed to create user");
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
       }
 
-      toast.success("Registration successful! Please check your email to verify your account.");
+      if (!user) {
+        throw new Error('User creation failed');
+      }
+
+      // Wait a bit for the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Verify the profile was created
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile verification error:', profileError);
+        throw new Error('Failed to verify user profile');
+      }
+
+      toast.success("Registration successful! Please login to continue.");
       navigate("/super-admin/login");
     } catch (error: any) {
       console.error('Registration error:', error);
