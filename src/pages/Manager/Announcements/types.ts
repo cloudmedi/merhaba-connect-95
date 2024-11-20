@@ -14,3 +14,10 @@ export interface CampaignFile {
   size: string;
   duration: string;
 }
+
+export interface FileWithPreview {
+  file: File;
+  previewUrl: string;
+  isPlaying: boolean;
+  duration?: number;
+}
