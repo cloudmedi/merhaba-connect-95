@@ -16,7 +16,6 @@ serve(async (req) => {
     // Get the form data from the request
     const formData = await req.formData()
     const file = formData.get('file') as File
-    const metadata = JSON.parse(formData.get('metadata') as string)
 
     if (!file) {
       return new Response(
@@ -36,20 +35,31 @@ serve(async (req) => {
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
 
+    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
+      throw new Error('Missing Bunny CDN configuration')
+    }
+
     const fileName = `${crypto.randomUUID()}-${file.name}`
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`
+
+    console.log('Uploading to Bunny CDN:', {
+      url: bunnyUrl,
+      fileName,
+      fileType: file.type
+    })
 
     // Upload file to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
-        'AccessKey': bunnyApiKey!,
+        'AccessKey': bunnyApiKey,
         'Content-Type': file.type,
       },
       body: file,
     })
 
     if (!uploadResponse.ok) {
+      console.error('Bunny CDN upload failed:', await uploadResponse.text())
       throw new Error('Failed to upload to Bunny CDN')
     }
 
@@ -61,30 +71,27 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
+    console.log('User authenticated:', user.id)
+
     // Save file metadata to Supabase
     const { data: songData, error: insertError } = await supabase
       .from('songs')
       .insert({
-        title: metadata.title,
-        artist: metadata.artist,
-        album: metadata.album,
-        genre: metadata.genres,
-        duration: metadata.duration,
+        title: file.name.replace(/\.[^/.]+$/, ""),
         file_url: bunnyUrl,
         bunny_id: fileName,
-        artwork_url: metadata.artworkUrl,
         created_by: user.id
       })
       .select()
       .single()
 
     if (insertError) {
+      console.error('Database insert error:', insertError)
       throw new Error('Failed to save song metadata')
     }
 
     console.log('Successfully uploaded song:', {
       fileName,
-      metadata,
       songData
     })
 
