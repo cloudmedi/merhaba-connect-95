@@ -21,7 +21,6 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    // Since our FormValues type matches CreateUserData, this cast is safe
     onSubmit(values as CreateUserData);
   };
 
