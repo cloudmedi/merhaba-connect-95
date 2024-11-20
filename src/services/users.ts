@@ -13,11 +13,11 @@ export const userService = {
   }) {
     let query = supabase
       .from('users')
-      .select('*, company:company_id(id, name, subscription_status, subscription_ends_at)')
+      .select('*, companies(id, name, subscription_status, subscription_ends_at)')
       .eq('role', 'manager');
 
     if (filters?.search) {
-      query = query.or(`firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+      query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
     }
 
     if (filters?.status) {
@@ -25,7 +25,7 @@ export const userService = {
     }
 
     if (filters?.license) {
-      query = query.eq('company.subscription_status', filters.license);
+      query = query.eq('companies.subscription_status', filters.license);
     }
 
     if (filters?.expiry) {
@@ -35,10 +35,10 @@ export const userService = {
       const futureDate = thirtyDaysFromNow.toISOString();
 
       if (filters.expiry === 'this-month') {
-        query = query.gte('company.subscription_ends_at', today)
-                    .lte('company.subscription_ends_at', futureDate);
+        query = query.gte('companies.subscription_ends_at', today)
+                    .lte('companies.subscription_ends_at', futureDate);
       } else if (filters.expiry === 'expired') {
-        query = query.lt('company.subscription_ends_at', today);
+        query = query.lt('companies.subscription_ends_at', today);
       }
     }
 
