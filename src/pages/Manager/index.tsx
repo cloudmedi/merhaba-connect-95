@@ -3,6 +3,7 @@ import ManagerDashboard from "./Dashboard";
 import { ManagerNav } from "@/components/ManagerNav";
 import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 import { ManagerHeader } from "@/components/ManagerHeader";
+import Announcements from "./Announcements";
 
 export default function Manager() {
   return (
@@ -15,7 +16,7 @@ export default function Manager() {
             <Routes>
               <Route index element={<ManagerDashboard />} />
               <Route path="playlists/:id" element={<PlaylistDetail />} />
-              {/* Other routes will be added here */}
+              <Route path="announcements" element={<Announcements />} />
             </Routes>
           </div>
         </main>
