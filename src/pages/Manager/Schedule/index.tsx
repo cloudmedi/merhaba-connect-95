@@ -4,7 +4,6 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { CreateEventDialog } from "./components/CreateEventDialog";
 
 export default function Schedule() {
@@ -33,20 +32,6 @@ export default function Schedule() {
             left: 'prev,next today',
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
-          }}
-          customButtons={{
-            prev: {
-              icon: 'chevron-left',
-              click: function(calendar) {
-                calendar.prev();
-              }
-            },
-            next: {
-              icon: 'chevron-right',
-              click: function(calendar) {
-                calendar.next();
-              }
-            }
           }}
           slotMinTime="00:00:00"
           slotMaxTime="24:00:00"
