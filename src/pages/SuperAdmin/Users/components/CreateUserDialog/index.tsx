@@ -21,7 +21,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error("Failed to create user: " + error.message);
+      if (error.message.includes('already exists')) {
+        toast.error("A user with this email already exists");
+      } else {
+        toast.error("Failed to create user: " + error.message);
+      }
     },
   });
 

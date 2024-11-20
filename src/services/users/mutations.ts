@@ -3,6 +3,17 @@ import { CreateUserData } from '@/types/auth';
 
 export const createUser = async (userData: CreateUserData) => {
   try {
+    // First check if user already exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', userData.email)
+      .single();
+
+    if (existingUser) {
+      throw new Error('A user with this email already exists');
+    }
+
     // 1. Create company
     const { data: company, error: companyError } = await supabase
       .from('companies')
@@ -16,7 +27,7 @@ export const createUser = async (userData: CreateUserData) => {
 
     if (companyError) throw new Error('Failed to create company: ' + companyError.message);
 
-    // 2. Create auth user
+    // 2. Create auth user with better error handling
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
       password: 'temp123!', // Temporary password
@@ -29,7 +40,20 @@ export const createUser = async (userData: CreateUserData) => {
       }
     });
 
-    if (authError || !authData.user) throw new Error('Failed to create auth user: ' + authError?.message);
+    if (authError) {
+      // If auth user creation fails, clean up the company
+      await supabase.from('companies').delete().eq('id', company.id);
+      
+      if (authError.message.includes('already registered')) {
+        throw new Error('A user with this email already exists');
+      }
+      throw new Error('Failed to create auth user: ' + authError.message);
+    }
+
+    if (!authData.user) {
+      await supabase.from('companies').delete().eq('id', company.id);
+      throw new Error('Failed to create user account');
+    }
 
     // 3. Update profile
     const { error: profileError } = await supabase
@@ -44,7 +68,12 @@ export const createUser = async (userData: CreateUserData) => {
       })
       .eq('id', authData.user.id);
 
-    if (profileError) throw new Error('Failed to update profile: ' + profileError.message);
+    if (profileError) {
+      // Clean up if profile update fails
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      await supabase.from('companies').delete().eq('id', company.id);
+      throw new Error('Failed to update profile: ' + profileError.message);
+    }
 
     // 4. Create license
     const { error: licenseError } = await supabase
@@ -57,7 +86,12 @@ export const createUser = async (userData: CreateUserData) => {
         quantity: userData.license.quantity
       });
 
-    if (licenseError) throw new Error('Failed to create license: ' + licenseError.message);
+    if (licenseError) {
+      // Clean up everything if license creation fails
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      await supabase.from('companies').delete().eq('id', company.id);
+      throw new Error('Failed to create license: ' + licenseError.message);
+    }
 
     return {
       id: authData.user.id,
