@@ -1,32 +1,24 @@
 import { supabase } from './supabase';
-import { Company } from '@/types/auth';
+
+interface CreateCompanyData {
+  name: string;
+  subscriptionStatus: 'trial' | 'premium';
+  subscriptionEndsAt: string;
+}
 
 export const companyService = {
-  async createCompany(data: Partial<Company>) {
+  async createCompany(data: CreateCompanyData) {
     const { data: company, error } = await supabase
       .from('companies')
       .insert({
         name: data.name,
-        subscriptionStatus: data.subscriptionStatus || 'trial',
-        subscriptionEndsAt: data.subscriptionEndsAt,
-        maxBranches: data.maxBranches || 1,
-        maxDevices: data.maxDevices || 5
+        subscription_status: data.subscriptionStatus === 'premium' ? 'active' : 'trial',
+        subscription_ends_at: data.subscriptionEndsAt
       })
       .select()
       .single();
-    
+
     if (error) throw error;
     return company;
-  },
-
-  async getCompany(id: string) {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
   }
 };

@@ -9,6 +9,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateUserData } from "@/types/auth";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -49,7 +50,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (values: z.infer<typeof formSchema>) => {
+    mutationFn: (values: CreateUserData) => {
       return userService.createUser(values);
     },
     onSuccess: () => {

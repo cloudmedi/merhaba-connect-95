@@ -1,21 +1,7 @@
 import { supabase } from './supabase';
-import { User } from '@/types/auth';
+import { User, CreateUserData } from '@/types/auth';
 import { companyService } from './company';
 import { licenseService } from './license';
-
-interface CreateUserData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  role: 'admin' | 'manager';
-  license: {
-    type: 'trial' | 'premium';
-    startDate: string;
-    endDate: string;
-    quantity: number;
-  };
-}
 
 export const userService = {
   async createUser(userData: CreateUserData) {
@@ -29,7 +15,7 @@ export const userService = {
     // 2. Create Supabase auth user
     const { data: authUser, error: authError } = await supabase.auth.signUp({
       email: userData.email,
-      password: 'temp123!', // Geçici şifre
+      password: 'temp123!',
       options: {
         data: {
           firstName: userData.firstName,
