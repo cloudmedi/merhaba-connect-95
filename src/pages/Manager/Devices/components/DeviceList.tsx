@@ -7,6 +7,7 @@ import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { DeviceGroupManagement, DeviceGroup } from "./DeviceGroupManagement";
+import { toast } from "sonner";
 
 // Mock data generation
 const generateMockDevices = (count: number) => {
@@ -48,6 +49,19 @@ export function DeviceList() {
   
   const itemsPerPage = 10;
 
+  const handleBulkPower = () => {
+    toast.success(`Power command sent to ${selectedDevices.length} devices`);
+  };
+
+  const handleBulkReset = () => {
+    toast.success(`Reset command sent to ${selectedDevices.length} devices`);
+  };
+
+  const handleBulkDelete = () => {
+    toast.success(`${selectedDevices.length} devices deleted`);
+    setSelectedDevices([]);
+  };
+
   const filteredDevices = mockDevices.filter(
     (device) =>
       (device.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,15 +91,16 @@ export function DeviceList() {
   const onlineDevices = mockDevices.filter(d => d.status === "online").length;
   const offlineDevices = mockDevices.length - onlineDevices;
 
+  const handleCreateGroup = (group: DeviceGroup) => {
+    setDeviceGroups(prev => [...prev, group]);
+    toast.success("Device group created successfully");
+  };
+
   const handleSort = (key: string) => {
     setSortConfig(current => ({
       key,
       direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
     }));
-  };
-
-  const handleCreateGroup = (group: DeviceGroup) => {
-    setDeviceGroups(prev => [...prev, group]);
   };
 
   return (
@@ -113,10 +128,7 @@ export function DeviceList() {
         />
         
         <div className="flex items-center gap-2 flex-wrap">
-          <DeviceGroupManagement
-            selectedDevices={selectedDevices}
-            onCreateGroup={handleCreateGroup}
-          />
+          <DeviceGroupManagement onCreateGroup={handleCreateGroup} />
           <BulkActions
             selectedDevices={selectedDevices}
             onPowerAll={handleBulkPower}
