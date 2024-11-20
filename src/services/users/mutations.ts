@@ -38,7 +38,7 @@ export const createUser = async (userData: CreateUserFormValues) => {
     // We just need to wait a moment and then fetch it
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Fetch the created profile
+    // Fetch the created profile from profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select(`
