@@ -15,7 +15,7 @@ export const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   role: z.enum(['admin', 'manager'] as const),
   license: licenseSchema
-}) as z.ZodType<CreateUserData>;
+}) satisfies z.ZodType<CreateUserData>;
 
 export type FormValues = z.infer<typeof formSchema>;
 
