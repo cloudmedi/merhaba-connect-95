@@ -7,13 +7,13 @@ interface AnnouncementFileProps {
   file: {
     id: string;
     file: File;
-    playbackType: "immediate" | "smooth";
-    interval?: number;
-    songInterval?: number;
-    scheduledTime?: string;
+    playbackType: "smooth" | "immediate";
+    interval: number;
+    songInterval: number;
+    scheduledTime: string;
   };
   onRemove: () => void;
-  onUpdateSettings: (settings: Partial<typeof file>) => void;
+  onUpdateSettings: (settings: Partial<typeof AnnouncementFileProps.file>) => void;
 }
 
 export function AnnouncementFile({ file, onRemove, onUpdateSettings }: AnnouncementFileProps) {
@@ -37,8 +37,13 @@ export function AnnouncementFile({ file, onRemove, onUpdateSettings }: Announcem
       </div>
 
       <PlaybackSettings
-        settings={file}
-        onUpdate={onUpdateSettings}
+        settings={{
+          playbackType: file.playbackType,
+          interval: file.interval,
+          songInterval: file.songInterval,
+          scheduledTime: file.scheduledTime
+        }}
+        onUpdate={(settings) => onUpdateSettings({ ...file, ...settings })}
       />
     </div>
   );
