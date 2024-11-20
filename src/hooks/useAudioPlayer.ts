@@ -15,7 +15,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     if (!audioUrl) return;
 
     const audio = new Audio();
-    audio.preload = "auto"; // Önbelleğe alma stratejisini değiştir
+    audio.preload = "metadata";
     
     const handleCanPlay = () => {
       setIsLoading(false);
@@ -84,6 +84,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       setIsPlaying(false);
       setProgress(0);
       setError(null);
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
     };
   }, [audioUrl, toast]);
 
