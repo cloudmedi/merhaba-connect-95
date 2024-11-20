@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { CreateUserData, User } from '@/types/auth';
+import { CreateUserData } from '@/types/auth';
 
 export const createUser = async (userData: CreateUserData) => {
   // 1. Create company
@@ -30,7 +30,7 @@ export const createUser = async (userData: CreateUserData) => {
 
   if (authError) throw authError;
 
-  // 3. Create profile record
+  // 3. Update profile record with company_id
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .update({
@@ -58,7 +58,7 @@ export const createUser = async (userData: CreateUserData) => {
   return profile;
 };
 
-export const updateUser = async (id: string, updates: Partial<User>) => {
+export const updateUser = async (id: string, updates: Partial<CreateUserData>) => {
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
