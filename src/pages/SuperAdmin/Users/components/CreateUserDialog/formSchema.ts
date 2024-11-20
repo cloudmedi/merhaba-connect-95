@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const licenseSchema = z.object({
-  type: z.enum(['trial', 'premium']),
+  type: z.enum(['trial', 'premium']).required(),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   quantity: z.number().min(1, "At least 1 license is required")
@@ -14,7 +14,7 @@ export const formSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   role: z.enum(['admin', 'manager']),
   license: licenseSchema
-}).required();
+});
 
 export type FormValues = z.infer<typeof formSchema>;
 
