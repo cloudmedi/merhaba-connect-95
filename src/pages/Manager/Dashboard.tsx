@@ -2,26 +2,28 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-import { businessHoursPlaylists, eveningPlaylists, weekendPlaylists } from "@/data/playlists";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { GridPlaylist } from "@/components/dashboard/types";
+import type { Playlist } from "@/types/api";
 
-interface PlaylistsData {
-  businessHours: typeof businessHoursPlaylists;
-  evening: typeof eveningPlaylists;
-  weekend: typeof weekendPlaylists;
-}
+const transformPlaylistToGridFormat = (playlist: Playlist): GridPlaylist => ({
+  id: playlist.id,
+  title: playlist.name,
+  artwork: playlist.artwork_url || "/placeholder.svg",
+  genre: "Various", // You might want to fetch this from the genres table
+  mood: "Various", // You might want to fetch this from the moods table
+});
 
-// Simulate API call
-const fetchPlaylists = async (): Promise<PlaylistsData> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        businessHours: businessHoursPlaylists,
-        evening: eveningPlaylists,
-        weekend: weekendPlaylists
-      });
-    }, 1500);
-  });
+// Fetch playlists from Supabase
+const fetchPlaylists = async () => {
+  const { data, error } = await supabase
+    .from('playlists')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as Playlist[];
 };
 
 export default function ManagerDashboard() {
@@ -29,6 +31,21 @@ export default function ManagerDashboard() {
     queryKey: ['playlists'],
     queryFn: fetchPlaylists,
   });
+
+  const businessHoursPlaylists = playlists
+    ?.filter(p => !p.is_public)
+    .slice(0, 6)
+    .map(transformPlaylistToGridFormat) || [];
+
+  const eveningPlaylists = playlists
+    ?.filter(p => !p.is_public)
+    .slice(6, 12)
+    .map(transformPlaylistToGridFormat) || [];
+
+  const weekendPlaylists = playlists
+    ?.filter(p => p.is_public)
+    .slice(0, 6)
+    .map(transformPlaylistToGridFormat) || [];
 
   return (
     <div>
@@ -51,21 +68,21 @@ export default function ManagerDashboard() {
         <PlaylistGrid 
           title="Business Hours" 
           description="Active during business hours"
-          playlists={playlists?.businessHours || []}
+          playlists={businessHoursPlaylists}
           isLoading={isLoading}
         />
         
         <PlaylistGrid 
           title="Evening Ambience" 
           description="Perfect for evening atmosphere"
-          playlists={playlists?.evening || []}
+          playlists={eveningPlaylists}
           isLoading={isLoading}
         />
         
         <PlaylistGrid 
           title="Weekend Selection" 
           description="Special weekend playlists"
-          playlists={playlists?.weekend || []}
+          playlists={weekendPlaylists}
           isLoading={isLoading}
         />
       </div>
