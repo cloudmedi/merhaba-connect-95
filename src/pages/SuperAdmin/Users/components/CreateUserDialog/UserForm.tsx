@@ -21,20 +21,8 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    const formData: CreateUserData = {
-      email: values.email,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      companyName: values.companyName,
-      role: values.role,
-      license: {
-        type: values.license.type,
-        startDate: values.license.startDate,
-        endDate: values.license.endDate,
-        quantity: values.license.quantity
-      }
-    };
-    onSubmit(formData);
+    // Since FormValues matches CreateUserData exactly, we can pass it directly
+    onSubmit(values);
   };
 
   return (
