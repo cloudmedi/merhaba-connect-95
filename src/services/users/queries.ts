@@ -39,7 +39,7 @@ export const getUsersQuery = async (filters?: {
   }
 
   if (filters?.license) {
-    query = query.eq('companies.subscription_status', filters.license);
+    query = query.eq('licenses.type', filters.license);
   }
 
   if (filters?.expiry) {
@@ -50,10 +50,10 @@ export const getUsersQuery = async (filters?: {
 
     if (filters.expiry === 'this-month') {
       query = query
-        .gte('companies.subscription_ends_at', today)
-        .lte('companies.subscription_ends_at', futureDate);
+        .gte('licenses.end_date', today)
+        .lte('licenses.end_date', futureDate);
     } else if (filters.expiry === 'expired') {
-      query = query.lt('companies.subscription_ends_at', today);
+      query = query.lt('licenses.end_date', today);
     }
   }
 

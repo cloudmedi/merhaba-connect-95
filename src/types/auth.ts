@@ -16,32 +16,8 @@ export interface User {
   };
   license?: {
     type: string;
-    startDate: string;
-    endDate: string | null;
+    start_date: string;
+    end_date: string | null;
     quantity: number;
   };
-}
-
-export interface CreateUserData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  companyName: string;
-  role: "admin" | "manager";
-  license: {
-    type: "trial" | "premium";
-    startDate: string;
-    endDate: string;
-    quantity: number;
-  };
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
 }

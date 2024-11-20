@@ -4,12 +4,27 @@ import { User } from "@/types/auth";
 import { UserAvatar } from "./UserAvatar";
 import { UserStatus } from "./UserStatus";
 import { UserActions } from "./UserActions";
+import { format } from "date-fns";
 
 interface UserTableRowProps {
   user: User;
 }
 
 export function UserTableRow({ user }: UserTableRowProps) {
+  const formatDate = (date: string | null | undefined) => {
+    if (!date) return 'N/A';
+    try {
+      return format(new Date(date), 'dd MMM yyyy');
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const getLicenseType = () => {
+    if (!user.license?.type) return 'N/A';
+    return user.license.type.charAt(0).toUpperCase() + user.license.type.slice(1);
+  };
+
   return (
     <TableRow className="border-b hover:bg-gray-50">
       <TableCell className="p-4">
@@ -22,13 +37,19 @@ export function UserTableRow({ user }: UserTableRowProps) {
       </TableCell>
       <TableCell className="p-4">
         <Badge 
-          variant="secondary"
-          className="bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20"
+          variant={user.license?.type === 'premium' ? 'default' : 'secondary'}
+          className={
+            user.license?.type === 'premium' 
+              ? 'bg-[#9b87f5] text-white hover:bg-[#8b77e5]'
+              : 'bg-[#9b87f5]/10 text-[#9b87f5] hover:bg-[#9b87f5]/20'
+          }
         >
-          {user.license?.type || 'N/A'}
+          {getLicenseType()}
         </Badge>
       </TableCell>
-      <TableCell className="p-4">{user.license?.endDate || 'N/A'}</TableCell>
+      <TableCell className="p-4">
+        {formatDate(user.license?.end_date)}
+      </TableCell>
       <TableCell className="p-4 text-right space-x-1">
         <UserActions user={user} />
       </TableCell>
