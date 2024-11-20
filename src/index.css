@@ -63,3 +63,61 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: white;
 }
+
+/* FullCalendar Custom Styles */
+.fc {
+  @apply font-sans;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  @apply mb-4;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-lg font-semibold text-gray-900;
+}
+
+.fc .fc-button {
+  @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#6E59A5] focus:ring-offset-2;
+}
+
+.fc .fc-button-primary {
+  @apply bg-[#6E59A5] border-[#6E59A5] text-white hover:bg-[#5a478a] hover:border-[#5a478a];
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  @apply bg-[#4c3b7a] border-[#4c3b7a];
+}
+
+.fc .fc-timegrid-slot {
+  @apply h-16;
+}
+
+.fc .fc-timegrid-slot-label {
+  @apply text-sm text-gray-500;
+}
+
+.fc .fc-timegrid-axis {
+  @apply border-r border-gray-200;
+}
+
+.fc .fc-col-header-cell {
+  @apply bg-gray-50 py-3;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  @apply border-red-500;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  @apply border-red-500;
+}
+
+.fc .fc-event {
+  @apply bg-[#6E59A5] border-[#6E59A5] rounded-md cursor-pointer;
+}
+
+.fc .fc-highlight {
+  @apply bg-[#6E59A5]/10;
+}
