@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
-import { Power, RefreshCw, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Power, RefreshCw, Clock, Edit, Trash2 } from "lucide-react";
 import { DeviceScheduleDialog } from "./DeviceScheduleDialog";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EditDeviceDialog } from "./EditDeviceDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface DeviceProps {
   device: {
@@ -30,9 +29,14 @@ interface DeviceProps {
 
 export function DeviceRow({ device }: DeviceProps) {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleReset = () => {
     toast.success("Device reset command sent");
+  };
+
+  const handleDelete = () => {
+    toast.success("Device deleted successfully");
   };
 
   return (
@@ -43,9 +47,7 @@ export function DeviceRow({ device }: DeviceProps) {
             <div className="flex items-center gap-2">
               <div
                 className={`h-3 w-3 rounded-full ${
-                  device.status === "online"
-                    ? "bg-green-500"
-                    : "bg-gray-300"
+                  device.status === "online" ? "bg-green-500" : "bg-gray-300"
                 }`}
               />
               <h3 className="font-semibold">{device.branchName}</h3>
@@ -69,11 +71,7 @@ export function DeviceRow({ device }: DeviceProps) {
             >
               <Clock className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleReset}
-            >
+            <Button variant="outline" size="icon" onClick={handleReset}>
               <RefreshCw className="h-4 w-4" />
             </Button>
             <Button
@@ -83,12 +81,43 @@ export function DeviceRow({ device }: DeviceProps) {
             >
               <Power className="h-4 w-4" />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowEditDialog(true)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Device</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this device? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </CardContent>
       <DeviceScheduleDialog
         open={showScheduleDialog}
         onOpenChange={setShowScheduleDialog}
+        device={device}
+      />
+      <EditDeviceDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
         device={device}
       />
     </Card>
