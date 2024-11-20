@@ -20,18 +20,18 @@ const fetchPlaylists = async (): Promise<PlaylistsData> => {
         evening: eveningPlaylists,
         weekend: weekendPlaylists
       });
-    }, 1500); // Simulate loading delay
+    }, 1500);
   });
 };
 
 export default function ManagerDashboard() {
-  const { data: playlists, isLoading } = useQuery<PlaylistsData>({
+  const { data: playlists, isLoading } = useQuery({
     queryKey: ['playlists'],
     queryFn: fetchPlaylists,
   });
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Assigned Playlists</h1>
