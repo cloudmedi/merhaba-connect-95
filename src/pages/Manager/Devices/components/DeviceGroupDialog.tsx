@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DeviceGroup } from "./DeviceGroupManagement";
+import { Search } from "lucide-react";
 
 interface DeviceGroupDialogProps {
   open: boolean;
@@ -21,10 +22,10 @@ interface Device {
 }
 
 // Mock data - replace with your actual device data
-const mockDevices: Device[] = Array.from({ length: 10 }, (_, i) => ({
+const mockDevices: Device[] = Array.from({ length: 500 }, (_, i) => ({
   id: `${i + 1}`,
   branchName: `Branch ${i + 1}`,
-  location: `Location ${i + 1}`,
+  location: `Location ${Math.floor(i / 100) + 1}`,
 }));
 
 export function DeviceGroupDialog({
@@ -35,6 +36,7 @@ export function DeviceGroupDialog({
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleCreateGroup = () => {
     if (!groupName) {
@@ -60,6 +62,7 @@ export function DeviceGroupDialog({
     setGroupName("");
     setDescription("");
     setSelectedDevices([]);
+    setSearchTerm("");
   };
 
   const toggleDevice = (deviceId: string) => {
@@ -69,6 +72,11 @@ export function DeviceGroupDialog({
         : [...prev, deviceId]
     );
   };
+
+  const filteredDevices = mockDevices.filter(device => 
+    device.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    device.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,9 +108,18 @@ export function DeviceGroupDialog({
             <label className="text-sm font-medium">
               Cihazlar ({selectedDevices.length} seçili)
             </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Cihaz ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 mb-2"
+              />
+            </div>
             <ScrollArea className="h-[300px] border rounded-md p-4">
               <div className="space-y-4">
-                {mockDevices.map((device) => (
+                {filteredDevices.map((device) => (
                   <div key={device.id} className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md">
                     <Checkbox
                       checked={selectedDevices.includes(device.id)}
@@ -114,13 +131,22 @@ export function DeviceGroupDialog({
                     </div>
                   </div>
                 ))}
+                {filteredDevices.length === 0 && (
+                  <div className="text-center text-gray-500 py-4">
+                    Sonuç bulunamadı
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </div>
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => {
+            onOpenChange(false);
+            setSearchTerm("");
+            setSelectedDevices([]);
+          }}>
             İptal
           </Button>
           <Button onClick={handleCreateGroup}>
