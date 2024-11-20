@@ -63,7 +63,7 @@ export default function SuperAdminRegister() {
       // Wait a bit for the trigger to complete
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Verify the profile was created
+      // Verify the profile was created by checking the profiles table
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
