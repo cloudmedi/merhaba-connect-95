@@ -55,7 +55,19 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const createUserMutation = useMutation({
     mutationFn: (values: z.infer<typeof formSchema>) => {
-      return userService.createUser(values);
+      return userService.createUser({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        companyName: values.companyName,
+        role: values.role,
+        license: {
+          type: values.license.type,
+          startDate: values.license.startDate.toISOString(),
+          endDate: values.license.endDate.toISOString(),
+          quantity: values.license.quantity,
+        },
+      });
     },
     onSuccess: () => {
       toast.success("User created successfully");
