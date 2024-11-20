@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { CreateUserData } from '@/types/auth';
 
 export const createUser = async (userData: CreateUserData) => {
