@@ -5,18 +5,7 @@ import { toast } from "sonner";
 
 export const createUser = async (userData: CreateUserFormValues) => {
   try {
-    // First check if user already exists
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', userData.email)
-      .single();
-
-    if (existingUser) {
-      throw new Error('A user with this email already exists');
-    }
-
-    // Create company first
+    // First create the company
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .insert({
@@ -29,22 +18,39 @@ export const createUser = async (userData: CreateUserFormValues) => {
 
     if (companyError) throw companyError;
 
-    // Generate a UUID for the new profile
-    const newProfileId = crypto.randomUUID();
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: userData.email,
+      password: 'temp123!', // Temporary password
+      options: {
+        data: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role,
+          companyId: company.id
+        }
+      }
+    });
 
-    // Create profile
+    if (authError) throw authError;
+
+    // The profile will be created automatically by the database trigger
+    // We just need to wait a moment and then fetch it
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Fetch the created profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .insert({
-        id: newProfileId,
-        email: userData.email,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
-        role: userData.role,
-        company_id: company.id,
-        is_active: true
-      })
-      .select()
+      .select(`
+        *,
+        companies (
+          id,
+          name,
+          subscription_status,
+          subscription_ends_at
+        )
+      `)
+      .eq('id', authData.user!.id)
       .single();
 
     if (profileError) throw profileError;
@@ -64,6 +70,7 @@ export const createUser = async (userData: CreateUserFormValues) => {
 
     return profile;
   } catch (error: any) {
+    console.error('Error creating user:', error);
     toast.error("Failed to create user: " + error.message);
     throw error;
   }
@@ -81,40 +88,14 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
   return data;
 };
 
-export const deleteUser = async (userId: string): Promise<{ success: boolean }> => {
-  try {
-    // Check if profile exists first
-    const { data: profile, error: fetchError } = await supabase
-      .from('profiles')
-      .select()
-      .eq('id', userId)
-      .single();
-
-    if (fetchError) {
-      console.error('Fetch profile error:', fetchError);
-      throw new Error('User not found');
-    }
-
-    if (!profile) {
-      throw new Error('User not found');
-    }
-
-    // Delete the profile
-    const { error: deleteError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (deleteError) {
-      console.error('Delete profile error:', deleteError);
-      throw new Error('Failed to delete user');
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Failed to delete user:', error);
-    throw new Error(error.message || 'Failed to delete user');
-  }
+export const deleteUser = async (userId: string) => {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+  
+  if (error) throw error;
+  return { success: true };
 };
 
 export const toggleUserStatus = async (id: string, isActive: boolean) => {
@@ -134,7 +115,7 @@ export const renewLicense = async (userId: string) => {
     .from('licenses')
     .update({ 
       type: 'premium',
-      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     })
     .eq('user_id', userId)
     .select()
