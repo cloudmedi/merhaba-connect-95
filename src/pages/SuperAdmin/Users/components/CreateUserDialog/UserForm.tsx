@@ -6,7 +6,7 @@ import { CreateUserData } from "@/types/auth";
 import { UserBasicInfo } from "./UserBasicInfo";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { LicenseInfo } from "./LicenseInfo";
-import { formSchema, FormValues, defaultValues, mapFormToCreateUserData } from "./formSchema";
+import { formSchema, FormValues, defaultValues } from "./formSchema";
 
 interface UserFormProps {
   onSubmit: (data: CreateUserData) => void;
@@ -22,12 +22,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    try {
-      const userData = mapFormToCreateUserData(values);
-      onSubmit(userData);
-    } catch (error) {
-      console.error("Form validation failed:", error);
-    }
+    onSubmit(values);
   };
 
   return (

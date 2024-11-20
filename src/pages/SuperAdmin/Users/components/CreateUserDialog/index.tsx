@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { UserForm } from "./UserForm";
 import { FormValues } from "./formSchema";
-import { CreateUserData } from "@/types/auth";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -15,16 +14,8 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const queryClient = useQueryClient();
 
   const createUserMutation = useMutation({
-    mutationFn: async (values: FormValues) => {
-      const userData: CreateUserData = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        companyName: values.companyName,
-        role: values.role,
-        license: values.license
-      };
-      return userService.createUser(userData);
+    mutationFn: (values: FormValues) => {
+      return userService.createUser(values);
     },
     onSuccess: () => {
       toast.success("User created successfully");
