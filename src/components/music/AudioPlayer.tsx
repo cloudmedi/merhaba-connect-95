@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
 import { VolumeControl } from "./VolumeControl";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -15,10 +16,19 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
     isPlaying,
     progress,
     isLoading,
+    error,
     togglePlay,
     seek,
     setVolume
   } = useAudioPlayer(audioUrl);
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="my-2">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -15,16 +15,14 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     if (!audioUrl) return;
 
     const audio = new Audio();
+    audio.preload = "auto"; // Önbelleğe alma stratejisini değiştir
     
     const handleCanPlay = () => {
       setIsLoading(false);
       setDuration(audio.duration);
+      setError(null);
       if (isPlaying) {
-        audio.play().catch(error => {
-          console.error("Playback error:", error);
-          setError("Playback failed");
-          setIsPlaying(false);
-        });
+        audio.play().catch(handlePlayError);
       }
     };
 
@@ -35,10 +33,23 @@ export function useAudioPlayer(audioUrl: string | undefined) {
 
     const handleError = () => {
       setIsLoading(false);
-      setError("Failed to load audio");
+      const errorMessage = "Ses dosyası yüklenemedi. Lütfen başka bir format veya tarayıcı deneyin.";
+      setError(errorMessage);
       toast({
-        title: "Error",
-        description: "Failed to load audio. Please try another format or browser.",
+        title: "Hata",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      setIsPlaying(false);
+    };
+
+    const handlePlayError = (error: Error) => {
+      console.error("Oynatma hatası:", error);
+      setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
+      setIsPlaying(false);
+      toast({
+        title: "Oynatma Hatası",
+        description: "Ses oynatılamıyor. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
     };
@@ -50,6 +61,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleEnded = () => {
       setIsPlaying(false);
       setProgress(0);
+      audio.currentTime = 0;
     };
 
     audio.addEventListener('canplay', handleCanPlay);
@@ -69,29 +81,34 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.src = '';
+      setIsPlaying(false);
+      setProgress(0);
+      setError(null);
     };
   }, [audioUrl, toast]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current) return;
 
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Playback error:", error);
-          setError("Playback failed");
-          setIsPlaying(false);
-        });
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
       }
+      setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error("Oynatma hatası:", error);
+      setError("Ses oynatılamıyor. Lütfen tekrar deneyin.");
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const seek = (value: number) => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !duration) return;
     const time = (value / 100) * duration;
     audioRef.current.currentTime = time;
     setProgress(value);
@@ -99,7 +116,8 @@ export function useAudioPlayer(audioUrl: string | undefined) {
 
   const setVolume = (value: number) => {
     if (!audioRef.current) return;
-    audioRef.current.volume = value / 100;
+    const volume = Math.max(0, Math.min(1, value / 100));
+    audioRef.current.volume = volume;
   };
 
   return {
