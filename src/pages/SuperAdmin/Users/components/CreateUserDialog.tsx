@@ -9,7 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BasicInfoSection } from "./CreateUserForm/BasicInfoSection";
 import { LicenseSection } from "./CreateUserForm/LicenseSection";
 import { createUserFormSchema } from "./CreateUserForm/schema";
-import type { CreateUserFormSchema } from "./CreateUserForm/schema";
+import type { CreateUserFormValues } from "./CreateUserForm/types";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -18,7 +18,7 @@ interface CreateUserDialogProps {
 
 export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const queryClient = useQueryClient();
-  const form = useForm<CreateUserFormSchema>({
+  const form = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserFormSchema),
     defaultValues: {
       firstName: "",
@@ -36,20 +36,8 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (values: CreateUserFormSchema) => {
-      return userService.createUser({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        companyName: values.companyName,
-        role: values.role,
-        license: {
-          type: values.license.type,
-          startDate: values.license.startDate.toISOString(),
-          endDate: values.license.endDate.toISOString(),
-          quantity: values.license.quantity,
-        },
-      });
+    mutationFn: (values: CreateUserFormValues) => {
+      return userService.createUser(values);
     },
     onSuccess: () => {
       toast.success("User created successfully");
@@ -62,7 +50,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     },
   });
 
-  const onSubmit = (values: CreateUserFormSchema) => {
+  const onSubmit = (values: CreateUserFormValues) => {
     createUserMutation.mutate(values);
   };
 

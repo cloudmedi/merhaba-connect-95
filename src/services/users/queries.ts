@@ -25,15 +25,13 @@ export const getUsersQuery = async (filters?: {
       )
     `);
 
-  // Apply role filter if not specified (default to manager)
-  if (filters?.role) {
-    query = query.eq('role', filters.role);
-  } else {
-    query = query.eq('role', 'manager');
-  }
-
+  // Apply filters
   if (filters?.search) {
     query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+  }
+
+  if (filters?.role) {
+    query = query.eq('role', filters.role);
   }
 
   if (filters?.status) {
