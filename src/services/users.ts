@@ -12,8 +12,16 @@ export const userService = {
     expiry?: string;
   }) {
     let query = supabase
-      .from('users')
-      .select('*, companies(id, name, subscription_status, subscription_ends_at)')
+      .from('profiles')
+      .select(`
+        *,
+        companies:company_id (
+          id,
+          name,
+          subscription_status,
+          subscription_ends_at
+        )
+      `)
       .eq('role', 'manager');
 
     if (filters?.search) {
