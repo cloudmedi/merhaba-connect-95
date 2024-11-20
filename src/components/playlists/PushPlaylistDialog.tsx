@@ -54,6 +54,16 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     });
   };
 
+  const handleSelectAllIndividualBranches = (checked: boolean) => {
+    if (checked) {
+      const filteredBranchIds = filteredBranches.map(branch => branch.id);
+      setSelectedTargets(prev => [...new Set([...prev, ...filteredBranchIds])]);
+    } else {
+      const filteredBranchIds = filteredBranches.map(branch => branch.id);
+      setSelectedTargets(prev => prev.filter(id => !filteredBranchIds.includes(id)));
+    }
+  };
+
   const handlePush = () => {
     // API çağrısı yapılacak
     console.log("Pushing playlist to selected targets:", selectedTargets);
@@ -64,6 +74,9 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     branch.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const areAllFilteredBranchesSelected = filteredBranches.length > 0 && 
+    filteredBranches.every(branch => selectedTargets.includes(branch.id));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -103,26 +116,35 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
           </div>
 
           <ScrollArea className="h-[400px] mt-4">
-            <TabsContent value="individual" className="grid grid-cols-2 gap-4">
-              {filteredBranches.map((branch) => (
-                <div
-                  key={branch.id}
-                  className="flex items-start space-x-2 p-4 rounded-lg border hover:bg-gray-50"
-                >
-                  <Checkbox
-                    checked={selectedTargets.includes(branch.id)}
-                    onCheckedChange={() => handleTargetToggle(branch.id)}
-                  />
-                  <div className="space-y-1">
-                    <p className="font-medium text-sm">{branch.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>{branch.location}</span>
-                      <span>•</span>
-                      <span>{branch.type}</span>
+            <TabsContent value="individual" className="space-y-4">
+              <div className="flex items-center space-x-2 px-4">
+                <Checkbox
+                  checked={areAllFilteredBranchesSelected}
+                  onCheckedChange={handleSelectAllIndividualBranches}
+                />
+                <span className="text-sm font-medium">Select All</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {filteredBranches.map((branch) => (
+                  <div
+                    key={branch.id}
+                    className="flex items-start space-x-2 p-4 rounded-lg border hover:bg-gray-50"
+                  >
+                    <Checkbox
+                      checked={selectedTargets.includes(branch.id)}
+                      onCheckedChange={() => handleTargetToggle(branch.id)}
+                    />
+                    <div className="space-y-1">
+                      <p className="font-medium text-sm">{branch.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span>{branch.location}</span>
+                        <span>•</span>
+                        <span>{branch.type}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </TabsContent>
 
             <TabsContent value="groups" className="space-y-4">
