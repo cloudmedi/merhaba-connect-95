@@ -1,74 +1,79 @@
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Category } from "./types";
 
 interface CategoriesDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingCategory: Category | null;
-  newCategory: { name: string; description: string };
-  setNewCategory: (category: { name: string; description: string }) => void;
-  onSave: () => void;
+  category: Category | null;
+  onSubmit: (category: Partial<Category>) => void;
 }
 
-export function CategoriesDialog({
-  isOpen,
-  onOpenChange,
-  editingCategory,
-  newCategory,
-  setNewCategory,
-  onSave,
-}: CategoriesDialogProps) {
+export function CategoriesDialog({ open, onOpenChange, category, onSubmit }: CategoriesDialogProps) {
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+  });
+
+  useEffect(() => {
+    if (category) {
+      setFormData({
+        name: category.name,
+        description: category.description || "",
+      });
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+      });
+    }
+  }, [category]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(category ? { ...category, ...formData } : formData);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {editingCategory ? "Edit Category" : "New Category"}
-          </DialogTitle>
+          <DialogTitle>{category ? "Edit Category" : "Create New Category"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Name</label>
             <Input
-              id="name"
-              value={newCategory.name}
-              onChange={(e) =>
-                setNewCategory({ ...newCategory, name: e.target.value })
-              }
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Enter category name"
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              Description
-            </label>
+          <div>
+            <label className="text-sm font-medium">Description</label>
             <Textarea
-              id="description"
-              value={newCategory.description}
-              onChange={(e) =>
-                setNewCategory({ ...newCategory, description: e.target.value })
-              }
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Enter category description"
             />
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={onSave}>Save</Button>
-        </DialogFooter>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {category ? "Update" : "Create"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

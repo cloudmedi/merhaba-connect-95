@@ -7,51 +7,71 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Category } from "./types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 interface CategoriesTableProps {
   categories: Category[];
   onEdit: (category: Category) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export function CategoriesTable({ categories, onEdit, onDelete }: CategoriesTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {categories.map((category) => (
-          <TableRow key={category.id}>
-            <TableCell className="font-medium">{category.name}</TableCell>
-            <TableCell>{category.description}</TableCell>
-            <TableCell>
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(category)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(category.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="rounded-md border">
+      <ScrollArea className="h-[600px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-[150px]">Name</TableHead>
+              <TableHead className="min-w-[200px] hidden md:table-cell">Description</TableHead>
+              <TableHead className="min-w-[120px] hidden md:table-cell">Created At</TableHead>
+              <TableHead className="w-[70px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.map((category) => (
+              <TableRow key={category.id}>
+                <TableCell className="font-medium">{category.name}</TableCell>
+                <TableCell className="hidden md:table-cell">{category.description}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {format(new Date(category.created_at), 'MMM dd, yyyy')}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit(category)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => onDelete(category.id)}
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 }
