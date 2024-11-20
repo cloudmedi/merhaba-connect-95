@@ -73,12 +73,22 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
     }
   };
 
+  const handleProgressChange = (value: number[]) => {
+    setProgress(value[0]);
+  };
+
   const currentSong = playlist.songs?.[currentSongIndex];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="flex flex-col max-w-screen-2xl mx-auto space-y-2">
-        <Progress value={progress} className="h-1 mb-2" />
+        <Slider
+          value={[progress]}
+          onValueChange={handleProgressChange}
+          max={100}
+          step={0.1}
+          className="h-1"
+        />
         
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
