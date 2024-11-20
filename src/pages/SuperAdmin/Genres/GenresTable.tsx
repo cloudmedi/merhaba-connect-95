@@ -16,11 +16,12 @@ import {
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Genre } from "./types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 interface GenresTableProps {
   genres: Genre[];
   onEdit: (genre: Genre) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
@@ -42,8 +43,10 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
               <TableRow key={genre.id}>
                 <TableCell className="font-medium">{genre.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{genre.description}</TableCell>
-                <TableCell>{genre.songCount}</TableCell>
-                <TableCell className="hidden md:table-cell">{genre.createdAt}</TableCell>
+                <TableCell>{genre.songCount || 0}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {format(new Date(genre.created_at), 'MMM dd, yyyy')}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

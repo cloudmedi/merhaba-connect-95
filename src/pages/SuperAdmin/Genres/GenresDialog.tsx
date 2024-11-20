@@ -14,7 +14,7 @@ interface GenresDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   genre: Genre | null;
-  onSubmit: (genre: any) => void;
+  onSubmit: (genre: Partial<Genre>) => void;
 }
 
 export function GenresDialog({ open, onOpenChange, genre, onSubmit }: GenresDialogProps) {
@@ -27,7 +27,7 @@ export function GenresDialog({ open, onOpenChange, genre, onSubmit }: GenresDial
     if (genre) {
       setFormData({
         name: genre.name,
-        description: genre.description,
+        description: genre.description || "",
       });
     } else {
       setFormData({

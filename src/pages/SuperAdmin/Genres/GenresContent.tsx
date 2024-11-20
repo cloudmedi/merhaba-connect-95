@@ -18,6 +18,11 @@ export function GenresContent() {
       setGenres(data);
     } catch (error) {
       console.error('Error fetching genres:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch genres",
+        variant: "destructive",
+      });
     }
   };
 
@@ -25,7 +30,7 @@ export function GenresContent() {
     fetchGenres();
   }, []);
 
-  const handleCreate = async (newGenre: Omit<Genre, "id" | "songCount" | "createdAt">) => {
+  const handleCreate = async (newGenre: Pick<Genre, "name" | "description">) => {
     try {
       await genreService.createGenre(newGenre);
       setIsDialogOpen(false);
@@ -36,6 +41,11 @@ export function GenresContent() {
       });
     } catch (error) {
       console.error('Error creating genre:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create genre",
+        variant: "destructive",
+      });
     }
   };
 
@@ -52,10 +62,15 @@ export function GenresContent() {
       });
     } catch (error) {
       console.error('Error updating genre:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update genre",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await genreService.deleteGenre(id);
       fetchGenres();
@@ -65,6 +80,11 @@ export function GenresContent() {
       });
     } catch (error) {
       console.error('Error deleting genre:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete genre",
+        variant: "destructive",
+      });
     }
   };
 

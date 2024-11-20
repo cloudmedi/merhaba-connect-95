@@ -1,8 +1,9 @@
 export interface Genre {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  songCount?: number; // Optional field for UI purposes
 }
