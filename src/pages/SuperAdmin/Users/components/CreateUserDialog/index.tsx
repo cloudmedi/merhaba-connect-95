@@ -40,7 +40,6 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   });
 
   const onSubmit = (values: FormValues) => {
-    // Ensure all required fields are present before submitting
     const userData: CreateUserData = {
       email: values.email,
       firstName: values.firstName,
