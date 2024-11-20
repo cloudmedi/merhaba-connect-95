@@ -22,6 +22,7 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
+    // Ensure all required fields are present before submitting
     const formattedValues: CreateUserData = {
       firstName: values.firstName,
       lastName: values.lastName,
