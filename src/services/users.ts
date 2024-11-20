@@ -57,12 +57,7 @@ export const userService = {
       .eq('role', 'manager');
 
     if (filters?.search) {
-      query = query.or(`
-        firstName.ilike.%${filters.search}%,
-        lastName.ilike.%${filters.search}%,
-        email.ilike.%${filters.search}%,
-        companies.name.ilike.%${filters.search}%
-      `);
+      query = query.or(`firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%,companies.name.ilike.%${filters.search}%`);
     }
 
     if (filters?.status) {
@@ -74,21 +69,56 @@ export const userService = {
     }
 
     if (filters?.expiry) {
-      const today = new Date();
+      const today = new Date().toISOString();
       const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(today.getDate() + 30);
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const futureDate = thirtyDaysFromNow.toISOString();
 
       switch (filters.expiry) {
         case 'this-month':
-          query = query.and(`subscriptionEndsAt.gte.${today.toISOString()},subscriptionEndsAt.lte.${thirtyDaysFromNow.toISOString()}`);
+          query = query.gte('companies.subscriptionEndsAt', today)
+                      .lte('companies.subscriptionEndsAt', futureDate);
           break;
         case 'expired':
-          query = query.lt('subscriptionEndsAt', today.toISOString());
+          query = query.lt('companies.subscriptionEndsAt', today);
           break;
       }
     }
 
     const { data, error } = await query;
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateUser(id: string, updates: Partial<User>) {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteUser(id: string) {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async toggleUserStatus(id: string, isActive: boolean) {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ isActive })
+      .eq('id', id)
+      .select()
+      .single();
     
     if (error) throw error;
     return data;
