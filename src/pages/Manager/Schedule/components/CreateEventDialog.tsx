@@ -1,8 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { EventDetailsStep } from "./EventDetailsStep";
+import { BranchSelectionStep } from "./BranchSelectionStep";
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -10,39 +10,66 @@ interface CreateEventDialogProps {
 }
 
 export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps) {
-  const [eventTitle, setEventTitle] = useState("");
+  const [step, setStep] = useState<'details' | 'branches'>('details');
+  const [eventData, setEventData] = useState({
+    title: "",
+    playlist: "",
+    startDate: "",
+    startTime: "",
+    endDate: "",
+    endTime: "",
+    selectedBranches: [] as string[]
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNext = () => {
+    setStep('branches');
+  };
+
+  const handleBack = () => {
+    setStep('details');
+  };
+
+  const handleCreate = () => {
     // Handle event creation logic here
+    console.log('Creating event:', eventData);
     onOpenChange(false);
+    setStep('details');
+    // Reset form
+    setEventData({
+      title: "",
+      playlist: "",
+      startDate: "",
+      startTime: "",
+      endDate: "",
+      endTime: "",
+      selectedBranches: []
+    });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Event</DialogTitle>
+          <DialogTitle>Create Event</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Event Title</Label>
-            <Input
-              id="title"
-              value={eventTitle}
-              onChange={(e) => setEventTitle(e.target.value)}
-              placeholder="Enter event title"
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-[#6E59A5] hover:bg-[#5a478a] text-white">
-              Create Event
-            </Button>
-          </div>
-        </form>
+
+        {step === 'details' ? (
+          <EventDetailsStep 
+            eventData={eventData}
+            setEventData={setEventData}
+            onNext={handleNext}
+            onCancel={() => onOpenChange(false)}
+          />
+        ) : (
+          <BranchSelectionStep
+            selectedBranches={eventData.selectedBranches}
+            onBranchesChange={(branches) => 
+              setEventData(prev => ({ ...prev, selectedBranches: branches }))
+            }
+            onBack={handleBack}
+            onCreate={handleCreate}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
