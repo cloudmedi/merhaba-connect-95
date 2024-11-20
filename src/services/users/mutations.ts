@@ -14,12 +14,9 @@ export const createUser = async (userData: CreateUserData) => {
       .select()
       .single();
 
-    if (companyError) {
-      console.error('Company creation error:', companyError);
-      throw new Error('Failed to create company');
-    }
+    if (companyError) throw new Error('Failed to create company: ' + companyError.message);
 
-    // 2. Create Supabase auth user with temporary password
+    // 2. Create auth user
     const { data: authUser, error: authError } = await supabase.auth.signUp({
       email: userData.email,
       password: 'temp123!', // Temporary password
@@ -32,13 +29,10 @@ export const createUser = async (userData: CreateUserData) => {
       }
     });
 
-    if (authError || !authUser.user) {
-      console.error('Auth user creation error:', authError);
-      throw new Error('Failed to create auth user');
-    }
+    if (authError || !authUser.user) throw new Error('Failed to create auth user: ' + authError?.message);
 
-    // 3. Update profile with company_id
-    const { data: profile, error: profileError } = await supabase
+    // 3. Update profile
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({
         company_id: company.id,
@@ -48,17 +42,12 @@ export const createUser = async (userData: CreateUserData) => {
         role: userData.role,
         is_active: true
       })
-      .eq('id', authUser.user.id)
-      .select()
-      .single();
+      .eq('id', authUser.user.id);
 
-    if (profileError) {
-      console.error('Profile update error:', profileError);
-      throw new Error('Failed to update profile');
-    }
+    if (profileError) throw new Error('Failed to update profile: ' + profileError.message);
 
     // 4. Create license
-    const { data: license, error: licenseError } = await supabase
+    const { error: licenseError } = await supabase
       .from('licenses')
       .insert({
         user_id: authUser.user.id,
@@ -66,19 +55,13 @@ export const createUser = async (userData: CreateUserData) => {
         start_date: new Date(userData.license.startDate).toISOString(),
         end_date: new Date(userData.license.endDate).toISOString(),
         quantity: userData.license.quantity
-      })
-      .select()
-      .single();
+      });
 
-    if (licenseError) {
-      console.error('License creation error:', licenseError);
-      throw new Error('Failed to create license');
-    }
+    if (licenseError) throw new Error('Failed to create license: ' + licenseError.message);
 
     return {
-      ...profile,
-      license,
-      company
+      id: authUser.user.id,
+      ...userData
     };
   } catch (error) {
     console.error('User creation failed:', error);
