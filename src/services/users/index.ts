@@ -1,18 +1,19 @@
-import { getUsersQuery } from './queries';
+import { getUsersQuery, getUserById } from './queries';
 import { createUser, updateUser, deleteUser, toggleUserStatus, renewLicense } from './mutations';
 
 export const userService = {
-  async getUsers(filters?: {
+  getUsers: async (filters?: {
     search?: string;
     role?: string;
     status?: string;
     license?: string;
     expiry?: string;
-  }) {
+  }) => {
     const { data, error } = await getUsersQuery(filters);
     if (error) throw error;
     return data;
   },
+  getUserById,
   createUser,
   updateUser,
   deleteUser,

@@ -23,8 +23,14 @@ export const getUsersQuery = async (filters?: {
         end_date,
         quantity
       )
-    `)
-    .eq('role', 'manager');
+    `);
+
+  // Apply role filter if not specified (default to manager)
+  if (filters?.role) {
+    query = query.eq('role', filters.role);
+  } else {
+    query = query.eq('role', 'manager');
+  }
 
   if (filters?.search) {
     query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
@@ -54,4 +60,29 @@ export const getUsersQuery = async (filters?: {
   }
 
   return query;
+};
+
+export const getUserById = async (id: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      *,
+      companies (
+        id,
+        name,
+        subscription_status,
+        subscription_ends_at
+      ),
+      licenses (
+        type,
+        start_date,
+        end_date,
+        quantity
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
 };

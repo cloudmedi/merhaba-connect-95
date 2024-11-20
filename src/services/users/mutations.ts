@@ -31,7 +31,7 @@ export const createUser = async (userData: CreateUserData) => {
     // Generate a UUID for the new profile
     const newProfileId = crypto.randomUUID();
 
-    // Create profile with the generated ID
+    // Create profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .insert({
