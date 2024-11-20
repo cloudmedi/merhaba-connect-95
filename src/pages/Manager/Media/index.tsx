@@ -20,7 +20,6 @@ export default function Media() {
           </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Media content will be added here */}
           <div className="h-48 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
             Media Content Coming Soon
           </div>
