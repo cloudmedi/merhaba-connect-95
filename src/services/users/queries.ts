@@ -11,7 +11,7 @@ export const getUsersQuery = (filters?: {
     .from('profiles')
     .select(`
       *,
-      company:company_id (
+      company:companies!profiles_company_id_fkey (
         id,
         name,
         subscription_status,

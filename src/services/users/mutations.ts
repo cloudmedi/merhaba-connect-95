@@ -2,12 +2,12 @@ import { supabase } from '../supabase';
 import { CreateUserData } from '@/types/auth';
 
 export const createUser = async (userData: CreateUserData) => {
-  // 1. Create company with correct subscription status
+  // 1. Create company
   const { data: company, error: companyError } = await supabase
     .from('companies')
     .insert({
       name: userData.companyName,
-      subscription_status: userData.license.type === 'premium' ? 'active' : 'trial',
+      subscription_status: userData.license.type,
       subscription_ends_at: new Date(userData.license.endDate).toISOString()
     })
     .select()
@@ -34,7 +34,9 @@ export const createUser = async (userData: CreateUserData) => {
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .update({
-      company_id: company.id
+      company_id: company.id,
+      role: userData.role,
+      is_active: true
     })
     .eq('id', authUser.user!.id)
     .select()
