@@ -5,26 +5,45 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
-export default function SuperAdminLogin() {
+export default function SuperAdminRegister() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate("/super-admin");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            firstName,
+            lastName,
+            role: 'super_admin'
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account.",
+      });
+      
+      navigate("/super-admin/login");
     } catch (error: any) {
       toast({
-        title: "Login failed",
+        title: "Registration failed",
         description: error.message,
         variant: "destructive"
       });
@@ -41,13 +60,31 @@ export default function SuperAdminLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Super Admin Login</CardTitle>
+          <CardTitle className="text-2xl">Super Admin Register</CardTitle>
           <CardDescription>
-            Enter your credentials to access the super admin dashboard
+            Create your super admin account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Input
                 type="email"
@@ -64,6 +101,7 @@ export default function SuperAdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <Button 
@@ -71,15 +109,15 @@ export default function SuperAdminLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Registering..." : "Register"}
             </Button>
             <Button
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => navigate("/super-admin/register")}
+              onClick={() => navigate("/super-admin/login")}
             >
-              Register as Super Admin
+              Back to Login
             </Button>
           </form>
         </CardContent>

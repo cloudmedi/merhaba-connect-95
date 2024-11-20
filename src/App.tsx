@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import SuperAdmin from "./pages/SuperAdmin";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
 import Manager from "./pages/Manager";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ export default function App() {
               
               {/* Super Admin Routes */}
               <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+              <Route path="/super-admin/register" element={<SuperAdminRegister />} />
               <Route path="/super-admin/*" element={<SuperAdmin />} />
               
               {/* Manager Routes */}
