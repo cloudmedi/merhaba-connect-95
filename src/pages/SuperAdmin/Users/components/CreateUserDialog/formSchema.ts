@@ -8,9 +8,9 @@ export const formSchema = z.object({
   role: z.enum(["admin", "manager"]),
   license: z.object({
     type: z.enum(["trial", "premium"]),
-    startDate: z.string(),
-    endDate: z.string(),
-    quantity: z.number().min(1)
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+    quantity: z.number().min(1, "Quantity must be at least 1")
   })
 });
 

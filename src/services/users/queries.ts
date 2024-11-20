@@ -17,11 +17,8 @@ export const getUsersQuery = (filters?: {
         subscription_status,
         subscription_ends_at
       )
-    `);
-
-  if (filters?.role) {
-    query = query.eq('role', filters.role);
-  }
+    `)
+    .eq('role', 'manager');
 
   if (filters?.search) {
     query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
@@ -31,7 +28,7 @@ export const getUsersQuery = (filters?: {
     query = query.eq('is_active', filters.status === 'active');
   }
 
-  if (filters?.license && filters?.license !== 'all') {
+  if (filters?.license) {
     query = query.eq('company.subscription_status', filters.license);
   }
 
