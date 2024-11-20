@@ -83,12 +83,15 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
 
 export const deleteUser = async (userId: string) => {
   try {
-    // Delete profile (this will cascade delete licenses due to FK constraint)
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    // Delete from profiles table first (this will cascade delete licenses)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
 
-    if (error) {
-      console.error('Delete user error:', error);
-      throw error;
+    if (profileError) {
+      console.error('Delete profile error:', profileError);
+      throw profileError;
     }
 
     return { success: true };
