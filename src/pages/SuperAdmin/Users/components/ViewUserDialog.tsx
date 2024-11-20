@@ -72,13 +72,13 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
             <div>
               <h4 className="text-sm font-medium text-gray-500">License Start Date</h4>
               <p className="mt-1">
-                {formatDate(user.license?.startDate)}
+                {formatDate(user.license?.start_date)}
               </p>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-500">License End Date</h4>
               <p className="mt-1">
-                {formatDate(user.license?.endDate)}
+                {formatDate(user.license?.end_date)}
               </p>
             </div>
           </div>
