@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   Menu,
   ChevronLeft,
+  Megaphone,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
@@ -22,6 +23,7 @@ const navItems = [
   { icon: Music2, label: "Playlists", href: "/manager/playlists" },
   { icon: Laptop2, label: "Devices", href: "/manager/devices" },
   { icon: Calendar, label: "Schedule", href: "/manager/schedule" },
+  { icon: Megaphone, label: "Announcements", href: "/manager/announcements" },
   { icon: Bell, label: "Notifications", href: "/manager/notifications" },
   { icon: SettingsIcon, label: "Settings", href: "/manager/settings" },
 ];
