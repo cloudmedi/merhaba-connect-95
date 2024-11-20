@@ -3,8 +3,8 @@ import { supabase } from './supabase';
 interface LicenseData {
   userId: string;
   type: 'trial' | 'premium';
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   quantity: number;
 }
 
@@ -15,8 +15,8 @@ export const licenseService = {
       .insert({
         user_id: data.userId,
         type: data.type,
-        start_date: data.startDate,
-        end_date: data.endDate,
+        start_date: data.start_date,
+        end_date: data.end_date,
         quantity: data.quantity
       })
       .select()
