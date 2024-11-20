@@ -18,6 +18,7 @@ interface AddDeviceDialogProps {
 
 export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [branchName, setBranchName] = useState("");
+  const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,12 +33,13 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
     toast.success("Device added successfully");
     onOpenChange(false);
     setBranchName("");
+    setLocation("");
     setToken("");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
@@ -49,6 +51,18 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
               placeholder="Enter branch name"
+              className="w-full"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter branch location"
+              className="w-full"
               required
             />
           </div>
@@ -61,11 +75,15 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
               placeholder="Enter 6-digit token"
               maxLength={6}
               pattern="[0-9]{6}"
+              className="w-full"
               required
             />
+            <p className="text-sm text-muted-foreground">
+              Enter the 6-digit token displayed on the device
+            </p>
           </div>
           <DialogFooter>
-            <Button type="submit">Add Device</Button>
+            <Button type="submit" className="w-full">Add Device</Button>
           </DialogFooter>
         </form>
       </DialogContent>
