@@ -6,7 +6,7 @@ import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Playlist } from "@/types/api";
+import type { Playlist } from "@/types/api";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,8 +33,21 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const businessPlaylists = filteredPlaylists.filter(p => !p.is_public);
-  const publicPlaylists = filteredPlaylists.filter(p => p.is_public);
+  const transformPlaylistForGrid = (playlist: Playlist) => ({
+    id: playlist.id,
+    title: playlist.name,
+    artwork: playlist.artwork_url || "/placeholder.svg",
+    genre: "Various", // You might want to fetch this from the genres table
+    mood: "Various", // You might want to fetch this from the moods table
+  });
+
+  const businessPlaylists = filteredPlaylists
+    .filter(p => !p.is_public)
+    .map(transformPlaylistForGrid);
+
+  const publicPlaylists = filteredPlaylists
+    .filter(p => p.is_public)
+    .map(transformPlaylistForGrid);
 
   return (
     <div className="space-y-8">

@@ -36,21 +36,21 @@ export interface Playlist {
   id: string;
   name: string;
   description?: string;
-  created_by: string;
-  company_id?: string;
-  is_public: boolean;
+  artwork_url?: string;
   created_at: string;
   updated_at: string;
-  artwork_url?: string;
-  mood_id?: string;
+  is_public: boolean;
+  company_id?: string;
   genre_id?: string;
+  mood_id?: string;
+  created_by?: string;
   company?: {
     name: string;
-  };
-  profiles?: {
+  } | null;
+  profiles?: Array<{
     first_name: string;
     last_name: string;
-  }[];
+  }> | null;
 }
 
 export interface Song {
