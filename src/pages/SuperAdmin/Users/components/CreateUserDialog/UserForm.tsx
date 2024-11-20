@@ -20,8 +20,9 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
     defaultValues,
   });
 
-  const handleSubmit = (data: FormValues) => {
-    onSubmit(data as CreateUserData);
+  const handleSubmit = (values: FormValues) => {
+    // Since our FormValues type matches CreateUserData, this cast is safe
+    onSubmit(values as CreateUserData);
   };
 
   return (
