@@ -6,7 +6,7 @@ import { CreateUserData } from "@/types/auth";
 import { UserBasicInfo } from "./UserBasicInfo";
 import { UserRoleSelect } from "./UserRoleSelect";
 import { LicenseInfo } from "./LicenseInfo";
-import { formSchema, FormValues, defaultValues } from "./formSchema";
+import { formSchema, FormValues, defaultValues, mapFormToCreateUserData } from "./formSchema";
 
 interface UserFormProps {
   onSubmit: (data: CreateUserData) => void;
@@ -21,20 +21,8 @@ export function UserForm({ onSubmit, isSubmitting, onCancel }: UserFormProps) {
   });
 
   const handleSubmit = (values: FormValues) => {
-    const formData: CreateUserData = {
-      email: values.email,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      companyName: values.companyName,
-      role: values.role,
-      license: {
-        type: values.license.type,
-        startDate: values.license.startDate,
-        endDate: values.license.endDate,
-        quantity: values.license.quantity
-      }
-    };
-    onSubmit(formData);
+    const userData = mapFormToCreateUserData(values);
+    onSubmit(userData);
   };
 
   return (

@@ -27,10 +27,6 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     },
   });
 
-  const handleSubmit = (values: CreateUserData) => {
-    createUserMutation.mutate(values);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -38,7 +34,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           <DialogTitle className="text-xl font-semibold">Create User</DialogTitle>
         </DialogHeader>
         <UserForm 
-          onSubmit={handleSubmit}
+          onSubmit={(values) => createUserMutation.mutate(values)}
           isSubmitting={createUserMutation.isPending}
           onCancel={() => onOpenChange(false)}
         />

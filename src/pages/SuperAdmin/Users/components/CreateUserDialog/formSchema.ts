@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CreateUserData } from "@/types/auth";
 
 export const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -28,4 +29,20 @@ export const defaultValues: FormValues = {
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     quantity: 1
   }
+};
+
+export const mapFormToCreateUserData = (values: FormValues): CreateUserData => {
+  return {
+    firstName: values.firstName,
+    lastName: values.lastName,
+    email: values.email,
+    companyName: values.companyName,
+    role: values.role,
+    license: {
+      type: values.license.type,
+      startDate: values.license.startDate,
+      endDate: values.license.endDate,
+      quantity: values.license.quantity
+    }
+  };
 };
