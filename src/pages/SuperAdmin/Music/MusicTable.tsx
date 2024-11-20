@@ -1,4 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -7,114 +8,154 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
-import { Music2, AlertCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "./components/EmptyState";
+import { TablePagination } from "./components/TablePagination";
+import { TrackArtwork } from "@/components/music/TrackArtwork";
+import { useToast } from "@/components/ui/use-toast";
+import { MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Song {
-  id: string;
+  id: number;
   title: string;
-  artist: string | null;
-  album: string | null;
-  genre: string[] | null;
-  duration: number | null;
-  file_url: string;
-  artwork_url: string | null;
-  created_at: string;
+  artist: string;
+  album: string;
+  genres: string[];
+  duration: string;
+  file: File;
+  artwork?: string;
 }
 
 interface MusicTableProps {
   songs: Song[];
-  isLoading: boolean;
+  selectedSongs: Song[];
+  onSelectAll: (checked: boolean) => void;
+  onSelectSong: (song: Song, checked: boolean) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  onPlaySong?: (song: Song) => void;
 }
 
-export function MusicTable({ songs, isLoading }: MusicTableProps) {
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <div className="space-y-4 animate-pulse">
-          <div className="h-8 bg-gray-100 rounded" />
-          <div className="h-8 bg-gray-100 rounded" />
-          <div className="h-8 bg-gray-100 rounded" />
-        </div>
-      </Card>
-    );
-  }
+export function MusicTable({ 
+  songs, 
+  selectedSongs, 
+  onSelectAll, 
+  onSelectSong,
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  onPlaySong
+}: MusicTableProps) {
+  const { toast } = useToast();
 
   if (songs.length === 0) {
-    return (
-      <Card className="p-12">
-        <div className="flex flex-col items-center justify-center text-gray-500 space-y-3">
-          <Music2 className="w-12 h-12 text-gray-400" />
-          <p className="text-lg font-medium">Henüz müzik yüklenmemiş</p>
-          <p className="text-sm">Müzik eklemek için yukarıdaki "Upload Music" butonunu kullanın</p>
-        </div>
-      </Card>
-    );
+    return <EmptyState />;
   }
 
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, songs.length);
+  const currentSongs = songs.slice(startIndex, endIndex);
+
+  const handlePlaySong = (song: Song) => {
+    if (onPlaySong) {
+      onPlaySong(song);
+    } else {
+      toast({
+        title: "Now Playing",
+        description: `${song.title} by ${song.artist}`,
+      });
+    }
+  };
+
   return (
-    <Card>
-      <ScrollArea className="h-[calc(100vh-300px)]">
+    <div className="space-y-4">
+      <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50/50">
-              <TableHead className="font-semibold">Title</TableHead>
-              <TableHead className="font-semibold">Artist</TableHead>
-              <TableHead className="font-semibold">Album</TableHead>
-              <TableHead className="font-semibold">Genre</TableHead>
-              <TableHead className="font-semibold">Duration</TableHead>
-              <TableHead className="font-semibold">Uploaded</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[30px]">
+                <Checkbox 
+                  checked={selectedSongs.length === songs.length}
+                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                />
+              </TableHead>
+              <TableHead className="font-medium">Title</TableHead>
+              <TableHead className="font-medium">Artist</TableHead>
+              <TableHead className="font-medium">Album</TableHead>
+              <TableHead className="font-medium">Genres</TableHead>
+              <TableHead className="font-medium text-right">Duration</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {songs.map((song) => (
-              <TableRow key={song.id} className="hover:bg-gray-50/50">
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {song.artwork_url ? (
-                      <img 
-                        src={song.artwork_url} 
-                        alt={song.title}
-                        className="w-8 h-8 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-                        <Music2 className="w-4 h-4 text-gray-400" />
-                      </div>
-                    )}
-                    {song.title}
+            {currentSongs.map((song) => (
+              <TableRow
+                key={song.id}
+                className="hover:bg-gray-50/50"
+              >
+                <TableCell className="w-[30px]">
+                  <Checkbox 
+                    checked={selectedSongs.some((s) => s.id === song.id)}
+                    onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-4">
+                    <TrackArtwork
+                      artwork={song.artwork}
+                      title={song.title}
+                      onPlay={() => handlePlaySong(song)}
+                    />
+                    <span className="font-medium text-gray-900">{song.title}</span>
                   </div>
                 </TableCell>
-                <TableCell>{song.artist || '-'}</TableCell>
-                <TableCell>{song.album || '-'}</TableCell>
+                <TableCell className="text-gray-600">{song.artist}</TableCell>
+                <TableCell className="text-gray-600">{song.album}</TableCell>
+                <TableCell className="text-gray-600">{song.genres.join(", ") || "-"}</TableCell>
+                <TableCell className="text-right text-gray-600">{song.duration}</TableCell>
                 <TableCell>
-                  {song.genre?.length ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {song.genre.map((g) => (
-                        <span 
-                          key={g} 
-                          className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs"
-                        >
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  ) : '-'}
-                </TableCell>
-                <TableCell>
-                  {song.duration ? (
-                    `${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, '0')}`
-                  ) : '-'}
-                </TableCell>
-                <TableCell>
-                  {format(new Date(song.created_at), 'MMM d, yyyy')}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem className="cursor-pointer">
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600 cursor-pointer">
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </ScrollArea>
-    </Card>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={songs.length}
+      />
+    </div>
   );
 }
