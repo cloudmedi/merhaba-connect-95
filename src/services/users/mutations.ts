@@ -83,15 +83,31 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
 
 export const deleteUser = async (userId: string) => {
   try {
-    // Delete from profiles table first (this will cascade delete licenses)
-    const { error: profileError } = await supabase
+    // First check if user exists
+    const { data: profile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError) {
+      console.error('Fetch profile error:', fetchError);
+      throw new Error('Kullanıcı bulunamadı');
+    }
+
+    if (!profile) {
+      throw new Error('Kullanıcı bulunamadı');
+    }
+
+    // Delete from profiles table
+    const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId);
 
-    if (profileError) {
-      console.error('Delete profile error:', profileError);
-      throw profileError;
+    if (deleteError) {
+      console.error('Delete profile error:', deleteError);
+      throw new Error('Kullanıcı silinirken bir hata oluştu');
     }
 
     return { success: true };
