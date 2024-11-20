@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
-import { User, CreateUserData } from '@/types/auth';
+import { User } from '@/types/auth';
 import { companyService } from './company';
 import { licenseService } from './license';
+import { CreateUserFormValues } from '@/pages/SuperAdmin/Users/components/CreateUserForm/types';
 
 export const userService = {
   async getUsers(filters?: {
@@ -56,12 +57,12 @@ export const userService = {
     return data;
   },
 
-  async createUser(userData: CreateUserData) {
+  async createUser(userData: CreateUserFormValues) {
     // 1. Create company
     const company = await companyService.createCompany({
       name: userData.companyName,
       subscriptionStatus: userData.license.type,
-      subscriptionEndsAt: userData.license.endDate,
+      subscriptionEndsAt: userData.license.endDate.toISOString(),
     });
 
     // 2. Create Supabase auth user
@@ -102,8 +103,8 @@ export const userService = {
     await licenseService.createLicense({
       userId: user.id,
       type: userData.license.type,
-      startDate: userData.license.startDate,
-      endDate: userData.license.endDate,
+      startDate: userData.license.startDate.toISOString(),
+      endDate: userData.license.endDate.toISOString(),
       quantity: userData.license.quantity
     });
 

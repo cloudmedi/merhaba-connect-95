@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CreateUserFormValues } from "@/pages/SuperAdmin/Users/components/CreateUserForm/types";
+import { User } from "@/types/auth";
 import { toast } from "sonner";
 
 export const createUser = async (userData: CreateUserFormValues) => {
