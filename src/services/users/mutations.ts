@@ -35,6 +35,9 @@ export const createUser = async (userData: CreateUserData) => {
     .from('profiles')
     .update({
       company_id: company.id,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      email: userData.email,
       role: userData.role,
       is_active: true
     })
@@ -45,7 +48,7 @@ export const createUser = async (userData: CreateUserData) => {
   if (profileError) throw profileError;
 
   // 4. Create license
-  const { error: licenseError } = await supabase
+  const { data: license, error: licenseError } = await supabase
     .from('licenses')
     .insert({
       user_id: profile.id,
@@ -53,11 +56,13 @@ export const createUser = async (userData: CreateUserData) => {
       start_date: new Date(userData.license.startDate).toISOString(),
       end_date: new Date(userData.license.endDate).toISOString(),
       quantity: userData.license.quantity
-    });
+    })
+    .select()
+    .single();
 
   if (licenseError) throw licenseError;
 
-  return profile;
+  return { ...profile, license };
 };
 
 export const updateUser = async (id: string, updates: Partial<CreateUserData>) => {

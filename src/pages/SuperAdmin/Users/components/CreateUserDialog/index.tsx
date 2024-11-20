@@ -22,7 +22,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error("Failed to create user: " + error.message);
     },
   });
