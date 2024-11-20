@@ -12,38 +12,66 @@ interface MusicPlayerProps {
       title: string;
       artist: string;
       duration: string;
+      file_url: string;
     }>;
   };
   onClose: () => void;
 }
 
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([75]);
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState([75]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number>();
 
   useEffect(() => {
-    if (playlist?.title) {
-      setIsPlaying(true);
+    if (playlist?.songs?.[currentSongIndex]) {
+      audioRef.current = new Audio(playlist.songs[currentSongIndex].file_url);
+      audioRef.current.volume = volume[0] / 100;
+      
+      if (isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error("Error playing audio:", error);
+        });
+      }
     }
-  }, [playlist?.title]);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [playlist?.songs, currentSongIndex]);
 
   useEffect(() => {
-    if (isPlaying) {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume[0] / 100;
+    }
+  }, [volume, isMuted]);
+
+  useEffect(() => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.play().catch(error => {
+        console.error("Error playing audio:", error);
+      });
+      
       progressInterval.current = window.setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
+        if (audioRef.current) {
+          const currentProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+          setProgress(currentProgress);
+
+          if (audioRef.current.ended) {
             handleNext();
-            return 0;
           }
-          return prev + 0.05;
-        });
-      }, 50);
-    } else {
+        }
+      }, 100);
+    } else if (audioRef.current) {
+      audioRef.current.pause();
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
@@ -75,7 +103,11 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   };
 
   const handleProgressChange = (value: number[]) => {
-    setProgress(value[0]);
+    if (audioRef.current) {
+      const newTime = (value[0] / 100) * audioRef.current.duration;
+      audioRef.current.currentTime = newTime;
+      setProgress(value[0]);
+    }
   };
 
   const handleVolumeToggle = () => {
@@ -113,7 +145,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <img
-              src={playlist.artwork}
+              src={playlist.artwork || "/placeholder.svg"}
               alt={playlist.title}
               className="w-12 h-12 rounded object-cover"
             />
@@ -122,7 +154,7 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
                 {currentSong?.title || playlist.title}
               </p>
               <p className="text-sm text-gray-500">
-                {currentSong?.artist || "Now Playing"}
+                {currentSong?.artist || "Unknown Artist"}
               </p>
             </div>
           </div>

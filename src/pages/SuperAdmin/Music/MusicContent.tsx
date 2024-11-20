@@ -139,7 +139,8 @@ export function MusicContent() {
               id: parseInt(currentlyPlaying.id),
               title: currentlyPlaying.title,
               artist: currentlyPlaying.artist || "Unknown Artist",
-              duration: currentlyPlaying.duration?.toString() || "0:00"
+              duration: currentlyPlaying.duration?.toString() || "0:00",
+              file_url: currentlyPlaying.file_url
             }]
           }}
           onClose={() => setCurrentlyPlaying(null)}
