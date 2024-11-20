@@ -5,10 +5,11 @@ import { DeviceRow } from "./DeviceRow";
 import { DeviceStats } from "./DeviceStats";
 import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
+import { DeviceGrouping } from "./DeviceGrouping";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
-// Keep the existing mock data generation
+// Mock data generation
 const generateMockDevices = (count: number) => {
   return Array.from({ length: count }, (_, i) => ({
     id: `${i + 1}`,
@@ -41,6 +42,12 @@ export function DeviceList() {
   const [locationFilter, setLocationFilter] = useState("all");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deviceGroups, setDeviceGroups] = useState<Array<{
+    id: string;
+    name: string;
+    deviceIds: string[];
+    description?: string;
+  }>>([]);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
@@ -84,31 +91,35 @@ export function DeviceList() {
     }));
   };
 
+  const handleCreateGroup = (group: { id: string; name: string; deviceIds: string[]; description?: string }) => {
+    setDeviceGroups(prev => [...prev, group]);
+    toast({
+      title: "Group Created",
+      description: `Created group "${group.name}" with ${group.deviceIds.length} devices`,
+    });
+  };
+
   const handleBulkPower = () => {
-    // Implement bulk power action
-    toast.success(`Power command sent to ${selectedDevices.length} devices`);
+    toast({
+      title: "Success",
+      description: `Power command sent to ${selectedDevices.length} devices`,
+    });
   };
 
   const handleBulkReset = () => {
-    // Implement bulk reset action
-    toast.success(`Reset command sent to ${selectedDevices.length} devices`);
+    toast({
+      title: "Success",
+      description: `Reset command sent to ${selectedDevices.length} devices`,
+    });
   };
 
   const handleBulkDelete = () => {
-    // Implement bulk delete action
-    toast.success(`${selectedDevices.length} devices deleted`);
+    toast({
+      title: "Success",
+      description: `${selectedDevices.length} devices deleted`,
+    });
     setSelectedDevices([]);
   };
-
-  const columns = [
-    "branchName",
-    "location",
-    "category",
-    "status",
-    "ip",
-    "lastSeen",
-    "version",
-  ];
 
   return (
     <div className="space-y-4">
@@ -119,26 +130,34 @@ export function DeviceList() {
         lastUpdated={new Date().toLocaleString()}
       />
 
-      <DeviceFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        categoryFilter={categoryFilter}
-        onCategoryFilterChange={setCategoryFilter}
-        locationFilter={locationFilter}
-        onLocationFilterChange={setLocationFilter}
-        onExport={() => {}}
-        data={filteredDevices}
-        columns={columns}
-      />
-
-      <BulkActions
-        selectedDevices={selectedDevices}
-        onPowerAll={handleBulkPower}
-        onResetAll={handleBulkReset}
-        onDeleteAll={handleBulkDelete}
-      />
+      <div className="flex items-center justify-between gap-4">
+        <DeviceFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          locationFilter={locationFilter}
+          onLocationFilterChange={setLocationFilter}
+          onExport={() => {}}
+          data={filteredDevices}
+          columns={[]}
+        />
+        
+        <div className="flex items-center gap-2">
+          <DeviceGrouping
+            selectedDevices={selectedDevices}
+            onCreateGroup={handleCreateGroup}
+          />
+          <BulkActions
+            selectedDevices={selectedDevices}
+            onPowerAll={handleBulkPower}
+            onResetAll={handleBulkReset}
+            onDeleteAll={handleBulkDelete}
+          />
+        </div>
+      </div>
 
       <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
         <ScrollArea className="h-[600px] rounded-lg">
@@ -174,4 +193,3 @@ export function DeviceList() {
     </div>
   );
 }
-
