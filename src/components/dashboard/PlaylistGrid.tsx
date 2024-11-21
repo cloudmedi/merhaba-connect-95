@@ -82,6 +82,10 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
+    // Transform cloud-media URLs to include .b-cdn.net
+    if (url.startsWith('cloud-media/')) {
+      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+    }
     // If it's a relative URL, prepend the base URL
     return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
