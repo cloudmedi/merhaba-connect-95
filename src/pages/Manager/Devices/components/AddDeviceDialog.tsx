@@ -24,12 +24,6 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
-  const generateToken = () => {
-    // Generate a random 6-digit number
-    const newToken = Math.floor(100000 + Math.random() * 900000).toString();
-    setToken(newToken);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,24 +88,15 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="token">Pairing Token</Label>
-            <div className="flex gap-2">
-              <Input
-                id="token"
-                value={token}
-                onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="6-digit token"
-                className="w-full"
-                maxLength={6}
-                required
-              />
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={generateToken}
-              >
-                Generate
-              </Button>
-            </div>
+            <Input
+              id="token"
+              value={token}
+              onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="Enter 6-digit token from Windows Player"
+              className="w-full"
+              maxLength={6}
+              required
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
