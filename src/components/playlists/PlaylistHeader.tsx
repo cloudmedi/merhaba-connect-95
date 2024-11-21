@@ -1,15 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
 
-interface PlaylistHeaderProps {
-  onBack: () => void;
-  artworkUrl: string;
-  name: string;
+export interface PlaylistHeaderProps {
+  onBack?: () => void;
+  artworkUrl?: string;
+  name?: string;
   genreName?: string;
   moodName?: string;
-  songCount: number;
-  onPlay: () => void;
-  onPush: () => void;
+  songCount?: number;
+  onPlay?: () => void;
+  onPush?: () => void;
+  // Add these new props for create/edit mode
+  onCancel?: () => void;
+  onCreate?: () => void;
 }
 
 export function PlaylistHeader({
@@ -18,10 +21,30 @@ export function PlaylistHeader({
   name,
   genreName = "Various",
   moodName = "Various",
-  songCount,
+  songCount = 0,
   onPlay,
-  onPush
+  onPush,
+  onCancel,
+  onCreate
 }: PlaylistHeaderProps) {
+  // If we're in create/edit mode
+  if (onCancel && onCreate) {
+    return (
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold">Create New Playlist</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button onClick={onCreate}>
+            Create Playlist
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Default view mode
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 text-gray-500">
@@ -41,14 +64,16 @@ export function PlaylistHeader({
             alt={name}
             className="w-32 h-32 rounded-lg object-cover"
           />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-            <button
-              onClick={onPlay}
-              className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
-            >
-              <Play className="w-6 h-6" />
-            </button>
-          </div>
+          {onPlay && (
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
+              <button
+                onClick={onPlay}
+                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+              >
+                <Play className="w-6 h-6" />
+              </button>
+            </div>
+          )}
         </div>
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold text-gray-900">{name}</h1>
@@ -59,12 +84,14 @@ export function PlaylistHeader({
             <span>•</span>
             <span>{songCount} songs</span>
           </div>
-          <Button 
-            onClick={onPush}
-            className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-          >
-            Push
-          </Button>
+          {onPush && (
+            <Button 
+              onClick={onPush}
+              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
+            >
+              Push
+            </Button>
+          )}
         </div>
       </div>
     </div>

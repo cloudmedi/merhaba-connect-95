@@ -21,8 +21,8 @@ export function PlaylistDetail() {
         .from('playlists')
         .select(`
           *,
-          genres:genre_id(name),
-          moods:mood_id(name)
+          genre:genre_id(name),
+          mood:mood_id(name)
         `)
         .eq('id', id)
         .single();
@@ -83,7 +83,7 @@ export function PlaylistDetail() {
     return (
       <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
         <div className="text-center text-gray-500">
-          Playlist bulunamadı
+          Playlist not found
         </div>
       </div>
     );
@@ -103,8 +103,8 @@ export function PlaylistDetail() {
           onBack={() => navigate("/manager/playlists")}
           artworkUrl={playlist.artwork_url}
           name={playlist.name}
-          genreName={playlist.genres?.name}
-          moodName={playlist.moods?.name}
+          genreName={playlist.genre?.name}
+          moodName={playlist.mood?.name}
           songCount={playlist.songs?.length || 0}
           onPlay={() => setIsPlaying(true)}
           onPush={() => setIsPushDialogOpen(true)}
