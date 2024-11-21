@@ -11,12 +11,7 @@ import { useDevices } from "../hooks/useDevices";
 import type { Device } from "../hooks/useDevices";
 
 interface DeviceRowProps {
-  device: Device & {
-    branch?: {
-      name: string;
-      location: string;
-    } | null;
-  };
+  device: Device;
   isSelected: boolean;
   onSelect: (checked: boolean) => void;
   sortConfig: {
@@ -84,7 +79,7 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
                 <h3 className="font-semibold text-lg">{device.name}</h3>
                 <SortButton column="name" />
               </div>
-              <span className="text-sm text-gray-500">({device.branch?.location})</span>
+              <span className="text-sm text-gray-500">({device.location})</span>
               <SortButton column="location" />
             </div>
             

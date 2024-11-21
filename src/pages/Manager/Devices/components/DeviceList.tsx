@@ -54,10 +54,10 @@ export function DeviceList() {
   const filteredDevices = devices.filter(
     (device) =>
       (device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        device.branch?.location?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        device.location?.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (statusFilter === "all" || device.status === statusFilter) &&
       (categoryFilter === "all" || device.category === categoryFilter) &&
-      (locationFilter === "all" || device.branch?.location?.toLowerCase().includes(locationFilter.toLowerCase()))
+      (locationFilter === "all" || device.location?.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
   const sortedDevices = [...filteredDevices].sort((a: any, b: any) => {

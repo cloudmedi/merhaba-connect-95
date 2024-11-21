@@ -7,7 +7,6 @@ import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 export interface Device {
   id: string;
   name: string;
-  location: string | null;
   category: 'player' | 'display' | 'controller';
   status: 'online' | 'offline';
   ip_address?: string | null;
@@ -25,6 +24,7 @@ export interface Device {
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;
+  location?: string | null;
 }
 
 export const useDevices = () => {
@@ -91,8 +91,24 @@ export const useDevices = () => {
         throw error;
       }
       
-      console.log('Fetched devices:', data);
-      return data as Device[];
+      // Transform the data to match our Device interface
+      const transformedData: Device[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category as 'player' | 'display' | 'controller',
+        status: item.status as 'online' | 'offline',
+        ip_address: item.ip_address,
+        system_info: item.system_info || {},
+        schedule: item.schedule || {},
+        token: item.token,
+        last_seen: item.last_seen,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        location: item.location
+      }));
+
+      console.log('Fetched devices:', transformedData);
+      return transformedData;
     },
   });
 
@@ -153,7 +169,6 @@ export const useDevices = () => {
     },
   });
 
-  // Delete device with improved error handling
   const deleteDevice = useMutation({
     mutationFn: async (id: string) => {
       console.log('Deleting device:', id);
