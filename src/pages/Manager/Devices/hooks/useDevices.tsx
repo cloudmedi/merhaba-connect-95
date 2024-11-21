@@ -71,11 +71,11 @@ export const useDevices = () => {
     queryFn: async () => {
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('*, licenses(*)')
+        .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      const { data: devices, error } = await supabase
+      const { data, error } = await supabase
         .from('devices')
         .select(`
           *,
@@ -88,7 +88,7 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile?.company_id);
 
       if (error) throw error;
-      return devices || [];
+      return data || [];
     },
   });
 
