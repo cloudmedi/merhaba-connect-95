@@ -5,6 +5,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -12,22 +15,83 @@ export function PlaylistDetail() {
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Mock data - replace with actual data fetching
-  const playlist = {
-    id,
-    title: "Summer Vibes 2024",
-    genre: "Pop",
-    mood: "Energetic",
-    songCount: "45 songs",
-    duration: "2h 45m",
-    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
-    songs: Array.from({ length: 45 }, (_, i) => ({
-      id: i + 1,
-      title: `Song Title ${i + 1}`,
-      artist: `Artist ${Math.floor(i / 8) + 1}`,
-      duration: "3:30",
-      file_url: `/mock-songs/song-${i + 1}.mp3` // Added mock file_url
-    }))
+  const { data: playlist, isLoading } = useQuery({
+    queryKey: ['playlist', id],
+    queryFn: async () => {
+      const { data: playlistData, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
+          id,
+          name,
+          genre:genres(name),
+          mood:moods(name),
+          artwork_url
+        `)
+        .eq('id', id)
+        .single();
+
+      if (playlistError) throw playlistError;
+
+      const { data: songsData, error: songsError } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url
+          )
+        `)
+        .eq('playlist_id', id)
+        .order('position');
+
+      if (songsError) throw songsError;
+
+      return {
+        ...playlistData,
+        songs: songsData.map(item => item.songs)
+      };
+    },
+    onError: (error) => {
+      toast.error("Failed to load playlist");
+      console.error("Error loading playlist:", error);
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 w-1/4 rounded"></div>
+          <div className="h-32 bg-gray-200 w-32 rounded-lg"></div>
+          <div className="h-8 bg-gray-200 w-1/2 rounded"></div>
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!playlist) {
+    return (
+      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
+        <div className="text-center text-gray-500">
+          Playlist not found
+        </div>
+      </div>
+    );
+  }
+
+  const formatDuration = (duration: number | null) => {
+    if (!duration) return "0:00";
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -46,8 +110,8 @@ export function PlaylistDetail() {
         <div className="flex items-start gap-8">
           <div className="relative group">
             <img 
-              src={playlist.artwork} 
-              alt={playlist.title}
+              src={playlist.artwork_url || "/placeholder.svg"}
+              alt={playlist.name}
               className="w-32 h-32 rounded-lg object-cover"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
@@ -60,15 +124,13 @@ export function PlaylistDetail() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">{playlist.title}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>{playlist.genre}</span>
+              <span>{playlist.genre?.name || "Various"}</span>
               <span>•</span>
-              <span>{playlist.mood}</span>
+              <span>{playlist.mood?.name || "Various"}</span>
               <span>•</span>
-              <span>{playlist.songCount}</span>
-              <span>•</span>
-              <span>{playlist.duration}</span>
+              <span>{playlist.songs?.length || 0} songs</span>
             </div>
             <Button 
               onClick={() => setIsPushDialogOpen(true)}
@@ -88,7 +150,7 @@ export function PlaylistDetail() {
           </div>
 
           <ScrollArea className="h-[calc(100vh-300px)]">
-            {playlist.songs.map((song, index) => (
+            {playlist.songs?.map((song, index) => (
               <div 
                 key={song.id}
                 className="grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100"
@@ -98,8 +160,8 @@ export function PlaylistDetail() {
                   <Music2 className="w-4 h-4 text-gray-400" />
                   {song.title}
                 </div>
-                <div className="col-span-4 text-gray-500">{song.artist}</div>
-                <div className="col-span-2 text-right text-gray-500">{song.duration}</div>
+                <div className="col-span-4 text-gray-500">{song.artist || "Unknown Artist"}</div>
+                <div className="col-span-2 text-right text-gray-500">{formatDuration(song.duration)}</div>
               </div>
             ))}
           </ScrollArea>
@@ -109,15 +171,21 @@ export function PlaylistDetail() {
       <PushPlaylistDialog
         isOpen={isPushDialogOpen}
         onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.title}
+        playlistTitle={playlist.name}
       />
 
       {isPlaying && (
         <MusicPlayer
           playlist={{
-            title: playlist.title,
-            artwork: playlist.artwork,
-            songs: playlist.songs
+            title: playlist.name,
+            artwork: playlist.artwork_url || "/placeholder.svg",
+            songs: playlist.songs?.map(song => ({
+              id: song.id,
+              title: song.title,
+              artist: song.artist || "Unknown Artist",
+              duration: song.duration?.toString() || "0:00",
+              file_url: song.file_url
+            }))
           }}
           onClose={() => setIsPlaying(false)}
         />
