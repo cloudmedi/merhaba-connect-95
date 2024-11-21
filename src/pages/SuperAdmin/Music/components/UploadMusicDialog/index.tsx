@@ -68,16 +68,6 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                progress: percent
-              }
-            }));
-          }
         });
 
       if (uploadError) throw uploadError;
@@ -91,7 +81,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         .insert([{
           title: file.name.replace(/\.[^/.]+$/, ""),
           file_url: publicUrl,
-          duration: 0, // We'll need to implement audio metadata extraction
+          duration: 0,
         }]);
 
       if (dbError) throw dbError;
@@ -100,14 +90,27 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         ...prev,
         [file.name]: {
           ...prev[file.name],
-          status: 'completed'
+          status: 'completed',
+          progress: 100
         }
       }));
 
-      toast({
-        title: "Upload successful",
-        description: `${file.name} has been uploaded`,
-      });
+      // Check if all files are completed
+      const allCompleted = Object.values(uploadingFiles).every(
+        file => file.status === 'completed'
+      );
+
+      if (allCompleted) {
+        toast({
+          title: "Upload successful",
+          description: "All files have been uploaded successfully",
+        });
+        // Close the dialog after a short delay
+        setTimeout(() => {
+          onOpenChange(false);
+          setUploadingFiles({});
+        }, 1500);
+      }
 
     } catch (error: any) {
       console.error('Upload error:', error);

@@ -28,23 +28,12 @@ const mockSongs = [
     artwork_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800",
     created_at: new Date().toISOString()
   },
-  // Add more mock songs as needed
 ];
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<typeof mockSongs[0][]>([]);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<typeof mockSongs[0] | null>(null);
   const { toast } = useToast();
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    toast({
-      title: "Upload Successful",
-      description: `${files.length} songs have been uploaded`,
-    });
-  };
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedSongs(checked ? mockSongs : []);
@@ -69,7 +58,7 @@ export function MusicContent() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
-        <MusicHeader onUpload={handleFileUpload} />
+        <MusicHeader />
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
