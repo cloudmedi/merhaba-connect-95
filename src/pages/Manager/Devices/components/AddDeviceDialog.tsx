@@ -11,8 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface AddDeviceDialogProps {
@@ -20,47 +18,24 @@ interface AddDeviceDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface Branch {
-  id: string;
-  name: string;
-  location: string | null;
-}
-
 export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [deviceName, setDeviceName] = useState("");
-  const [branchId, setBranchId] = useState("");
+  const [location, setLocation] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
-  // Fetch branches for the company
-  const { data: branches = [], isLoading: isLoadingBranches } = useQuery({
-    queryKey: ['branches'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('branches')
-        .select('*');
-      
-      if (error) {
-        toast.error('Error loading branches');
-        throw error;
-      }
-      
-      return data as Branch[];
-    },
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!branchId) {
-      toast.error('Please select a location');
+    if (!deviceName) {
+      toast.error('Lütfen cihaz adı girin');
       return;
     }
 
     await createDevice.mutateAsync({
       name: deviceName,
-      branch_id: branchId,
+      location: location,
       category,
       status: 'offline',
       system_info: {},
@@ -70,7 +45,7 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
 
     onOpenChange(false);
     setDeviceName("");
-    setBranchId("");
+    setLocation("");
     setCategory("player");
     setToken("");
   };
@@ -79,46 +54,35 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Device</DialogTitle>
+          <DialogTitle>Yeni Cihaz Ekle</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="deviceName">Device Name</Label>
+            <Label htmlFor="deviceName">Cihaz Adı</Label>
             <Input
               id="deviceName"
               value={deviceName}
               onChange={(e) => setDeviceName(e.target.value)}
-              placeholder="Enter device name"
+              placeholder="Cihaz adını girin"
               className="w-full"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Select value={branchId} onValueChange={setBranchId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select branch location" />
-              </SelectTrigger>
-              <SelectContent>
-                {isLoadingBranches ? (
-                  <SelectItem value="loading" disabled>Loading branches...</SelectItem>
-                ) : branches.length > 0 ? (
-                  branches.map((branch) => (
-                    <SelectItem key={branch.id} value={branch.id}>
-                      {branch.name} {branch.location && `(${branch.location})`}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-branches" disabled>No branches available</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="location">Konum</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="İl/İlçe bilgisini girin"
+              className="w-full"
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">Device Type</Label>
+            <Label htmlFor="category">Cihaz Tipi</Label>
             <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select device type" />
+                <SelectValue placeholder="Cihaz tipini seçin" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="player">Player</SelectItem>
@@ -128,12 +92,12 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="token">Pairing Token</Label>
+            <Label htmlFor="token">Eşleştirme Kodu</Label>
             <Input
               id="token"
               value={token}
               onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="Enter 6-digit token from Windows Player"
+              placeholder="Windows Player'dan 6 haneli kodu girin"
               className="w-full"
               maxLength={6}
               required
@@ -141,7 +105,7 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
-              {createDevice.isPending ? "Adding..." : "Add Device"}
+              {createDevice.isPending ? "Ekleniyor..." : "Cihaz Ekle"}
             </Button>
           </DialogFooter>
         </form>

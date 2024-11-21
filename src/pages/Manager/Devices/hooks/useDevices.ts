@@ -7,7 +7,7 @@ import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 export interface Device {
   id: string;
   name: string;
-  branch_id: string | null;
+  location: string | null;
   category: 'player' | 'display' | 'controller';
   status: 'online' | 'offline';
   ip_address?: string | null;
@@ -25,10 +25,6 @@ export interface Device {
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;
-  branch?: {
-    name: string;
-    location: string;
-  } | null;
 }
 
 export const useDevices = () => {
@@ -88,13 +84,7 @@ export const useDevices = () => {
       console.log('Fetching devices...');
       const { data, error } = await supabase
         .from('devices')
-        .select(`
-          *,
-          branch:branches(
-            name,
-            location
-          )
-        `);
+        .select('*');
 
       if (error) {
         console.error('Error fetching devices:', error);
@@ -106,7 +96,6 @@ export const useDevices = () => {
     },
   });
 
-  // Create device with improved error handling
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
       console.log('Creating device:', device);
@@ -115,7 +104,7 @@ export const useDevices = () => {
         .insert({
           ...device,
           last_seen: new Date().toISOString(),
-          ip_address: window.location.hostname, // Default to client IP for demo
+          ip_address: window.location.hostname,
         })
         .select()
         .single();
@@ -128,14 +117,14 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Cihaz başarıyla eklendi');
     },
     onError: (error) => {
-      toast.error('Failed to add device');
+      toast.error('Cihaz eklenirken bir hata oluştu');
       console.error('Error adding device:', error);
     },
   });
 
-  // Update device with improved error handling
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
       console.log('Updating device:', id, device);
