@@ -61,6 +61,14 @@ export function PlaylistDetail() {
     }
   });
 
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `https://cloud-media.b-cdn.net/${url}`;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
@@ -111,7 +119,7 @@ export function PlaylistDetail() {
         <div className="flex items-start gap-8">
           <div className="relative group">
             <img 
-              src={playlist.artwork_url || "/placeholder.svg"}
+              src={getFullUrl(playlist.artwork_url || "")}
               alt={playlist.name}
               className="w-32 h-32 rounded-lg object-cover"
             />
@@ -179,13 +187,13 @@ export function PlaylistDetail() {
         <MusicPlayer
           playlist={{
             title: playlist.name,
-            artwork: playlist.artwork_url || "/placeholder.svg",
+            artwork: getFullUrl(playlist.artwork_url || ""),
             songs: playlist.songs?.map(song => ({
               id: song.id,
               title: song.title,
               artist: song.artist || "Unknown Artist",
               duration: song.duration?.toString() || "0:00",
-              file_url: song.file_url
+              file_url: getFullUrl(song.file_url)
             }))
           }}
           onClose={() => setIsPlaying(false)}
