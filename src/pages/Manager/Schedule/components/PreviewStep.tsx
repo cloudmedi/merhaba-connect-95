@@ -16,7 +16,7 @@ interface PreviewStepProps {
     recurrence?: {
       frequency: 'daily' | 'weekly' | 'monthly';
       interval: number;
-      endDate?: Date;
+      endDate?: string;
     };
   };
   onBack: () => void;
@@ -77,7 +77,7 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
                 Every {formData.recurrence.interval}{" "}
                 {formData.recurrence.frequency}
                 {formData.recurrence.endDate &&
-                  ` until ${formData.recurrence.endDate.toLocaleDateString()}`}
+                  ` until ${new Date(formData.recurrence.endDate).toLocaleDateString()}`}
               </p>
             </div>
           )}
