@@ -11,35 +11,66 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface AddDeviceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+  location: string | null;
+}
+
 export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
-  const [branchName, setBranchName] = useState("");
-  const [location, setLocation] = useState("");
+  const [deviceName, setDeviceName] = useState("");
+  const [branchId, setBranchId] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
+  // Fetch branches for the company
+  const { data: branches = [], isLoading: isLoadingBranches } = useQuery({
+    queryKey: ['branches'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('*');
+      
+      if (error) {
+        toast.error('Error loading branches');
+        throw error;
+      }
+      
+      return data as Branch[];
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!branchId) {
+      toast.error('Please select a location');
+      return;
+    }
+
     await createDevice.mutateAsync({
-      name: branchName,
-      branch_id: location, // In a real app, you'd have a branch selector
+      name: deviceName,
+      branch_id: branchId,
       category,
       status: 'offline',
       system_info: {},
       schedule: {},
-      token: token // Add token to the device data
+      token
     });
 
     onOpenChange(false);
-    setBranchName("");
-    setLocation("");
+    setDeviceName("");
+    setBranchId("");
     setCategory("player");
     setToken("");
   };
@@ -52,11 +83,11 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="branchName">Device Name</Label>
+            <Label htmlFor="deviceName">Device Name</Label>
             <Input
-              id="branchName"
-              value={branchName}
-              onChange={(e) => setBranchName(e.target.value)}
+              id="deviceName"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
               placeholder="Enter device name"
               className="w-full"
               required
@@ -64,14 +95,24 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter branch location"
-              className="w-full"
-              required
-            />
+            <Select value={branchId} onValueChange={setBranchId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select branch location" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingBranches ? (
+                  <SelectItem value="loading" disabled>Loading branches...</SelectItem>
+                ) : branches.length > 0 ? (
+                  branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id}>
+                      {branch.name} {branch.location && `(${branch.location})`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-branches" disabled>No branches available</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Device Type</Label>
