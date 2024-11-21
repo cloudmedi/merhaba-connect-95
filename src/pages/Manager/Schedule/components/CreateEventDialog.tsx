@@ -7,7 +7,7 @@ import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence } from "../types";
+import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
@@ -30,11 +30,7 @@ interface EventFormData {
   category: EventCategory;
   branches: string[];
   notifications: EventNotification[];
-  recurrence?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
-    interval: number;
-    endDate?: string;
-  };
+  recurrence?: EventRecurrence;
 }
 
 export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
