@@ -16,7 +16,7 @@ export const userService = {
       .from('profiles')
       .select(`
         *,
-        companies:company_id (
+        companies (
           id,
           name,
           subscription_status,
@@ -48,56 +48,83 @@ export const userService = {
   },
 
   async createUser(userData: CreateUserFormValues) {
-    // 1. Create company
-    const company = await companyService.createCompany({
-      name: userData.companyName,
-      subscriptionStatus: userData.license.type,
-      subscriptionEndsAt: userData.license.end_date,
-    });
+    try {
+      // 1. Create company first
+      const company = await companyService.createCompany({
+        name: userData.companyName,
+        subscriptionStatus: userData.license.type,
+        subscriptionEndsAt: userData.license.end_date,
+      });
 
-    // 2. Create Supabase auth user
-    const { data: authUser, error: authError } = await supabase.auth.signUp({
-      email: userData.email,
-      password: 'temp123!',
-      options: {
-        data: {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          role: userData.role,
-          companyId: company.id,
-        }
-      }
-    });
-
-    if (authError) throw authError;
-
-    // 3. Create user record in profiles table
-    const { data: user, error: userError } = await supabase
-      .from('profiles')
-      .insert({
-        id: authUser.user!.id,
+      // 2. Create Supabase auth user with password
+      const { data: authUser, error: authError } = await supabase.auth.signUp({
         email: userData.email,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
-        role: userData.role,
-        company_id: company.id,
-        is_active: true
-      })
-      .select()
-      .single();
+        password: 'Welcome123!', // Default password that user will need to change
+        options: {
+          data: {
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role,
+            companyId: company.id
+          }
+        }
+      });
 
-    if (userError) throw userError;
+      if (authError) throw authError;
+      if (!authUser.user) throw new Error('Failed to create user');
 
-    // 4. Create license record
-    await licenseService.createLicense({
-      userId: user.id,
-      type: userData.license.type,
-      start_date: userData.license.start_date,
-      end_date: userData.license.end_date,
-      quantity: userData.license.quantity
-    });
+      // Wait for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    return user;
+      // 3. Update the profile with company_id
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          company_id: company.id,
+          role: userData.role,
+          is_active: true
+        })
+        .eq('id', authUser.user.id);
+
+      if (profileError) throw profileError;
+
+      // 4. Create license
+      await licenseService.createLicense({
+        userId: authUser.user.id,
+        type: userData.license.type,
+        start_date: userData.license.start_date,
+        end_date: userData.license.end_date,
+        quantity: userData.license.quantity
+      });
+
+      // 5. Fetch and return the created user with all relations
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            subscription_status,
+            subscription_ends_at
+          ),
+          licenses (
+            type,
+            start_date,
+            end_date,
+            quantity
+          )
+        `)
+        .eq('id', authUser.user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      return profile;
+
+    } catch (error: any) {
+      console.error('Error in createUser:', error);
+      throw error;
+    }
   },
 
   async updateUser(id: string, updates: Partial<User>) {
@@ -144,7 +171,7 @@ export const userService = {
       .from('licenses')
       .update({ 
         type: 'premium',
-        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       })
       .eq('user_id', userId)
       .select()
