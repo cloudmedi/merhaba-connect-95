@@ -39,7 +39,8 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   };
 
   // Use a default placeholder image if artwork is missing or invalid
-  const artworkUrl = playlist.artwork || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+  const artworkUrl = playlist.artwork || defaultArtwork;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">

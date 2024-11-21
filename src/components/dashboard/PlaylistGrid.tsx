@@ -7,6 +7,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { GridPlaylist } from "./types";
 
+interface PlaylistSong {
+  position: number;
+  songs: {
+    id: string;
+    title: string;
+    artist: string | null;
+    duration: number | null;
+    file_url: string;
+  };
+}
+
 interface PlaylistGridProps {
   title: string;
   description?: string;
@@ -19,12 +30,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   const navigate = useNavigate();
 
   // Fetch songs for the current playlist
-  const { data: playlistSongs } = useQuery({
+  const { data: playlistSongs } = useQuery<PlaylistSong[]>({
     queryKey: ['playlist-songs', currentPlaylist?.id],
     queryFn: async () => {
-      if (!currentPlaylist?.id) return null;
+      if (!currentPlaylist?.id) return [];
       
-      const { data: playlistSongsData, error } = await supabase
+      const { data, error } = await supabase
         .from('playlist_songs')
         .select(`
           position,
@@ -39,8 +50,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         .eq('playlist_id', currentPlaylist.id)
         .order('position');
 
-      if (error) throw error;
-      return playlistSongsData;
+      if (error) {
+        console.error('Error fetching playlist songs:', error);
+        throw error;
+      }
+
+      return data || [];
     },
     enabled: !!currentPlaylist?.id
   });
@@ -61,6 +76,8 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
     navigate(`/manager/playlists/${playlist.id}`);
   };
 
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+
   return (
     <div className="space-y-4">
       <div>
@@ -78,12 +95,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               onClick={() => handlePlaylistClick(playlist)}
             >
               <img
-                src={playlist.artwork || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b"}
+                src={playlist.artwork || defaultArtwork}
                 alt={playlist.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
-                  img.src = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+                  img.src = defaultArtwork;
                 }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
@@ -114,12 +131,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
           </div>
         ))}
       </div>
-      {currentPlaylist && (
+      {currentPlaylist && playlistSongs && (
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-            songs: playlistSongs?.map(ps => ({
+            artwork: currentPlaylist.artwork || defaultArtwork,
+            songs: playlistSongs.map(ps => ({
               id: parseInt(ps.songs.id),
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
