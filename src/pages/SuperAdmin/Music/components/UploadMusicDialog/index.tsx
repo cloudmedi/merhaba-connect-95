@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UploadMusicDialogProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface UploadingFile {
 export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps) {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleFileSelect = async (files: FileList) => {
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
@@ -85,10 +87,15 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       );
 
       if (allCompleted) {
+        // Invalidate and refetch songs query to update the music library
+        await queryClient.invalidateQueries({ queryKey: ['songs'] });
+        
         toast({
           title: "Upload successful",
           description: "All files have been uploaded successfully",
         });
+
+        // Close dialog and reset state
         onOpenChange(false);
         setUploadingFiles({});
       }
