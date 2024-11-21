@@ -15,7 +15,23 @@ serve(async (req) => {
 
   try {
     // Get the form data from the request body
-    const formData = await req.formData();
+    let formData;
+    try {
+      formData = await req.formData();
+    } catch (error) {
+      console.error('Form data parsing error:', error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Upload failed', 
+          details: 'Failed to parse form data: ' + error.message 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+          status: 400 
+        }
+      );
+    }
+
     const file = formData.get('file');
     
     if (!file || !(file instanceof File)) {
@@ -58,6 +74,7 @@ serve(async (req) => {
     });
 
     if (!uploadResponse.ok) {
+      console.error('Bunny CDN upload failed:', await uploadResponse.text());
       throw new Error('Failed to upload to Bunny CDN');
     }
 

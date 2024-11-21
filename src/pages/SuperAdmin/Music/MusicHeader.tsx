@@ -21,13 +21,12 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           throw new Error('No active session');
         }
 
-        // Create FormData object
-        const formData = new FormData();
-        formData.append('file', file);
+        // Create a new FormData instance for each file
+        const body = new FormData();
+        body.append('file', file);
 
-        // Call the Edge Function
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
+          body,
         });
 
         if (error) {
