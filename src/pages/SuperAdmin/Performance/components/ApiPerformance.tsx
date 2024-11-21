@@ -11,12 +11,12 @@ export function ApiPerformance() {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 bg-white">
-        <h3 className="text-lg font-semibold mb-6">API Request Volume (24h)</h3>
+      <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
+        <h3 className="text-lg font-semibold mb-6 text-gray-900">API Request Volume (24h)</h3>
         <div className="h-[300px]">
           <ChartContainer
             config={{
-              requests: { color: "#3b82f6" },
+              requests: { color: "#6E59A5" },
               errors: { color: "#ef4444" },
             }}
           >
@@ -32,7 +32,7 @@ export function ApiPerformance() {
               <ChartTooltip />
               <Bar 
                 dataKey="total_requests" 
-                fill="#3b82f6"
+                fill="#6E59A5"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
                 {...commonChartProps}
@@ -42,8 +42,8 @@ export function ApiPerformance() {
         </div>
       </Card>
 
-      <Card className="p-6 bg-white">
-        <h3 className="text-lg font-semibold mb-4">Endpoint Performance</h3>
+      <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900">API Endpoint Performance</h3>
         <ScrollArea className="h-[300px]">
           <Table>
             <TableHeader>

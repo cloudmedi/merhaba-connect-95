@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis } from "recharts";
-import { Cpu, Database, HardDrive } from "lucide-react";
+import { Cpu, Database, Memory } from "lucide-react";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
@@ -14,15 +14,13 @@ export function ResourceUsage() {
     storage_usage: 78,
   };
 
-  // ... keep existing code (resource cards)
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 bg-white">
+        <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Cpu className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Cpu className="h-6 w-6 text-[#6E59A5]" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">CPU Usage</p>
@@ -32,10 +30,10 @@ export function ResourceUsage() {
           </div>
         </Card>
 
-        <Card className="p-6 bg-white">
+        <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Database className="h-6 w-6 text-purple-600" />
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Memory className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
@@ -45,10 +43,10 @@ export function ResourceUsage() {
           </div>
         </Card>
 
-        <Card className="p-6 bg-white">
+        <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-emerald-100 rounded-lg">
-              <HardDrive className="h-6 w-6 text-emerald-600" />
+              <Database className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Storage Usage</p>
@@ -59,13 +57,13 @@ export function ResourceUsage() {
         </Card>
       </div>
 
-      <Card className="p-6 bg-white">
-        <h3 className="text-lg font-semibold mb-6">Resource Usage Trends (24h)</h3>
+      <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
+        <h3 className="text-lg font-semibold mb-6 text-gray-900">Resource Usage Trends (24h)</h3>
         <div className="h-[300px]">
           <ChartContainer
             config={{
-              cpu: { color: "#3b82f6" },
-              memory: { color: "#9333ea" },
+              cpu: { color: "#6E59A5" },
+              memory: { color: "#3b82f6" },
               storage: { color: "#10b981" },
             }}
           >
@@ -83,7 +81,7 @@ export function ResourceUsage() {
               <Line
                 type="monotone"
                 dataKey="cpu_usage"
-                stroke="#3b82f6"
+                stroke="#6E59A5"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -92,7 +90,7 @@ export function ResourceUsage() {
               <Line
                 type="monotone"
                 dataKey="memory_usage"
-                stroke="#9333ea"
+                stroke="#3b82f6"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}

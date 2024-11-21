@@ -7,9 +7,9 @@ export default function Performance() {
   return (
     <DashboardLayout
       title="System Performance"
-      description="Monitor system health, resource usage, and API performance"
+      description="Monitor system health, resource usage, and API performance metrics in real-time"
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         <ServerStatus />
         <ResourceUsage />
         <ApiPerformance />
