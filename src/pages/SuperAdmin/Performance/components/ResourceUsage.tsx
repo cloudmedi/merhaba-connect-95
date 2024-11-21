@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis } from "recharts";
-import { Cpu, Database, Memory } from "lucide-react";
+import { Cpu, Database, HardDrive } from "lucide-react";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
@@ -33,7 +33,7 @@ export function ResourceUsage() {
         <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-lg">
-              <Memory className="h-6 w-6 text-blue-600" />
+              <Database className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
@@ -46,7 +46,7 @@ export function ResourceUsage() {
         <Card className="p-6 bg-white hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-emerald-100 rounded-lg">
-              <Database className="h-6 w-6 text-emerald-600" />
+              <HardDrive className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Storage Usage</p>
