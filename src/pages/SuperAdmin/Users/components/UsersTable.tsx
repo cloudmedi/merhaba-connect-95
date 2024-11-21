@@ -2,9 +2,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserTableRow } from "./UserTableRow";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "@/types/auth";
+import DataTableLoader from "@/components/loaders/DataTableLoader";
 
 export function UsersTable() {
   const [searchParams] = useSearchParams();
@@ -17,7 +17,7 @@ export function UsersTable() {
     expiry: searchParams.get('expiry') || undefined,
   };
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error } = useQuery({
     queryKey: ['users', filters],
     queryFn: async () => {
       let query = supabase
@@ -84,36 +84,20 @@ export function UsersTable() {
           quantity: profile.licenses[0].quantity
         } : undefined
       })) || [];
-    }
+    },
+    retry: 1
   });
 
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>NAME</TableHead>
-              <TableHead>COMPANY</TableHead>
-              <TableHead>ROLE</TableHead>
-              <TableHead>STATUS</TableHead>
-              <TableHead>LICENSE</TableHead>
-              <TableHead>EXPIRY</TableHead>
-              <TableHead className="text-right">ACTIONS</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[...Array(3)].map((_, i) => (
-              <TableRow key={i}>
-                <TableCell colSpan={7}>
-                  <Skeleton className="h-12 w-full" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="rounded-md border p-8 text-center">
+        <p className="text-red-500">Error loading users: {error.message}</p>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return <DataTableLoader />;
   }
 
   if (!users?.length) {
