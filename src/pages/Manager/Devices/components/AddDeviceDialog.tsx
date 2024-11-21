@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
-import { DeviceGrouping } from "./DeviceGrouping";
 
 export function AddDeviceDialog({
   open,
@@ -24,7 +23,6 @@ export function AddDeviceDialog({
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
-  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +43,6 @@ export function AddDeviceDialog({
     setCategory("player");
     setLocation("");
     setToken("");
-    setSelectedDevices([]);
   };
 
   return (
@@ -94,16 +91,6 @@ export function AddDeviceDialog({
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Enter device token"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Device Group</Label>
-            <DeviceGrouping 
-              selectedDevices={selectedDevices} 
-              onCreateGroup={(group) => {
-                console.log("Created group:", group);
-                setSelectedDevices([]);
-              }} 
             />
           </div>
           <DialogFooter>

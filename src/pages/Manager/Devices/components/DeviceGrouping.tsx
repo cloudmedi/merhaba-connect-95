@@ -5,9 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { Users } from "lucide-react";
+import { Users, Plus } from "lucide-react";
 
-export interface DeviceGroup {
+interface DeviceGroup {
   id: string;
   name: string;
   deviceIds: string[];
@@ -66,10 +66,11 @@ export function DeviceGrouping({ selectedDevices, onCreateGroup }: DeviceGroupin
       <Button 
         variant="outline" 
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 w-full"
+        disabled={selectedDevices.length === 0}
+        className="flex items-center gap-2"
       >
         <Users className="w-4 h-4" />
-        Create Group
+        Create Group ({selectedDevices.length})
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -106,11 +107,6 @@ export function DeviceGrouping({ selectedDevices, onCreateGroup }: DeviceGroupin
                     <span className="text-sm">Device {deviceId}</span>
                   </div>
                 ))}
-                {selectedDevices.length === 0 && (
-                  <div className="text-center text-gray-500 py-4">
-                    No devices selected
-                  </div>
-                )}
               </ScrollArea>
             </div>
           </div>
