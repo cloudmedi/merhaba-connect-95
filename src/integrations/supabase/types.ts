@@ -287,7 +287,6 @@ export type Database = {
           ip_address: string | null
           last_seen: string | null
           location: string | null
-          location_id: string | null
           name: string
           schedule: Json | null
           status: string | null
@@ -303,7 +302,6 @@ export type Database = {
           ip_address?: string | null
           last_seen?: string | null
           location?: string | null
-          location_id?: string | null
           name: string
           schedule?: Json | null
           status?: string | null
@@ -319,7 +317,6 @@ export type Database = {
           ip_address?: string | null
           last_seen?: string | null
           location?: string | null
-          location_id?: string | null
           name?: string
           schedule?: Json | null
           status?: string | null
@@ -333,13 +330,6 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "devices_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -419,30 +409,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      locations: {
-        Row: {
-          city: string
-          created_at: string | null
-          district: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          city: string
-          created_at?: string | null
-          district?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          city?: string
-          created_at?: string | null
-          district?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       moods: {
         Row: {

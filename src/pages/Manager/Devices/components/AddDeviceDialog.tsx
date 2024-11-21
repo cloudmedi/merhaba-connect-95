@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
-import { useLocations } from "../hooks/useLocations";
 import { toast } from "sonner";
 
 interface AddDeviceDialogProps {
@@ -25,7 +24,6 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
-  const { data: locations = [], isLoading: isLoadingLocations } = useLocations();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,27 +70,13 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Konum</Label>
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger>
-                <SelectValue placeholder="Konum seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((loc) => (
-                  <SelectItem key={loc} value={loc}>
-                    {loc}
-                  </SelectItem>
-                ))}
-                <SelectItem value="new">Yeni Konum</SelectItem>
-              </SelectContent>
-            </Select>
-            {location === "new" && (
-              <Input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Yeni konum girin"
-                className="mt-2"
-              />
-            )}
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="İl/İlçe bilgisini girin"
+              className="w-full"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Cihaz Tipi</Label>
