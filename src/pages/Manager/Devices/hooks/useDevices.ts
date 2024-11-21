@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export interface Device {
   id: string;
@@ -43,13 +44,13 @@ export const useDevices = () => {
           schema: 'public',
           table: 'devices'
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Device>) => {
           // Invalidate and refetch devices query
           queryClient.invalidateQueries({ queryKey: ['devices'] });
           
           // Show toast notification based on the event
           const event = payload.eventType;
-          const deviceName = payload.new?.name || payload.old?.name;
+          const deviceName = (payload.new as Device)?.name || (payload.old as Device)?.name;
           
           if (event === 'INSERT') {
             toast.success(`Device "${deviceName}" has been added`);
