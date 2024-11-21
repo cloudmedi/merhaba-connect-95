@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Play, MoreVertical } from "lucide-react";
+import { Play, MoreVertical, Music2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
