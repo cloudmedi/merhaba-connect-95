@@ -14,24 +14,22 @@ serve(async (req) => {
   }
 
   try {
-    const startTime = Date.now();
     console.log('Starting file upload process');
-
     const { fileName, fileType, fileData } = await req.json();
-    console.log(`Processing file: ${fileName}, type: ${fileType}, data length: ${fileData?.length || 0}`);
-
+    
     if (!fileName || !fileType || !fileData) {
       throw new Error('Missing required file data');
     }
 
-    // Convert base64 to Uint8Array more efficiently
+    console.log(`Processing file: ${fileName}, type: ${fileType}`);
+
+    // Convert base64 to ArrayBuffer more efficiently
     const base64Data = fileData.split(',')[1];
-    const binaryData = new Uint8Array(base64Data.length);
-    for (let i = 0; i < base64Data.length; i++) {
-      binaryData[i] = base64Data.charCodeAt(i);
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
     }
-    
-    console.log(`Binary data prepared, size: ${binaryData.length} bytes`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -43,18 +41,12 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Extract basic metadata without full parse
-    console.log('Extracting basic metadata...');
-    const metadata = await mm.parseBuffer(binaryData, {
+    // Extract basic metadata
+    console.log('Extracting metadata...');
+    const metadata = await mm.parseBuffer(bytes, {
       duration: true,
-      skipCovers: true, // Skip artwork parsing to save memory
+      skipCovers: true,
       skipPostHeaders: true,
-    });
-    
-    console.log('Metadata extracted:', {
-      title: metadata.common.title,
-      artist: metadata.common.artist,
-      duration: metadata.format.duration
     });
 
     // Prepare Bunny CDN upload
@@ -73,7 +65,7 @@ serve(async (req) => {
 
     // Upload to Bunny CDN with timeout
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    const timeout = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
     try {
       const uploadResponse = await fetch(bunnyUrl, {
@@ -82,7 +74,7 @@ serve(async (req) => {
           'AccessKey': bunnyApiKey,
           'Content-Type': fileType,
         },
-        body: binaryData,
+        body: bytes,
         signal: controller.signal,
       });
 
@@ -102,7 +94,7 @@ serve(async (req) => {
       throw error;
     }
 
-    // Get the user information from the auth header
+    // Get user information
     const authHeader = req.headers.get('Authorization')?.split(' ')[1];
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader!);
 
@@ -136,14 +128,10 @@ serve(async (req) => {
       throw new Error('Failed to save song metadata');
     }
 
-    const endTime = Date.now();
-    console.log(`Upload process completed in ${endTime - startTime}ms`);
-
     return new Response(
       JSON.stringify({ 
         message: 'Upload successful',
-        song: savedSong,
-        processingTime: endTime - startTime
+        song: savedSong
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -155,7 +143,10 @@ serve(async (req) => {
         error: 'Upload failed', 
         details: error.message 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+        status: 500 
+      }
     );
   }
 });
