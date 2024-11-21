@@ -124,7 +124,7 @@ export function MusicContent() {
               title: currentlyPlaying.title,
               artwork: currentlyPlaying.artwork_url || "/placeholder.svg",
               songs: [{
-                id: parseInt(currentlyPlaying.id),
+                id: currentlyPlaying.id,
                 title: currentlyPlaying.title,
                 artist: currentlyPlaying.artist || "Unknown Artist",
                 duration: currentlyPlaying.duration?.toString() || "0:00",
