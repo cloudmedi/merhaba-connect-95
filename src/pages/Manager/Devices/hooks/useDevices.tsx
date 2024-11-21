@@ -75,6 +75,10 @@ export const useDevices = () => {
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
+      if (!userProfile?.company_id) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('devices')
         .select(`
@@ -85,7 +89,7 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branches.company_id', userProfile?.company_id);
+        .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
       return data || [];
@@ -94,7 +98,6 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      // First check license limit
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('*, licenses(*)')
@@ -103,7 +106,6 @@ export const useDevices = () => {
 
       const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
       
-      // Count current devices
       const { count: currentDevices } = await supabase
         .from('devices')
         .select('*', { count: 'exact' })
