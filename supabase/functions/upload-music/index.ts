@@ -15,39 +15,45 @@ serve(async (req) => {
 
   try {
     const { fileName, fileType, fileData } = await req.json();
+    console.log('Received file data:', { fileName, fileType });
 
     if (!fileName || !fileType || !fileData) {
-      return new Response(
-        JSON.stringify({ error: 'Missing file data' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      throw new Error('Missing required file data');
     }
 
     // Convert base64 to Uint8Array
     const base64Data = fileData.split(',')[1];
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    console.log('Converted file to binary data, size:', binaryData.length);
 
     // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Extract metadata from the audio file
+    console.log('Extracting metadata from audio file...');
     const metadata = await mm.parseBuffer(binaryData);
+    console.log('Extracted metadata:', metadata);
 
-    // Upload to Bunny CDN
+    // Prepare Bunny CDN upload
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME');
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
-    const bunnyStorageHost = "storage.bunnycdn.com";
 
     if (!bunnyStorageName || !bunnyApiKey) {
       throw new Error('Missing Bunny CDN configuration');
     }
 
+    console.log('Bunny CDN configuration loaded:', { bunnyStorageName });
+
     const fileExt = fileName.split('.').pop();
     const uniqueFileName = `${crypto.randomUUID()}-${fileName}`;
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`;
+    const bunnyUrl = `https://storage.bunnycdn.com/${bunnyStorageName}/${uniqueFileName}`;
 
     console.log('Uploading to Bunny CDN:', bunnyUrl);
 
@@ -62,9 +68,12 @@ serve(async (req) => {
     });
 
     if (!uploadResponse.ok) {
-      console.error('Bunny CDN upload failed:', await uploadResponse.text());
-      throw new Error('Failed to upload to Bunny CDN');
+      const errorText = await uploadResponse.text();
+      console.error('Bunny CDN upload failed:', errorText);
+      throw new Error(`Failed to upload to Bunny CDN: ${errorText}`);
     }
+
+    console.log('Successfully uploaded to Bunny CDN');
 
     // Get the user information from the auth header
     const authHeader = req.headers.get('Authorization')?.split(' ')[1];
@@ -83,7 +92,7 @@ serve(async (req) => {
       duration: Math.round(metadata.format.duration || 0),
       file_url: bunnyUrl,
       bunny_id: uniqueFileName,
-      artwork_url: null,
+      artwork_url: null, // We'll handle artwork separately in the future
       created_by: user.id
     };
 
