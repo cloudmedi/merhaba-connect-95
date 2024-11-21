@@ -34,10 +34,15 @@ export default function SuperAdminLogin() {
         .single();
 
       if (profile?.role !== 'super_admin') {
+        await supabase.auth.signOut();
         throw new Error('Unauthorized access');
       }
 
       navigate("/super-admin/dashboard");
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
