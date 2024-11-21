@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { User } from "@/types/auth";
 
 export function UsersTable() {
   const [searchParams] = useSearchParams();
@@ -51,7 +52,31 @@ export function UsersTable() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Map the Supabase data to match the User type
+      return data?.map((profile): User => ({
+        id: profile.id,
+        email: profile.email,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        role: profile.role as 'super_admin' | 'manager' | 'admin',
+        companyId: profile.company_id,
+        isActive: profile.is_active,
+        createdAt: profile.created_at,
+        updatedAt: profile.updated_at,
+        company: profile.companies ? {
+          id: profile.companies.id,
+          name: profile.companies.name,
+          subscriptionStatus: profile.companies.subscription_status,
+          subscriptionEndsAt: profile.companies.subscription_ends_at
+        } : undefined,
+        license: profile.licenses?.[0] ? {
+          type: profile.licenses[0].type,
+          start_date: profile.licenses[0].start_date,
+          end_date: profile.licenses[0].end_date,
+          quantity: profile.licenses[0].quantity
+        } : undefined
+      })) || [];
     }
   });
 
