@@ -3,13 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CampaignFormData } from "../types";
 
-export function CampaignSchedule() {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [repeatType, setRepeatType] = useState("once");
-  const [repeatInterval, setRepeatInterval] = useState("daily");
+interface CampaignScheduleProps {
+  formData: CampaignFormData;
+  onFormDataChange: (data: Partial<CampaignFormData>) => void;
+}
 
+export function CampaignSchedule({ formData, onFormDataChange }: CampaignScheduleProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -17,16 +18,16 @@ export function CampaignSchedule() {
           <Label>Başlangıç Tarihi</Label>
           <Input
             type="datetime-local"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            value={formData.startDate}
+            onChange={(e) => onFormDataChange({ startDate: e.target.value })}
           />
         </div>
         <div>
           <Label>Bitiş Tarihi</Label>
           <Input
             type="datetime-local"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            value={formData.endDate}
+            onChange={(e) => onFormDataChange({ endDate: e.target.value })}
           />
         </div>
       </div>
@@ -34,8 +35,8 @@ export function CampaignSchedule() {
       <div>
         <Label>Tekrar Tipi</Label>
         <RadioGroup
-          value={repeatType}
-          onValueChange={setRepeatType}
+          value={formData.repeatType}
+          onValueChange={(value) => onFormDataChange({ repeatType: value })}
           className="flex gap-4 mt-2"
         >
           <div className="flex items-center space-x-2">
@@ -49,17 +50,20 @@ export function CampaignSchedule() {
         </RadioGroup>
       </div>
 
-      {repeatType === "repeat" && (
+      {formData.repeatType === "repeat" && (
         <div>
           <Label>Tekrar Aralığı</Label>
-          <Select value={repeatInterval} onValueChange={setRepeatInterval}>
+          <Select 
+            value={formData.repeatInterval.toString()} 
+            onValueChange={(value) => onFormDataChange({ repeatInterval: parseInt(value) })}
+          >
             <SelectTrigger className="mt-2">
               <SelectValue placeholder="Tekrar aralığı seçin" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Günlük</SelectItem>
-              <SelectItem value="weekly">Haftalık</SelectItem>
-              <SelectItem value="monthly">Aylık</SelectItem>
+              <SelectItem value="1">Günlük</SelectItem>
+              <SelectItem value="7">Haftalık</SelectItem>
+              <SelectItem value="30">Aylık</SelectItem>
             </SelectContent>
           </Select>
         </div>

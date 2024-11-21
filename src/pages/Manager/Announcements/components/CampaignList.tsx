@@ -3,6 +3,7 @@ import { CampaignRow } from "./CampaignRow";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Campaign } from "../types";
 
 export function CampaignList() {
   const { data: campaigns, isLoading } = useQuery({
@@ -26,7 +27,14 @@ export function CampaignList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match Campaign type
+      return data.map((item): Campaign => ({
+        ...item,
+        status: item.status === 'pending' || item.status === 'playing' 
+          ? item.status 
+          : 'pending', // Default to pending if status is invalid
+      }));
     }
   });
 

@@ -1,41 +1,106 @@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { CampaignFormData } from "../types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-export function CampaignTargeting() {
-  const [priority, setPriority] = useState("normal");
-  const [location, setLocation] = useState("");
+interface CampaignTargetingProps {
+  formData: CampaignFormData;
+  onFormDataChange: (data: Partial<CampaignFormData>) => void;
+}
+
+export function CampaignTargeting({ formData, onFormDataChange }: CampaignTargetingProps) {
+  const [open, setOpen] = useState(false);
+
+  const { data: branches, isLoading } = useQuery({
+    queryKey: ['branches'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <Label>Öncelik Seviyesi</Label>
-        <Select value={priority} onValueChange={setPriority}>
-          <SelectTrigger className="mt-2">
-            <SelectValue placeholder="Öncelik seviyesi seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Düşük</SelectItem>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="high">Yüksek</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Hedef Şube/Lokasyon</Label>
-        <Select value={location} onValueChange={setLocation}>
-          <SelectTrigger className="mt-2">
-            <SelectValue placeholder="Lokasyon seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Şubeler</SelectItem>
-            <SelectItem value="istanbul">İstanbul Şubeleri</SelectItem>
-            <SelectItem value="ankara">Ankara Şubeleri</SelectItem>
-            <SelectItem value="izmir">İzmir Şubeleri</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label>Şubeler</Label>
+        <p className="text-sm text-gray-500 mb-2">
+          Kampanyanın oynatılacağı şubeleri seçin
+        </p>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {formData.branches.length > 0
+                ? `${formData.branches.length} şube seçildi`
+                : "Şube seçin..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput placeholder="Şube ara..." />
+              <CommandEmpty>Şube bulunamadı.</CommandEmpty>
+              <CommandGroup>
+                {branches?.map((branch) => (
+                  <CommandItem
+                    key={branch.id}
+                    value={branch.id}
+                    onSelect={(currentValue) => {
+                      const newBranches = formData.branches.includes(currentValue)
+                        ? formData.branches.filter((id) => id !== currentValue)
+                        : [...formData.branches, currentValue];
+                      onFormDataChange({ branches: newBranches });
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        formData.branches.includes(branch.id) ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {branch.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
