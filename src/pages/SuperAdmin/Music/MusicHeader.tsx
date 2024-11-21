@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Upload, Plus } from "lucide-react";
+import { Upload } from "lucide-react";
 
 interface MusicHeaderProps {
   onUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -22,11 +22,6 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           className="hidden"
           onChange={onUpload}
         />
-      </Button>
-
-      <Button variant="outline">
-        <Plus className="w-4 h-4 mr-2" />
-        Add Manually
       </Button>
     </div>
   );
