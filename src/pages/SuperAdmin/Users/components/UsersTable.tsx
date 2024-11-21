@@ -5,9 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { User } from "@/types/auth";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
+import { TablePagination } from "./TablePagination";
+import { useState } from "react";
+
+const ITEMS_PER_PAGE = 20;
 
 export function UsersTable() {
   const [searchParams] = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(1);
   
   const filters = {
     search: searchParams.get('search') || undefined,
@@ -108,26 +113,44 @@ export function UsersTable() {
     );
   }
 
+  // Pagination calculations
+  const totalItems = users.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+  const currentUsers = users.slice(startIndex, endIndex);
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>NAME</TableHead>
-            <TableHead>COMPANY</TableHead>
-            <TableHead>ROLE</TableHead>
-            <TableHead>STATUS</TableHead>
-            <TableHead>LICENSE</TableHead>
-            <TableHead>EXPIRY</TableHead>
-            <TableHead className="text-right">ACTIONS</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <UserTableRow key={user.id} user={user} />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>NAME</TableHead>
+              <TableHead>COMPANY</TableHead>
+              <TableHead>ROLE</TableHead>
+              <TableHead>STATUS</TableHead>
+              <TableHead>LICENSE</TableHead>
+              <TableHead>EXPIRY</TableHead>
+              <TableHead className="text-right">ACTIONS</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {currentUsers.map((user) => (
+              <UserTableRow key={user.id} user={user} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={totalItems}
+      />
     </div>
   );
 }
