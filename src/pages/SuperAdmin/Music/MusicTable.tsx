@@ -8,18 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, Play, Pause } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TablePagination } from "./components/TablePagination";
 import { EmptyState } from "./components/EmptyState";
 import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { SongTableRow } from "@/components/music/SongTableRow";
 
 interface Song {
   id: string;
@@ -75,7 +68,7 @@ export function MusicTable({
     return <EmptyState />;
   }
 
-  const formatDuration = (duration: number | undefined) => {
+  const formatDuration = (duration?: number) => {
     if (!duration) return "0:00";
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
@@ -106,82 +99,15 @@ export function MusicTable({
           </TableHeader>
           <TableBody>
             {songs.map((song) => (
-              <TableRow
+              <SongTableRow
                 key={song.id}
-                className="hover:bg-gray-50/50 group"
-              >
-                <TableCell className="w-[30px]">
-                  <Checkbox
-                    checked={selectedSongs.some((s) => s.id === song.id)}
-                    onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-4">
-                    <div className="relative group w-10 h-10">
-                      <img
-                        src={song.artwork_url || defaultArtwork}
-                        alt={song.title}
-                        className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement;
-                          img.src = defaultArtwork;
-                        }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
-                          onClick={() => setCurrentlyPlaying(song)}
-                        >
-                          <Play className="w-4 h-4 text-white" />
-                        </Button>
-                      </div>
-                    </div>
-                    <span className="font-medium text-gray-900">{song.title}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>
-                <TableCell className="text-gray-600">{song.album || '-'}</TableCell>
-                <TableCell className="text-gray-600">
-                  {song.genre ? (
-                    <div className="flex gap-2">
-                      {song.genre.map((g) => (
-                        <span
-                          key={g}
-                          className="px-2 py-1 text-xs rounded-full bg-gray-100"
-                        >
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  ) : '-'}
-                </TableCell>
-                <TableCell className="text-right text-gray-600">
-                  {formatDuration(song.duration)}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem className="cursor-pointer">
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600 cursor-pointer">
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+                song={song}
+                isSelected={selectedSongs.some((s) => s.id === song.id)}
+                onSelect={(checked) => onSelectSong(song, checked)}
+                onPlay={() => setCurrentlyPlaying(song)}
+                formatDuration={formatDuration}
+                defaultArtwork={defaultArtwork}
+              />
             ))}
           </TableBody>
         </Table>
@@ -202,7 +128,7 @@ export function MusicTable({
             title: currentlyPlaying.title,
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
             songs: [{
-              id: parseInt(currentlyPlaying.id),
+              id: currentlyPlaying.id,
               title: currentlyPlaying.title,
               artist: currentlyPlaying.artist || "Unknown Artist",
               duration: currentlyPlaying.duration?.toString() || "0:00",
