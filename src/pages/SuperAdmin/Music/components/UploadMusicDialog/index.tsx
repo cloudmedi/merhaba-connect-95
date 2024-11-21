@@ -60,12 +60,17 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       try {
         console.log('Starting upload for:', file.name);
         
+        // Create FormData object
         const formData = new FormData();
         formData.append('file', file);
 
         // Call the upload-music edge function
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
+          headers: {
+            'Accept': 'application/json',
+          },
+          responseType: 'json'
         });
 
         console.log('Upload response:', { data, error });
