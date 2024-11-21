@@ -66,7 +66,7 @@ export const useDevices = () => {
     queryFn: async () => {
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('*, licenses(*)')
+        .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
@@ -134,7 +134,6 @@ export const useDevices = () => {
 
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
-      console.log('Updating device:', id, device);
       const { data, error } = await supabase
         .from('devices')
         .update({
@@ -147,10 +146,7 @@ export const useDevices = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating device:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -164,16 +160,12 @@ export const useDevices = () => {
 
   const deleteDevice = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Deleting device:', id);
       const { error } = await supabase
         .from('devices')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting device:', error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
