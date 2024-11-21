@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreVertical, Play } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { TrackArtwork } from "@/components/music/TrackArtwork";
 import {
   Table,
@@ -51,6 +51,7 @@ export function PlaylistsTable({
   isLoading 
 }: PlaylistsTableProps) {
   const { toast } = useToast();
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300";
 
   const handleDelete = async (id: string) => {
     try {
@@ -103,7 +104,7 @@ export function PlaylistsTable({
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <TrackArtwork
-                        artwork={playlist.artwork_url || "/placeholder.svg"}
+                        artwork={playlist.artwork_url || defaultArtwork}
                         title={playlist.name}
                         onPlay={() => onPlay(playlist)}
                       />
