@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Crown, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User as UserType } from "@/types/auth";
+import { User } from "@/types/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/users";
 import { toast } from "sonner";
+import { BasicInfoSection } from "./EditUserForm/BasicInfoSection";
+import { RoleSection } from "./EditUserForm/RoleSection";
+import { EditUserFormValues } from "./EditUserForm/types";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -22,7 +23,7 @@ const formSchema = z.object({
 });
 
 interface EditUserDialogProps {
-  user: UserType;
+  user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -30,7 +31,7 @@ interface EditUserDialogProps {
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<EditUserFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: user.firstName || "",
@@ -43,16 +44,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const updateData: Partial<UserType> & { 
-        password?: string; 
-        company?: { 
-          id?: string; 
-          name: string;
-          subscriptionStatus?: string;
-          subscriptionEndsAt?: string | null;
-        } 
-      } = {
+    mutationFn: async (values: EditUserFormValues) => {
+      const updateData = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
@@ -60,8 +53,6 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         company: {
           id: user.company?.id,
           name: values.companyName,
-          subscriptionStatus: user.company?.subscriptionStatus || 'trial',
-          subscriptionEndsAt: user.company?.subscriptionEndsAt || null
         }
       };
 
@@ -75,13 +66,14 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       toast.success("User updated successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
+      form.reset();
     },
     onError: (error: Error) => {
       toast.error("Failed to update user: " + error.message);
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: EditUserFormValues) => {
     updateUserMutation.mutate(values);
   };
 
@@ -93,100 +85,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" {...field} />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" {...field} />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="companyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex space-x-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="admin" id="admin" />
-                        <label htmlFor="admin" className="cursor-pointer flex items-center">
-                          <Crown className="h-4 w-4 mr-1 text-[#9b87f5]" />
-                          Admin
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="manager" id="manager" />
-                        <label htmlFor="manager" className="cursor-pointer flex items-center">
-                          <User className="h-4 w-4 mr-1 text-[#9b87f5]" />
-                          Manager
-                        </label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <BasicInfoSection form={form} />
+            <RoleSection form={form} />
 
             <FormField
               control={form.control}

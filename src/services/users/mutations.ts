@@ -89,15 +89,7 @@ export const updateUser = async (id: string, updates: Partial<User> & { password
         is_active: updates.isActive,
       })
       .eq('id', id)
-      .select(`
-        *,
-        companies (
-          id,
-          name,
-          subscription_status,
-          subscription_ends_at
-        )
-      `)
+      .select()
       .single();
 
     if (profileError) throw profileError;
@@ -106,11 +98,7 @@ export const updateUser = async (id: string, updates: Partial<User> & { password
     if (updates.company?.name && profile.company_id) {
       const { error: companyError } = await supabase
         .from('companies')
-        .update({ 
-          name: updates.company.name,
-          subscription_status: updates.company.subscriptionStatus,
-          subscription_ends_at: updates.company.subscriptionEndsAt
-        })
+        .update({ name: updates.company.name })
         .eq('id', profile.company_id);
 
       if (companyError) throw companyError;
