@@ -18,6 +18,13 @@ interface PlaylistGridProps {
 
 export function PlaylistGrid({ title, description, playlists, isLoading }: PlaylistGridProps) {
   const navigate = useNavigate();
+  const defaultArtwork = "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7";
+
+  const getArtworkUrl = (url?: string) => {
+    if (!url) return defaultArtwork;
+    if (url.startsWith('http')) return url;
+    return `${url}`;
+  };
 
   if (isLoading) {
     return (
@@ -56,9 +63,13 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
           >
             <div className="aspect-square relative overflow-hidden rounded-t-lg">
               <img
-                src={playlist.artwork_url || "/placeholder.svg"}
+                src={getArtworkUrl(playlist.artwork_url)}
                 alt={playlist.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.src = defaultArtwork;
+                }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200" />
             </div>
