@@ -79,8 +79,7 @@ serve(async (req) => {
     console.log('Parsing file metadata...')
     const metadata = await mm.parseBuffer(arrayBuffer, fileType, {
       duration: true,
-      skipCovers: true,
-      skipPostHeaders: true,
+      skipCovers: false, // We want to extract artwork
     })
 
     console.log('File metadata parsed:', metadata)
@@ -107,36 +106,34 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Verify user profile exists and get profile data
-    const { data: profiles, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+    // Extract and upload artwork if available
+    let artworkUrl = null
+    if (metadata.common.picture && metadata.common.picture.length > 0) {
+      const picture = metadata.common.picture[0]
+      const artworkData = picture.data
+      const artworkType = picture.format
+      const artworkExt = artworkType.split('/')[1] || 'jpg'
+      const artworkFileName = `${crypto.randomUUID()}.${artworkExt}`
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
-      throw new Error('Failed to fetch user profile')
-    }
+      console.log('Uploading artwork to Supabase storage...')
+      const { data: artworkData2, error: artworkError } = await supabase
+        .storage
+        .from('music')
+        .upload(`artworks/${artworkFileName}`, artworkData, {
+          contentType: artworkType,
+          cacheControl: '3600'
+        })
 
-    if (!profiles || profiles.length === 0) {
-      console.error('No profile found for user:', user.id)
-      // Create a profile for the user if it doesn't exist
-      const { data: newProfile, error: createProfileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: user.id,
-            email: user.email,
-            role: 'manager',
-            is_active: true
-          }
-        ])
-        .select()
-        .single()
-
-      if (createProfileError) {
-        console.error('Failed to create profile:', createProfileError)
-        throw new Error('Failed to create user profile')
+      if (artworkError) {
+        console.error('Failed to upload artwork:', artworkError)
+      } else {
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from('music')
+          .getPublicUrl(`artworks/${artworkFileName}`)
+        
+        artworkUrl = publicUrl
+        console.log('Artwork uploaded successfully:', artworkUrl)
       }
     }
 
@@ -149,6 +146,7 @@ serve(async (req) => {
       genre: metadata.common.genre || [],
       duration: Math.round(metadata.format.duration || 0),
       file_url: cdnUrl,
+      artwork_url: artworkUrl,
       bunny_id: uniqueFileName,
       created_by: user.id
     }
