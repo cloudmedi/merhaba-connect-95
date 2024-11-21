@@ -107,33 +107,6 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // First check if the user has a profile
-    const { data: existingProfile, error: profileCheckError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    // If no profile exists, create one
-    if (!existingProfile && !profileCheckError) {
-      console.log('Creating profile for user:', user.id)
-      const { error: createProfileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: user.id,
-          email: user.email,
-          role: 'manager'
-        }])
-
-      if (createProfileError) {
-        console.error('Failed to create profile:', createProfileError)
-        throw new Error('Failed to create user profile')
-      }
-    } else if (profileCheckError) {
-      console.error('Error checking profile:', profileCheckError)
-      throw new Error('Error checking user profile')
-    }
-
     // Save song metadata to Supabase
     const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
     const songData = {
