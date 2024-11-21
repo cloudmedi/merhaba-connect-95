@@ -28,14 +28,14 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
     const maxSize = 20 * 1024 * 1024; // 20MB
 
-    Array.from(files).forEach(async (file) => {
+    for (const file of Array.from(files)) {
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Invalid file type",
           description: `${file.name} is not a supported audio file`,
           variant: "destructive",
         });
-        return;
+        continue;
       }
 
       if (file.size > maxSize) {
@@ -44,7 +44,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           description: `${file.name} exceeds the 20MB limit`,
           variant: "destructive",
         });
-        return;
+        continue;
       }
 
       // Add file to progress tracking
@@ -58,6 +58,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       }));
 
       try {
+        console.log('Starting upload for:', file.name);
+        
         const formData = new FormData();
         formData.append('file', file);
 
@@ -65,6 +67,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
         });
+
+        console.log('Upload response:', { data, error });
 
         if (error) {
           throw error;
@@ -87,6 +91,9 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           description: `${file.name} has been uploaded successfully`,
         });
 
+        // Close the dialog after successful upload
+        onOpenChange(false);
+
       } catch (error: any) {
         console.error('Upload error:', error);
         
@@ -105,11 +112,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           variant: "destructive",
         });
       }
-    });
+    }
   };
-
-  const handleDragEnter = () => setIsDragging(true);
-  const handleDragLeave = () => setIsDragging(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,8 +125,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         <UploadZone
           onFileSelect={handleFileSelect}
           isDragging={isDragging}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
+          onDragEnter={() => setIsDragging(true)}
+          onDragLeave={() => setIsDragging(false)}
         />
 
         {Object.entries(uploadingFiles).length > 0 && (

@@ -82,8 +82,11 @@ serve(async (req) => {
 
     // Get user information
     const authHeader = req.headers.get('Authorization')?.split(' ')[1]
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader!)
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
 
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader)
     if (userError || !user) {
       throw new Error('Unauthorized')
     }
