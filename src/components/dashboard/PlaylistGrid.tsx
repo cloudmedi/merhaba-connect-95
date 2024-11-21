@@ -1,22 +1,6 @@
-import { useState } from "react";
-import { MusicPlayer } from "@/components/MusicPlayer";
-import { Play } from "lucide-react";
-import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import CatalogLoader from "@/components/loaders/CatalogLoader";
 import type { GridPlaylist } from "./types";
-
-interface PlaylistSong {
-  position: number;
-  songs: {
-    id: string;
-    title: string;
-    artist: string | null;
-    duration: number | null;
-    file_url: string;
-  };
-}
 
 interface PlaylistGridProps {
   title: string;
@@ -26,38 +10,7 @@ interface PlaylistGridProps {
 }
 
 export function PlaylistGrid({ title, description, playlists, isLoading = false }: PlaylistGridProps) {
-  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
-
-  const { data: playlistSongs } = useQuery({
-    queryKey: ['playlist-songs', currentPlaylist?.id],
-    queryFn: async () => {
-      if (!currentPlaylist?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url
-          )
-        `)
-        .eq('playlist_id', currentPlaylist.id)
-        .order('position');
-
-      if (error) {
-        console.error('Error fetching playlist songs:', error);
-        throw error;
-      }
-
-      return data as PlaylistSong[];
-    },
-    enabled: !!currentPlaylist?.id
-  });
 
   if (isLoading) {
     return (
@@ -77,19 +30,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    // Transform cloud-media URLs to include .b-cdn.net
-    if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
-    }
-    // If it's a relative URL, prepend the base URL
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
-  };
-
   return (
     <div className="space-y-4">
       <div>
@@ -101,11 +41,9 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
           <div 
             key={playlist.id} 
             className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+            onClick={() => handlePlaylistClick(playlist)}
           >
-            <div 
-              className="aspect-square relative overflow-hidden cursor-pointer"
-              onClick={() => handlePlaylistClick(playlist)}
-            >
+            <div className="aspect-square relative overflow-hidden cursor-pointer">
               <img
                 src={playlist.artwork_url || defaultArtwork}
                 alt={playlist.title}
@@ -115,19 +53,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
                   img.src = defaultArtwork;
                 }}
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentPlaylist(playlist);
-                    }}
-                    className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform transition-all"
-                  >
-                    <Play className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
             </div>
             <div className="p-4">
               <h3 className="font-medium text-base text-gray-900">{playlist.title}</h3>
@@ -143,22 +69,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
           </div>
         ))}
       </div>
-      {currentPlaylist && playlistSongs && playlistSongs.length > 0 && (
-        <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: playlistSongs.map(ps => ({
-              id: ps.songs.id,
-              title: ps.songs.title,
-              artist: ps.songs.artist || "Unknown Artist",
-              duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
-            }))
-          }}
-          onClose={() => setCurrentPlaylist(null)}
-        />
-      )}
     </div>
   );
 }
