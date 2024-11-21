@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -25,45 +24,49 @@ serve(async (req) => {
     console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type)
 
     // Get Bunny CDN configuration
-    const bunnyStorageZone = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
+    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME')
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
 
-    if (!bunnyStorageZone || !bunnyApiKey || !bunnyStorageHost) {
+    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
       throw new Error('Missing Bunny CDN configuration')
     }
 
-    console.log('Bunny CDN configuration:', {
-      storageZone: bunnyStorageZone,
+    console.log('Bunny CDN configuration loaded:', {
+      storageName: bunnyStorageName,
       host: bunnyStorageHost
     })
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZone}/${uniqueFileName}`
+    
+    // Construct proper Bunny CDN URL
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`
 
-    console.log('Uploading to Bunny CDN:', bunnyUrl)
+    console.log('Attempting upload to Bunny CDN:', bunnyUrl)
 
-    // Upload to Bunny CDN with proper headers
+    // Upload to Bunny CDN with proper headers and authentication
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': file.type,
+        'Content-Type': file.type || 'application/octet-stream',
         'Accept': '*/*'
       },
       body: file,
     })
 
+    const responseText = await uploadResponse.text()
+    console.log('Bunny CDN Response:', {
+      status: uploadResponse.status,
+      statusText: uploadResponse.statusText,
+      headers: Object.fromEntries(uploadResponse.headers.entries()),
+      body: responseText
+    })
+
     if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text()
-      console.error('Bunny CDN upload failed:', {
-        status: uploadResponse.status,
-        statusText: uploadResponse.statusText,
-        error: errorText
-      })
-      throw new Error(`Failed to upload to Bunny CDN: ${errorText}`)
+      throw new Error(`Failed to upload to Bunny CDN: ${responseText}`)
     }
 
     console.log('Successfully uploaded to Bunny CDN')
@@ -100,7 +103,7 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZone}/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageName}/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
