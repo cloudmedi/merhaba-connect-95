@@ -6,6 +6,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useToast } from "@/hooks/use-toast";
 
+interface PlaylistData {
+  id: string;
+  name: string;
+  artwork_url: string | null;
+  genre: { name: string } | null;
+  mood: { name: string } | null;
+  company_id: string | null;
+  is_public: boolean;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  playlists: PlaylistData[];
+}
+
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
@@ -61,7 +78,8 @@ export default function ManagerDashboard() {
                 artwork_url,
                 genre:genres(name),
                 mood:moods(name),
-                company_id
+                company_id,
+                is_public
               )
             `)
             .eq('category_id', category.id);
@@ -71,7 +89,7 @@ export default function ManagerDashboard() {
           // Filter playlists to only include those that belong to the user's company or are public
           const playlists = playlistsData
             .map(item => item.playlists)
-            .filter(playlist => playlist !== null)
+            .filter((playlist): playlist is PlaylistData => playlist !== null)
             .filter(playlist => playlist.company_id === userData.company_id || playlist.is_public);
 
           return {
