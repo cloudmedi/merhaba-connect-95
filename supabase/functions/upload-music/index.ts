@@ -30,7 +30,7 @@ serve(async (req) => {
     })
 
     // Check file type
-    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
     if (!allowedTypes.includes(file.type)) {
       throw new Error(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`)
     }
