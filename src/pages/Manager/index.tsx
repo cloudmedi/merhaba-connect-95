@@ -1,26 +1,20 @@
 import { Routes, Route } from "react-router-dom";
-import ManagerDashboard from "./Dashboard";
-import { ManagerNav } from "@/components/ManagerNav";
 import { ManagerHeader } from "@/components/ManagerHeader";
-import Announcements from "./Announcements";
-import Devices from "./Devices";
-import Schedule from "./Schedule";
+import { ManagerNav } from "@/components/ManagerNav";
+import ManagerDashboard from "./Dashboard";
+import { PlaylistDetail } from "./Playlists/PlaylistDetail";
 
 export default function Manager() {
   return (
-    <div className="flex min-h-screen bg-[#F8F9FC]">
+    <div className="flex min-h-screen bg-gray-100/40">
       <ManagerNav />
       <div className="flex-1">
         <ManagerHeader />
-        <main className="mx-auto w-full p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-[1400px]">
-            <Routes>
-              <Route index element={<ManagerDashboard />} />
-              <Route path="announcements" element={<Announcements />} />
-              <Route path="devices/*" element={<Devices />} />
-              <Route path="schedule" element={<Schedule />} />
-            </Routes>
-          </div>
+        <main className="p-8">
+          <Routes>
+            <Route path="/" element={<ManagerDashboard />} />
+            <Route path="/playlists/:id" element={<PlaylistDetail />} />
+          </Routes>
         </main>
       </div>
     </div>

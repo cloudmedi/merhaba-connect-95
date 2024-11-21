@@ -1,73 +1,84 @@
 import { useNavigate } from "react-router-dom";
-import CatalogLoader from "@/components/loaders/CatalogLoader";
-import type { GridPlaylist } from "./types";
+import { Card } from "@/components/ui/card";
+
+interface Playlist {
+  id: string;
+  title: string;
+  artwork_url?: string;
+  genre?: string;
+  mood?: string;
+}
 
 interface PlaylistGridProps {
   title: string;
   description?: string;
-  playlists: GridPlaylist[];
+  playlists: Playlist[];
   isLoading?: boolean;
 }
 
-export function PlaylistGrid({ title, description, playlists, isLoading = false }: PlaylistGridProps) {
+export function PlaylistGrid({ title, description, playlists, isLoading }: PlaylistGridProps) {
   const navigate = useNavigate();
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
-          {description && <p className="text-sm text-gray-500">{description}</p>}
+        <div className="space-y-2">
+          <div className="h-6 w-1/4 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-1/3 bg-gray-200 rounded animate-pulse" />
         </div>
-        <CatalogLoader foregroundColor="#e5e7eb" backgroundColor="#f3f4f6" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="aspect-square bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
+              <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  const handlePlaylistClick = (playlist: GridPlaylist) => {
-    navigate(`/manager/playlists/${playlist.id}`);
-  };
-
-  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
-
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-        {description && <p className="text-sm text-gray-500">{description}</p>}
+        <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
+        {description && (
+          <p className="text-sm text-gray-500 mt-1">{description}</p>
+        )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {playlists.map((playlist) => (
-          <div 
-            key={playlist.id} 
-            className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
-            onClick={() => handlePlaylistClick(playlist)}
+          <Card
+            key={playlist.id}
+            className="group cursor-pointer hover:shadow-md transition-shadow duration-200"
+            onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
           >
-            <div className="aspect-square relative overflow-hidden cursor-pointer">
+            <div className="aspect-square relative overflow-hidden rounded-t-lg">
               <img
-                src={playlist.artwork_url || defaultArtwork}
+                src={playlist.artwork_url || "/placeholder.svg"}
                 alt={playlist.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  img.src = defaultArtwork;
-                }}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200" />
             </div>
             <div className="p-4">
-              <h3 className="font-medium text-base text-gray-900">{playlist.title}</h3>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  {playlist.genre}
-                </span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  {playlist.mood}
-                </span>
+              <h3 className="font-medium text-gray-900 truncate">
+                {playlist.title}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-gray-500">{playlist.genre}</span>
+                <span className="text-xs text-gray-300">•</span>
+                <span className="text-xs text-gray-500">{playlist.mood}</span>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
+        {playlists.length === 0 && (
+          <div className="col-span-full text-center py-12">
+            <p className="text-gray-500">No playlists found</p>
+          </div>
+        )}
       </div>
     </div>
   );
