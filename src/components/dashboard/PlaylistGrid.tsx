@@ -77,20 +77,17 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  const getFullUrl = (url: string | null) => {
-    if (!url) return defaultArtwork;
-    
-    // If it's already a full URL, return it
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    
-    // If it's a Supabase storage URL, get the public URL
-    if (url.startsWith('playlists/')) {
-      return `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public/playlists/${url.replace('playlists/', '')}`;
+    // Transform cloud-media URLs to include .b-cdn.net
+    if (url.startsWith('cloud-media/')) {
+      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
     }
-    
-    return defaultArtwork;
+    // If it's a relative URL, prepend the base URL
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   return (
@@ -110,7 +107,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               onClick={() => handlePlaylistClick(playlist)}
             >
               <img
-                src={getFullUrl(playlist.artwork_url)}
+                src={playlist.artwork || defaultArtwork}
                 alt={playlist.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
@@ -135,16 +132,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
             <div className="p-4">
               <h3 className="font-medium text-base text-gray-900">{playlist.title}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
-                {playlist.genre && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                    {playlist.genre}
-                  </span>
-                )}
-                {playlist.mood && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                    {playlist.mood}
-                  </span>
-                )}
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  {playlist.genre}
+                </span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  {playlist.mood}
+                </span>
               </div>
             </div>
           </div>
@@ -154,7 +147,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: getFullUrl(currentPlaylist.artwork_url),
+            artwork: currentPlaylist.artwork || defaultArtwork,
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,
