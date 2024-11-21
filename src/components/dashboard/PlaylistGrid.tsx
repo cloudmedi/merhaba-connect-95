@@ -77,17 +77,22 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
+  const getFullUrl = (url: string | null) => {
+    if (!url) return defaultArtwork;
+    
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    // Transform cloud-media URLs to include .b-cdn.net
-    if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+
+    // Transform Supabase storage URLs
+    if (url.startsWith('playlists/')) {
+      const { data } = supabase.storage
+        .from('playlists')
+        .getPublicUrl(url);
+      return data.publicUrl;
     }
-    // If it's a relative URL, prepend the base URL
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+
+    return defaultArtwork;
   };
 
   return (
@@ -107,7 +112,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               onClick={() => handlePlaylistClick(playlist)}
             >
               <img
-                src={playlist.artwork || defaultArtwork}
+                src={getFullUrl(playlist.artwork_url)}
                 alt={playlist.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
@@ -147,13 +152,13 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork || defaultArtwork,
+            artwork: getFullUrl(currentPlaylist.artwork_url),
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
+              file_url: ps.songs.file_url
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}
