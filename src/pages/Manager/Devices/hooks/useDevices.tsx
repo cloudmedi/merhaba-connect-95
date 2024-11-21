@@ -24,7 +24,6 @@ export interface Device {
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('devices_changes')
@@ -92,20 +91,18 @@ export const useDevices = () => {
       // First check license limit
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('*, licenses(*)')
+        .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
-      
       // Count current devices
       const { count: currentDevices } = await supabase
         .from('devices')
         .select('*', { count: 'exact' })
         .eq('branch_id', device.branch_id);
 
-      if (currentDevices !== null && currentDevices >= licenseQuantity) {
-        throw new Error(`License limit reached (${licenseQuantity} devices). Please upgrade your license to add more devices.`);
+      if (currentDevices !== null && currentDevices >= 5) { // Using default limit of 5 for trial
+        throw new Error('License limit reached (5 devices). Please upgrade your license to add more devices.');
       }
 
       const { data, error } = await supabase
