@@ -4,32 +4,49 @@ import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  playlists: {
-    id: string;
-    name: string;
-    artwork_url: string;
-    genre: { name: string } | null;
-    mood: { name: string } | null;
-  }[];
-}
+import { useToast } from "@/hooks/use-toast";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['manager-categories'],
+  // Get current user's company_id
+  const { data: userData } = useQuery({
+    queryKey: ['current-user'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return profile;
+    }
+  });
+
+  // Fetch playlists for the user's company
+  const { data: categories, isLoading } = useQuery({
+    queryKey: ['manager-categories', userData?.company_id],
+    queryFn: async () => {
+      if (!userData?.company_id) return [];
+
       // First, fetch categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
 
-      if (categoriesError) throw categoriesError;
+      if (categoriesError) {
+        toast({
+          title: "Error",
+          description: "Failed to load categories",
+          variant: "destructive"
+        });
+        throw categoriesError;
+      }
 
       // For each category, fetch associated playlists through playlist_categories
       const categoriesWithPlaylists = await Promise.all(
@@ -43,25 +60,38 @@ export default function ManagerDashboard() {
                 name,
                 artwork_url,
                 genre:genres(name),
-                mood:moods(name)
+                mood:moods(name),
+                company_id
               )
             `)
             .eq('category_id', category.id);
 
           if (playlistsError) throw playlistsError;
 
+          // Filter playlists to only include those that belong to the user's company or are public
           const playlists = playlistsData
             .map(item => item.playlists)
-            .filter(playlist => playlist !== null);
+            .filter(playlist => playlist !== null)
+            .filter(playlist => playlist.company_id === userData.company_id || playlist.is_public);
 
           return {
             ...category,
-            playlists: playlists
+            playlists
           };
         })
       );
 
       return categoriesWithPlaylists;
+    },
+    enabled: !!userData?.company_id,
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to load playlists",
+          variant: "destructive"
+        });
+      }
     }
   });
 
@@ -106,7 +136,7 @@ export default function ManagerDashboard() {
               playlists={category.playlists.map(playlist => ({
                 id: playlist.id,
                 title: playlist.name,
-                artwork_url: playlist.artwork_url,
+                artwork_url: playlist.artwork_url || "/placeholder.svg",
                 genre: playlist.genre?.name || "Various",
                 mood: playlist.mood?.name || "Various"
               }))}
