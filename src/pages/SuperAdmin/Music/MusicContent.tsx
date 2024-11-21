@@ -5,41 +5,33 @@ import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
 import { MusicPlayer } from "@/components/MusicPlayer";
-
-// Mock data
-const mockSongs = [
-  {
-    id: "1",
-    title: "Summer Vibes",
-    artist: "John Doe",
-    album: "Summer Collection",
-    genre: ["Pop", "Electronic"],
-    duration: 180,
-    artwork_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "2",
-    title: "Midnight Jazz",
-    artist: "Sarah Smith",
-    album: "Jazz Sessions",
-    genre: ["Jazz"],
-    duration: 240,
-    artwork_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800",
-    created_at: new Date().toISOString()
-  },
-];
+import { useMusicLibrary } from "./hooks/useMusicLibrary";
 
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<typeof mockSongs[0][]>([]);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<typeof mockSongs[0] | null>(null);
+  const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<any | null>(null);
   const { toast } = useToast();
 
+  const {
+    songs,
+    isLoading,
+    filterGenre,
+    setFilterGenre,
+    filterPlaylist,
+    setFilterPlaylist,
+    sortByRecent,
+    setSortByRecent,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    itemsPerPage
+  } = useMusicLibrary();
+
   const handleSelectAll = (checked: boolean) => {
-    setSelectedSongs(checked ? mockSongs : []);
+    setSelectedSongs(checked ? songs : []);
   };
 
-  const handleSelectSong = (song: typeof mockSongs[0], checked: boolean) => {
+  const handleSelectSong = (song: any, checked: boolean) => {
     if (checked) {
       setSelectedSongs(prev => [...prev, song]);
     } else {
@@ -47,13 +39,16 @@ export function MusicContent() {
     }
   };
 
-  const handlePlaySong = (song: typeof mockSongs[0]) => {
+  const handlePlaySong = (song: any) => {
     setCurrentlyPlaying(song);
     toast({
       title: "Now Playing",
-      description: `${song.title} by ${song.artist}`,
+      description: `${song.title} by ${song.artist || 'Unknown Artist'}`,
     });
   };
+
+  // Get unique genres from songs
+  const uniqueGenres = Array.from(new Set(songs.flatMap(song => song.genre || [])));
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -89,24 +84,24 @@ export function MusicContent() {
       </div>
       
       <MusicFilters
-        onGenreChange={() => {}}
-        onPlaylistChange={() => {}}
-        onRecentChange={() => {}}
-        genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
+        onGenreChange={(genre) => setFilterGenre(genre)}
+        onPlaylistChange={(playlist) => setFilterPlaylist(playlist)}
+        onRecentChange={(recent) => setSortByRecent(recent)}
+        genres={uniqueGenres}
         playlists={[]}
       />
       
       <MusicTable
-        songs={mockSongs}
+        songs={songs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
-        currentPage={1}
-        totalPages={1}
-        onPageChange={() => {}}
-        itemsPerPage={10}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
         onPlaySong={handlePlaySong}
-        isLoading={false}
+        isLoading={isLoading}
       />
 
       {currentlyPlaying && (
@@ -120,7 +115,7 @@ export function MusicContent() {
                 title: currentlyPlaying.title,
                 artist: currentlyPlaying.artist || "Unknown Artist",
                 duration: currentlyPlaying.duration?.toString() || "0:00",
-                file_url: "/mock-audio.mp3"
+                file_url: currentlyPlaying.file_url
               }]
             }}
             onClose={() => setCurrentlyPlaying(null)}

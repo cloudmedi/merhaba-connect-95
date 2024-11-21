@@ -25,30 +25,32 @@ export const useMusicLibrary = () => {
   const itemsPerPage = 100;
 
   const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs'],
+    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('songs')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
-      if (error) throw error;
+      if (filterGenre !== "all-genres") {
+        query = query.contains('genre', [filterGenre]);
+      }
+
+      if (sortByRecent) {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching songs:', error);
+        throw error;
+      }
+
       return data as Song[];
     }
   });
 
-  const filteredSongs = songs
-    .filter(song => {
-      if (filterGenre !== "all-genres" && !song.genre?.includes(filterGenre)) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortByRecent) {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-      return 0;
-    });
-
+  const filteredSongs = songs || [];
   const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
 
   return {
