@@ -25,7 +25,6 @@ interface Song {
   genre?: string[];
   duration?: number;
   artwork_url?: string;
-  created_at: string;
 }
 
 interface MusicTableProps {
@@ -33,10 +32,6 @@ interface MusicTableProps {
   selectedSongs: Song[];
   onSelectAll: (checked: boolean) => void;
   onSelectSong: (song: Song, checked: boolean) => void;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  itemsPerPage: number;
   onPlaySong?: (song: Song) => void;
   isLoading?: boolean;
 }
@@ -73,7 +68,7 @@ export function MusicTable({
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow className="hover:bg-transparent border-b border-gray-100">
               <TableHead className="w-[30px]">
                 <Checkbox
                   checked={selectedSongs.length === songs.length}
@@ -92,9 +87,9 @@ export function MusicTable({
             {songs.map((song) => (
               <TableRow
                 key={song.id}
-                className="hover:bg-gray-50/50 group"
+                className="hover:bg-gray-50/50 group border-b border-gray-100"
               >
-                <TableCell className="w-[30px]">
+                <TableCell>
                   <Checkbox
                     checked={selectedSongs.some((s) => s.id === song.id)}
                     onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
@@ -124,7 +119,7 @@ export function MusicTable({
                 </TableCell>
                 <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>
                 <TableCell className="text-gray-600">{song.album || '-'}</TableCell>
-                <TableCell className="text-gray-600">
+                <TableCell>
                   {song.genre ? (
                     <div className="flex gap-2">
                       {song.genre.map((g) => (
@@ -170,7 +165,7 @@ export function MusicTable({
                   className="h-32 text-center text-gray-500"
                 >
                   <div className="flex flex-col items-center justify-center">
-                    <Play className="w-8 h-8 mb-2 text-gray-400" />
+                    <Music2 className="w-8 h-8 mb-2 text-gray-400" />
                     <p>No songs found</p>
                     <p className="text-sm">Upload some music to get started</p>
                   </div>

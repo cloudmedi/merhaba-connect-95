@@ -15,7 +15,6 @@ const mockSongs = [
     genre: ["Pop", "Electronic"],
     duration: 180,
     artwork_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800",
-    created_at: new Date().toISOString()
   },
   {
     id: "2",
@@ -25,7 +24,6 @@ const mockSongs = [
     genre: ["Jazz"],
     duration: 240,
     artwork_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800",
-    created_at: new Date().toISOString()
   },
 ];
 
@@ -53,9 +51,10 @@ export function MusicContent() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center justify-between gap-4">
-        <MusicHeader />
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen animate-fade-in">
+      <MusicHeader />
+      
+      <div className="space-y-4">
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
@@ -74,28 +73,24 @@ export function MusicContent() {
             }}
           />
         )}
+        
+        <MusicFilters
+          onGenreChange={() => {}}
+          onPlaylistChange={() => {}}
+          onRecentChange={() => {}}
+          genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
+          playlists={[]}
+        />
+        
+        <MusicTable
+          songs={mockSongs}
+          selectedSongs={selectedSongs}
+          onSelectAll={handleSelectAll}
+          onSelectSong={handleSelectSong}
+          onPlaySong={handlePlaySong}
+          isLoading={false}
+        />
       </div>
-      
-      <MusicFilters
-        onGenreChange={() => {}}
-        onPlaylistChange={() => {}}
-        onRecentChange={() => {}}
-        genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
-        playlists={[]}
-      />
-      
-      <MusicTable
-        songs={mockSongs}
-        selectedSongs={selectedSongs}
-        onSelectAll={handleSelectAll}
-        onSelectSong={handleSelectSong}
-        currentPage={1}
-        totalPages={1}
-        onPageChange={() => {}}
-        itemsPerPage={10}
-        onPlaySong={handlePlaySong}
-        isLoading={false}
-      />
     </div>
   );
 }
