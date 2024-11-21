@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserTableRow } from "./UserTableRow";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useSearchParams } from "react-router-dom";
 import { User } from "@/types/auth";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
 
