@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export interface Device {
   id: string;
@@ -31,6 +32,41 @@ export interface Device {
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('devices_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices'
+        },
+        (payload) => {
+          // Invalidate and refetch devices query
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+          
+          // Show toast notification based on the event
+          const event = payload.eventType;
+          const deviceName = payload.new?.name || payload.old?.name;
+          
+          if (event === 'INSERT') {
+            toast.success(`Device "${deviceName}" has been added`);
+          } else if (event === 'UPDATE') {
+            toast.success(`Device "${deviceName}" has been updated`);
+          } else if (event === 'DELETE') {
+            toast.success(`Device "${deviceName}" has been removed`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
@@ -46,14 +82,7 @@ export const useDevices = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our Device type
-      return data.map((device: any) => ({
-        ...device,
-        category: device.category as 'player' | 'display' | 'controller',
-        status: device.status as 'online' | 'offline',
-        system_info: device.system_info || {},
-        schedule: device.schedule || {}
-      })) as Device[];
+      return data as Device[];
     },
   });
 
@@ -71,7 +100,6 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device added successfully');
     },
     onError: (error) => {
       toast.error('Failed to add device');
@@ -94,7 +122,6 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device updated successfully');
     },
     onError: (error) => {
       toast.error('Failed to update device');
@@ -114,7 +141,6 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device deleted successfully');
     },
     onError: (error) => {
       toast.error('Failed to delete device');
