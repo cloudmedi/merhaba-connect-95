@@ -7,7 +7,7 @@ import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence } from "../types";
+import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
@@ -88,7 +88,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
   };
 
   const getEventColor = (category: EventCategory): EventColor => {
-    const colors = {
+    const colors: Record<EventCategory, EventColor> = {
       'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
       'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },
       'Holiday Music': { primary: '#0EA5E9', secondary: '#D3E4FD', text: '#1A1F2C' },
