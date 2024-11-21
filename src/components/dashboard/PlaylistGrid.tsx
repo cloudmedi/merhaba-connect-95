@@ -107,7 +107,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               onClick={() => handlePlaylistClick(playlist)}
             >
               <img
-                src={playlist.artwork || defaultArtwork}
+                src={playlist.artwork_url || defaultArtwork}
                 alt={playlist.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => {
@@ -147,7 +147,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork || defaultArtwork,
+            artwork: currentPlaylist.artwork_url,
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,
