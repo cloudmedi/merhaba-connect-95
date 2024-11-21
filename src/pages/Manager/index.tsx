@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import ManagerDashboard from "./Dashboard";
 import { ManagerNav } from "@/components/ManagerNav";
-import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 import { ManagerHeader } from "@/components/ManagerHeader";
 import Announcements from "./Announcements";
 import Devices from "./Devices";
@@ -17,7 +16,6 @@ export default function Manager() {
           <div className="mx-auto max-w-[1400px]">
             <Routes>
               <Route index element={<ManagerDashboard />} />
-              <Route path="playlists/:id" element={<PlaylistDetail />} />
               <Route path="announcements" element={<Announcements />} />
               <Route path="devices/*" element={<Devices />} />
               <Route path="schedule" element={<Schedule />} />

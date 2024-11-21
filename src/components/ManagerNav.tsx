@@ -1,13 +1,10 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  Music2,
-  Users,
   Monitor,
   Calendar,
   Bell,
   Settings,
-  Building2,
   Volume2
 } from "lucide-react";
 
@@ -16,21 +13,6 @@ const navItems = [
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/manager",
-  },
-  {
-    title: "Branches",
-    icon: Building2,
-    href: "/manager/branches",
-  },
-  {
-    title: "Staff",
-    icon: Users,
-    href: "/manager/staff",
-  },
-  {
-    title: "Playlists",
-    icon: Music2,
-    href: "/manager/playlists",
   },
   {
     title: "Devices",
