@@ -21,18 +21,20 @@ serve(async (req) => {
       throw new Error('Missing required file data');
     }
 
-    // Verify Bunny CDN configuration
+    // Get Bunny CDN configuration
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME');
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST');
+    const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
     
     console.log('Checking Bunny CDN configuration:', {
       storageName: bunnyStorageName ? 'present' : 'missing',
       apiKey: bunnyApiKey ? 'present' : 'missing',
-      storageHost: bunnyStorageHost ? 'present' : 'missing'
+      storageHost: bunnyStorageHost ? 'present' : 'missing',
+      storageZoneName: bunnyStorageZoneName ? 'present' : 'missing'
     });
 
-    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
+    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost || !bunnyStorageZoneName) {
       throw new Error('Missing Bunny CDN configuration. Please check environment variables.');
     }
 
@@ -45,16 +47,6 @@ serve(async (req) => {
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase configuration');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Extract metadata
     console.log('Extracting metadata...');
@@ -73,7 +65,7 @@ serve(async (req) => {
 
     // Upload to Bunny CDN with timeout
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
       const uploadResponse = await fetch(bunnyUrl, {
@@ -97,7 +89,17 @@ serve(async (req) => {
       console.log('Successfully uploaded to Bunny CDN');
 
       // Get CDN URL
-      const cdnUrl = `https://${Deno.env.get('BUNNY_STORAGE_ZONE_NAME')}/${uniqueFileName}`;
+      const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`;
+
+      // Initialize Supabase client
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Missing Supabase configuration');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Get user information
       const authHeader = req.headers.get('Authorization')?.split(' ')[1];
