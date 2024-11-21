@@ -39,7 +39,6 @@ export function UsersTable() {
             subscription_ends_at
           ),
           licenses (
-            id,
             type,
             start_date,
             end_date,
