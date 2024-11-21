@@ -25,6 +25,6 @@ export const useSystemMetrics = () => {
       if (error) throw error;
       return data as SystemMetric[];
     },
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile
   });
 };

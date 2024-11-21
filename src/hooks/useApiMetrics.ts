@@ -24,6 +24,6 @@ export const useApiMetrics = () => {
       if (error) throw error;
       return data as ApiMetric[];
     },
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile
   });
 };
