@@ -3,7 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { Json } from "@/integrations/supabase/types/json";
+import type { Database } from "@/integrations/supabase/types";
+
+type DbDevice = Database['public']['Tables']['devices']['Row'];
+type DeviceInsert = Database['public']['Tables']['devices']['Insert'];
 
 interface SystemInfo {
   version?: string;
@@ -30,10 +33,10 @@ export interface Device {
   ip_address?: string | null;
   system_info: SystemInfo;
   schedule: Schedule;
-  token?: string;
+  token?: string | null;
   last_seen?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
   location?: string | null;
   branch_id?: string | null;
   branch?: Branch | null;
@@ -87,6 +90,10 @@ export const useDevices = () => {
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
+      if (!userProfile?.company_id) {
+        return [];
+      }
+
       const { data: devices, error } = await supabase
         .from('devices')
         .select(`
@@ -97,21 +104,23 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branch.company_id', userProfile?.company_id);
+        .eq('branch.company_id', userProfile.company_id);
 
       if (error) throw error;
       
       return (devices || []).map(device => ({
         ...device,
-        system_info: device.system_info as SystemInfo,
-        schedule: device.schedule as Schedule,
-        branch: device.branch as Branch | null
+        system_info: (device.system_info || {}) as SystemInfo,
+        schedule: (device.schedule || {}) as Schedule,
+        branch: device.branch as Branch | null,
+        category: device.category as Device['category'],
+        status: device.status as Device['status']
       }));
     },
   });
 
   const createDevice = useMutation({
-    mutationFn: async (device: Omit<Device, 'id'>) => {
+    mutationFn: async (device: Omit<DeviceInsert, 'id'>) => {
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
@@ -131,10 +140,10 @@ export const useDevices = () => {
         .from('devices')
         .insert({
           ...device,
+          system_info: {},
+          schedule: {},
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
-          system_info: device.system_info || {},
-          schedule: device.schedule || {}
         })
         .select()
         .single();
@@ -153,14 +162,21 @@ export const useDevices = () => {
 
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
+      const updateData: Partial<DbDevice> = {
+        ...device,
+        last_seen: new Date().toISOString(),
+      };
+
+      if (device.system_info) {
+        updateData.system_info = device.system_info as DbDevice['system_info'];
+      }
+      if (device.schedule) {
+        updateData.schedule = device.schedule as DbDevice['schedule'];
+      }
+
       const { data, error } = await supabase
         .from('devices')
-        .update({
-          ...device,
-          last_seen: new Date().toISOString(),
-          system_info: device.system_info || undefined,
-          schedule: device.schedule || undefined
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

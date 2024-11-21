@@ -31,8 +31,8 @@ export function AddDeviceDialog({
     const newDevice: DeviceInsert = {
       name,
       token,
-      category: "player", // Default category
-      status: 'offline',
+      category: "player",
+      status: "offline",
       system_info: {},
       schedule: {},
     };
