@@ -18,7 +18,7 @@ export function MusicFilters({
   playlists,
 }: MusicFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-6 items-center p-4 bg-white rounded-lg border">
+    <div className="flex flex-wrap gap-6 items-center p-6 bg-white rounded-xl shadow-sm border border-gray-100">
       <div className="flex-1 min-w-[200px]">
         <Select onValueChange={onGenreChange}>
           <SelectTrigger>
