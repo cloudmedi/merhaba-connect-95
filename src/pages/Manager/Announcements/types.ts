@@ -52,6 +52,7 @@ export interface CampaignFormData {
 export interface Branch {
   id: string;
   name: string;
+  location: string | null;
   company_id?: string;
   created_at?: string;
   updated_at?: string;

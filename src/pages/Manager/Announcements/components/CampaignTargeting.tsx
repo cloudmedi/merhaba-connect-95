@@ -33,12 +33,11 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
     queryKey: ['branches'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('companies')
+        .from('branches')
         .select(`
           id,
           name,
-          created_at,
-          updated_at
+          location
         `)
         .order('name');
 

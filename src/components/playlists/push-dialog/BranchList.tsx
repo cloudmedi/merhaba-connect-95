@@ -3,13 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-
-interface Branch {
-  id: string;
-  name: string;
-  location: string;
-  type: string;
-}
+import { Branch } from "@/pages/Manager/Announcements/types";
 
 interface BranchListProps {
   branches: Branch[];
@@ -23,7 +17,7 @@ export function BranchList({ branches, selectedBranches, onBranchToggle, onSelec
 
   const filteredBranches = branches.filter(branch =>
     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    branch.location.toLowerCase().includes(searchQuery.toLowerCase())
+    (branch.location && branch.location.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const areAllSelected = filteredBranches.length > 0 && 
@@ -66,7 +60,9 @@ export function BranchList({ branches, selectedBranches, onBranchToggle, onSelec
               />
               <div>
                 <h4 className="text-sm font-medium">{branch.name}</h4>
-                <p className="text-sm text-gray-500">{branch.location}</p>
+                {branch.location && (
+                  <p className="text-sm text-gray-500">{branch.location}</p>
+                )}
               </div>
             </div>
           ))}
