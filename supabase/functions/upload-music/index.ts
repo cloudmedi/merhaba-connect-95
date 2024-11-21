@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -16,7 +15,6 @@ serve(async (req) => {
   try {
     console.log('Starting file upload process...')
     
-    // Get the file data from the request body
     const { fileName, fileType, fileSize, fileData } = await req.json()
 
     if (!fileName || !fileType || !fileData) {
@@ -29,13 +27,11 @@ serve(async (req) => {
       type: fileType
     })
 
-    // Check file type
     const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
     if (!allowedTypes.includes(fileType)) {
       throw new Error(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`)
     }
 
-    // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
@@ -45,18 +41,14 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration')
     }
 
-    // Generate unique filename
     const fileExt = fileName.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
-    // Construct Bunny CDN URL
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`
     console.log('Uploading to Bunny CDN:', bunnyUrl)
 
-    // Convert array back to Uint8Array for upload
     const arrayBuffer = new Uint8Array(fileData)
 
-    // Upload to Bunny CDN
     console.log('Initiating Bunny CDN upload...')
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
@@ -75,16 +67,14 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN')
 
-    // Get file metadata using music-metadata package
     console.log('Parsing file metadata...')
     const metadata = await mm.parseBuffer(arrayBuffer, fileType, {
       duration: true,
-      skipCovers: false, // We want to extract artwork
+      skipCovers: false,
     })
 
     console.log('File metadata parsed:', metadata)
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
@@ -94,7 +84,6 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get user information from the authorization header
     const authHeader = req.headers.get('Authorization')?.split(' ')[1]
     if (!authHeader) {
       throw new Error('No authorization header')
@@ -106,7 +95,6 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Extract and upload artwork if available
     let artworkUrl = null
     if (metadata.common.picture && metadata.common.picture.length > 0) {
       const picture = metadata.common.picture[0]
@@ -137,8 +125,8 @@ serve(async (req) => {
       }
     }
 
-    // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
+    // Update: Store the complete Bunny CDN URL
+    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || fileName.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
