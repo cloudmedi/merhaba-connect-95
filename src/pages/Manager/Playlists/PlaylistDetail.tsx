@@ -8,6 +8,17 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
+import { SongList } from "@/components/playlists/SongList";
+
+interface PlaylistSong {
+  id: string;
+  title: string;
+  artist: string | null;
+  duration: number | null;
+  file_url: string;
+  artwork_url?: string | null;
+}
 
 interface PlaylistData {
   id: string;
@@ -16,15 +27,22 @@ interface PlaylistData {
   artwork_url?: string;
   genre: { name: string } | null;
   mood: { name: string } | null;
-  songs: Array<{
-    id: string;
-    title: string;
-    artist: string | null;
-    duration: number | null;
-    file_url: string;
-    artwork_url?: string | null;
-  }>;
+  songs: PlaylistSong[];
 }
+
+const formatDuration = (duration: number | null): string => {
+  if (!duration) return "0:00";
+  const minutes = Math.floor(duration / 60);
+  const seconds = duration % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const calculateTotalDuration = (songs: PlaylistSong[]): string => {
+  const totalSeconds = songs.reduce((acc, song) => acc + (song.duration || 0), 0);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+};
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -35,7 +53,6 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      // Fetch playlist details with genre and mood
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -51,7 +68,6 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
-      // Fetch playlist songs
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -73,7 +89,6 @@ export function PlaylistDetail() {
         throw songsError;
       }
 
-      // Calculate total duration and format songs data
       const songs = playlistSongs.map(ps => ({
         id: ps.songs.id,
         title: ps.songs.title,
@@ -83,15 +98,9 @@ export function PlaylistDetail() {
         artwork_url: ps.songs.artwork_url
       }));
 
-      const totalDuration = songs.reduce((acc, song) => acc + (song.duration || 0), 0);
-      const hours = Math.floor(totalDuration / 3600);
-      const minutes = Math.floor((totalDuration % 3600) / 60);
-
       return {
         ...playlist,
-        songs,
-        totalDuration: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`,
-        songCount: songs.length
+        songs
       } as PlaylistData;
     }
   });
@@ -123,87 +132,25 @@ export function PlaylistDetail() {
     );
   }
 
-  const formatDuration = (duration: number | null) => {
-    if (!duration) return "0:00";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="min-h-screen bg-white rounded-lg shadow-sm">
       <div className="p-6 space-y-8">
-        <div className="flex items-center gap-2 text-gray-500">
-          <button 
-            onClick={() => navigate("/manager/playlists")}
-            className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Media Library
-          </button>
-        </div>
+        <PlaylistHeader 
+          onBack={() => navigate("/manager/playlists")}
+          artworkUrl={playlist.artwork_url}
+          name={playlist.name}
+          genreName={playlist.genre?.name}
+          moodName={playlist.mood?.name}
+          songCount={playlist.songs.length}
+          duration={calculateTotalDuration(playlist.songs)}
+          onPlay={() => setIsPlaying(true)}
+          onPush={() => setIsPushDialogOpen(true)}
+        />
 
-        <div className="flex items-start gap-8">
-          <div className="relative group">
-            <img 
-              src={playlist.artwork_url || "/placeholder.svg"} 
-              alt={playlist.name}
-              className="w-32 h-32 rounded-lg object-cover"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-              <button
-                onClick={() => setIsPlaying(true)}
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
-              >
-                <Play className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>{playlist.genre?.name || 'No Genre'}</span>
-              <span>•</span>
-              <span>{playlist.mood?.name || 'No Mood'}</span>
-              <span>•</span>
-              <span>{playlist.songs.length} songs</span>
-              <span>•</span>
-              <span>{playlist.totalDuration}</span>
-            </div>
-            <Button 
-              onClick={() => setIsPushDialogOpen(true)}
-              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-            >
-              Push
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <div className="grid grid-cols-12 text-xs text-gray-500 uppercase tracking-wider pb-4 border-b">
-            <div className="col-span-1">#</div>
-            <div className="col-span-5">TITLE</div>
-            <div className="col-span-4">ARTIST</div>
-            <div className="col-span-2 text-right">DURATION</div>
-          </div>
-
-          <ScrollArea className="h-[calc(100vh-300px)]">
-            {playlist.songs.map((song, index) => (
-              <div 
-                key={song.id}
-                className="grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100"
-              >
-                <div className="col-span-1 text-gray-400">{index + 1}</div>
-                <div className="col-span-5 font-medium text-gray-900 flex items-center gap-2">
-                  <Music2 className="w-4 h-4 text-gray-400" />
-                  {song.title}
-                </div>
-                <div className="col-span-4 text-gray-500">{song.artist}</div>
-                <div className="col-span-2 text-right text-gray-500">{formatDuration(song.duration)}</div>
-              </div>
-            ))}
-          </ScrollArea>
-        </div>
+        <SongList 
+          songs={playlist.songs}
+          formatDuration={formatDuration}
+        />
       </div>
 
       <PushPlaylistDialog

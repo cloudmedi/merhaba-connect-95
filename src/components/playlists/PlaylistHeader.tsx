@@ -8,9 +8,9 @@ export interface PlaylistHeaderProps {
   genreName?: string;
   moodName?: string;
   songCount?: number;
+  duration?: string;
   onPlay?: () => void;
   onPush?: () => void;
-  // Add these new props for create/edit mode
   onCancel?: () => void;
   onCreate?: () => void;
 }
@@ -22,6 +22,7 @@ export function PlaylistHeader({
   genreName = "Various",
   moodName = "Various",
   songCount = 0,
+  duration,
   onPlay,
   onPush,
   onCancel,
@@ -83,6 +84,12 @@ export function PlaylistHeader({
             <span>{moodName}</span>
             <span>•</span>
             <span>{songCount} songs</span>
+            {duration && (
+              <>
+                <span>•</span>
+                <span>{duration}</span>
+              </>
+            )}
           </div>
           {onPush && (
             <Button 
