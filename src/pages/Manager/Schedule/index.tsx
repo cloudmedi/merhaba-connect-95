@@ -14,6 +14,10 @@ import { toast } from "sonner";
 
 export default function Schedule() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<{
+    start: string;
+    end: string;
+  } | null>(null);
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
   const handleEventDrop = async (info: any) => {
@@ -31,6 +35,14 @@ export default function Schedule() {
       toast.error("Failed to update event");
       info.revert();
     }
+  };
+
+  const handleSelect = (selectInfo: any) => {
+    setSelectedTimeRange({
+      start: selectInfo.startStr,
+      end: selectInfo.endStr,
+    });
+    setIsCreateEventOpen(true);
   };
 
   if (isLoading) {
@@ -106,6 +118,7 @@ export default function Schedule() {
           weekends={true}
           nowIndicator={true}
           events={formattedEvents}
+          select={handleSelect}
         />
       </div>
 
@@ -113,6 +126,7 @@ export default function Schedule() {
         open={isCreateEventOpen} 
         onOpenChange={setIsCreateEventOpen}
         existingEvents={events}
+        initialTimeRange={selectedTimeRange}
       />
     </div>
   );

@@ -7,13 +7,17 @@ import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
+import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingEvents: ScheduleEvent[];
+  initialTimeRange?: {
+    start: string;
+    end: string;
+  } | null;
 }
 
 interface EventFormData {
@@ -29,22 +33,41 @@ interface EventFormData {
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;
-    endDate?: string;  // Changed from Date to string
+    endDate?: string;
   };
 }
 
-export function CreateEventDialog({ open, onOpenChange, existingEvents }: CreateEventDialogProps) {
+export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
   const [currentTab, setCurrentTab] = useState("details");
-  const [formData, setFormData] = useState<EventFormData>({
-    title: "",
-    playlistId: "",
-    startDate: "",
-    startTime: "",
-    endDate: "",
-    endTime: "",
-    category: "Regular Playlist",
-    branches: [],
-    notifications: [],
+  const [formData, setFormData] = useState<EventFormData>(() => {
+    if (initialTimeRange) {
+      const startDate = new Date(initialTimeRange.start);
+      const endDate = new Date(initialTimeRange.end);
+      
+      return {
+        title: "",
+        playlistId: "",
+        startDate: startDate.toISOString().split('T')[0],
+        startTime: startDate.toTimeString().slice(0, 5),
+        endDate: endDate.toISOString().split('T')[0],
+        endTime: endDate.toTimeString().slice(0, 5),
+        category: "Regular Playlist",
+        branches: [],
+        notifications: [],
+      };
+    }
+    
+    return {
+      title: "",
+      playlistId: "",
+      startDate: "",
+      startTime: "",
+      endDate: "",
+      endTime: "",
+      category: "Regular Playlist",
+      branches: [],
+      notifications: [],
+    };
   });
 
   const handleCreate = async () => {
