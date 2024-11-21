@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -7,7 +8,6 @@ import { EventCategory } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
 
 interface EventDetailsStepProps {
   formData: {
@@ -53,7 +53,7 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
           is_public,
           company_id
         `)
-        .or('is_public.eq.true,company_id.eq.' + profile.company_id)
+        .or(`is_public.eq.true,company_id.is.null,company_id.eq.${profile.company_id}`)
         .ilike('name', `%${searchQuery}%`);
 
       if (error) throw error;
