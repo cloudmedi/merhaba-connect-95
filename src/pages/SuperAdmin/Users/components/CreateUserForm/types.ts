@@ -2,6 +2,7 @@ export interface CreateUserFormValues {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   companyName: string;
   role: "admin" | "manager";
   license: {

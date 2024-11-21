@@ -1,7 +1,7 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Building2, Crown, User } from "lucide-react";
+import { Building2, Crown, Lock, Mail, User } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { CreateUserFormValues } from "./types";
 
@@ -55,7 +55,32 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="john.doe@example.com" {...field} />
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input className="pl-9" type="email" placeholder="john.doe@example.com" {...field} />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="password"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Password</FormLabel>
+            <FormControl>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input 
+                  className="pl-9" 
+                  type="password" 
+                  placeholder="Enter password" 
+                  {...field} 
+                />
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -24,6 +24,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       firstName: "",
       lastName: "",
       email: "",
+      password: "",
       companyName: "",
       role: "manager",
       license: {
