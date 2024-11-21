@@ -8,16 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useDevices } from "../hooks/useDevices";
+import type { Device } from "../hooks/useDevices";
 
 interface EditDeviceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  device: {
-    id: string;
-    branchName: string;
-  };
+  device: Device;
 }
 
 export function EditDeviceDialog({
@@ -25,11 +24,19 @@ export function EditDeviceDialog({
   onOpenChange,
   device,
 }: EditDeviceDialogProps) {
-  const [branchName, setBranchName] = useState(device.branchName);
+  const [name, setName] = useState(device.name);
+  const [category, setCategory] = useState(device.category);
+  const { updateDevice } = useDevices();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Device updated successfully");
+    
+    await updateDevice.mutateAsync({
+      id: device.id,
+      name,
+      category,
+    });
+
     onOpenChange(false);
   };
 
@@ -41,17 +48,32 @@ export function EditDeviceDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="branchName">Branch Name</Label>
+            <Label htmlFor="name">Device Name</Label>
             <Input
-              id="branchName"
-              value={branchName}
-              onChange={(e) => setBranchName(e.target.value)}
-              placeholder="Enter branch name"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter device name"
               required
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Device Type</Label>
+            <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select device type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="player">Player</SelectItem>
+                <SelectItem value="display">Display</SelectItem>
+                <SelectItem value="controller">Controller</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <DialogFooter>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={updateDevice.isPending}>
+              {updateDevice.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

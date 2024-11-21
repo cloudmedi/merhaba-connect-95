@@ -278,6 +278,56 @@ export type Database = {
         }
         Relationships: []
       }
+      devices: {
+        Row: {
+          branch_id: string | null
+          category: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          last_seen: string | null
+          name: string
+          schedule: Json | null
+          status: string | null
+          system_info: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          category: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen?: string | null
+          name: string
+          schedule?: Json | null
+          status?: string | null
+          system_info?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          category?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen?: string | null
+          name?: string
+          schedule?: Json | null
+          status?: string | null
+          system_info?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       genres: {
         Row: {
           created_at: string | null

@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useDevices } from "../hooks/useDevices";
 
 interface AddDeviceDialogProps {
   open: boolean;
@@ -19,22 +20,25 @@ interface AddDeviceDialogProps {
 export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [branchName, setBranchName] = useState("");
   const [location, setLocation] = useState("");
-  const [token, setToken] = useState("");
+  const [category, setCategory] = useState<"player" | "display" | "controller">("player");
+  const { createDevice } = useDevices();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (token.length !== 6) {
-      toast.error("Token must be 6 digits");
-      return;
-    }
+    await createDevice.mutateAsync({
+      name: branchName,
+      branch_id: location, // In a real app, you'd have a branch selector
+      category,
+      status: 'offline',
+      system_info: {},
+      schedule: {}
+    });
 
-    // Here you would typically make an API call to register the device
-    toast.success("Device added successfully");
     onOpenChange(false);
     setBranchName("");
     setLocation("");
-    setToken("");
+    setCategory("player");
   };
 
   return (
@@ -45,12 +49,12 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="branchName">Branch Name</Label>
+            <Label htmlFor="branchName">Device Name</Label>
             <Input
               id="branchName"
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
-              placeholder="Enter branch name"
+              placeholder="Enter device name"
               className="w-full"
               required
             />
@@ -67,23 +71,22 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="token">Device Token</Label>
-            <Input
-              id="token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter 6-digit token"
-              maxLength={6}
-              pattern="[0-9]{6}"
-              className="w-full"
-              required
-            />
-            <p className="text-sm text-muted-foreground">
-              Enter the 6-digit token displayed on the device
-            </p>
+            <Label htmlFor="category">Device Type</Label>
+            <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select device type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="player">Player</SelectItem>
+                <SelectItem value="display">Display</SelectItem>
+                <SelectItem value="controller">Controller</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
-            <Button type="submit" className="w-full">Add Device</Button>
+            <Button type="submit" disabled={createDevice.isPending}>
+              {createDevice.isPending ? "Adding..." : "Add Device"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

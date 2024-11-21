@@ -7,32 +7,8 @@ import { DeviceFilters } from "./DeviceFilters";
 import { BulkActions } from "./BulkActions";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { DeviceGroupManagement, DeviceGroup } from "./DeviceGroupManagement";
-import { toast } from "sonner";
-
-// Mock data generation
-const generateMockDevices = (count: number) => {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${i + 1}`,
-    branchName: `Branch ${i + 1}`,
-    location: `Region ${Math.floor(i / 100) + 1}`,
-    category: i % 3 === 0 ? "player" : i % 3 === 1 ? "display" : "controller",
-    status: i % 3 === 0 ? "online" : "offline",
-    ip: `192.168.1.${100 + i}`,
-    lastSeen: "2024-03-20T10:00:00",
-    systemInfo: {
-      os: "Linux 5.15.0",
-      memory: "4GB",
-      storage: "64GB",
-      version: "1.2.0",
-    },
-    schedule: {
-      powerOn: "08:00",
-      powerOff: "22:00",
-    },
-  }));
-};
-
-const mockDevices = generateMockDevices(500);
+import { useDevices } from "../hooks/useDevices";
+import { DataTableLoader } from "@/components/loaders/DataTableLoader";
 
 export function DeviceList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,28 +23,41 @@ export function DeviceList() {
     direction: 'asc' | 'desc';
   }>({ key: '', direction: 'asc' });
   
+  const { devices, isLoading, error, updateDevice, deleteDevice } = useDevices();
   const itemsPerPage = 10;
 
-  const handleBulkPower = () => {
-    toast.success(`Power command sent to ${selectedDevices.length} devices`);
+  const handleBulkPower = async () => {
+    for (const id of selectedDevices) {
+      await updateDevice.mutateAsync({
+        id,
+        status: 'online'
+      });
+    }
   };
 
-  const handleBulkReset = () => {
-    toast.success(`Reset command sent to ${selectedDevices.length} devices`);
+  const handleBulkReset = async () => {
+    for (const id of selectedDevices) {
+      await updateDevice.mutateAsync({
+        id,
+        status: 'offline'
+      });
+    }
   };
 
-  const handleBulkDelete = () => {
-    toast.success(`${selectedDevices.length} devices deleted`);
+  const handleBulkDelete = async () => {
+    for (const id of selectedDevices) {
+      await deleteDevice.mutateAsync(id);
+    }
     setSelectedDevices([]);
   };
 
-  const filteredDevices = mockDevices.filter(
+  const filteredDevices = devices.filter(
     (device) =>
-      (device.branchName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        device.location.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        device.branch?.location?.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (statusFilter === "all" || device.status === statusFilter) &&
       (categoryFilter === "all" || device.category === categoryFilter) &&
-      (locationFilter === "all" || device.location.toLowerCase().includes(locationFilter.toLowerCase()))
+      (locationFilter === "all" || device.branch?.location?.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
   const sortedDevices = [...filteredDevices].sort((a: any, b: any) => {
@@ -88,12 +77,11 @@ export function DeviceList() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentDevices = sortedDevices.slice(startIndex, endIndex);
 
-  const onlineDevices = mockDevices.filter(d => d.status === "online").length;
-  const offlineDevices = mockDevices.length - onlineDevices;
+  const onlineDevices = devices.filter(d => d.status === "online").length;
+  const offlineDevices = devices.length - onlineDevices;
 
   const handleCreateGroup = (group: DeviceGroup) => {
     setDeviceGroups(prev => [...prev, group]);
-    toast.success("Device group created successfully");
   };
 
   const handleSort = (key: string) => {
@@ -103,10 +91,18 @@ export function DeviceList() {
     }));
   };
 
+  if (isLoading) {
+    return <DataTableLoader />;
+  }
+
+  if (error) {
+    return <div>Error loading devices</div>;
+  }
+
   return (
     <div className="space-y-4">
       <DeviceStats
-        totalDevices={mockDevices.length}
+        totalDevices={devices.length}
         onlineDevices={onlineDevices}
         offlineDevices={offlineDevices}
         lastUpdated={new Date().toLocaleString()}

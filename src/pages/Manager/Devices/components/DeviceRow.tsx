@@ -3,31 +3,19 @@ import { Card } from "@/components/ui/card";
 import { Power, RefreshCw, Clock, Edit, Trash2, ArrowUpDown } from "lucide-react";
 import { DeviceScheduleDialog } from "./DeviceScheduleDialog";
 import { useState } from "react";
-import { toast } from "sonner";
 import { EditDeviceDialog } from "./EditDeviceDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useDevices } from "../hooks/useDevices";
+import type { Device } from "../hooks/useDevices";
 
-interface DeviceProps {
-  device: {
-    id: string;
-    branchName: string;
-    location: string;
-    category: string;
-    status: string;
-    ip: string;
-    lastSeen: string;
-    systemInfo: {
-      os: string;
-      memory: string;
-      storage: string;
-      version: string;
-    };
-    schedule: {
-      powerOn: string;
-      powerOff: string;
-    };
+interface DeviceRowProps {
+  device: Device & {
+    branch?: {
+      name: string;
+      location: string;
+    } | null;
   };
   isSelected: boolean;
   onSelect: (checked: boolean) => void;
@@ -38,16 +26,27 @@ interface DeviceProps {
   onSort: (key: string) => void;
 }
 
-export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: DeviceProps) {
+export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: DeviceRowProps) {
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const { updateDevice, deleteDevice } = useDevices();
 
-  const handleReset = () => {
-    toast.success("Device reset command sent");
+  const handlePowerToggle = async () => {
+    await updateDevice.mutateAsync({
+      id: device.id,
+      status: device.status === 'online' ? 'offline' : 'online'
+    });
   };
 
-  const handleDelete = () => {
-    toast.success("Device deleted successfully");
+  const handleReset = async () => {
+    await updateDevice.mutateAsync({
+      id: device.id,
+      status: 'offline'
+    });
+  };
+
+  const handleDelete = async () => {
+    await deleteDevice.mutateAsync(device.id);
   };
 
   const SortButton = ({ column }: { column: string }) => (
@@ -82,10 +81,10 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
                 {device.status === "online" ? "Online" : "Offline"}
               </Badge>
               <div className="flex items-center gap-1">
-                <h3 className="font-semibold text-lg">{device.branchName}</h3>
-                <SortButton column="branchName" />
+                <h3 className="font-semibold text-lg">{device.name}</h3>
+                <SortButton column="name" />
               </div>
-              <span className="text-sm text-gray-500">({device.location})</span>
+              <span className="text-sm text-gray-500">({device.branch?.location})</span>
               <SortButton column="location" />
             </div>
             
@@ -97,18 +96,18 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">IP:</span>
-                <span>{device.ip}</span>
-                <SortButton column="ip" />
+                <span>{device.ip_address}</span>
+                <SortButton column="ip_address" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Last Seen:</span>
-                <span>{device.lastSeen}</span>
-                <SortButton column="lastSeen" />
+                <span>{new Date(device.last_seen || '').toLocaleString()}</span>
+                <SortButton column="last_seen" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Version:</span>
-                <span>{device.systemInfo.version}</span>
-                <SortButton column="version" />
+                <span>{device.system_info.version}</span>
+                <SortButton column="system_info" />
               </div>
             </div>
           </div>
@@ -127,14 +126,16 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
               size="icon"
               onClick={handleReset}
               className="hover:bg-gray-100"
+              disabled={updateDevice.isPending}
             >
               <RefreshCw className="h-4 w-4 text-gray-600" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => toast.success("Power command sent")}
+              onClick={handlePowerToggle}
               className="hover:bg-gray-100"
+              disabled={updateDevice.isPending}
             >
               <Power className="h-4 w-4 text-gray-600" />
             </Button>
