@@ -1,4 +1,3 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { SongList } from "@/components/playlists/SongList";
+import { useParams, useNavigate } from "react-router-dom";
 
 interface PlaylistData {
   id: string;
@@ -36,8 +36,8 @@ export function PlaylistDetail() {
         .from('playlists')
         .select(`
           *,
-          genre:genre_id(name),
-          mood:mood_id(name)
+          genre:genres!playlists_genre_id_fkey(name),
+          mood:moods!playlists_mood_id_fkey(name)
         `)
         .eq('id', id)
         .single();
