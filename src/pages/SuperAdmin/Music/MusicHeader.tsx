@@ -16,21 +16,21 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
 
     for (const file of Array.from(files)) {
       try {
-        // Create FormData object
-        const formData = new FormData();
-        formData.append('file', file);
-
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error('No active session');
         }
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('file', file);
 
         // Call the Edge Function with proper headers
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
           headers: {
             Authorization: `Bearer ${session.access_token}`,
-            Accept: 'multipart/form-data',
+            'Content-Type': 'multipart/form-data; boundary=' + (formData as any)._boundary,
           }
         });
 
