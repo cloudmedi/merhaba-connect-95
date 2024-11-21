@@ -20,6 +20,7 @@ interface UploadingFile {
 
 export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps) {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -135,6 +136,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
         <UploadZone
           onFileSelect={handleFileSelect}
+          isDragging={isDragging}
         />
 
         {Object.entries(uploadingFiles).length > 0 && (

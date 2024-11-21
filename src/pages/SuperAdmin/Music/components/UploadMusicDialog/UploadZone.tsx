@@ -2,10 +2,10 @@ import { Upload } from "lucide-react";
 
 interface UploadZoneProps {
   onFileSelect: (files: FileList) => void;
-  isDragging: boolean;
+  isDragging?: boolean; // Made optional with ?
 }
 
-export function UploadZone({ onFileSelect, isDragging }: UploadZoneProps) {
+export function UploadZone({ onFileSelect, isDragging = false }: UploadZoneProps) {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
