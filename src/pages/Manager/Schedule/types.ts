@@ -1,3 +1,5 @@
+import type { Json } from "@/integrations/supabase/types/json";
+
 export type EventCategory = 'Marketing' | 'Special Promotion' | 'Holiday Music' | 'Regular Playlist' | 'Background Music';
 
 export interface EventColor {

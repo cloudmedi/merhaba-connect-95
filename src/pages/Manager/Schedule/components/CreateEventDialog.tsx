@@ -29,7 +29,7 @@ interface EventFormData {
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;
-    endDate?: Date;
+    endDate?: string;
   };
 }
 

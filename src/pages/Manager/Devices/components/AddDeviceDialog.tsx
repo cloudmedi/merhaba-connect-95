@@ -1,46 +1,49 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
-import { toast } from "sonner";
 
-interface AddDeviceDialogProps {
+export function AddDeviceDialog({
+  open,
+  onOpenChange,
+}: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
+}) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    await createDevice.mutateAsync({
+      name,
+      category,
+      status: 'offline',
+      schedule: {},
+      system_info: {},
+    });
 
-    try {
-      await createDevice.mutateAsync({
-        name,
-        category,
-        schedule: {}, // Add appropriate schedule data if needed
-        system_info: {}, // Add appropriate system info if needed
-      });
-      onOpenChange(false);
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("An error occurred, please try again.");
-      }
-    }
+    onOpenChange(false);
+    setName("");
+    setCategory("player");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Device</DialogTitle>
+          <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -55,15 +58,20 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Device Type</Label>
-            <select value={category} onChange={(e) => setCategory(e.target.value as "player" | "display" | "controller")}>
-              <option value="player">Player</option>
-              <option value="display">Display</option>
-              <option value="controller">Controller</option>
-            </select>
+            <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select device type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="player">Player</SelectItem>
+                <SelectItem value="display">Display</SelectItem>
+                <SelectItem value="controller">Controller</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
-            <Button type="submit">
-              Add Device
+            <Button type="submit" disabled={createDevice.isPending}>
+              {createDevice.isPending ? "Adding..." : "Add Device"}
             </Button>
           </DialogFooter>
         </form>
