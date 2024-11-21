@@ -3,11 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { UploadMusicDialog } from "./components/UploadMusicDialog";
 
-interface MusicHeaderProps {
-  onUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-export function MusicHeader({ onUpload }: MusicHeaderProps) {
+export function MusicHeader() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   return (
