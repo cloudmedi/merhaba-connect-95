@@ -107,6 +107,18 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
+    // Verify user profile exists
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      console.error('Profile error:', profileError)
+      throw new Error('User profile not found. Please ensure your profile is set up.')
+    }
+
     // Save song metadata to Supabase
     const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
     const songData = {
@@ -117,7 +129,7 @@ serve(async (req) => {
       duration: Math.round(metadata.format.duration || 0),
       file_url: cdnUrl,
       bunny_id: uniqueFileName,
-      created_by: user.id
+      created_by: profile.id // Use the verified profile ID
     }
 
     console.log('Saving song metadata to Supabase:', songData)
