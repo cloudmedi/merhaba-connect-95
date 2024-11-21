@@ -16,7 +16,7 @@ export interface EventNotification {
 export interface EventRecurrence {
   frequency: 'daily' | 'weekly' | 'monthly';
   interval: number;
-  endDate?: string;
+  endDate?: string;  // Changed from Date to string for consistency
 }
 
 export interface ScheduleEvent {

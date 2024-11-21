@@ -26,7 +26,11 @@ interface EventFormData {
   category: EventCategory;
   branches: string[];
   notifications: EventNotification[];
-  recurrence?: EventRecurrence;
+  recurrence?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number;
+    endDate?: string;  // Changed from Date to string
+  };
 }
 
 export function CreateEventDialog({ open, onOpenChange, existingEvents }: CreateEventDialogProps) {

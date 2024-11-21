@@ -8,7 +8,7 @@ export interface RecurrenceStepProps {
     recurrence?: {
       frequency: 'daily' | 'weekly' | 'monthly';
       interval: number;
-      endDate?: Date;
+      endDate?: string;  // Changed from Date to string
     };
   };
   onFormDataChange: (data: Partial<RecurrenceStepProps['formData']>) => void;
@@ -65,12 +65,12 @@ export function RecurrenceStep({ formData, onFormDataChange, onNext, onBack }: R
         <Label>End Date (Optional)</Label>
         <Input
           type="date"
-          value={formData.recurrence?.endDate?.toISOString().split('T')[0] || ''}
+          value={formData.recurrence?.endDate || ''}
           onChange={(e) =>
             onFormDataChange({
               recurrence: {
                 ...formData.recurrence,
-                endDate: e.target.value ? new Date(e.target.value) : undefined,
+                endDate: e.target.value || undefined,
               },
             })
           }
