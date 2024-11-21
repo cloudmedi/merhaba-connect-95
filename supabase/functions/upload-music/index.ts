@@ -24,17 +24,22 @@ serve(async (req) => {
     console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type)
 
     // Get Bunny CDN configuration
-    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME')
-    const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
+    const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
+    const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
 
-    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
+    if (!bunnyStorageHost || !bunnyStorageZoneName || !bunnyApiKey) {
+      console.error('Missing Bunny CDN configuration:', {
+        host: !!bunnyStorageHost,
+        zoneName: !!bunnyStorageZoneName,
+        apiKey: !!bunnyApiKey
+      })
       throw new Error('Missing Bunny CDN configuration')
     }
 
     console.log('Bunny CDN configuration loaded:', {
-      storageName: bunnyStorageName,
-      host: bunnyStorageHost
+      host: bunnyStorageHost,
+      zoneName: bunnyStorageZoneName
     })
 
     // Generate unique filename
@@ -42,7 +47,7 @@ serve(async (req) => {
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
     // Construct proper Bunny CDN URL
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`
+    const bunnyUrl = `https://${bunnyStorageHost}/${uniqueFileName}`
 
     console.log('Attempting upload to Bunny CDN:', bunnyUrl)
 
@@ -103,7 +108,7 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageName}/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
