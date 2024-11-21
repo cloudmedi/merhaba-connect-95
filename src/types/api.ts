@@ -47,10 +47,10 @@ export interface PlaylistResponse {
   company?: {
     name: string;
   } | null;
-  profiles?: Array<{
+  profiles?: {
     first_name: string | null;
     last_name: string | null;
-  }> | null;
+  }[] | null;
   genre?: {
     name: string;
   } | null;
