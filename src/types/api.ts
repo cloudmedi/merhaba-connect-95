@@ -32,26 +32,34 @@ export interface Device {
   updatedAt: string;
 }
 
-export interface Playlist {
+export interface PlaylistResponse {
   id: string;
   name: string;
-  description?: string;
-  artwork_url?: string;
+  description?: string | null;
+  artwork_url?: string | null;
   created_at: string;
   updated_at: string;
   is_public: boolean;
-  company_id?: string;
-  genre_id?: string;
-  mood_id?: string;
-  created_by?: string;
+  company_id?: string | null;
+  genre_id?: string | null;
+  mood_id?: string | null;
+  created_by?: string | null;
   company?: {
     name: string;
   } | null;
-  profiles?: Array<{
-    first_name: string;
-    last_name: string;
-  }> | null;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+  genre?: {
+    name: string;
+  } | null;
+  mood?: {
+    name: string;
+  } | null;
 }
+
+export interface Playlist extends PlaylistResponse {}
 
 export interface Song {
   id: string;

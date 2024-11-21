@@ -6,9 +6,10 @@ import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Playlist } from "@/types/api";
+import type { PlaylistResponse } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { toast } from "sonner";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,13 +23,15 @@ export function PlaylistsContent() {
         .from('playlists')
         .select(`
           *,
-          company:company_id(name),
-          profiles:created_by(first_name, last_name)
+          company:companies(name),
+          profiles:profiles(first_name, last_name),
+          genre:genres(name),
+          mood:moods(name)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as Playlist[];
+      return data as PlaylistResponse[];
     }
   });
 
@@ -52,11 +55,7 @@ export function PlaylistsContent() {
         .eq('playlist_id', currentPlaylist.id)
         .order('position');
 
-      if (error) {
-        console.error('Error fetching playlist songs:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     enabled: !!currentPlaylist?.id
@@ -66,37 +65,51 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
-    const defaultArtwork = "/placeholder.svg";
-    const artworkUrl = playlist.artwork_url || defaultArtwork;
-    
-    return {
-      id: playlist.id,
-      title: playlist.name,
-      artwork_url: artworkUrl,
-      genre: "Various",
-      mood: "Various",
-    };
+  const handlePlayPlaylist = async (playlist: PlaylistResponse) => {
+    try {
+      const { data: songs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
+
+      if (error) throw error;
+
+      if (!songs || songs.length === 0) {
+        toast.error("Bu playlist'te çalınacak şarkı bulunmuyor.");
+        return;
+      }
+
+      setCurrentPlaylist({
+        id: playlist.id,
+        title: playlist.name,
+        artwork_url: playlist.artwork_url || null,
+        genre: playlist.genre?.name || "Various",
+        mood: playlist.mood?.name || "Various",
+      });
+
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      toast.error("Playlist şarkıları yüklenirken bir hata oluştu.");
+    }
   };
 
-  const businessPlaylists = filteredPlaylists
-    .filter(p => !p.is_public)
-    .map(transformPlaylistForGrid);
-
-  const publicPlaylists = filteredPlaylists
-    .filter(p => p.is_public)
-    .map(transformPlaylistForGrid);
-
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
-    }
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
-  };
+  const playlistsForGrid: GridPlaylist[] = filteredPlaylists.map(playlist => ({
+    id: playlist.id,
+    title: playlist.name,
+    artwork_url: playlist.artwork_url || null,
+    genre: playlist.genre?.name || "Various",
+    mood: playlist.mood?.name || "Various"
+  }));
 
   return (
     <div className="space-y-8">
@@ -121,16 +134,9 @@ export function PlaylistsContent() {
 
       <div className="space-y-12">
         <PlaylistGrid 
-          title="Business Playlists" 
-          description="Private playlists for business use"
-          playlists={businessPlaylists}
-          isLoading={isLoading}
-        />
-        
-        <PlaylistGrid 
-          title="Public Playlists" 
-          description="Playlists available to all users"
-          playlists={publicPlaylists}
+          title="Playlists" 
+          description="Manage your playlists"
+          playlists={playlistsForGrid}
           isLoading={isLoading}
         />
       </div>
@@ -139,13 +145,15 @@ export function PlaylistsContent() {
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg",
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
+              file_url: ps.songs.file_url.startsWith('http') 
+                ? ps.songs.file_url 
+                : `https://cloud-media.b-cdn.net/${ps.songs.file_url}`
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}

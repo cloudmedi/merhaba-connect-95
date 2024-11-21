@@ -1,12 +1,8 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GridPlaylist } from "./types";
 import { Play } from "lucide-react";
-import { MusicPlayer } from "@/components/MusicPlayer";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface PlaylistGridProps {
   title: string;
@@ -17,55 +13,21 @@ interface PlaylistGridProps {
 
 export function PlaylistGrid({ title, description, playlists, isLoading }: PlaylistGridProps) {
   const navigate = useNavigate();
-  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
-
-  const { data: playlistSongs } = useQuery({
-    queryKey: ['playlist-songs', currentPlaylist?.id],
-    queryFn: async () => {
-      if (!currentPlaylist?.id) return null;
-      
-      const { data, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url
-          )
-        `)
-        .eq('playlist_id', currentPlaylist.id)
-        .order('position');
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentPlaylist?.id
-  });
 
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
+    // If it's already a full URL (including Bunny CDN URLs), return it as is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    return `https://cloud-media.b-cdn.net/${url}`;
-  };
-
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+    // If it's a Bunny CDN path without the full URL, construct the full URL
+    if (!url.includes('://')) {
+      return `https://cloud-media.b-cdn.net/${url}`;
     }
-    return `https://cloud-media.b-cdn.net/${url}`;
-  };
-
-  const handlePlayClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
-    e.stopPropagation(); // Prevent navigation when clicking play
-    setCurrentPlaylist(playlist);
+    
+    return "/placeholder.svg";
   };
 
   if (isLoading) {
@@ -117,7 +79,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
                 size="icon"
                 variant="ghost"
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/20 backdrop-blur-sm hover:bg-white/30"
-                onClick={(e) => handlePlayClick(e, playlist)}
               >
                 <Play className="w-5 h-5 text-white" />
               </Button>
@@ -133,23 +94,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
           </Card>
         ))}
       </div>
-
-      {currentPlaylist && playlistSongs && (
-        <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: getFullUrl(currentPlaylist.artwork_url),
-            songs: playlistSongs.map(ps => ({
-              id: ps.songs.id,
-              title: ps.songs.title,
-              artist: ps.songs.artist || "Unknown Artist",
-              duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
-            }))
-          }}
-          onClose={() => setCurrentPlaylist(null)}
-        />
-      )}
     </div>
   );
 }
