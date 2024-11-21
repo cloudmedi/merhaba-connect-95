@@ -8,10 +8,10 @@ interface MusicPlayerProps {
     title: string;
     artwork: string;
     songs?: Array<{
-      id: number;
+      id: string | number; // UUID veya number olabilir
       title: string;
       artist: string;
-      duration: string;
+      duration: string | number;
       file_url: string;
     }>;
   };
@@ -42,7 +42,21 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const artworkUrl = playlist.artwork || defaultArtwork;
 
-  console.log('Current song:', currentSong); // Debug log
+  // Format duration if it's a number
+  const formatDuration = (duration: string | number) => {
+    if (typeof duration === 'number') {
+      const minutes = Math.floor(duration / 60);
+      const seconds = Math.floor(duration % 60);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return duration;
+  };
+
+  // Prepare the current song with formatted duration
+  const formattedCurrentSong = currentSong ? {
+    ...currentSong,
+    duration: formatDuration(currentSong.duration)
+  } : null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
