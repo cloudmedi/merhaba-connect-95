@@ -15,37 +15,43 @@ const transformPlaylistToGridFormat = (playlist: Playlist): GridPlaylist => ({
   mood: "Various", // You might want to fetch this from the moods table
 });
 
-// Fetch playlists from Supabase
-const fetchPlaylists = async () => {
-  const { data, error } = await supabase
-    .from('playlists')
+// Fetch categories and their playlists
+const fetchCategoriesWithPlaylists = async () => {
+  // First fetch all categories
+  const { data: categories, error: categoriesError } = await supabase
+    .from('categories')
     .select('*')
+    .order('name');
+
+  if (categoriesError) throw categoriesError;
+
+  // Then fetch all playlists
+  const { data: playlists, error: playlistsError } = await supabase
+    .from('playlists')
+    .select(`
+      *,
+      category:categories(*)
+    `)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data as Playlist[];
+  if (playlistsError) throw playlistsError;
+
+  // Group playlists by category
+  const playlistsByCategory = categories.map(category => ({
+    category,
+    playlists: playlists
+      .filter(playlist => playlist.category?.id === category.id)
+      .map(transformPlaylistToGridFormat)
+  }));
+
+  return playlistsByCategory;
 };
 
 export default function ManagerDashboard() {
-  const { data: playlists, isLoading } = useQuery({
-    queryKey: ['playlists'],
-    queryFn: fetchPlaylists,
+  const { data: categorizedPlaylists, isLoading } = useQuery({
+    queryKey: ['categories-with-playlists'],
+    queryFn: fetchCategoriesWithPlaylists,
   });
-
-  const businessHoursPlaylists = playlists
-    ?.filter(p => !p.is_public)
-    .slice(0, 6)
-    .map(transformPlaylistToGridFormat) || [];
-
-  const eveningPlaylists = playlists
-    ?.filter(p => !p.is_public)
-    .slice(6, 12)
-    .map(transformPlaylistToGridFormat) || [];
-
-  const weekendPlaylists = playlists
-    ?.filter(p => p.is_public)
-    .slice(0, 6)
-    .map(transformPlaylistToGridFormat) || [];
 
   return (
     <div>
@@ -65,26 +71,21 @@ export default function ManagerDashboard() {
       </div>
 
       <div className="space-y-12">
-        <PlaylistGrid 
-          title="Business Hours" 
-          description="Active during business hours"
-          playlists={businessHoursPlaylists}
-          isLoading={isLoading}
-        />
+        {categorizedPlaylists?.map(({ category, playlists }) => (
+          <PlaylistGrid 
+            key={category.id}
+            title={category.name} 
+            description={category.description || `Playlists in ${category.name}`}
+            playlists={playlists}
+            isLoading={isLoading}
+          />
+        ))}
         
-        <PlaylistGrid 
-          title="Evening Ambience" 
-          description="Perfect for evening atmosphere"
-          playlists={eveningPlaylists}
-          isLoading={isLoading}
-        />
-        
-        <PlaylistGrid 
-          title="Weekend Selection" 
-          description="Special weekend playlists"
-          playlists={weekendPlaylists}
-          isLoading={isLoading}
-        />
+        {categorizedPlaylists?.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No categories or playlists found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
