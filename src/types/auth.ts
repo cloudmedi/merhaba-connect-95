@@ -1,35 +1,33 @@
 export interface User {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string | null;
+  lastName: string | null;
   role: 'super_admin' | 'manager' | 'admin';
   companyId?: string;
-  isActive?: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   company?: {
     id: string;
     name: string;
-    subscriptionStatus?: string;
-    subscriptionEndsAt?: string;
-    trial_status?: 'active' | 'expired' | 'upgraded';
-    trial_ends_at?: string;
+    subscriptionStatus: string;
+    subscriptionEndsAt: string | null;
   };
   license?: {
-    type: 'trial' | 'premium';
+    type: string;
     start_date: string;
-    end_date: string;
+    end_date: string | null;
     quantity: number;
   };
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
 }
 
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
