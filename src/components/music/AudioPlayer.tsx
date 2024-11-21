@@ -4,6 +4,8 @@ import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
 import { VolumeControl } from "./VolumeControl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -12,6 +14,7 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) {
+  const { toast } = useToast();
   const {
     isPlaying,
     progress,
@@ -21,6 +24,16 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
     seek,
     setVolume
   } = useAudioPlayer(audioUrl);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error,
+      });
+    }
+  }, [error, toast]);
 
   if (error) {
     return (

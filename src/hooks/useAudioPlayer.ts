@@ -13,13 +13,22 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   useEffect(() => {
     if (!audioUrl) return;
 
+    setIsLoading(true);
+    setError(null);
+
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
 
     const handleCanPlay = () => {
       setIsLoading(false);
       setDuration(audio.duration);
-      setError(null);
+      if (isPlaying) {
+        audio.play().catch(e => {
+          console.error('Error playing audio:', e);
+          setError("Ses dosyası oynatılamadı");
+          setIsPlaying(false);
+        });
+      }
     };
 
     const handleLoadStart = () => {
@@ -27,7 +36,8 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       setError(null);
     };
 
-    const handleError = () => {
+    const handleError = (e: ErrorEvent) => {
+      console.error('Audio error:', e);
       setIsLoading(false);
       setError("Ses dosyası yüklenemedi");
       setIsPlaying(false);
@@ -39,7 +49,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     };
 
     const handleTimeUpdate = () => {
-      setProgress((audio.currentTime / audio.duration) * 100);
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
     };
 
     const handleEnded = () => {
@@ -61,6 +73,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
+      audio.src = '';
       setIsPlaying(false);
       setProgress(0);
       setError(null);
@@ -73,7 +86,10 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(e => {
+        console.error('Error playing audio:', e);
+        setError("Ses dosyası oynatılamadı");
+      });
     }
     setIsPlaying(!isPlaying);
   };
