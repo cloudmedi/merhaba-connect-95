@@ -8,9 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Playlist } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
 
   const { data: playlists, isLoading } = useQuery({
@@ -30,6 +32,37 @@ export function PlaylistsContent() {
     }
   });
 
+  // Query for playlist songs when a playlist is selected
+  const { data: playlistSongs } = useQuery({
+    queryKey: ['playlist-songs', currentPlaylist?.id],
+    queryFn: async () => {
+      if (!currentPlaylist?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url
+          )
+        `)
+        .eq('playlist_id', currentPlaylist.id)
+        .order('position');
+
+      if (error) {
+        console.error('Error fetching playlist songs:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!currentPlaylist?.id
+  });
+
   const filteredPlaylists = playlists?.filter(playlist =>
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
@@ -38,8 +71,8 @@ export function PlaylistsContent() {
     id: playlist.id,
     title: playlist.name,
     artwork: playlist.artwork_url || "/placeholder.svg",
-    genre: "Various", // You might want to fetch this from the genres table
-    mood: "Various", // You might want to fetch this from the moods table
+    genre: "Various",
+    mood: "Various",
   });
 
   const businessPlaylists = filteredPlaylists
@@ -49,6 +82,17 @@ export function PlaylistsContent() {
   const publicPlaylists = filteredPlaylists
     .filter(p => p.is_public)
     .map(transformPlaylistForGrid);
+
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    if (url.startsWith('cloud-media/')) {
+      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+    }
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   return (
     <div className="space-y-8">
@@ -86,6 +130,23 @@ export function PlaylistsContent() {
           isLoading={isLoading}
         />
       </div>
+
+      {currentPlaylist && playlistSongs && playlistSongs.length > 0 && (
+        <MusicPlayer
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork,
+            songs: playlistSongs.map(ps => ({
+              id: ps.songs.id,
+              title: ps.songs.title,
+              artist: ps.songs.artist || "Unknown Artist",
+              duration: ps.songs.duration?.toString() || "0:00",
+              file_url: getFullUrl(ps.songs.file_url)
+            }))
+          }}
+          onClose={() => setCurrentPlaylist(null)}
+        />
+      )}
     </div>
   );
 }
