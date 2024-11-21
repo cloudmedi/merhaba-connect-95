@@ -29,7 +29,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
 
-  // Fetch songs for the current playlist
   const { data: playlistSongs } = useQuery<PlaylistSong[]>({
     queryKey: ['playlist-songs', currentPlaylist?.id],
     queryFn: async () => {
@@ -39,7 +38,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         .from('playlist_songs')
         .select(`
           position,
-          songs:song_id (
+          songs (
             id,
             title,
             artist,
@@ -55,7 +54,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         throw error;
       }
 
-      return data || [];
+      return (data as PlaylistSong[]) || [];
     },
     enabled: !!currentPlaylist?.id
   });
@@ -131,7 +130,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
           </div>
         ))}
       </div>
-      {currentPlaylist && playlistSongs && (
+      {currentPlaylist && playlistSongs && playlistSongs.length > 0 && (
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
