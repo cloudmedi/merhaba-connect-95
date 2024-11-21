@@ -3,19 +3,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Device } from "@/types/api";
 
+interface DeviceWithRelations extends Device {
+  branches?: {
+    name: string;
+    company?: {
+      name: string;
+    } | null;
+  } | null;
+}
+
 export function useDevices() {
   const queryClient = useQueryClient();
 
-  const { data: devices = [], isLoading, error } = useQuery({
+  const { data: devices = [], isLoading, error } = useQuery<DeviceWithRelations[]>({
     queryKey: ['admin-devices'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('devices')
         .select(`
           *,
-          branches:branch_id(
+          branches:branch_id (
             name,
-            company:company_id(name)
+            company:company_id (
+              name
+            )
           )
         `);
 

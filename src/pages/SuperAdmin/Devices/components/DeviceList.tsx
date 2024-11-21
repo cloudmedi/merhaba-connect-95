@@ -47,7 +47,7 @@ export function DeviceList() {
                       {device.branches?.company?.name} - {device.branches?.name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Last seen: {new Date(device.last_seen || '').toLocaleString()}
+                      Last seen: {new Date(device.lastPingAt || '').toLocaleString()}
                     </p>
                   </div>
                 </div>
