@@ -2,13 +2,14 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { TrackInfo } from "./music/TrackInfo";
 import { AudioPlayer } from "./music/AudioPlayer";
+import { toast } from "sonner";
 
 interface MusicPlayerProps {
   playlist: {
     title: string;
     artwork: string;
     songs?: Array<{
-      id: string | number; // UUID veya number olabilir
+      id: string | number;
       title: string;
       artist: string;
       duration: string | number;
@@ -21,6 +22,12 @@ interface MusicPlayerProps {
 export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const currentSong = playlist.songs?.[currentSongIndex];
+
+  if (!playlist.songs || playlist.songs.length === 0) {
+    toast.error("Bu playlist'te çalınacak şarkı bulunmuyor.");
+    onClose();
+    return null;
+  }
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {

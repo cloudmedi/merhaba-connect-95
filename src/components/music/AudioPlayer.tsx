@@ -5,7 +5,7 @@ import { ProgressBar } from "./ProgressBar";
 import { VolumeControl } from "./VolumeControl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -14,7 +14,6 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) {
-  const { toast } = useToast();
   const {
     isPlaying,
     progress,
@@ -27,13 +26,11 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
 
   useEffect(() => {
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Hata",
+      toast.error("Ses dosyası oynatılamadı", {
         description: error,
       });
     }
-  }, [error, toast]);
+  }, [error]);
 
   if (error) {
     return (
