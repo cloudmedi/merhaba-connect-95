@@ -5,10 +5,10 @@ import { toast } from "sonner";
 export interface Device {
   id: string;
   name: string;
-  branch_id: string;
+  branch_id: string | null;
   category: 'player' | 'display' | 'controller';
   status: 'online' | 'offline';
-  ip_address?: string;
+  ip_address?: string | null;
   system_info: {
     os?: string;
     memory?: string;
@@ -19,15 +19,18 @@ export interface Device {
     powerOn?: string;
     powerOff?: string;
   };
-  last_seen?: string;
+  last_seen?: string | null;
   created_at?: string;
   updated_at?: string;
+  branch?: {
+    name: string;
+    location: string;
+  } | null;
 }
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
-  // Fetch devices
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
@@ -36,14 +39,21 @@ export const useDevices = () => {
         .select(`
           *,
           branch:branches(
-            id,
             name,
             location
           )
         `);
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match our Device type
+      return data.map((device: any) => ({
+        ...device,
+        category: device.category as 'player' | 'display' | 'controller',
+        status: device.status as 'online' | 'offline',
+        system_info: device.system_info || {},
+        schedule: device.schedule || {}
+      })) as Device[];
     },
   });
 

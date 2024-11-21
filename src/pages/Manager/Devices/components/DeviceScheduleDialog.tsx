@@ -1,74 +1,26 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { toast } from "sonner";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { Device } from '../hooks/useDevices';
 
 interface DeviceScheduleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  device: {
-    id: string;
-    schedule: {
-      powerOn: string;
-      powerOff: string;
-    };
-  };
+  device: Device;
 }
 
-export function DeviceScheduleDialog({
-  open,
-  onOpenChange,
-  device,
-}: DeviceScheduleDialogProps) {
-  const [powerOn, setPowerOn] = useState(device.schedule.powerOn);
-  const [powerOff, setPowerOff] = useState(device.schedule.powerOff);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically make an API call to update the schedule
-    toast.success("Schedule updated successfully");
-    onOpenChange(false);
-  };
-
+export function DeviceScheduleDialog({ open, onOpenChange, device }: DeviceScheduleDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Device Schedule</DialogTitle>
+          <DialogTitle>Schedule for {device.name}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="powerOn">Power On Time</Label>
-            <Input
-              id="powerOn"
-              type="time"
-              value={powerOn}
-              onChange={(e) => setPowerOn(e.target.value)}
-              required
-            />
+        <div className="grid gap-4 py-4">
+          <div>
+            <p>Power On: {device.schedule.powerOn || 'Not set'}</p>
+            <p>Power Off: {device.schedule.powerOff || 'Not set'}</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="powerOff">Power Off Time</Label>
-            <Input
-              id="powerOff"
-              type="time"
-              value={powerOff}
-              onChange={(e) => setPowerOff(e.target.value)}
-              required
-            />
-          </div>
-          <DialogFooter>
-            <Button type="submit">Save Schedule</Button>
-          </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
