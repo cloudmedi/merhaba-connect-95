@@ -8,6 +8,7 @@ interface FilePreviewListProps {
   audioRefs: MutableRefObject<{ [key: string]: HTMLAudioElement }>;
   onTogglePlay: (index: number) => void;
   onRemoveFile: (index: number) => void;
+  isUploading?: boolean;
 }
 
 export function FilePreviewList({
@@ -15,6 +16,7 @@ export function FilePreviewList({
   audioRefs,
   onTogglePlay,
   onRemoveFile,
+  isUploading = false,
 }: FilePreviewListProps) {
   return (
     <div className="space-y-2">
@@ -29,6 +31,7 @@ export function FilePreviewList({
               variant="ghost"
               className="h-8 w-8"
               onClick={() => onTogglePlay(index)}
+              disabled={isUploading}
             >
               {preview.isPlaying ? (
                 <Pause className="h-4 w-4" />
@@ -49,6 +52,7 @@ export function FilePreviewList({
             variant="ghost"
             className="h-8 w-8 text-red-500 hover:text-red-700"
             onClick={() => onRemoveFile(index)}
+            disabled={isUploading}
           >
             <X className="h-4 w-4" />
           </Button>
