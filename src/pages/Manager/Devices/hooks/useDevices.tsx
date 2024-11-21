@@ -124,7 +124,14 @@ export const useDevices = () => {
           system_info: device.system_info || {},
           schedule: device.schedule || {}
         })
-        .select('*, branches(*)')
+        .select(`
+          *,
+          branches (
+            id,
+            name,
+            company_id
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -150,7 +157,14 @@ export const useDevices = () => {
           schedule: device.schedule || undefined
         })
         .eq('id', id)
-        .select('*, branches(*)')
+        .select(`
+          *,
+          branches (
+            id,
+            name,
+            company_id
+          )
+        `)
         .single();
 
       if (error) throw error;
