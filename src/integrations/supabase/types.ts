@@ -9,6 +9,145 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      announcement_branches: {
+        Row: {
+          announcement_id: string
+          branch_id: string
+          created_at: string | null
+        }
+        Insert: {
+          announcement_id: string
+          branch_id: string
+          created_at?: string | null
+        }
+        Update: {
+          announcement_id?: string
+          branch_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_branches_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_files: {
+        Row: {
+          announcement_id: string | null
+          bunny_id: string | null
+          created_at: string | null
+          duration: number | null
+          file_name: string
+          file_url: string
+          id: string
+          interval: number | null
+          playback_type: string | null
+          scheduled_time: string | null
+          song_interval: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          announcement_id?: string | null
+          bunny_id?: string | null
+          created_at?: string | null
+          duration?: number | null
+          file_name: string
+          file_url: string
+          id?: string
+          interval?: number | null
+          playback_type?: string | null
+          scheduled_time?: string | null
+          song_interval?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          announcement_id?: string | null
+          bunny_id?: string | null
+          created_at?: string | null
+          duration?: number | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          interval?: number | null
+          playback_type?: string | null
+          scheduled_time?: string | null
+          song_interval?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_files_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          repeat_interval: number | null
+          repeat_type: string | null
+          start_date: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          repeat_interval?: number | null
+          repeat_type?: string | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          repeat_interval?: number | null
+          repeat_type?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_metrics: {
         Row: {
           created_at: string | null

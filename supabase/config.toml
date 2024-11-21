@@ -1,8 +1,8 @@
 project_id = "mfvacqmsaudhozgogfrx"
 
-[functions.upload-music]
+[functions.upload-announcement]
 verify_jwt = true
-[functions.upload-music.secrets]
+[functions.upload-announcement.secrets]
 BUNNY_STORAGE_NAME = "cloud-media"
 BUNNY_API_KEY = "252d6778-79bc-425f-995631ea893d-e258-4101"
 BUNNY_STORAGE_HOST = "uk.storage.bunnycdn.com"
