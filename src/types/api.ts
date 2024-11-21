@@ -32,7 +32,7 @@ export interface Device {
   updatedAt: string;
 }
 
-export interface Playlist {
+export interface PlaylistResponse {
   id: string;
   name: string;
   description?: string;
@@ -44,6 +44,22 @@ export interface Playlist {
   genre_id?: string;
   mood_id?: string;
   created_by?: string;
+  company: {
+    name: string;
+  } | null;
+  profiles?: Array<{
+    first_name: string;
+    last_name: string;
+  }> | null;
+  genre?: {
+    name: string;
+  } | null;
+  mood?: {
+    name: string;
+  } | null;
+}
+
+export interface Playlist extends Omit<PlaylistResponse, 'company' | 'profiles'> {
   company?: {
     name: string;
   } | null;

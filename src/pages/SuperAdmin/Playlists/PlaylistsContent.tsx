@@ -6,7 +6,7 @@ import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Playlist } from "@/types/api";
+import type { PlaylistResponse } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { toast } from "sonner";
@@ -24,12 +24,14 @@ export function PlaylistsContent() {
         .select(`
           *,
           company:company_id(name),
-          profiles:created_by(first_name, last_name)
+          profiles:created_by(first_name, last_name),
+          genre:genres(name),
+          mood:moods(name)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as Playlist[];
+      return data as PlaylistResponse[];
     }
   });
 
@@ -67,7 +69,7 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const handlePlayPlaylist = async (playlist: Playlist) => {
+  const handlePlayPlaylist = async (playlist: PlaylistResponse) => {
     try {
       const { data: songs, error } = await supabase
         .from('playlist_songs')
@@ -94,9 +96,9 @@ export function PlaylistsContent() {
       setCurrentPlaylist({
         id: playlist.id,
         title: playlist.name,
-        artwork_url: playlist.artwork_url,
-        genre: "Various",
-        mood: "Various",
+        artwork_url: playlist.artwork_url || null,
+        genre: playlist.genre?.name || "Various",
+        mood: playlist.mood?.name || "Various",
       });
 
     } catch (error) {
@@ -104,6 +106,14 @@ export function PlaylistsContent() {
       toast.error("Playlist şarkıları yüklenirken bir hata oluştu.");
     }
   };
+
+  const playlistsForGrid: GridPlaylist[] = filteredPlaylists.map(playlist => ({
+    id: playlist.id,
+    title: playlist.name,
+    artwork_url: playlist.artwork_url || null,
+    genre: playlist.genre?.name || "Various",
+    mood: playlist.mood?.name || "Various"
+  }));
 
   return (
     <div className="space-y-8">
@@ -130,7 +140,7 @@ export function PlaylistsContent() {
         <PlaylistGrid 
           title="Playlists" 
           description="Manage your playlists"
-          playlists={filteredPlaylists}
+          playlists={playlistsForGrid}
           isLoading={isLoading}
         />
       </div>

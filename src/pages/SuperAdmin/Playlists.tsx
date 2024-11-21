@@ -9,19 +9,8 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Playlist } from "@/types/api";
+import { PlaylistResponse } from "@/types/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
-
-interface PlaylistResponse {
-  id: string;
-  name: string;
-  description?: string;
-  artwork_url?: string;
-  created_at: string;
-  is_public: boolean;
-  company: { name: string } | null;
-  profiles: { first_name: string; last_name: string }[] | null;
-}
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,12 +28,14 @@ export default function Playlists() {
         .select(`
           *,
           company:company_id(name),
-          profiles:created_by(first_name, last_name)
+          profiles:created_by(first_name, last_name),
+          genre:genres(name),
+          mood:moods(name)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as PlaylistResponse[];
+      return data as PlaylistResponse[];
     }
   });
 
@@ -62,13 +53,45 @@ export default function Playlists() {
     }
   });
 
-  const handlePlayPlaylist = (playlist: PlaylistResponse) => {
-    setCurrentPlaylist(playlist);
-    setIsPlayerVisible(true);
-    toast({
-      title: "Now Playing",
-      description: `Playing ${playlist.name}`,
-    });
+  const handlePlayPlaylist = async (playlist: PlaylistResponse) => {
+    try {
+      const { data: songs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
+
+      if (error) throw error;
+
+      if (!songs || songs.length === 0) {
+        toast({
+          title: "No songs",
+          description: "This playlist has no songs to play.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setCurrentPlaylist(playlist);
+      setIsPlayerVisible(true);
+
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load playlist songs",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredPlaylists = playlists?.filter(playlist => 
@@ -118,7 +141,8 @@ export default function Playlists() {
           key={currentPlaylist.id}
           playlist={{
             title: currentPlaylist.name,
-            artwork: currentPlaylist.artwork_url || "/placeholder.svg"
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg",
+            songs: []
           }}
           onClose={() => {
             setIsPlayerVisible(false);
