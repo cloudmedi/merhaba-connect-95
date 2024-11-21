@@ -32,7 +32,7 @@ export function UsersTable() {
           is_active,
           created_at,
           updated_at,
-          companies:company_id (
+          companies (
             id,
             name,
             subscription_status,
@@ -57,24 +57,6 @@ export function UsersTable() {
 
       if (filters.status && filters.status !== 'all') {
         query = query.eq('is_active', filters.status === 'active');
-      }
-
-      if (filters.license && filters.license !== 'all') {
-        query = query.eq('licenses.type', filters.license);
-      }
-
-      if (filters.expiry && filters.expiry !== 'all') {
-        const today = new Date().toISOString();
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-        const futureDate = thirtyDaysFromNow.toISOString();
-
-        if (filters.expiry === 'this-month') {
-          query = query.gte('licenses.end_date', today)
-                      .lte('licenses.end_date', futureDate);
-        } else if (filters.expiry === 'expired') {
-          query = query.lt('licenses.end_date', today);
-        }
       }
 
       const { data, error } = await query;
