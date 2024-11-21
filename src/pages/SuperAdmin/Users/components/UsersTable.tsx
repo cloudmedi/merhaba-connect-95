@@ -23,7 +23,15 @@ export function UsersTable() {
       let query = supabase
         .from('profiles')
         .select(`
-          *,
+          id,
+          email,
+          first_name,
+          last_name,
+          role,
+          company_id,
+          is_active,
+          created_at,
+          updated_at,
           companies:company_id (
             id,
             name,
