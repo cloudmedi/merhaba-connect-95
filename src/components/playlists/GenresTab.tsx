@@ -1,33 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Genre {
-  id: number;
+  id: string;
   name: string;
+  description: string | null;
 }
 
 interface GenresTabProps {
   selectedGenres: Genre[];
   onSelectGenre: (genre: Genre) => void;
-  onUnselectGenre: (genreId: number) => void;
+  onUnselectGenre: (genreId: string) => void;
 }
-
-const availableGenres: Genre[] = [
-  { id: 1, name: "Pop" },
-  { id: 2, name: "Rock" },
-  { id: 3, name: "Jazz" },
-  { id: 4, name: "Hip Hop" },
-  { id: 5, name: "Classical" },
-];
 
 export function GenresTab({ selectedGenres, onSelectGenre, onUnselectGenre }: GenresTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [genres, setGenres] = useState<Genre[]>([]);
 
-  const filteredGenres = availableGenres.filter((genre) =>
-    genre.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchGenres = async () => {
+      const { data, error } = await supabase
+        .from('genres')
+        .select('*')
+        .ilike('name', `%${searchQuery}%`);
+      
+      if (error) {
+        console.error('Error fetching genres:', error);
+        return;
+      }
+      
+      setGenres(data || []);
+    };
+
+    fetchGenres();
+  }, [searchQuery]);
 
   return (
     <div className="space-y-4">
@@ -39,7 +48,7 @@ export function GenresTab({ selectedGenres, onSelectGenre, onUnselectGenre }: Ge
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredGenres.map((genre) => {
+        {genres.map((genre) => {
           const isSelected = selectedGenres.some((g) => g.id === genre.id);
           return (
             <div
@@ -63,7 +72,12 @@ export function GenresTab({ selectedGenres, onSelectGenre, onUnselectGenre }: Ge
                   }
                 }}
               />
-              <span className="text-sm font-medium">{genre.name}</span>
+              <div>
+                <span className="text-sm font-medium">{genre.name}</span>
+                {genre.description && (
+                  <p className="text-xs text-gray-500">{genre.description}</p>
+                )}
+              </div>
             </div>
           );
         })}

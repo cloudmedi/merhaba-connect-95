@@ -1,37 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
-  description: string;
+  description: string | null;
 }
 
 interface CategoriesTabProps {
   selectedCategories: Category[];
   onSelectCategory: (category: Category) => void;
-  onUnselectCategory: (categoryId: number) => void;
+  onUnselectCategory: (categoryId: string) => void;
 }
-
-// Mock data - Replace with actual API call
-const availableCategories: Category[] = [
-  { id: 1, name: "Cozy Cafe", description: "Perfect for coffee shops and cafes" },
-  { id: 2, name: "Shop Sound", description: "Retail and shopping environment" },
-  { id: 3, name: "Restaurant Vibes", description: "Dining and restaurant atmosphere" },
-  { id: 4, name: "Lounge Music", description: "Hotel lounges and bars" },
-  { id: 5, name: "Spa Relaxation", description: "Wellness centers and spas" },
-  { id: 6, name: "Gym Energy", description: "Fitness centers and gyms" },
-];
 
 export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselectCategory }: CategoriesTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const filteredCategories = availableCategories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .ilike('name', `%${searchQuery}%`);
+      
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return;
+      }
+      
+      setCategories(data || []);
+    };
+
+    fetchCategories();
+  }, [searchQuery]);
 
   return (
     <div className="space-y-4">
@@ -46,7 +51,7 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredCategories.map((category) => {
+        {categories.map((category) => {
           const isSelected = selectedCategories.some((c) => c.id === category.id);
           return (
             <div
@@ -72,7 +77,9 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
               />
               <div>
                 <h4 className="text-sm font-medium">{category.name}</h4>
-                <p className="text-sm text-gray-500">{category.description}</p>
+                {category.description && (
+                  <p className="text-sm text-gray-500">{category.description}</p>
+                )}
               </div>
             </div>
           );
