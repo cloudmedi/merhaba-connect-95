@@ -47,10 +47,12 @@ export function PlaylistDetail() {
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { data: playlist, isLoading } = useQuery({
+  const { data: playlist, isLoading, error } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      // First, fetch the playlist details
+      if (!id) throw new Error("Playlist ID is required");
+
+      // First, fetch the playlist details with genre and mood
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -66,7 +68,12 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
-      // Then, fetch the songs for this playlist
+      if (!playlist) {
+        toast.error("Playlist bulunamadı");
+        throw new Error("Playlist not found");
+      }
+
+      // Then, fetch the songs for this playlist with their details
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -89,21 +96,32 @@ export function PlaylistDetail() {
       }
 
       // Map the songs data
-      const songs = playlistSongs.map(ps => ({
+      const songs = playlistSongs?.map(ps => ({
         id: ps.songs.id,
         title: ps.songs.title,
         artist: ps.songs.artist || 'Unknown Artist',
         duration: ps.songs.duration,
         file_url: ps.songs.file_url,
         artwork_url: ps.songs.artwork_url
-      }));
+      })) || [];
 
       return {
         ...playlist,
         songs
       } as PlaylistData;
-    }
+    },
+    retry: 1
   });
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
+        <div className="text-center text-red-500">
+          Bir hata oluştu. Lütfen daha sonra tekrar deneyin.
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
