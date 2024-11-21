@@ -33,7 +33,10 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration')
     }
 
-    console.log('Bunny CDN configuration validated')
+    console.log('Bunny CDN configuration:', {
+      storageZone: bunnyStorageZone,
+      host: bunnyStorageHost
+    })
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
@@ -42,19 +45,24 @@ serve(async (req) => {
 
     console.log('Uploading to Bunny CDN:', bunnyUrl)
 
-    // Upload to Bunny CDN
+    // Upload to Bunny CDN with proper headers
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
         'Content-Type': file.type,
+        'Accept': '*/*'
       },
       body: file,
     })
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text()
-      console.error('Bunny CDN upload failed:', errorText)
+      console.error('Bunny CDN upload failed:', {
+        status: uploadResponse.status,
+        statusText: uploadResponse.statusText,
+        error: errorText
+      })
       throw new Error(`Failed to upload to Bunny CDN: ${errorText}`)
     }
 
