@@ -1,7 +1,7 @@
 import React from 'react';
 import ContentLoader from 'react-content-loader';
 
-export const DataTableLoader = () => {
+const DataTableLoader = () => {
   return (
     <div className="rounded-md border">
       <div className="relative w-full overflow-auto">
@@ -35,3 +35,5 @@ export const DataTableLoader = () => {
     </div>
   );
 };
+
+export default DataTableLoader;

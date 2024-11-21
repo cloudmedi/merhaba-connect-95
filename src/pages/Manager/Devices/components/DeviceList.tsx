@@ -8,7 +8,7 @@ import { BulkActions } from "./BulkActions";
 import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { DeviceGroupManagement, DeviceGroup } from "./DeviceGroupManagement";
 import { useDevices } from "../hooks/useDevices";
-import { DataTableLoader } from "@/components/loaders/DataTableLoader";
+import DataTableLoader from "@/components/loaders/DataTableLoader";
 
 export function DeviceList() {
   const [searchTerm, setSearchTerm] = useState("");
