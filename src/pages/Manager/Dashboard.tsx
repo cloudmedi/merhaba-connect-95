@@ -5,52 +5,55 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { GridPlaylist } from "@/components/dashboard/types";
-import type { Playlist } from "@/types/api";
 
-const transformPlaylistToGridFormat = (playlist: Playlist): GridPlaylist => ({
+const transformPlaylistToGridFormat = (playlist: any): GridPlaylist => ({
   id: playlist.id,
   title: playlist.name,
   artwork_url: playlist.artwork_url || "/placeholder.svg",
-  genre: "Various", // You might want to fetch this from the genres table
-  mood: "Various", // You might want to fetch this from the moods table
+  genre: playlist.genres?.name || "Various",
+  mood: playlist.moods?.name || "Various",
 });
 
-// Fetch categories and their playlists
-const fetchCategoriesWithPlaylists = async () => {
-  // First fetch all categories
-  const { data: categories, error: categoriesError } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
-
-  if (categoriesError) throw categoriesError;
-
-  // Then fetch all playlists
-  const { data: playlists, error: playlistsError } = await supabase
-    .from('playlists')
-    .select(`
-      *,
-      category:categories(*)
-    `)
-    .order('created_at', { ascending: false });
-
-  if (playlistsError) throw playlistsError;
-
-  // Group playlists by category
-  const playlistsByCategory = categories.map(category => ({
-    category,
-    playlists: playlists
-      .filter(playlist => playlist.category?.id === category.id)
-      .map(transformPlaylistToGridFormat)
-  }));
-
-  return playlistsByCategory;
-};
-
 export default function ManagerDashboard() {
+  const [searchQuery, setSearchQuery] = useState("");
+
   const { data: categorizedPlaylists, isLoading } = useQuery({
     queryKey: ['categories-with-playlists'],
-    queryFn: fetchCategoriesWithPlaylists,
+    queryFn: async () => {
+      // First fetch all categories
+      const { data: categories, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (categoriesError) throw categoriesError;
+
+      // Then fetch all playlists with their related data
+      const { data: playlists, error: playlistsError } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          genres:genre_id(*),
+          moods:mood_id(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (playlistsError) throw playlistsError;
+
+      // Group playlists by category
+      return categories.map(category => ({
+        category,
+        playlists: playlists
+          .filter(playlist => {
+            // If there's a search query, filter by playlist name
+            if (searchQuery) {
+              return playlist.name.toLowerCase().includes(searchQuery.toLowerCase());
+            }
+            return true;
+          })
+          .map(transformPlaylistToGridFormat)
+      }));
+    },
   });
 
   return (
@@ -66,6 +69,8 @@ export default function ManagerDashboard() {
             type="search"
             placeholder="Search playlists..."
             className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
