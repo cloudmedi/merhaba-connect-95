@@ -4,7 +4,7 @@ import * as mm from 'https://esm.sh/music-metadata-browser'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -14,24 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Content-Type:', req.headers.get('content-type'));
-    
-    // Ensure we have the right content type
-    const contentType = req.headers.get('content-type');
-    if (!contentType || !contentType.includes('multipart/form-data')) {
-      console.error('Invalid content type:', contentType);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid content type', 
-          details: `Expected multipart/form-data but got ${contentType}` 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 400 
-        }
-      );
-    }
-
     // Parse form data
     let formData;
     try {
@@ -40,14 +22,8 @@ serve(async (req) => {
     } catch (error) {
       console.error('Form data parsing error:', error);
       return new Response(
-        JSON.stringify({ 
-          error: 'Upload failed', 
-          details: 'Failed to parse form data: ' + error.message 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 400 
-        }
+        JSON.stringify({ error: 'Failed to parse form data: ' + error.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -146,24 +122,17 @@ serve(async (req) => {
         message: 'Upload successful',
         song: savedSong
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Upload error:', error);
-
     return new Response(
       JSON.stringify({ 
         error: 'Upload failed', 
         details: error.message 
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
