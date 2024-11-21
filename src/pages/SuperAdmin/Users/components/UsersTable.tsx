@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserTableRow } from "./UserTableRow";
 import { useQuery } from "@tanstack/react-query";
-import { userService } from "@/services/users";
+import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -18,7 +18,41 @@ export function UsersTable() {
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users', filters],
-    queryFn: () => userService.getUsers(filters),
+    queryFn: async () => {
+      let query = supabase
+        .from('profiles')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            subscription_status,
+            subscription_ends_at
+          ),
+          licenses (
+            type,
+            start_date,
+            end_date,
+            quantity
+          )
+        `);
+
+      if (filters.search) {
+        query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+      }
+
+      if (filters.role) {
+        query = query.eq('role', filters.role);
+      }
+
+      if (filters.status) {
+        query = query.eq('is_active', filters.status === 'active');
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    }
   });
 
   if (isLoading) {
