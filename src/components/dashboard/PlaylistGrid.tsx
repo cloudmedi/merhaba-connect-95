@@ -77,6 +77,15 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If it's a relative URL, prepend the base URL
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -140,7 +149,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: ps.songs.file_url
+              file_url: getFullUrl(ps.songs.file_url)
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}

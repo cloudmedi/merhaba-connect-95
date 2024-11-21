@@ -14,6 +14,8 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       return;
     }
 
+    console.log('Attempting to load audio from URL:', audioUrl); // Debug log
+
     setIsLoading(true);
     setError(null);
 
@@ -21,6 +23,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audioRef.current = audio;
 
     const handleCanPlay = () => {
+      console.log('Audio can play now'); // Debug log
       setIsLoading(false);
       setDuration(audio.duration);
       if (isPlaying) {
@@ -33,6 +36,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     };
 
     const handleLoadStart = () => {
+      console.log('Audio loading started'); // Debug log
       setIsLoading(true);
       setError(null);
     };
@@ -40,7 +44,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleError = (e: ErrorEvent) => {
       console.error('Audio error:', e);
       setIsLoading(false);
-      setError("Ses dosyası yüklenemedi. URL: " + audioUrl);
+      setError(`Ses dosyası yüklenemedi. URL: ${audioUrl}`);
       setIsPlaying(false);
     };
 
@@ -62,7 +66,8 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
-    // Preload the audio
+    // Force audio preload
+    audio.preload = 'auto';
     audio.load();
 
     return () => {
