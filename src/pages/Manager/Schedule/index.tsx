@@ -17,12 +17,12 @@ export default function Schedule() {
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
   const handleEventDrop = async (info: any) => {
-    const updatedEvent = {
+    const updatedEvent: ScheduleEvent = {
       ...info.event.extendedProps,
       id: info.event.id,
       title: info.event.title,
-      start: info.event.start,
-      end: info.event.end,
+      start_time: info.event.start.toISOString(),
+      end_time: info.event.end.toISOString(),
     };
 
     try {
@@ -36,6 +36,17 @@ export default function Schedule() {
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  const formattedEvents = events.map(event => ({
+    id: event.id,
+    title: event.title,
+    start: new Date(event.start_time),
+    end: new Date(event.end_time),
+    backgroundColor: event.color.primary,
+    borderColor: event.color.primary,
+    textColor: event.color.text,
+    extendedProps: event
+  }));
 
   return (
     <div className="p-6 space-y-6">
@@ -94,16 +105,7 @@ export default function Schedule() {
           dayMaxEvents={true}
           weekends={true}
           nowIndicator={true}
-          events={events.map(event => ({
-            id: event.id,
-            title: event.title,
-            start: event.start_time,
-            end: event.end_time,
-            backgroundColor: event.color.primary,
-            borderColor: event.color.primary,
-            textColor: event.color.text,
-            extendedProps: event
-          }))}
+          events={formattedEvents}
         />
       </div>
 

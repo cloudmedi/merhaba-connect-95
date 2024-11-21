@@ -25,7 +25,7 @@ export const useScheduleEvents = () => {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return data as ScheduleEvent[];
     },
   });
 
@@ -44,7 +44,6 @@ export const useScheduleEvents = () => {
 
       if (error) throw error;
 
-      // Insert device assignments if any
       if (event.branches?.length) {
         const { error: assignmentError } = await supabase
           .from('schedule_device_assignments')
@@ -71,31 +70,38 @@ export const useScheduleEvents = () => {
   });
 
   const updateEvent = useMutation({
-    mutationFn: async ({ id, ...event }: ScheduleEvent) => {
+    mutationFn: async (event: ScheduleEvent) => {
       const { error: updateError } = await supabase
         .from('schedule_events')
-        .update(event)
-        .eq('id', id);
+        .update({
+          title: event.title,
+          description: event.description,
+          playlist_id: event.playlist_id,
+          start_time: event.start_time,
+          end_time: event.end_time,
+          category: event.category,
+          color: event.color,
+          recurrence: event.recurrence,
+          notifications: event.notifications,
+        })
+        .eq('id', event.id);
 
       if (updateError) throw updateError;
 
-      // Update device assignments
       if (event.branches) {
-        // First delete existing assignments
         const { error: deleteError } = await supabase
           .from('schedule_device_assignments')
           .delete()
-          .eq('schedule_id', id);
+          .eq('schedule_id', event.id);
 
         if (deleteError) throw deleteError;
 
-        // Then insert new ones
         if (event.branches.length > 0) {
           const { error: assignmentError } = await supabase
             .from('schedule_device_assignments')
             .insert(
               event.branches.map(deviceId => ({
-                schedule_id: id,
+                schedule_id: event.id,
                 device_id: deviceId
               }))
             );

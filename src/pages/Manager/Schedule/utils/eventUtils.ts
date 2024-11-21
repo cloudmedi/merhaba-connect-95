@@ -6,10 +6,11 @@ export const checkEventConflicts = (
 ): ScheduleEvent[] => {
   return existingEvents.filter(existingEvent => {
     const hasTimeConflict =
-      (newEvent.start <= existingEvent.end && newEvent.end >= existingEvent.start);
+      (new Date(newEvent.start_time) <= new Date(existingEvent.end_time) && 
+       new Date(newEvent.end_time) >= new Date(existingEvent.start_time));
     
-    const hasBranchOverlap = newEvent.branches.some(branch =>
-      existingEvent.branches.includes(branch)
+    const hasBranchOverlap = newEvent.branches?.some(branch =>
+      existingEvent.branches?.includes(branch)
     );
 
     return hasTimeConflict && hasBranchOverlap;
@@ -30,12 +31,11 @@ export const generateEventColor = (category: string): { primary: string; seconda
 
 export const exportEvents = (events: ScheduleEvent[], format: 'ics' | 'csv') => {
   if (format === 'ics') {
-    // Implementation for ICS export
     const icsContent = events.map(event => `
 BEGIN:VEVENT
 SUMMARY:${event.title}
-DTSTART:${event.start.toISOString()}
-DTEND:${event.end.toISOString()}
+DTSTART:${new Date(event.start_time).toISOString()}
+DTEND:${new Date(event.end_time).toISOString()}
 DESCRIPTION:Category: ${event.category}
 END:VEVENT
     `).join('\n');
@@ -47,15 +47,14 @@ END:VEVENT
     link.download = 'schedule.ics';
     link.click();
   } else {
-    // Implementation for CSV export
     const csvContent = [
       ['Title', 'Start', 'End', 'Category', 'Branches'].join(','),
       ...events.map(event => [
         event.title,
-        event.start.toISOString(),
-        event.end.toISOString(),
+        event.start_time,
+        event.end_time,
         event.category,
-        event.branches.join(';')
+        event.branches?.join(';')
       ].join(','))
     ].join('\n');
 

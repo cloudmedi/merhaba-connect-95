@@ -16,15 +16,15 @@ export interface ScheduleEvent {
   title: string;
   description?: string;
   playlist_id?: string;
-  start_time: Date;
-  end_time: Date;
+  start_time: string;
+  end_time: string;
   category: EventCategory;
   color: EventColor;
   branches?: string[];
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;
-    endDate?: Date;
+    endDate?: string;
   };
   notifications?: EventNotification[];
   created_by?: string;
