@@ -21,6 +21,7 @@ export interface Device {
     powerOn?: string;
     powerOff?: string;
   };
+  token?: string;
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;

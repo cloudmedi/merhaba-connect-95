@@ -21,7 +21,14 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
   const [branchName, setBranchName] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
+  const [token, setToken] = useState("");
   const { createDevice } = useDevices();
+
+  const generateToken = () => {
+    // Generate a random 6-digit number
+    const newToken = Math.floor(100000 + Math.random() * 900000).toString();
+    setToken(newToken);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +39,15 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
       category,
       status: 'offline',
       system_info: {},
-      schedule: {}
+      schedule: {},
+      token: token // Add token to the device data
     });
 
     onOpenChange(false);
     setBranchName("");
     setLocation("");
     setCategory("player");
+    setToken("");
   };
 
   return (
@@ -82,6 +91,27 @@ export function AddDeviceDialog({ open, onOpenChange }: AddDeviceDialogProps) {
                 <SelectItem value="controller">Controller</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="token">Pairing Token</Label>
+            <div className="flex gap-2">
+              <Input
+                id="token"
+                value={token}
+                onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-digit token"
+                className="w-full"
+                maxLength={6}
+                required
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={generateToken}
+              >
+                Generate
+              </Button>
+            </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
