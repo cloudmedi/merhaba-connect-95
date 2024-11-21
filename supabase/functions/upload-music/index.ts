@@ -24,21 +24,18 @@ serve(async (req) => {
     console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type)
 
     // Get Bunny CDN configuration
-    const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
-    const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
+    const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
 
-    if (!bunnyStorageHost || !bunnyStorageZoneName || !bunnyApiKey) {
+    if (!bunnyApiKey || !bunnyStorageZoneName) {
       console.error('Missing Bunny CDN configuration:', {
-        host: !!bunnyStorageHost,
-        zoneName: !!bunnyStorageZoneName,
-        apiKey: !!bunnyApiKey
+        apiKey: !!bunnyApiKey,
+        zoneName: !!bunnyStorageZoneName
       })
       throw new Error('Missing Bunny CDN configuration')
     }
 
     console.log('Bunny CDN configuration loaded:', {
-      host: bunnyStorageHost,
       zoneName: bunnyStorageZoneName
     })
 
@@ -46,31 +43,29 @@ serve(async (req) => {
     const fileExt = file.name.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
-    // Construct proper Bunny CDN URL
-    const bunnyUrl = `https://${bunnyStorageHost}/${uniqueFileName}`
+    // Construct proper Bunny CDN URL and headers
+    const bunnyUrl = `https://storage.bunnycdn.com/${bunnyStorageZoneName}/${uniqueFileName}`
+    const bunnyHeaders = {
+      'AccessKey': bunnyApiKey,
+      'Content-Type': file.type || 'application/octet-stream'
+    }
 
     console.log('Attempting upload to Bunny CDN:', bunnyUrl)
 
-    // Upload to Bunny CDN with proper headers and authentication
+    // Upload to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
-      headers: {
-        'AccessKey': bunnyApiKey,
-        'Content-Type': file.type || 'application/octet-stream',
-        'Accept': '*/*'
-      },
-      body: file,
-    })
-
-    const responseText = await uploadResponse.text()
-    console.log('Bunny CDN Response:', {
-      status: uploadResponse.status,
-      statusText: uploadResponse.statusText,
-      headers: Object.fromEntries(uploadResponse.headers.entries()),
-      body: responseText
+      headers: bunnyHeaders,
+      body: file
     })
 
     if (!uploadResponse.ok) {
+      const responseText = await uploadResponse.text()
+      console.error('Bunny CDN upload failed:', {
+        status: uploadResponse.status,
+        statusText: uploadResponse.statusText,
+        response: responseText
+      })
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`)
     }
 
