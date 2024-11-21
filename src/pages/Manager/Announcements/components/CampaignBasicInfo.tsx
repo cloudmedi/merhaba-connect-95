@@ -5,14 +5,11 @@ import { FileUploadPreview } from "./FileUploadPreview";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { CampaignFormData } from "../types";
 
 interface CampaignBasicInfoProps {
-  formData: {
-    title: string;
-    description: string;
-    files: File[];
-  };
-  onFormDataChange: (data: Partial<typeof formData>) => void;
+  formData: CampaignFormData;
+  onFormDataChange: (data: Partial<CampaignFormData>) => void;
 }
 
 export function CampaignBasicInfo({ formData, onFormDataChange }: CampaignBasicInfoProps) {

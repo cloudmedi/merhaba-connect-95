@@ -31,16 +31,20 @@ export function CampaignRow({ campaign }: CampaignRowProps) {
               )}
             </Button>
             <div>
-              <div className="font-medium">{campaign.name}</div>
-              <div className="text-sm text-gray-500">{campaign.fileCount} files</div>
+              <div className="font-medium">{campaign.title}</div>
+              <div className="text-sm text-gray-500">
+                {campaign.announcement_files.length} files
+              </div>
             </div>
           </div>
         </TableCell>
         <TableCell>
-          {campaign.schedule ? (
+          {campaign.start_date ? (
             <div>
-              <div className="font-medium">{campaign.schedule}</div>
-              <div className="text-sm text-gray-500">{campaign.scheduleTime}</div>
+              <div className="font-medium">{new Date(campaign.start_date).toLocaleDateString()}</div>
+              <div className="text-sm text-gray-500">
+                {new Date(campaign.start_date).toLocaleTimeString()}
+              </div>
             </div>
           ) : (
             <Button variant="link" className="text-[#6E59A5] p-0 h-auto">
@@ -71,10 +75,10 @@ export function CampaignRow({ campaign }: CampaignRowProps) {
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded && campaign.files.length > 0 && (
+      {isExpanded && campaign.announcement_files.length > 0 && (
         <TableRow>
           <TableCell colSpan={4} className="bg-gray-50">
-            <CampaignFiles files={campaign.files} />
+            <CampaignFiles files={campaign.announcement_files} />
           </TableCell>
         </TableRow>
       )}

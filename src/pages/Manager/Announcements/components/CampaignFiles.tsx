@@ -23,7 +23,7 @@ export function CampaignFiles({ files }: CampaignFilesProps) {
             className="flex items-center justify-between p-2 rounded-lg hover:bg-white transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="text-sm font-medium">{file.name}</div>
+              <div className="text-sm font-medium">{file.file_name}</div>
               <div className="text-xs text-gray-500">{file.size}</div>
               <div className="text-xs text-gray-500">{file.duration}</div>
             </div>
