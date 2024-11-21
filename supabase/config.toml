@@ -6,4 +6,4 @@ verify_jwt = true
 BUNNY_STORAGE_NAME = "cloud-media"
 BUNNY_API_KEY = "252d6778-79bc-425f-995631ea893d-e258-4101"
 BUNNY_STORAGE_HOST = "uk.storage.bunnycdn.com"
-BUNNY_STORAGE_ZONE_NAME = "cloud-media"
+BUNNY_STORAGE_ZONE_NAME = "cloud-media.b-cdn.net"
