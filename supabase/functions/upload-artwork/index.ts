@@ -6,19 +6,22 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    // Get the form data from the request
     const formData = await req.formData()
-    const file = formData.get('file')
-    const fileName = formData.get('fileName')
+    const file = formData.get('file') as File
+    const fileName = formData.get('fileName') as string
 
     if (!file || !fileName) {
       throw new Error('File and fileName are required')
     }
 
+    // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { PlaylistForm } from "./PlaylistForm";
 import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
@@ -48,17 +48,15 @@ export function CreatePlaylist() {
 
       let artwork_url = null;
       if (playlistData.artwork) {
-        const file = playlistData.artwork;
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
-
-        // Upload to Bunny CDN via Edge Function
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('fileName', fileName);
+        formData.append('file', playlistData.artwork);
+        formData.append('fileName', `${crypto.randomUUID()}.${playlistData.artwork.name.split('.').pop()}`);
 
         const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-artwork', {
-          body: formData
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+          }
         });
 
         if (uploadError) throw uploadError;
