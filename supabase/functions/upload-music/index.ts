@@ -14,11 +14,13 @@ serve(async (req) => {
 
   try {
     console.log('Starting file upload process...')
+    
+    // Get the form data
     const formData = await req.formData()
     const file = formData.get('file')
 
-    if (!file) {
-      throw new Error('No file uploaded')
+    if (!file || !(file instanceof File)) {
+      throw new Error('No file uploaded or invalid file')
     }
 
     console.log('File received:', {
@@ -39,11 +41,7 @@ serve(async (req) => {
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
 
     if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageZoneName) {
-      console.error('Missing Bunny CDN configuration:', {
-        hasApiKey: !!bunnyApiKey,
-        hasHost: !!bunnyStorageHost,
-        hasZoneName: !!bunnyStorageZoneName
-      })
+      console.error('Missing Bunny CDN configuration')
       throw new Error('Missing Bunny CDN configuration')
     }
 
@@ -58,7 +56,7 @@ serve(async (req) => {
     // Convert file to ArrayBuffer for upload
     const arrayBuffer = await file.arrayBuffer()
 
-    // Upload to Bunny CDN with detailed logging
+    // Upload to Bunny CDN
     console.log('Initiating Bunny CDN upload...')
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
@@ -69,14 +67,9 @@ serve(async (req) => {
       body: arrayBuffer
     })
 
-    const responseText = await uploadResponse.text()
-    console.log('Bunny CDN upload response:', {
-      status: uploadResponse.status,
-      statusText: uploadResponse.statusText,
-      response: responseText
-    })
-
     if (!uploadResponse.ok) {
+      const responseText = await uploadResponse.text()
+      console.error('Bunny CDN upload failed:', responseText)
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`)
     }
 

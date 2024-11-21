@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { UploadProgress } from "./UploadProgress";
-import { UploadZone } from "./UploadZone";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface UploadMusicDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+import { UploadProgress } from "./UploadProgress";
+import { UploadZone } from "./UploadZone";
 
 interface UploadingFile {
   file: File;
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+}
+
+interface UploadMusicDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps) {
@@ -25,7 +25,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
   const queryClient = useQueryClient();
 
   const handleFileSelect = async (files: FileList) => {
-    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
     const maxSize = 20 * 1024 * 1024; // 20MB
 
     for (const file of Array.from(files)) {
@@ -60,24 +60,22 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       try {
         console.log('Starting upload for:', file.name);
         
+        // Get the session for authentication
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No active session');
+        }
+
         // Create FormData object
         const formData = new FormData();
         formData.append('file', file);
-
-        // Update progress to show upload started
-        setUploadingFiles(prev => ({
-          ...prev,
-          [file.name]: {
-            ...prev[file.name],
-            progress: 10
-          }
-        }));
 
         // Call the upload-music edge function
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
           headers: {
             'Accept': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
           }
         });
 
