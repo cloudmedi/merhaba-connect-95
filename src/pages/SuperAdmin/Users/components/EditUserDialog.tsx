@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -45,14 +45,16 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
   const updateUserMutation = useMutation({
     mutationFn: async (values: EditUserFormValues) => {
-      const updateData = {
+      const updateData: Partial<User> & { password?: string } = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         role: values.role,
         company: {
-          id: user.company?.id,
+          id: user.company?.id || "",
           name: values.companyName,
+          subscriptionStatus: user.company?.subscriptionStatus || "trial",
+          subscriptionEndsAt: user.company?.subscriptionEndsAt || null,
         }
       };
 
