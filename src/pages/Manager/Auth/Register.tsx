@@ -1,113 +1,102 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { Music2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  companyName: z.string().min(2, 'Company name must be at least 2 characters'),
 });
 
-export default function ManagerRegister() {
+type FormValues = z.infer<typeof formSchema>;
+
+export default function Register() {
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { toast } = useToast();
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      companyName: "",
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      companyName: '',
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     try {
-      // First create the company
-      const { data: company, error: companyError } = await supabase
+      setIsLoading(true);
+
+      // 1. Create company
+      const { data: companyData, error: companyError } = await supabase
         .from('companies')
-        .insert({
-          name: values.companyName,
-          subscription_status: 'trial',
-          subscription_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days trial
-        })
+        .insert([{ name: data.companyName }])
         .select()
         .single();
 
       if (companyError) throw companyError;
 
-      // Then create the user with Supabase Auth
-      const { data: { user }, error: authError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
+      // 2. Sign up user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            firstName: values.firstName,
-            lastName: values.lastName,
+            firstName: data.firstName,
+            lastName: data.lastName,
             role: 'manager',
-            companyId: company.id
-          }
-        }
+          },
+        },
       });
 
       if (authError) throw authError;
-      if (!user) throw new Error('User creation failed');
 
-      // Wait for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 3. Update profile with company_id
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ company_id: companyData.id })
+          .eq('id', authData.user.id);
 
-      // Update the profile with company_id
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          company_id: company.id,
-          role: 'manager',
-          is_active: true
-        })
-        .eq('id', user.id);
+        if (profileError) throw profileError;
+      }
 
-      if (profileError) throw profileError;
+      toast({
+        title: 'Registration successful!',
+        description: 'Please check your email to verify your account.',
+      });
 
-      toast.success("Registration successful! Please login to continue.");
-      navigate("/manager/login");
+      navigate('/manager/login');
     } catch (error: any) {
-      console.error('Registration error:', error);
-      toast.error(error.message || "An error occurred during registration");
+      toast({
+        variant: 'destructive',
+        title: 'Registration failed',
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Music2 className="h-6 w-6 text-[#9b87f5]" />
-            <h2 className="text-2xl font-bold">Merhaba Music</h2>
-          </div>
-          <CardTitle className="text-2xl">Manager Registration</CardTitle>
-          <CardDescription>
-            Create your manager account to get started
-          </CardDescription>
+        <CardHeader>
+          <CardTitle>Register as Manager</CardTitle>
+          <CardDescription>Create your account and company profile</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -119,7 +108,7 @@ export default function ManagerRegister() {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your first name" {...field} />
+                      <Input placeholder="John" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,7 +122,7 @@ export default function ManagerRegister() {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your last name" {...field} />
+                      <Input placeholder="Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,7 +136,7 @@ export default function ManagerRegister() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
+                      <Input type="email" placeholder="john@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,11 +150,7 @@ export default function ManagerRegister() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Enter your password" 
-                        {...field} 
-                      />
+                      <Input type="password" placeholder="••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -179,29 +164,16 @@ export default function ManagerRegister() {
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your company name" {...field} />
+                      <Input placeholder="Acme Inc." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button 
-                type="submit" 
-                className="w-full bg-[#9b87f5] hover:bg-[#7E69AB]"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? "Registering..." : "Register"}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Registering...' : 'Register'}
               </Button>
-
-              <div className="text-center mt-4">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <Link to="/manager/login" className="text-[#9b87f5] hover:text-[#7E69AB]">
-                    Sign in
-                  </Link>
-                </p>
-              </div>
             </form>
           </Form>
         </CardContent>
