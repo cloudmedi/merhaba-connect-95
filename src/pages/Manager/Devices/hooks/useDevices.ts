@@ -20,14 +20,16 @@ interface Schedule {
   [key: string]: unknown;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+  company_id: string | null;
+}
+
 export interface Device extends Omit<DbDevice, 'system_info' | 'schedule'> {
   system_info: SystemInfo;
   schedule: Schedule;
-  branches?: {
-    id: string;
-    name: string;
-    company_id: string;
-  } | null;
+  branches?: Branch | null;
 }
 
 export const useDevices = () => {
@@ -99,7 +101,8 @@ export const useDevices = () => {
       return (devices || []).map(device => ({
         ...device,
         system_info: device.system_info as SystemInfo,
-        schedule: device.schedule as Schedule
+        schedule: device.schedule as Schedule,
+        branches: device.branches as Branch
       }));
     },
   });
