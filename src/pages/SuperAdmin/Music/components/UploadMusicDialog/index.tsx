@@ -69,8 +69,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           body: formData,
           headers: {
             'Accept': 'application/json',
-          },
-          responseType: 'json'
+            'Content-Type': 'multipart/form-data',
+          }
         });
 
         console.log('Upload response:', { data, error });
