@@ -40,13 +40,23 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
   const updateUserMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const updateData: Partial<User> & { password?: string; company?: { id?: string; name: string } } = {
+      const updateData: Partial<User> & { 
+        password?: string; 
+        company?: { 
+          id?: string; 
+          name: string;
+          subscriptionStatus?: string;
+          subscriptionEndsAt?: string | null;
+        } 
+      } = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         company: {
           id: user.company?.id,
-          name: values.companyName
+          name: values.companyName,
+          subscriptionStatus: user.company?.subscriptionStatus || 'trial',
+          subscriptionEndsAt: user.company?.subscriptionEndsAt || null
         }
       };
 

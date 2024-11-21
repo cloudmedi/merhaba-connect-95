@@ -106,7 +106,11 @@ export const updateUser = async (id: string, updates: Partial<User> & { password
     if (updates.company?.name && profile.company_id) {
       const { error: companyError } = await supabase
         .from('companies')
-        .update({ name: updates.company.name })
+        .update({ 
+          name: updates.company.name,
+          subscription_status: updates.company.subscriptionStatus,
+          subscription_ends_at: updates.company.subscriptionEndsAt
+        })
         .eq('id', profile.company_id);
 
       if (companyError) throw companyError;
