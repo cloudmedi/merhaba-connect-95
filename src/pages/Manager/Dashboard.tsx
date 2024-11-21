@@ -28,13 +28,16 @@ export default function ManagerDashboard() {
 
       if (categoriesError) throw categoriesError;
 
-      // Then fetch all playlists with their related data
+      // Then fetch all playlists with their related data and category relationships
       const { data: playlists, error: playlistsError } = await supabase
         .from('playlists')
         .select(`
           *,
           genres:genre_id(*),
-          moods:mood_id(*)
+          moods:mood_id(*),
+          playlist_categories!inner (
+            category_id
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -45,11 +48,17 @@ export default function ManagerDashboard() {
         category,
         playlists: playlists
           .filter(playlist => {
-            // If there's a search query, filter by playlist name
-            if (searchQuery) {
+            // First check if the playlist belongs to this category
+            const belongsToCategory = playlist.playlist_categories.some(
+              (pc: any) => pc.category_id === category.id
+            );
+
+            // Then apply search filter if there's a search query
+            if (searchQuery && belongsToCategory) {
               return playlist.name.toLowerCase().includes(searchQuery.toLowerCase());
             }
-            return true;
+
+            return belongsToCategory;
           })
           .map(transformPlaylistToGridFormat)
       }));
