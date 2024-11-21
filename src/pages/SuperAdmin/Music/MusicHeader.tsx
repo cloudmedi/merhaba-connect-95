@@ -21,9 +21,14 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           throw new Error('No active session');
         }
 
-        // Create form data properly
-        const formData = new FormData();
-        formData.append('file', file);
+        // Convert file to base64
+        const reader = new FileReader();
+        const filePromise = new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+        });
+        reader.readAsDataURL(file);
+        const base64File = await filePromise;
 
         console.log('Uploading file:', {
           name: file.name,
@@ -32,7 +37,11 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
         });
 
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
+          body: {
+            fileName: file.name,
+            fileType: file.type,
+            fileData: base64File,
+          }
         });
 
         if (error) {

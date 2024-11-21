@@ -14,34 +14,18 @@ serve(async (req) => {
   }
 
   try {
-    // Parse form data
-    let formData;
-    try {
-      formData = await req.formData();
-      console.log('FormData parsed successfully');
-    } catch (error) {
-      console.error('Form data parsing error:', error);
+    const { fileName, fileType, fileData } = await req.json();
+
+    if (!fileName || !fileType || !fileData) {
       return new Response(
-        JSON.stringify({ error: 'Failed to parse form data: ' + error.message }),
+        JSON.stringify({ error: 'Missing file data' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Get file from form data
-    const file = formData.get('file');
-    if (!file || !(file instanceof File)) {
-      console.error('No valid file found in form data');
-      return new Response(
-        JSON.stringify({ error: 'No file uploaded or invalid file' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    console.log('File received:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
+    // Convert base64 to Uint8Array
+    const base64Data = fileData.split(',')[1];
+    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -50,8 +34,7 @@ serve(async (req) => {
     );
 
     // Extract metadata from the audio file
-    const arrayBuffer = await file.arrayBuffer();
-    const metadata = await mm.parseBlob(new Blob([arrayBuffer]));
+    const metadata = await mm.parseBuffer(binaryData);
 
     // Upload to Bunny CDN
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
@@ -62,8 +45,9 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration');
     }
 
-    const fileName = `${crypto.randomUUID()}-${file.name}`;
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`;
+    const fileExt = fileName.split('.').pop();
+    const uniqueFileName = `${crypto.randomUUID()}-${fileName}`;
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`;
 
     console.log('Uploading to Bunny CDN:', bunnyUrl);
 
@@ -72,9 +56,9 @@ serve(async (req) => {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': file.type,
+        'Content-Type': fileType,
       },
-      body: arrayBuffer,
+      body: binaryData,
     });
 
     if (!uploadResponse.ok) {
@@ -92,13 +76,13 @@ serve(async (req) => {
 
     // Extract relevant metadata
     const songData = {
-      title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
+      title: metadata.common.title || fileName.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
       album: metadata.common.album || null,
       genre: metadata.common.genre || [],
       duration: Math.round(metadata.format.duration || 0),
       file_url: bunnyUrl,
-      bunny_id: fileName,
+      bunny_id: uniqueFileName,
       artwork_url: null,
       created_by: user.id
     };
