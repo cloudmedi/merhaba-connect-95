@@ -21,6 +21,7 @@ export function AddDeviceDialog({
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
+  const [location, setLocation] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +30,7 @@ export function AddDeviceDialog({
     await createDevice.mutateAsync({
       name,
       category,
+      location,
       status: 'offline',
       schedule: {},
       system_info: {},
@@ -37,6 +39,7 @@ export function AddDeviceDialog({
     onOpenChange(false);
     setName("");
     setCategory("player");
+    setLocation("");
   };
 
   return (
@@ -68,6 +71,15 @@ export function AddDeviceDialog({
                 <SelectItem value="controller">Controller</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter device location"
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
