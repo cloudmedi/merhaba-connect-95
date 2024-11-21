@@ -28,7 +28,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
     const maxSize = 20 * 1024 * 1024; // 20MB
 
-    Array.from(files).forEach(file => {
+    Array.from(files).forEach(async (file) => {
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Invalid file type",
@@ -47,85 +47,69 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         return;
       }
 
+      // Add file to progress tracking
       setUploadingFiles(prev => ({
         ...prev,
         [file.name]: {
           file,
           progress: 0,
-          status: 'uploading' as const
+          status: 'uploading'
         }
       }));
 
-      uploadFile(file);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Call the upload-music edge function
+        const { data, error } = await supabase.functions.invoke('upload-music', {
+          body: formData,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        setUploadingFiles(prev => ({
+          ...prev,
+          [file.name]: {
+            ...prev[file.name],
+            progress: 100,
+            status: 'completed'
+          }
+        }));
+
+        // Invalidate and refetch songs query
+        await queryClient.invalidateQueries({ queryKey: ['songs'] });
+
+        toast({
+          title: "Upload successful",
+          description: `${file.name} has been uploaded successfully`,
+        });
+
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        
+        setUploadingFiles(prev => ({
+          ...prev,
+          [file.name]: {
+            ...prev[file.name],
+            status: 'error',
+            error: error.message || 'Failed to upload file'
+          }
+        }));
+
+        toast({
+          title: "Upload failed",
+          description: error.message || 'Failed to upload file',
+          variant: "destructive",
+        });
+      }
     });
   };
 
-  const uploadFile = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const response = await supabase.functions.invoke('upload-music', {
-        body: formData,
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      setUploadingFiles(prev => ({
-        ...prev,
-        [file.name]: {
-          ...prev[file.name],
-          status: 'completed' as const,
-          progress: 100
-        }
-      }));
-
-      // Check if all files are completed
-      const allCompleted = Object.values(uploadingFiles).every(
-        file => file.status === 'completed'
-      );
-
-      if (allCompleted) {
-        // Invalidate and refetch songs query to update the music library
-        await queryClient.invalidateQueries({ queryKey: ['songs'] });
-        
-        toast({
-          title: "Upload successful",
-          description: "All files have been uploaded successfully",
-        });
-
-        // Close dialog and reset state
-        onOpenChange(false);
-        setUploadingFiles({});
-      }
-
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      
-      setUploadingFiles(prev => ({
-        ...prev,
-        [file.name]: {
-          ...prev[file.name],
-          status: 'error' as const,
-          error: error.message
-        }
-      }));
-
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  const handleDragEnter = () => setIsDragging(true);
+  const handleDragLeave = () => setIsDragging(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,6 +121,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         <UploadZone
           onFileSelect={handleFileSelect}
           isDragging={isDragging}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
         />
 
         {Object.entries(uploadingFiles).length > 0 && (

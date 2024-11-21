@@ -2,16 +2,30 @@ import { Upload } from "lucide-react";
 
 interface UploadZoneProps {
   onFileSelect: (files: FileList) => void;
-  isDragging?: boolean; // Made optional with ?
+  isDragging?: boolean;
+  onDragEnter?: () => void;
+  onDragLeave?: () => void;
 }
 
-export function UploadZone({ onFileSelect, isDragging = false }: UploadZoneProps) {
+export function UploadZone({ 
+  onFileSelect, 
+  isDragging = false,
+  onDragEnter,
+  onDragLeave 
+}: UploadZoneProps) {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    onDragEnter?.();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    onDragLeave?.();
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    onDragLeave?.();
     onFileSelect(e.dataTransfer.files);
   };
 
@@ -21,6 +35,7 @@ export function UploadZone({ onFileSelect, isDragging = false }: UploadZoneProps
         isDragging ? 'border-primary bg-primary/5' : 'border-gray-200'
       }`}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => document.getElementById('music-upload')?.click()}
     >
