@@ -1,64 +1,86 @@
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  Bell,
+  Music2,
+  Users,
   Monitor,
   Calendar,
-  FolderTree,
+  Bell,
+  Settings,
+  Building2,
+  Volume2
 } from "lucide-react";
 
 const navItems = [
   {
     title: "Dashboard",
-    href: "/manager",
     icon: LayoutDashboard,
+    href: "/manager",
   },
   {
-    title: "Announcements",
-    href: "/manager/announcements",
-    icon: Bell,
+    title: "Branches",
+    icon: Building2,
+    href: "/manager/branches",
+  },
+  {
+    title: "Staff",
+    icon: Users,
+    href: "/manager/staff",
+  },
+  {
+    title: "Playlists",
+    icon: Music2,
+    href: "/manager/playlists",
   },
   {
     title: "Devices",
-    href: "/manager/devices",
     icon: Monitor,
+    href: "/manager/devices",
   },
   {
     title: "Schedule",
-    href: "/manager/schedule",
     icon: Calendar,
+    href: "/manager/schedule",
   },
   {
-    title: "Categories",
-    href: "/manager/categories",
-    icon: FolderTree,
+    title: "Notifications",
+    icon: Bell,
+    href: "/manager/notifications",
+  },
+  {
+    title: "Announcements",
+    icon: Volume2,
+    href: "/manager/announcements",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    href: "/manager/settings",
   },
 ];
 
 export function ManagerNav() {
-  const location = useLocation();
-
   return (
-    <nav className="grid items-start gap-2">
-      {navItems.map((item, index) => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.href;
-
-        return (
-          <Link
-            key={index}
-            to={item.href}
-            className={cn(
-              "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-              isActive ? "bg-accent" : "transparent",
-            )}
-          >
-            <Icon className="mr-2 h-4 w-4" />
-            <span>{item.title}</span>
-          </Link>
-        );
-      })}
+    <nav className="w-[240px] bg-[#1C1C28] min-h-screen p-4 flex flex-col gap-2">
+      <div className="flex items-center gap-2 px-2 py-4">
+        <span className="text-lg font-semibold text-white">Manager Panel</span>
+      </div>
+      {navItems.map((item) => (
+        <NavLink
+          key={item.href}
+          to={item.href}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+              isActive
+                ? "bg-[#6E59A5] text-white"
+                : "text-gray-400 hover:text-white hover:bg-[#6E59A5]/10"
+            }`
+          }
+        >
+          <item.icon className="w-5 h-5" />
+          <span>{item.title}</span>
+        </NavLink>
+      ))}
     </nav>
   );
 }
