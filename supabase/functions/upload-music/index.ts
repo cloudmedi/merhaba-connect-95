@@ -107,16 +107,37 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Verify user profile exists
-    const { data: profile, error: profileError } = await supabase
+    // Verify user profile exists and get profile data
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('*')
       .eq('id', user.id)
-      .single()
 
-    if (profileError || !profile) {
-      console.error('Profile error:', profileError)
-      throw new Error('User profile not found. Please ensure your profile is set up.')
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+      throw new Error('Failed to fetch user profile')
+    }
+
+    if (!profiles || profiles.length === 0) {
+      console.error('No profile found for user:', user.id)
+      // Create a profile for the user if it doesn't exist
+      const { data: newProfile, error: createProfileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: user.id,
+            email: user.email,
+            role: 'manager',
+            is_active: true
+          }
+        ])
+        .select()
+        .single()
+
+      if (createProfileError) {
+        console.error('Failed to create profile:', createProfileError)
+        throw new Error('Failed to create user profile')
+      }
     }
 
     // Save song metadata to Supabase
@@ -129,7 +150,7 @@ serve(async (req) => {
       duration: Math.round(metadata.format.duration || 0),
       file_url: cdnUrl,
       bunny_id: uniqueFileName,
-      created_by: profile.id // Use the verified profile ID
+      created_by: user.id
     }
 
     console.log('Saving song metadata to Supabase:', songData)
