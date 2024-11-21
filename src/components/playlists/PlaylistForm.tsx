@@ -8,6 +8,7 @@ interface PlaylistFormProps {
     title: string;
     description: string;
     artwork: File | null;
+    artwork_url?: string;
   };
   setPlaylistData: (data: any) => void;
 }
@@ -47,6 +48,12 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
           {playlistData.artwork ? (
             <img
               src={URL.createObjectURL(playlistData.artwork)}
+              alt="Playlist artwork"
+              className="w-full h-40 object-cover rounded"
+            />
+          ) : playlistData.artwork_url ? (
+            <img
+              src={playlistData.artwork_url}
               alt="Playlist artwork"
               className="w-full h-40 object-cover rounded"
             />

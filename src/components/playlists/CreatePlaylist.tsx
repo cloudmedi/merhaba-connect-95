@@ -14,15 +14,57 @@ export function CreatePlaylist() {
     title: "",
     description: "",
     artwork: null as File | null,
+    artwork_url: "",
     selectedSongs: [],
     selectedUsers: [],
     selectedGenres: [],
     selectedCategories: [],
     selectedMoods: [],
   });
+  const isEditMode = location.state?.editMode;
+  const existingPlaylist = location.state?.playlistData;
 
   useEffect(() => {
-    if (location.state?.selectedSongs) {
+    // Initialize form with existing playlist data if in edit mode
+    if (isEditMode && existingPlaylist) {
+      const fetchPlaylistDetails = async () => {
+        try {
+          // Fetch playlist songs
+          const { data: playlistSongs } = await supabase
+            .from('playlist_songs')
+            .select('songs(*)')
+            .eq('playlist_id', existingPlaylist.id)
+            .order('position');
+
+          // Fetch playlist categories
+          const { data: playlistCategories } = await supabase
+            .from('playlist_categories')
+            .select('categories(*)')
+            .eq('playlist_id', existingPlaylist.id);
+
+          setPlaylistData({
+            title: existingPlaylist.name,
+            description: existingPlaylist.description || "",
+            artwork: null,
+            artwork_url: existingPlaylist.artwork_url || "",
+            selectedSongs: playlistSongs?.map(ps => ps.songs) || [],
+            selectedUsers: [],
+            selectedGenres: existingPlaylist.genre_id ? [{ id: existingPlaylist.genre_id }] : [],
+            selectedCategories: playlistCategories?.map(pc => pc.categories) || [],
+            selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
+          });
+        } catch (error) {
+          console.error('Error fetching playlist details:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load playlist details",
+            variant: "destructive",
+          });
+        }
+      };
+
+      fetchPlaylistDetails();
+    } else if (location.state?.selectedSongs) {
       setPlaylistData(prev => ({
         ...prev,
         selectedSongs: Array.isArray(location.state.selectedSongs) 
@@ -30,9 +72,9 @@ export function CreatePlaylist() {
           : [location.state.selectedSongs]
       }));
     }
-  }, [location.state]);
+  }, [isEditMode, existingPlaylist, location.state]);
 
-  const handleCreatePlaylist = async () => {
+  const handleSavePlaylist = async () => {
     if (!playlistData.title) {
       toast({
         title: "Error",
@@ -46,7 +88,7 @@ export function CreatePlaylist() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      let artwork_url = null;
+      let artwork_url = playlistData.artwork_url;
       if (playlistData.artwork) {
         // Convert file to base64
         const reader = new FileReader();
@@ -68,27 +110,48 @@ export function CreatePlaylist() {
         });
 
         if (uploadError) throw uploadError;
-        
         artwork_url = uploadData.url;
-        console.log("Uploaded artwork URL:", artwork_url);
       }
 
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .insert([
-          {
-            name: playlistData.title,
-            description: playlistData.description,
-            artwork_url,
-            is_public: false,
-            created_by: user.id
-          }
-        ])
-        .select()
-        .single();
+      const playlistPayload = {
+        name: playlistData.title,
+        description: playlistData.description,
+        artwork_url,
+        is_public: false,
+        created_by: user.id,
+        genre_id: playlistData.selectedGenres[0]?.id || null,
+        mood_id: playlistData.selectedMoods[0]?.id || null,
+      };
 
-      if (playlistError) throw playlistError;
+      let playlist;
+      if (isEditMode && existingPlaylist) {
+        // Update existing playlist
+        const { data, error } = await supabase
+          .from('playlists')
+          .update(playlistPayload)
+          .eq('id', existingPlaylist.id)
+          .select()
+          .single();
 
+        if (error) throw error;
+        playlist = data;
+
+        // Delete existing playlist songs and categories
+        await supabase.from('playlist_songs').delete().eq('playlist_id', existingPlaylist.id);
+        await supabase.from('playlist_categories').delete().eq('playlist_id', existingPlaylist.id);
+      } else {
+        // Create new playlist
+        const { data, error } = await supabase
+          .from('playlists')
+          .insert([playlistPayload])
+          .select()
+          .single();
+
+        if (error) throw error;
+        playlist = data;
+      }
+
+      // Insert playlist songs
       if (playlistData.selectedSongs.length > 0) {
         const playlistSongs = playlistData.selectedSongs.map((song: any, index: number) => ({
           playlist_id: playlist.id,
@@ -103,6 +166,7 @@ export function CreatePlaylist() {
         if (songsError) throw songsError;
       }
 
+      // Insert playlist categories
       if (playlistData.selectedCategories.length > 0) {
         const playlistCategories = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
@@ -118,15 +182,15 @@ export function CreatePlaylist() {
 
       toast({
         title: "Success",
-        description: "Playlist created successfully",
+        description: `Playlist ${isEditMode ? 'updated' : 'created'} successfully`,
       });
       
       navigate("/super-admin/playlists");
     } catch (error: any) {
-      console.error('Error creating playlist:', error);
+      console.error('Error saving playlist:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create playlist",
+        description: error.message || `Failed to ${isEditMode ? 'update' : 'create'} playlist`,
         variant: "destructive",
       });
     }
@@ -139,7 +203,8 @@ export function CreatePlaylist() {
       <div className="flex-1">
         <PlaylistHeader
           onCancel={() => navigate("/super-admin/playlists")}
-          onCreate={handleCreatePlaylist}
+          onCreate={handleSavePlaylist}
+          isEditMode={isEditMode}
         />
 
         <PlaylistTabs

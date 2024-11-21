@@ -13,6 +13,7 @@ export interface PlaylistHeaderProps {
   onPush?: () => void;
   onCancel?: () => void;
   onCreate?: () => void;
+  isEditMode?: boolean;
 }
 
 export function PlaylistHeader({
@@ -26,19 +27,22 @@ export function PlaylistHeader({
   onPlay,
   onPush,
   onCancel,
-  onCreate
+  onCreate,
+  isEditMode
 }: PlaylistHeaderProps) {
   // If we're in create/edit mode
   if (onCancel && onCreate) {
     return (
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Create New Playlist</h2>
+        <h2 className="text-2xl font-semibold">
+          {isEditMode ? "Edit Playlist" : "Create New Playlist"}
+        </h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button onClick={onCreate}>
-            Create Playlist
+            {isEditMode ? "Save Changes" : "Create Playlist"}
           </Button>
         </div>
       </div>
