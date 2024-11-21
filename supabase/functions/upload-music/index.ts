@@ -21,14 +21,23 @@ serve(async (req) => {
       throw new Error('No file uploaded')
     }
 
-    console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type)
+    console.log('File received:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
+    const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
 
-    if (!bunnyApiKey || !bunnyStorageZoneName) {
-      console.error('Missing Bunny CDN configuration')
+    if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageZoneName) {
+      console.error('Missing Bunny CDN configuration:', {
+        hasApiKey: !!bunnyApiKey,
+        hasHost: !!bunnyStorageHost,
+        hasZoneName: !!bunnyStorageZoneName
+      })
       throw new Error('Missing Bunny CDN configuration')
     }
 
@@ -36,15 +45,15 @@ serve(async (req) => {
     const fileExt = file.name.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
-    // Construct Bunny CDN URL and headers
-    const bunnyUrl = `https://storage.bunnycdn.com/${bunnyStorageZoneName}/${uniqueFileName}`
-    
+    // Construct Bunny CDN URL
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`
     console.log('Uploading to Bunny CDN:', bunnyUrl)
 
     // Convert file to ArrayBuffer for upload
     const arrayBuffer = await file.arrayBuffer()
 
-    // Upload to Bunny CDN
+    // Upload to Bunny CDN with detailed logging
+    console.log('Initiating Bunny CDN upload...')
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
@@ -54,19 +63,21 @@ serve(async (req) => {
       body: arrayBuffer
     })
 
+    const responseText = await uploadResponse.text()
+    console.log('Bunny CDN upload response:', {
+      status: uploadResponse.status,
+      statusText: uploadResponse.statusText,
+      response: responseText
+    })
+
     if (!uploadResponse.ok) {
-      const responseText = await uploadResponse.text()
-      console.error('Bunny CDN upload failed:', {
-        status: uploadResponse.status,
-        statusText: uploadResponse.statusText,
-        response: responseText
-      })
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`)
     }
 
     console.log('Successfully uploaded to Bunny CDN')
 
     // Get file metadata
+    console.log('Parsing file metadata...')
     const metadata = await mm.parseBuffer(new Uint8Array(arrayBuffer), {
       duration: true,
       skipCovers: true,
