@@ -49,3 +49,11 @@ export interface CampaignFormData {
   repeatInterval: number;
   branches: string[];
 }
+
+export interface Branch {
+  id: string;
+  name: string;
+  company_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}

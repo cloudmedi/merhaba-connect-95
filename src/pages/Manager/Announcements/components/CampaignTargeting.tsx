@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CampaignFormData } from "../types";
+import { CampaignFormData, Branch } from "../types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,15 +29,15 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
   const [open, setOpen] = useState(false);
 
   const { data: branches, isLoading } = useQuery({
-    queryKey: ['branches'],
+    queryKey: ['companies'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('branches')
+        .from('companies')
         .select('*')
         .order('name');
 
       if (error) throw error;
-      return data;
+      return data as Branch[];
     }
   });
 
