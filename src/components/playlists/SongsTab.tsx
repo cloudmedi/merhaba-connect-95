@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Music } from "lucide-react";
+import { Plus, Music, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Song {
@@ -44,6 +44,13 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
     fetchSongs();
   }, [searchQuery]);
 
+  const formatDuration = (duration: number | null) => {
+    if (!duration) return "0:00";
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="space-y-4">
       <Input
@@ -63,21 +70,25 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
                 No songs found
               </div>
             ) : (
-              availableSongs.map(song => (
-                <div key={song.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
-                  <div>
-                    <p className="font-medium">{song.title}</p>
-                    <p className="text-sm text-gray-500">{song.artist}</p>
+              availableSongs
+                .filter(song => !selectedSongs.some(s => s.id === song.id))
+                .map(song => (
+                  <div key={song.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
+                    <div>
+                      <p className="font-medium">{song.title}</p>
+                      <p className="text-sm text-gray-500">
+                        {song.artist || 'Unknown Artist'} • {formatDuration(song.duration)}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onAddSong(song)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onAddSong(song)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))
+                ))
             )}
           </div>
         </div>
@@ -92,18 +103,25 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
                 <p className="text-sm">Add songs from the list</p>
               </div>
             ) : (
-              selectedSongs.map(song => (
+              selectedSongs.map((song, index) => (
                 <div key={song.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
                   <div>
-                    <p className="font-medium">{song.title}</p>
-                    <p className="text-sm text-gray-500">{song.artist}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">{index + 1}</span>
+                      <div>
+                        <p className="font-medium">{song.title}</p>
+                        <p className="text-sm text-gray-500">
+                          {song.artist || 'Unknown Artist'} • {formatDuration(song.duration)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => onRemoveSong(song.id)}
                   >
-                    Remove
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               ))
