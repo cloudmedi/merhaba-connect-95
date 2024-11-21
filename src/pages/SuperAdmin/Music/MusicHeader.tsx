@@ -31,8 +31,7 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
             Accept: 'multipart/form-data',
-          },
-          responseType: 'json'
+          }
         });
 
         if (error) {
