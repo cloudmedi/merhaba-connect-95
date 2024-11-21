@@ -95,8 +95,17 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         }
       }));
 
+      const updatedFiles = {
+        ...uploadingFiles,
+        [file.name]: {
+          ...uploadingFiles[file.name],
+          status: 'completed',
+          progress: 100
+        }
+      };
+
       // Check if all files are completed
-      const allCompleted = Object.values(uploadingFiles).every(
+      const allCompleted = Object.values(updatedFiles).every(
         file => file.status === 'completed'
       );
 
@@ -105,11 +114,10 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           title: "Upload successful",
           description: "All files have been uploaded successfully",
         });
-        // Close the dialog after a short delay
-        setTimeout(() => {
-          onOpenChange(false);
-          setUploadingFiles({});
-        }, 1500);
+        
+        // Close the dialog immediately and reset state
+        onOpenChange(false);
+        setUploadingFiles({});
       }
 
     } catch (error: any) {
