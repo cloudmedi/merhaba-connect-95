@@ -15,8 +15,8 @@ const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters").optional(),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal('')),
 });
 
 interface EditUserDialogProps {
@@ -40,16 +40,22 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
   const updateUserMutation = useMutation({
     mutationFn: (values: z.infer<typeof formSchema>) => {
-      return userService.updateUser(user.id, {
+      const updateData: Partial<User> & { password?: string } = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
-        password: values.password,
         company: {
           ...user.company,
           name: values.companyName
         }
-      });
+      };
+
+      // Only include password if it's not empty
+      if (values.password && values.password.length > 0) {
+        updateData.password = values.password;
+      }
+
+      return userService.updateUser(user.id, updateData);
     },
     onSuccess: () => {
       toast.success("User updated successfully");

@@ -76,7 +76,7 @@ export const createUser = async (userData: CreateUserFormValues) => {
   }
 };
 
-export const updateUser = async (id: string, updates: Partial<User>) => {
+export const updateUser = async (id: string, updates: Partial<User> & { password?: string }) => {
   try {
     // First update the profile
     const { data: profile, error: profileError } = await supabase
@@ -91,7 +91,7 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (profileError) throw profileError;
 
     // If company name is updated, update the company table
