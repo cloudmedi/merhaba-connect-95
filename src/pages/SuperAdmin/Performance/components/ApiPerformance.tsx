@@ -28,6 +28,7 @@ export function ApiPerformance() {
                 stroke="#94a3b8"
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
+                width={60}
               />
               <YAxis 
                 stroke="#94a3b8"
