@@ -14,28 +14,10 @@ serve(async (req) => {
   }
 
   try {
-    // Check content type
-    const contentType = req.headers.get('content-type') || '';
-    if (!contentType.includes('multipart/form-data')) {
-      console.error('Invalid content type:', contentType);
-      return new Response(
-        JSON.stringify({ error: 'Invalid content type. Expected multipart/form-data' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    let formData;
-    try {
-      formData = await req.formData();
-    } catch (error) {
-      console.error('Error parsing form data:', error);
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse form data', details: error.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
+    // Get the form data from the request body
+    const formData = await req.formData();
     const file = formData.get('file');
+    
     if (!file || !(file instanceof File)) {
       return new Response(
         JSON.stringify({ error: 'No file uploaded or invalid file' }),
@@ -52,8 +34,6 @@ serve(async (req) => {
     // Extract metadata from the audio file
     const arrayBuffer = await file.arrayBuffer();
     const metadata = await mm.parseBlob(new Blob([arrayBuffer]));
-
-    console.log('Extracted metadata:', JSON.stringify(metadata, null, 2));
 
     // Upload to Bunny CDN
     const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
@@ -78,7 +58,6 @@ serve(async (req) => {
     });
 
     if (!uploadResponse.ok) {
-      console.error('Bunny CDN upload failed:', await uploadResponse.text());
       throw new Error('Failed to upload to Bunny CDN');
     }
 
@@ -90,7 +69,7 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Extract relevant metadata with fallbacks
+    // Extract relevant metadata
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
@@ -133,14 +112,8 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      console.error('Database insert error:', insertError);
       throw new Error('Failed to save song metadata');
     }
-
-    console.log('Successfully uploaded song:', {
-      fileName,
-      songData: savedSong
-    });
 
     return new Response(
       JSON.stringify({ 

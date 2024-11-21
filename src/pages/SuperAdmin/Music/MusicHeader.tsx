@@ -25,13 +25,9 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Call the Edge Function with proper headers
+        // Call the Edge Function
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            'Content-Type': 'multipart/form-data; boundary=' + (formData as any)._boundary,
-          }
         });
 
         if (error) {
