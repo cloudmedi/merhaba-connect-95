@@ -24,7 +24,7 @@ export function UsersTable() {
         .from('profiles')
         .select(`
           *,
-          companies (
+          companies:company_id (
             id,
             name,
             subscription_status,
@@ -72,7 +72,6 @@ export function UsersTable() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Map the Supabase data to match the User type
       return data?.map((profile): User => ({
         id: profile.id,
         email: profile.email,
