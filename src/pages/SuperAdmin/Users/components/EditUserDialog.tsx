@@ -39,23 +39,23 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: (values: z.infer<typeof formSchema>) => {
-      const updateData: Partial<User> & { password?: string } = {
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const updateData: Partial<User> & { password?: string; company?: { id?: string; name: string } } = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         company: {
-          ...user.company,
+          id: user.company?.id,
           name: values.companyName
         }
       };
 
-      // Only include password if it's not empty
       if (values.password && values.password.length > 0) {
         updateData.password = values.password;
       }
 
-      return userService.updateUser(user.id, updateData);
+      const updatedUser = await userService.updateUser(user.id, updateData);
+      return updatedUser;
     },
     onSuccess: () => {
       toast.success("User updated successfully");
