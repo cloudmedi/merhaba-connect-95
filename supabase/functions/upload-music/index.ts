@@ -27,6 +27,12 @@ serve(async (req) => {
       type: file.type
     })
 
+    // Check file type
+    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`)
+    }
+
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
