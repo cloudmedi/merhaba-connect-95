@@ -115,6 +115,7 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device updated successfully');
     },
     onError: (error) => {
       toast.error('Failed to update device');
@@ -133,6 +134,7 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device deleted successfully');
     },
     onError: (error) => {
       toast.error('Failed to delete device');
