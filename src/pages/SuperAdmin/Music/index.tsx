@@ -5,7 +5,7 @@ export default function Music() {
   return (
     <DashboardLayout 
       title="Music Library"
-      description="Manage your music collection"
+      description="Manage and organize your music collection"
     >
       <MusicContent />
     </DashboardLayout>

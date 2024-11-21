@@ -8,19 +8,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EmptyState } from "./components/EmptyState";
-import { TablePagination } from "./components/TablePagination";
-import { TrackArtwork } from "@/components/music/TrackArtwork";
-import { useToast } from "@/components/ui/use-toast";
-import { MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MoreVertical, Play, Pause } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Song } from "./hooks/useMusicLibrary";
+import { TablePagination } from "./components/TablePagination";
+import { EmptyState } from "./components/EmptyState";
+
+interface Song {
+  id: string;
+  title: string;
+  artist?: string;
+  album?: string;
+  genre?: string[];
+  duration?: number;
+  artwork_url?: string;
+  created_at: string;
+}
 
 interface MusicTableProps {
   songs: Song[];
@@ -35,10 +43,10 @@ interface MusicTableProps {
   isLoading?: boolean;
 }
 
-export function MusicTable({ 
-  songs, 
-  selectedSongs, 
-  onSelectAll, 
+export function MusicTable({
+  songs,
+  selectedSongs,
+  onSelectAll,
   onSelectSong,
   currentPage,
   totalPages,
@@ -47,32 +55,23 @@ export function MusicTable({
   onPlaySong,
   isLoading
 }: MusicTableProps) {
-  const { toast } = useToast();
-
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 w-48 bg-gray-200 rounded"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded"></div>
+          <div className="h-4 w-52 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   if (songs.length === 0) {
     return <EmptyState />;
   }
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, songs.length);
-  const currentSongs = songs.slice(startIndex, endIndex);
-
-  const handlePlaySong = (song: Song) => {
-    if (onPlaySong) {
-      onPlaySong(song);
-    } else {
-      toast({
-        title: "Now Playing",
-        description: `${song.title} by ${song.artist || 'Unknown Artist'}`,
-      });
-    }
-  };
-
-  const formatDuration = (duration: number | null | undefined) => {
+  const formatDuration = (duration: number | undefined) => {
     if (!duration) return "0:00";
     const minutes = Math.floor(duration / 60);
     const seconds = duration % 60;
@@ -80,13 +79,13 @@ export function MusicTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-white rounded-lg border">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[30px]">
-                <Checkbox 
+                <Checkbox
                   checked={selectedSongs.length === songs.length}
                   onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
@@ -100,37 +99,64 @@ export function MusicTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentSongs.map((song) => (
+            {songs.map((song) => (
               <TableRow
                 key={song.id}
-                className="hover:bg-gray-50/50"
+                className="hover:bg-gray-50/50 group"
               >
                 <TableCell className="w-[30px]">
-                  <Checkbox 
+                  <Checkbox
                     checked={selectedSongs.some((s) => s.id === song.id)}
                     onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
                   />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-4">
-                    <TrackArtwork
-                      artwork={song.artwork_url}
-                      title={song.title}
-                      onPlay={() => handlePlaySong(song)}
-                    />
+                    <div className="relative group w-10 h-10">
+                      <img
+                        src={song.artwork_url || "/placeholder.svg"}
+                        alt={song.title}
+                        className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
+                          onClick={() => onPlaySong?.(song)}
+                        >
+                          <Play className="w-4 h-4 text-white" />
+                        </Button>
+                      </div>
+                    </div>
                     <span className="font-medium text-gray-900">{song.title}</span>
                   </div>
                 </TableCell>
                 <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>
                 <TableCell className="text-gray-600">{song.album || '-'}</TableCell>
-                <TableCell className="text-gray-600">{song.genre ? song.genre.join(", ") : "-"}</TableCell>
-                <TableCell className="text-right text-gray-600">{formatDuration(song.duration)}</TableCell>
+                <TableCell className="text-gray-600">
+                  {song.genre ? (
+                    <div className="flex gap-2">
+                      {song.genre.map((g) => (
+                        <span
+                          key={g}
+                          className="px-2 py-1 text-xs rounded-full bg-gray-100"
+                        >
+                          {g}
+                        </span>
+                      ))}
+                    </div>
+                  ) : '-'}
+                </TableCell>
+                <TableCell className="text-right text-gray-600">
+                  {formatDuration(song.duration)}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
@@ -155,8 +181,8 @@ export function MusicTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
+        startIndex={(currentPage - 1) * itemsPerPage}
+        endIndex={Math.min(currentPage * itemsPerPage, songs.length)}
         totalItems={songs.length}
       />
     </div>

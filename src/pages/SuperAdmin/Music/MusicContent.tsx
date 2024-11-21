@@ -1,175 +1,143 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
-import { GenreChangeDialog } from "./components/GenreChangeDialog";
-import { AddGenreDialog } from "./components/AddGenreDialog";
-import { PlaylistDialog } from "./components/PlaylistDialog";
-import { MoodDialog } from "./components/MoodDialog";
-import { useMusicActions } from "./hooks/useMusicActions";
-import { usePlaylistActions } from "./hooks/usePlaylistActions";
-import { useMoodActions } from "./hooks/useMoodActions";
-import { useMusicLibrary, type Song } from "./hooks/useMusicLibrary";
+import { useToast } from "@/hooks/use-toast";
 import { MusicPlayer } from "@/components/MusicPlayer";
 
+// Mock data
+const mockSongs = [
+  {
+    id: "1",
+    title: "Summer Vibes",
+    artist: "John Doe",
+    album: "Summer Collection",
+    genre: ["Pop", "Electronic"],
+    duration: 180,
+    artwork_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "2",
+    title: "Midnight Jazz",
+    artist: "Sarah Smith",
+    album: "Jazz Sessions",
+    genre: ["Jazz"],
+    duration: 240,
+    artwork_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800",
+    created_at: new Date().toISOString()
+  },
+  // Add more mock songs as needed
+];
+
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+  const [selectedSongs, setSelectedSongs] = useState<typeof mockSongs[0][]>([]);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<typeof mockSongs[0] | null>(null);
   const { toast } = useToast();
 
-  const {
-    songs,
-    isLoading,
-    filterGenre,
-    setFilterGenre,
-    filterPlaylist,
-    setFilterPlaylist,
-    sortByRecent,
-    setSortByRecent,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    itemsPerPage
-  } = useMusicLibrary();
-
-  const {
-    isGenreDialogOpen,
-    setIsGenreDialogOpen,
-    isAddGenreDialogOpen,
-    setIsAddGenreDialogOpen,
-    handleGenreChange,
-    handleAddGenre,
-    handleGenreConfirm,
-    handleAddGenreConfirm
-  } = useMusicActions(songs, () => {});
-
-  const {
-    isPlaylistDialogOpen,
-    setIsPlaylistDialogOpen,
-    handleAddToPlaylist
-  } = usePlaylistActions();
-
-  const {
-    isMoodDialogOpen,
-    setIsMoodDialogOpen,
-    handleAddMood
-  } = useMoodActions();
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedSongs(songs);
-    } else {
-      setSelectedSongs([]);
-    }
-  };
-
-  const handleSelectSong = (song: Song, checked: boolean) => {
-    if (checked) {
-      setSelectedSongs((prev) => [...prev, song]);
-    } else {
-      setSelectedSongs((prev) => prev.filter((s) => s.id !== song.id));
-    }
-  };
-
-  const handlePlaySong = (song: Song) => {
-    setCurrentlyPlaying(song);
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
     toast({
-      title: "Success",
-      description: `${files.length} songs uploaded successfully`,
+      title: "Upload Successful",
+      description: `${files.length} songs have been uploaded`,
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedSongs(checked ? mockSongs : []);
+  };
+
+  const handleSelectSong = (song: typeof mockSongs[0], checked: boolean) => {
+    if (checked) {
+      setSelectedSongs(prev => [...prev, song]);
+    } else {
+      setSelectedSongs(prev => prev.filter(s => s.id !== song.id));
+    }
+  };
+
+  const handlePlaySong = (song: typeof mockSongs[0]) => {
+    setCurrentlyPlaying(song);
+    toast({
+      title: "Now Playing",
+      description: `${song.title} by ${song.artist}`,
     });
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
         <MusicHeader onUpload={handleFileUpload} />
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
-            onCreatePlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onDeleteSelected={() => {/* Implement delete action */}}
-            onAddGenre={() => handleAddGenre(selectedSongs)}
-            onChangeGenre={() => handleGenreChange(selectedSongs)}
-            onAddPlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onChangePlaylist={() => handleAddToPlaylist(selectedSongs)}
-            onAddMood={() => handleAddMood(selectedSongs)}
-            onChangeMood={() => handleAddMood(selectedSongs)}
-            onChangeArtist={() => {/* Implement artist change */}}
-            onChangeAlbum={() => {/* Implement album change */}}
-            onApprove={() => {/* Implement approve action */}}
+            onCreatePlaylist={() => {
+              toast({
+                title: "Playlist Created",
+                description: `Created playlist with ${selectedSongs.length} songs`,
+              });
+            }}
+            onDeleteSelected={() => {
+              toast({
+                title: "Songs Deleted",
+                description: `${selectedSongs.length} songs have been deleted`,
+              });
+              setSelectedSongs([]);
+            }}
+            onAddGenre={() => {}}
+            onChangeGenre={() => {}}
+            onAddPlaylist={() => {}}
+            onChangePlaylist={() => {}}
+            onAddMood={() => {}}
+            onChangeMood={() => {}}
+            onChangeArtist={() => {}}
+            onChangeAlbum={() => {}}
+            onApprove={() => {}}
           />
         )}
       </div>
       
       <MusicFilters
-        onGenreChange={setFilterGenre}
-        onPlaylistChange={setFilterPlaylist}
-        onRecentChange={setSortByRecent}
-        genres={Array.from(new Set(songs.flatMap(song => song.genre || [])))}
-        playlists={[]} // We'll implement this later
+        onGenreChange={() => {}}
+        onPlaylistChange={() => {}}
+        onRecentChange={() => {}}
+        genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
+        playlists={[]}
       />
       
       <MusicTable
-        songs={songs}
+        songs={mockSongs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={() => {}}
+        itemsPerPage={10}
         onPlaySong={handlePlaySong}
-        isLoading={isLoading}
+        isLoading={false}
       />
 
       {currentlyPlaying && (
-        <MusicPlayer
-          playlist={{
-            title: currentlyPlaying.title,
-            artwork: currentlyPlaying.artwork_url || "/placeholder.svg",
-            songs: [{
-              id: parseInt(currentlyPlaying.id),
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg animate-slide-in-up">
+          <MusicPlayer
+            playlist={{
               title: currentlyPlaying.title,
-              artist: currentlyPlaying.artist || "Unknown Artist",
-              duration: currentlyPlaying.duration?.toString() || "0:00",
-              file_url: currentlyPlaying.file_url
-            }]
-          }}
-          onClose={() => setCurrentlyPlaying(null)}
-        />
+              artwork: currentlyPlaying.artwork_url || "/placeholder.svg",
+              songs: [{
+                id: parseInt(currentlyPlaying.id),
+                title: currentlyPlaying.title,
+                artist: currentlyPlaying.artist || "Unknown Artist",
+                duration: currentlyPlaying.duration?.toString() || "0:00",
+                file_url: "/mock-audio.mp3"
+              }]
+            }}
+            onClose={() => setCurrentlyPlaying(null)}
+          />
+        </div>
       )}
-
-      <GenreChangeDialog 
-        isOpen={isGenreDialogOpen}
-        onClose={() => setIsGenreDialogOpen(false)}
-        onConfirm={(genreId) => handleGenreConfirm(genreId, selectedSongs)}
-      />
-
-      <AddGenreDialog
-        isOpen={isAddGenreDialogOpen}
-        onClose={() => setIsAddGenreDialogOpen(false)}
-        onConfirm={(genreIds) => handleAddGenreConfirm(genreIds, selectedSongs)}
-      />
-
-      <PlaylistDialog
-        isOpen={isPlaylistDialogOpen}
-        onClose={() => setIsPlaylistDialogOpen(false)}
-        onConfirm={() => {}} // We'll implement this later
-      />
-
-      <MoodDialog
-        isOpen={isMoodDialogOpen}
-        onClose={() => setIsMoodDialogOpen(false)}
-        onConfirm={() => {}} // We'll implement this later
-      />
     </div>
   );
 }
