@@ -286,6 +286,7 @@ export type Database = {
           id: string
           ip_address: string | null
           last_seen: string | null
+          location: string | null
           name: string
           schedule: Json | null
           status: string | null
@@ -300,6 +301,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           last_seen?: string | null
+          location?: string | null
           name: string
           schedule?: Json | null
           status?: string | null
@@ -314,6 +316,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           last_seen?: string | null
+          location?: string | null
           name?: string
           schedule?: Json | null
           status?: string | null

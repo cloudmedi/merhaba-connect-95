@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { Json } from "@/integrations/supabase/types/json";
 
 export interface Device {
   id: string;
@@ -98,8 +99,8 @@ export const useDevices = () => {
         category: item.category as 'player' | 'display' | 'controller',
         status: item.status as 'online' | 'offline',
         ip_address: item.ip_address,
-        system_info: item.system_info || {},
-        schedule: item.schedule || {},
+        system_info: typeof item.system_info === 'object' ? item.system_info as Device['system_info'] : {},
+        schedule: typeof item.schedule === 'object' ? item.schedule as Device['schedule'] : {},
         token: item.token,
         last_seen: item.last_seen,
         created_at: item.created_at,
