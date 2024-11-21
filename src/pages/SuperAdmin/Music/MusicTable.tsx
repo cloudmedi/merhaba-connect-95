@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TablePagination } from "./components/TablePagination";
 import { EmptyState } from "./components/EmptyState";
+import { useState } from "react";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 interface Song {
   id: string;
@@ -27,6 +29,7 @@ interface Song {
   genre?: string[];
   duration?: number;
   artwork_url?: string;
+  file_url: string;
   created_at: string;
 }
 
@@ -52,9 +55,10 @@ export function MusicTable({
   totalPages,
   onPageChange,
   itemsPerPage,
-  onPlaySong,
   isLoading
 }: MusicTableProps) {
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -77,6 +81,8 @@ export function MusicTable({
     const seconds = duration % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
   return (
     <div className="space-y-4 bg-white rounded-lg border">
@@ -114,16 +120,20 @@ export function MusicTable({
                   <div className="flex items-center gap-4">
                     <div className="relative group w-10 h-10">
                       <img
-                        src={song.artwork_url || "/placeholder.svg"}
+                        src={song.artwork_url || defaultArtwork}
                         alt={song.title}
                         className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          img.src = defaultArtwork;
+                        }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           size="icon"
                           variant="ghost"
                           className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
-                          onClick={() => onPlaySong?.(song)}
+                          onClick={() => setCurrentlyPlaying(song)}
                         >
                           <Play className="w-4 h-4 text-white" />
                         </Button>
@@ -185,6 +195,23 @@ export function MusicTable({
         endIndex={Math.min(currentPage * itemsPerPage, songs.length)}
         totalItems={songs.length}
       />
+
+      {currentlyPlaying && (
+        <MusicPlayer
+          playlist={{
+            title: currentlyPlaying.title,
+            artwork: currentlyPlaying.artwork_url || defaultArtwork,
+            songs: [{
+              id: parseInt(currentlyPlaying.id),
+              title: currentlyPlaying.title,
+              artist: currentlyPlaying.artist || "Unknown Artist",
+              duration: currentlyPlaying.duration?.toString() || "0:00",
+              file_url: currentlyPlaying.file_url
+            }]
+          }}
+          onClose={() => setCurrentlyPlaying(null)}
+        />
+      )}
     </div>
   );
 }
