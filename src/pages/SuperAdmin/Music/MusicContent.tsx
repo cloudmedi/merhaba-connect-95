@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
@@ -11,6 +12,7 @@ export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<any | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const {
     songs,
@@ -47,6 +49,22 @@ export function MusicContent() {
     });
   };
 
+  const handleCreatePlaylist = () => {
+    if (selectedSongs.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select at least one song to create a playlist",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Navigate to create playlist page with selected songs
+    navigate("/super-admin/playlists/create", {
+      state: { selectedSongs }
+    });
+  };
+
   // Get unique genres from songs
   const uniqueGenres = Array.from(new Set(songs.flatMap(song => song.genre || [])));
 
@@ -57,12 +75,7 @@ export function MusicContent() {
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
-            onCreatePlaylist={() => {
-              toast({
-                title: "Playlist Created",
-                description: `Created playlist with ${selectedSongs.length} songs`,
-              });
-            }}
+            onCreatePlaylist={handleCreatePlaylist}
             onDeleteSelected={() => {
               toast({
                 title: "Songs Deleted",

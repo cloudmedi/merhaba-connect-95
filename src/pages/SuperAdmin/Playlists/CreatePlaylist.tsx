@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PlaylistForm } from "@/components/playlists/PlaylistForm";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function CreatePlaylist() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [playlistData, setPlaylistData] = useState({
     title: "",
@@ -20,6 +21,16 @@ export function CreatePlaylist() {
     selectedCategories: [],
     selectedMoods: [],
   });
+
+  // Initialize selected songs from navigation state
+  useEffect(() => {
+    if (location.state?.selectedSongs) {
+      setPlaylistData(prev => ({
+        ...prev,
+        selectedSongs: location.state.selectedSongs
+      }));
+    }
+  }, [location.state]);
 
   const handleCreatePlaylist = async () => {
     if (!playlistData.title) {
