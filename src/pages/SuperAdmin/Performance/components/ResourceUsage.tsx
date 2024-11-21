@@ -13,6 +13,8 @@ export function ResourceUsage() {
     storage_usage: 78,
   };
 
+  // ... keep existing code (resource cards)
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -77,12 +79,15 @@ export function ResourceUsage() {
                 tickLine={{ stroke: '#94a3b8' }}
                 tickFormatter={(value) => new Date(value).toLocaleTimeString()}
                 width={60}
+                padding={{ left: 0, right: 0 }}
               />
               <YAxis 
                 stroke="#94a3b8"
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
                 width={60}
+                padding={{ top: 20, bottom: 20 }}
+                tickCount={5}
               />
               <ChartTooltip />
               <Line
@@ -92,6 +97,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -100,6 +106,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -108,6 +115,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
+                isAnimationActive={false}
               />
             </LineChart>
           </ChartContainer>

@@ -29,12 +29,15 @@ export function ApiPerformance() {
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
                 width={60}
+                padding={{ left: 0, right: 0 }}
               />
               <YAxis 
                 stroke="#94a3b8"
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
                 width={60}
+                padding={{ top: 20, bottom: 20 }}
+                tickCount={5}
               />
               <ChartTooltip />
               <Bar 
@@ -42,6 +45,7 @@ export function ApiPerformance() {
                 fill="#3b82f6"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
+                isAnimationActive={false}
               />
             </BarChart>
           </ChartContainer>

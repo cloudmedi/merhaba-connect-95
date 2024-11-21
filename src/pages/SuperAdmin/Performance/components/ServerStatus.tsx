@@ -12,6 +12,8 @@ export function ServerStatus() {
     error_rate: 0.1,
   };
 
+  // ... keep existing code (status cards)
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -91,12 +93,16 @@ export function ServerStatus() {
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
                 tickFormatter={(value) => new Date(value).toLocaleTimeString()}
+                width={60}
+                padding={{ left: 0, right: 0 }}
               />
               <YAxis 
                 stroke="#94a3b8"
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
                 width={60}
+                padding={{ top: 20, bottom: 20 }}
+                tickCount={5}
               />
               <ChartTooltip />
               <Area
@@ -105,6 +111,7 @@ export function ServerStatus() {
                 stroke="#3b82f6"
                 strokeWidth={2}
                 fill="url(#responseTimeGradient)"
+                isAnimationActive={false}
               />
             </AreaChart>
           </ChartContainer>
