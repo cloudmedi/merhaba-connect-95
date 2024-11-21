@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Device } from '../hooks/useDevices';
+import type { Device } from '../hooks/types';
 
 interface DeviceScheduleDialogProps {
   open: boolean;
@@ -17,8 +17,8 @@ export function DeviceScheduleDialog({ open, onOpenChange, device }: DeviceSched
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div>
-            <p>Power On: {device.schedule.powerOn || 'Not set'}</p>
-            <p>Power Off: {device.schedule.powerOff || 'Not set'}</p>
+            <p>Power On: {(device.schedule as DeviceSchedule).powerOn || 'Not set'}</p>
+            <p>Power Off: {(device.schedule as DeviceSchedule).powerOff || 'Not set'}</p>
           </div>
         </div>
       </DialogContent>

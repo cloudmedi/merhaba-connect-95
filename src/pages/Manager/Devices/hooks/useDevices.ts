@@ -1,12 +1,14 @@
 import { useDeviceQueries } from "./useDeviceQueries";
 import { useDeviceMutations } from "./useDeviceMutations";
 import { useDeviceSubscription } from "./useDeviceSubscription";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useDevices = () => {
+  const queryClient = useQueryClient();
   const { data: devices = [], isLoading, error } = useDeviceQueries();
   const { createDevice, updateDevice, deleteDevice } = useDeviceMutations();
 
-  useDeviceSubscription();
+  useDeviceSubscription(queryClient);
 
   return {
     devices,
