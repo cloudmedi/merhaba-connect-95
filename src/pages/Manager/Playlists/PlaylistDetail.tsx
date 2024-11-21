@@ -1,15 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Music2, Play } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
-import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
-import { MusicPlayer } from "@/components/MusicPlayer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { SongList } from "@/components/playlists/SongList";
+import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 interface PlaylistSong {
   id: string;

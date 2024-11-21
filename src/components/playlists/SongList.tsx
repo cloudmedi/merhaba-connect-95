@@ -5,12 +5,12 @@ interface Song {
   id: string;
   title: string;
   artist: string;
-  duration: string;
+  duration: number | null;
 }
 
 interface SongListProps {
   songs: Song[];
-  formatDuration: (duration: string) => string;
+  formatDuration: (duration: number | null) => string;
 }
 
 export function SongList({ songs, formatDuration }: SongListProps) {
