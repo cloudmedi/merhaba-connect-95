@@ -3,16 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types/database";
+
+type DbDevice = Database['public']['Tables']['devices']['Row'];
 
 interface SystemInfo {
   version?: string;
-  // Add other system info properties as needed
+  [key: string]: unknown;
 }
 
 interface Schedule {
   powerOn?: string;
   powerOff?: string;
-  // Add other schedule properties as needed
+  [key: string]: unknown;
 }
 
 export interface Device {
@@ -23,12 +26,13 @@ export interface Device {
   ip_address?: string | null;
   system_info: SystemInfo;
   schedule: Schedule;
-  token?: string;
+  token?: string | null;
   last_seen?: string | null;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
   location?: string | null;
   branch_id?: string | null;
+  location_id?: string | null;
   branches?: {
     id: string;
     name: string;
@@ -84,6 +88,10 @@ export const useDevices = () => {
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
+      if (!userProfile?.company_id) {
+        return [];
+      }
+
       const { data: devices, error } = await supabase
         .from('devices')
         .select(`
@@ -94,14 +102,14 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branches.company_id', userProfile?.company_id);
+        .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
       
-      // Ensure the returned devices match the Device interface
       return (devices || []).map(device => ({
         ...device,
         category: device.category as 'player' | 'display' | 'controller',
+        status: device.status as 'online' | 'offline',
         system_info: device.system_info as SystemInfo,
         schedule: device.schedule as Schedule
       }));
@@ -109,7 +117,7 @@ export const useDevices = () => {
   });
 
   const createDevice = useMutation({
-    mutationFn: async (device: Omit<Device, 'id'>) => {
+    mutationFn: async (device: Omit<DbDevice, 'id' | 'created_at' | 'updated_at'>) => {
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
@@ -131,8 +139,8 @@ export const useDevices = () => {
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
-          system_info: device.system_info || {},
-          schedule: device.schedule || {}
+          system_info: {},
+          schedule: {}
         })
         .select()
         .single();
@@ -150,14 +158,12 @@ export const useDevices = () => {
   });
 
   const updateDevice = useMutation({
-    mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
+    mutationFn: async ({ id, ...device }: Partial<DbDevice> & { id: string }) => {
       const { data, error } = await supabase
         .from('devices')
         .update({
           ...device,
           last_seen: new Date().toISOString(),
-          system_info: device.system_info || undefined,
-          schedule: device.schedule || undefined
         })
         .eq('id', id)
         .select()
