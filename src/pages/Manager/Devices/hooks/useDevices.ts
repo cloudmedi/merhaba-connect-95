@@ -3,7 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { Json } from "@/integrations/supabase/types";
+
+interface SystemInfo {
+  version?: string;
+  // Add other system info properties as needed
+}
+
+interface Schedule {
+  powerOn?: string;
+  powerOff?: string;
+  // Add other schedule properties as needed
+}
 
 export interface Device {
   id: string;
@@ -11,14 +21,19 @@ export interface Device {
   category: 'player' | 'display' | 'controller';
   status: 'online' | 'offline';
   ip_address?: string | null;
-  system_info: Json;
-  schedule: Json;
+  system_info: SystemInfo;
+  schedule: Schedule;
   token?: string;
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;
   location?: string | null;
   branch_id?: string | null;
+  branches?: {
+    id: string;
+    name: string;
+    company_id: string;
+  } | null;
 }
 
 export const useDevices = () => {
@@ -81,12 +96,15 @@ export const useDevices = () => {
         `)
         .eq('branches.company_id', userProfile?.company_id);
 
-      if (error) {
-        console.error('Error fetching devices:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      return devices || [];
+      // Ensure the returned devices match the Device interface
+      return (devices || []).map(device => ({
+        ...device,
+        category: device.category as 'player' | 'display' | 'controller',
+        system_info: device.system_info as SystemInfo,
+        schedule: device.schedule as Schedule
+      }));
     },
   });
 
@@ -97,6 +115,15 @@ export const useDevices = () => {
         .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
+
+      const { count: currentDevices } = await supabase
+        .from('devices')
+        .select('*', { count: 'exact' })
+        .eq('branch_id', device.branch_id);
+
+      if (currentDevices !== null && currentDevices >= 5) {
+        throw new Error('License limit reached (5 devices). Please upgrade your license to add more devices.');
+      }
 
       const { data, error } = await supabase
         .from('devices')
@@ -118,8 +145,7 @@ export const useDevices = () => {
       toast.success('Device added successfully');
     },
     onError: (error: Error) => {
-      toast.error('Failed to add device');
-      console.error('Error adding device:', error);
+      toast.error(error.message);
     },
   });
 
