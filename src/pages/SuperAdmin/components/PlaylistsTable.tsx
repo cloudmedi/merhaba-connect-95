@@ -51,20 +51,23 @@ export function PlaylistsTable({
 }: PlaylistsTableProps) {
   const { toast } = useToast();
 
-  const handleDelete = async (id: string) => {
-    try {
-      await onDelete(id);
-      toast({
-        title: "Success",
-        description: "Playlist deleted successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete playlist",
-        variant: "destructive",
-      });
+  const getArtworkUrl = (url: string | null | undefined) => {
+    if (!url) return "/placeholder.svg";
+    
+    // If it's already a full URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
     }
+    
+    // If it's a storage path, construct the full URL
+    if (url.startsWith('artworks/')) {
+      const { data } = supabase.storage
+        .from('playlists')
+        .getPublicUrl(url);
+      return data.publicUrl;
+    }
+    
+    return url;
   };
 
   if (isLoading) {
@@ -103,9 +106,13 @@ export function PlaylistsTable({
                     <div className="flex items-center gap-4">
                       <div className="relative group w-10 h-10">
                         <img
-                          src={playlist.artwork_url || "/placeholder.svg"}
+                          src={getArtworkUrl(playlist.artwork_url)}
                           alt={playlist.name}
                           className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
+                          onError={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            img.src = "/placeholder.svg";
+                          }}
                         />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button

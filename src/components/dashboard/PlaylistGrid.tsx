@@ -14,6 +14,25 @@ interface PlaylistGridProps {
 export function PlaylistGrid({ title, description, playlists, isLoading }: PlaylistGridProps) {
   const navigate = useNavigate();
 
+  const getArtworkUrl = (url: string | null | undefined) => {
+    if (!url) return "/placeholder.svg";
+    
+    // If it's already a full URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If it's a storage path, construct the full URL
+    if (url.startsWith('artworks/')) {
+      const { data } = supabase.storage
+        .from('playlists')
+        .getPublicUrl(url);
+      return data.publicUrl;
+    }
+    
+    return url;
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -50,9 +69,13 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
           >
             <div className="aspect-square relative overflow-hidden rounded-t-lg">
               <img
-                src={playlist.artwork_url || "/placeholder.svg"}
+                src={getArtworkUrl(playlist.artwork_url)}
                 alt={playlist.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.src = "/placeholder.svg";
+                }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200" />
               <Button

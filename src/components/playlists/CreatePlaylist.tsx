@@ -21,7 +21,6 @@ export function CreatePlaylist() {
     selectedMoods: [],
   });
 
-  // Initialize selected songs from navigation state
   useEffect(() => {
     if (location.state?.selectedSongs) {
       setPlaylistData(prev => ({
@@ -44,34 +43,34 @@ export function CreatePlaylist() {
     }
 
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Upload artwork if exists
       let artwork_url = null;
       if (playlistData.artwork) {
         const file = playlistData.artwork;
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `artworks/${fileName}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('playlists')
-          .upload(`artworks/${fileName}`, file, {
+          .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false
           });
 
         if (uploadError) throw uploadError;
         
+        // Get the public URL directly after upload
         const { data: { publicUrl } } = supabase.storage
           .from('playlists')
-          .getPublicUrl(`artworks/${fileName}`);
+          .getPublicUrl(filePath);
           
         artwork_url = publicUrl;
+        console.log("Uploaded artwork URL:", artwork_url); // Debug log
       }
 
-      // Create playlist
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .insert([
@@ -88,7 +87,6 @@ export function CreatePlaylist() {
 
       if (playlistError) throw playlistError;
 
-      // Add songs to playlist if any selected
       if (playlistData.selectedSongs.length > 0) {
         const playlistSongs = playlistData.selectedSongs.map((song: any, index: number) => ({
           playlist_id: playlist.id,
@@ -103,7 +101,6 @@ export function CreatePlaylist() {
         if (songsError) throw songsError;
       }
 
-      // Add categories to playlist if any selected
       if (playlistData.selectedCategories.length > 0) {
         const playlistCategories = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
