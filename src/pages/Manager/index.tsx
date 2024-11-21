@@ -3,14 +3,14 @@ import Dashboard from "./Dashboard";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import Announcements from "./Announcements";
 import Devices from "./Devices";
-import Playlists from "./Playlists/PlaylistDetail";
+import PlaylistDetail from "./Playlists/PlaylistDetail";
 
 export default function Manager() {
   return (
     <DashboardLayout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/playlists" element={<Playlists />} />
+        <Route path="/playlists" element={<PlaylistDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/devices" element={<Devices />} />
       </Routes>
