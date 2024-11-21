@@ -17,9 +17,14 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
-    // If it's already a Bunny CDN URL or any other full URL, return it
+    // If it's already a full URL (including Bunny CDN URLs), return it as is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
+    }
+    
+    // If it's a Bunny CDN path without the full URL, construct the full URL
+    if (!url.includes('://')) {
+      return `https://cloud-media.b-cdn.net/${url}`;
     }
     
     return "/placeholder.svg";
