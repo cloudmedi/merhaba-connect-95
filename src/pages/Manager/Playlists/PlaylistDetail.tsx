@@ -50,6 +50,7 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
+      // First, fetch the playlist details
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -65,6 +66,7 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
+      // Then, fetch the songs for this playlist
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -86,6 +88,7 @@ export function PlaylistDetail() {
         throw songsError;
       }
 
+      // Map the songs data
       const songs = playlistSongs.map(ps => ({
         id: ps.songs.id,
         title: ps.songs.title,
