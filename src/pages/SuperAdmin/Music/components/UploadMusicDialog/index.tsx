@@ -64,12 +64,20 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         const formData = new FormData();
         formData.append('file', file);
 
+        // Update progress to show upload started
+        setUploadingFiles(prev => ({
+          ...prev,
+          [file.name]: {
+            ...prev[file.name],
+            progress: 10
+          }
+        }));
+
         // Call the upload-music edge function
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data',
           }
         });
 
@@ -79,6 +87,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           throw error;
         }
 
+        // Update progress to show completion
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
@@ -95,9 +104,6 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           title: "Upload successful",
           description: `${file.name} has been uploaded successfully`,
         });
-
-        // Close the dialog after successful upload
-        onOpenChange(false);
 
       } catch (error: any) {
         console.error('Upload error:', error);

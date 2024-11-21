@@ -96,7 +96,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get user information
+    // Get user information from the authorization header
     const authHeader = req.headers.get('Authorization')?.split(' ')[1]
     if (!authHeader) {
       throw new Error('No authorization header')
@@ -108,7 +108,7 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
