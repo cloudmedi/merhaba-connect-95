@@ -4,7 +4,7 @@ import * as mm from 'https://esm.sh/music-metadata-browser'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -14,25 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    // Get the content type
-    const contentType = req.headers.get('content-type');
-    if (!contentType || !contentType.includes('multipart/form-data')) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid content type', 
-          details: 'Content type must be multipart/form-data' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 400 
-        }
-      );
-    }
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
 
-    // Parse form data
     let formData;
     try {
       formData = await req.formData();
+      console.log('FormData parsed successfully');
     } catch (error) {
       console.error('Form data parsing error:', error);
       return new Response(
@@ -47,14 +34,16 @@ serve(async (req) => {
       );
     }
 
-    // Get file from form data
     const file = formData.get('file');
     if (!file || !(file instanceof File)) {
+      console.error('No valid file found in form data');
       return new Response(
         JSON.stringify({ error: 'No file uploaded or invalid file' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+
+    console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -77,6 +66,8 @@ serve(async (req) => {
 
     const fileName = `${crypto.randomUUID()}-${file.name}`;
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`;
+
+    console.log('Uploading to Bunny CDN:', bunnyUrl);
 
     // Upload file to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
@@ -114,27 +105,7 @@ serve(async (req) => {
       created_by: user.id
     };
 
-    // If there's cover art, upload it to Supabase Storage
-    if (metadata.common.picture && metadata.common.picture.length > 0) {
-      const picture = metadata.common.picture[0];
-      const artworkFileName = `${crypto.randomUUID()}.${picture.format.split('/')[1]}`;
-      
-      const { data: artworkData, error: artworkError } = await supabase.storage
-        .from('music')
-        .upload(
-          `artwork/${artworkFileName}`, 
-          new Blob([picture.data], { type: picture.format }),
-          { contentType: picture.format }
-        );
-
-      if (!artworkError && artworkData) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('music')
-          .getPublicUrl(`artwork/${artworkFileName}`);
-        
-        songData.artwork_url = publicUrl;
-      }
-    }
+    console.log('Saving song metadata:', songData);
 
     // Save song metadata to Supabase
     const { data: savedSong, error: insertError } = await supabase
@@ -144,6 +115,7 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
+      console.error('Failed to save song metadata:', insertError);
       throw new Error('Failed to save song metadata');
     }
 

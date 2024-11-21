@@ -21,19 +21,18 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           throw new Error('No active session');
         }
 
-        // Create FormData and explicitly set the file
+        // Create FormData
         const formData = new FormData();
-        formData.append('file', file, file.name);
+        formData.append('file', file);
+
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
 
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
-          headers: {
-            // Let the browser set the correct Content-Type with boundary
-            'Accept': 'application/json',
-          },
         });
 
         if (error) {
+          console.error('Upload error:', error);
           throw error;
         }
 
