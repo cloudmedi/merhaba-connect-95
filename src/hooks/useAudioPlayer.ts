@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 export function useAudioPlayer(audioUrl: string | undefined) {
-  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -11,7 +9,10 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      setError("Ses dosyası URL'i bulunamadı");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -39,13 +40,8 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleError = (e: ErrorEvent) => {
       console.error('Audio error:', e);
       setIsLoading(false);
-      setError("Ses dosyası yüklenemedi");
+      setError("Ses dosyası yüklenemedi. URL: " + audioUrl);
       setIsPlaying(false);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Ses dosyası yüklenemedi",
-      });
     };
 
     const handleTimeUpdate = () => {
@@ -66,6 +62,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
+    // Preload the audio
+    audio.load();
+
     return () => {
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('loadstart', handleLoadStart);
@@ -78,7 +77,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       setProgress(0);
       setError(null);
     };
-  }, [audioUrl, toast]);
+  }, [audioUrl, isPlaying]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;

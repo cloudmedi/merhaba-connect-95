@@ -54,7 +54,6 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         throw error;
       }
 
-      console.log('Playlist songs data:', data); // Debug log
       return data as PlaylistSong[];
     },
     enabled: !!currentPlaylist?.id
@@ -137,11 +136,11 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
             title: currentPlaylist.title,
             artwork: currentPlaylist.artwork || defaultArtwork,
             songs: playlistSongs.map(ps => ({
-              id: parseInt(ps.songs.id),
+              id: ps.songs.id,
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: ps.songs.file_url // This should be the Bunny CDN URL
+              file_url: ps.songs.file_url
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}
