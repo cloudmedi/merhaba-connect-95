@@ -48,14 +48,22 @@ export function CreatePlaylist() {
 
       let artwork_url = null;
       if (playlistData.artwork) {
-        const formData = new FormData();
-        formData.append('file', playlistData.artwork);
-        formData.append('fileName', `${crypto.randomUUID()}.${playlistData.artwork.name.split('.').pop()}`);
+        // Convert file to base64
+        const reader = new FileReader();
+        const fileBase64Promise = new Promise((resolve) => {
+          reader.onload = () => {
+            const base64 = reader.result?.toString().split(',')[1];
+            resolve(base64);
+          };
+        });
+        reader.readAsDataURL(playlistData.artwork);
+        const fileBase64 = await fileBase64Promise;
 
         const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-artwork', {
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
+          body: {
+            fileData: fileBase64,
+            fileName: `${crypto.randomUUID()}.${playlistData.artwork.name.split('.').pop()}`,
+            contentType: playlistData.artwork.type
           }
         });
 
