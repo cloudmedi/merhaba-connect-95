@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreVertical, Play } from "lucide-react";
+import { MoreVertical, Play, Globe, Lock } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,9 +37,12 @@ export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading 
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
-    // If it's already a Bunny CDN URL or any other full URL, return it
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
+    }
+    
+    if (!url.includes('://')) {
+      return `https://cloud-media.b-cdn.net/${url}`;
     }
     
     return "/placeholder.svg";
@@ -64,6 +67,32 @@ export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading 
       toast({
         title: "Error",
         description: error.message || "Failed to delete playlist",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePublishToggle = async (playlist: Playlist) => {
+    try {
+      const { error } = await supabase
+        .from('playlists')
+        .update({ is_public: !playlist.is_public })
+        .eq('id', playlist.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Playlist ${playlist.is_public ? 'unpublished' : 'published'} successfully`,
+      });
+
+      // Refresh the page to update the UI
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error toggling playlist publish state:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update playlist",
         variant: "destructive",
       });
     }
@@ -137,12 +166,13 @@ export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading 
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                         playlist.is_public
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
+                      {playlist.is_public ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                       {playlist.is_public ? "Public" : "Private"}
                     </span>
                   </TableCell>
@@ -159,13 +189,20 @@ export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading 
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem
                           onClick={() => onEdit(playlist)}
                           className="cursor-pointer"
                         >
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePublishToggle(playlist)}
+                          className="cursor-pointer"
+                        >
+                          {playlist.is_public ? "Unpublish" : "Publish"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => handleDelete(playlist.id)}
                           className="text-red-600 cursor-pointer"
