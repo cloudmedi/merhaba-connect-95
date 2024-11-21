@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types/database";
+import type { Database } from "@/integrations/supabase/types";
 
 type DbDevice = Database['public']['Tables']['devices']['Row'];
+type DeviceInsert = Database['public']['Tables']['devices']['Insert'];
+type DeviceUpdate = Database['public']['Tables']['devices']['Update'];
 
 interface SystemInfo {
   version?: string;
@@ -18,21 +20,9 @@ interface Schedule {
   [key: string]: unknown;
 }
 
-export interface Device {
-  id: string;
-  name: string;
-  category: 'player' | 'display' | 'controller';
-  status: 'online' | 'offline';
-  ip_address?: string | null;
+export interface Device extends Omit<DbDevice, 'system_info' | 'schedule'> {
   system_info: SystemInfo;
   schedule: Schedule;
-  token?: string | null;
-  last_seen?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  location?: string | null;
-  branch_id?: string | null;
-  location_id?: string | null;
   branches?: {
     id: string;
     name: string;
@@ -96,7 +86,7 @@ export const useDevices = () => {
         .from('devices')
         .select(`
           *,
-          branches (
+          branches:branch_id (
             id,
             name,
             company_id
@@ -108,8 +98,6 @@ export const useDevices = () => {
       
       return (devices || []).map(device => ({
         ...device,
-        category: device.category as 'player' | 'display' | 'controller',
-        status: device.status as 'online' | 'offline',
         system_info: device.system_info as SystemInfo,
         schedule: device.schedule as Schedule
       }));
@@ -117,7 +105,7 @@ export const useDevices = () => {
   });
 
   const createDevice = useMutation({
-    mutationFn: async (device: Omit<DbDevice, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (device: DeviceInsert) => {
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
@@ -139,8 +127,6 @@ export const useDevices = () => {
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
-          system_info: {},
-          schedule: {}
         })
         .select()
         .single();
@@ -158,7 +144,7 @@ export const useDevices = () => {
   });
 
   const updateDevice = useMutation({
-    mutationFn: async ({ id, ...device }: Partial<DbDevice> & { id: string }) => {
+    mutationFn: async ({ id, ...device }: DeviceUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('devices')
         .update({

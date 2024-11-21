@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
+import type { Database } from "@/integrations/supabase/types";
+
+type DeviceInsert = Database['public']['Tables']['devices']['Insert'];
 
 export function AddDeviceDialog({
   open,
@@ -20,26 +23,24 @@ export function AddDeviceDialog({
 }) {
   const [name, setName] = useState("");
   const [token, setToken] = useState("");
-  const [location, setLocation] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    await createDevice.mutateAsync({
+    const newDevice: DeviceInsert = {
       name,
       token,
-      location,
-      category: "player", // Default category since we removed the selection
+      category: "player", // Default category
       status: 'offline',
-      schedule: {},
       system_info: {},
-    });
+      schedule: {},
+    };
 
+    await createDevice.mutateAsync(newDevice);
     onOpenChange(false);
     setName("");
     setToken("");
-    setLocation("");
   };
 
   return (
@@ -73,16 +74,6 @@ export function AddDeviceDialog({
               required
               pattern="\d{6}"
               title="Please enter a 6-digit token"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter device location"
-              required
             />
           </div>
           <DialogFooter>
