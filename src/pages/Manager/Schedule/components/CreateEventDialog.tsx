@@ -87,7 +87,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
     setCurrentTab("details");
   };
 
-  const getEventColor = (category: EventCategory) => {
+  const getEventColor = (category: EventCategory): EventColor => {
     const colors = {
       'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
       'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },

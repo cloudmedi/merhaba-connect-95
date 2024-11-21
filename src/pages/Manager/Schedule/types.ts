@@ -1,4 +1,4 @@
-import type { Json } from "@/integrations/supabase/types/json";
+import type { Json } from "@/integrations/supabase/types";
 
 export type EventCategory = 'Marketing' | 'Special Promotion' | 'Holiday Music' | 'Regular Playlist' | 'Background Music';
 
