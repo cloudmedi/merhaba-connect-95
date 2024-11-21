@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EventDetailsStep } from "./EventDetailsStep";
 import { BranchSelectionStep } from "./BranchSelectionStep";
 import { RecurrenceStep } from "./RecurrenceStep";
@@ -35,24 +35,47 @@ interface EventFormData {
 
 export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
   const [currentTab, setCurrentTab] = useState("details");
-  const [formData, setFormData] = useState<EventFormData>(() => {
-    if (initialTimeRange) {
-      const startDateTime = new Date(initialTimeRange.start);
-      const endDateTime = new Date(initialTimeRange.end);
+  const [formData, setFormData] = useState<EventFormData>(() => getInitialFormData(initialTimeRange));
 
-      // Saat ve dakika formatını düzgün şekilde ayarla
-      const formatTime = (date: Date) => {
-        const hours = date.getHours().toString().padStart(2, '0');
-        const minutes = date.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
+  // Form verilerini initialTimeRange değiştiğinde güncelle
+  useEffect(() => {
+    if (initialTimeRange) {
+      setFormData(getInitialFormData(initialTimeRange));
+    }
+  }, [initialTimeRange]);
+
+  function getInitialFormData(timeRange: { start: string; end: string; } | null | undefined): EventFormData {
+    if (timeRange) {
+      const startDateTime = new Date(timeRange.start);
+      const endDateTime = new Date(timeRange.end);
+
+      const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
       };
+
+      const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      };
+
+      console.log("Creating form data with:", {
+        startDateTime,
+        endDateTime,
+        formattedStartDate: formatDate(startDateTime),
+        formattedStartTime: formatTime(startDateTime),
+        formattedEndDate: formatDate(endDateTime),
+        formattedEndTime: formatTime(endDateTime)
+      });
 
       return {
         title: "",
         playlistId: "",
-        startDate: startDateTime.toISOString().split('T')[0],
+        startDate: formatDate(startDateTime),
         startTime: formatTime(startDateTime),
-        endDate: endDateTime.toISOString().split('T')[0],
+        endDate: formatDate(endDateTime),
         endTime: formatTime(endDateTime),
         category: "Regular Playlist",
         branches: [],
@@ -71,7 +94,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       branches: [],
       notifications: [],
     };
-  });
+  }
 
   const handleCreate = async () => {
     const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
