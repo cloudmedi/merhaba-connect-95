@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EventCategory } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,7 +15,6 @@ interface EventDetailsStepProps {
     startTime: string;
     endDate: string;
     endTime: string;
-    category: EventCategory;
   };
   onFormDataChange: (data: Partial<EventDetailsStepProps['formData']>) => void;
   onNext: () => void;
@@ -27,11 +24,9 @@ interface EventDetailsStepProps {
 export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel }: EventDetailsStepProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch playlists that are either public or belong to the user's company
   const { data: playlists = [], isLoading } = useQuery({
     queryKey: ['available-playlists', searchQuery],
     queryFn: async () => {
-      // First get the user's company_id
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
@@ -43,7 +38,6 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
 
       if (!profile) throw new Error('No profile found');
 
-      // Then fetch playlists that are either public or belong to the user's company
       const query = supabase
         .from('playlists')
         .select(`
@@ -55,7 +49,6 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
         `)
         .ilike('name', `%${searchQuery}%`);
 
-      // Add the OR conditions separately
       if (profile.company_id) {
         query.or(`is_public.eq.true,company_id.eq.${profile.company_id}`);
       } else {
@@ -82,25 +75,6 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
           value={formData.title}
           onChange={(e) => onFormDataChange({ title: e.target.value })}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Event Category</Label>
-        <Select
-          value={formData.category}
-          onValueChange={(value: EventCategory) => onFormDataChange({ category: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Marketing">Marketing</SelectItem>
-            <SelectItem value="Special Promotion">Special Promotion</SelectItem>
-            <SelectItem value="Holiday Music">Holiday Music</SelectItem>
-            <SelectItem value="Regular Playlist">Regular Playlist</SelectItem>
-            <SelectItem value="Background Music">Background Music</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">

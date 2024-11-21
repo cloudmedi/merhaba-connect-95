@@ -1,7 +1,5 @@
 import type { Json } from "@/integrations/supabase/types";
 
-export type EventCategory = 'Marketing' | 'Special Promotion' | 'Holiday Music' | 'Regular Playlist' | 'Background Music';
-
 export interface EventColor {
   primary: string;
   secondary: string;
@@ -16,7 +14,7 @@ export interface EventNotification {
 export interface EventRecurrence {
   frequency: 'daily' | 'weekly' | 'monthly';
   interval: number;
-  endDate?: string;  // Changed from Date to string for consistency
+  endDate?: string;
 }
 
 export interface ScheduleEvent {
@@ -26,7 +24,6 @@ export interface ScheduleEvent {
   playlist_id?: string;
   start_time: string;
   end_time: string;
-  category: EventCategory;
   color: EventColor;
   recurrence?: EventRecurrence;
   notifications?: EventNotification[];
