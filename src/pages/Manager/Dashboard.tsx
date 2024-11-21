@@ -31,7 +31,7 @@ export default function ManagerDashboard() {
 
       if (categoriesError) throw categoriesError;
 
-      // For each category, fetch associated playlists through playlist_categories
+      // For each category, fetch associated public playlists through playlist_categories
       const categoriesWithPlaylists = await Promise.all(
         categoriesData.map(async (category) => {
           const { data: playlistsData, error: playlistsError } = await supabase
@@ -46,7 +46,9 @@ export default function ManagerDashboard() {
                 mood:moods(name)
               )
             `)
-            .eq('category_id', category.id);
+            .eq('category_id', category.id)
+            // Only fetch playlists where is_public is true
+            .eq('playlists.is_public', true);
 
           if (playlistsError) throw playlistsError;
 
@@ -66,7 +68,9 @@ export default function ManagerDashboard() {
   });
 
   const filteredCategories = categories?.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    category.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    // Only show categories that have public playlists
+    category.playlists.length > 0
   ) || [];
 
   return (
@@ -74,7 +78,7 @@ export default function ManagerDashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Manage your business settings</p>
+          <p className="text-gray-500 mt-1">Browse available playlists</p>
         </div>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -95,7 +99,7 @@ export default function ManagerDashboard() {
           </div>
         ) : filteredCategories.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No categories found</p>
+            <p className="text-gray-500">No playlists available</p>
           </div>
         ) : (
           filteredCategories.map((category) => (
