@@ -42,6 +42,8 @@ export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const artworkUrl = playlist.artwork || defaultArtwork;
 
+  console.log('Current song:', currentSong); // Debug log
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
       <div className="flex flex-col max-w-screen-2xl mx-auto space-y-2">

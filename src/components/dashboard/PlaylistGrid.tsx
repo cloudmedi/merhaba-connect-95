@@ -29,7 +29,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
 
-  const { data: playlistSongs } = useQuery<PlaylistSong[]>({
+  const { data: playlistSongs } = useQuery({
     queryKey: ['playlist-songs', currentPlaylist?.id],
     queryFn: async () => {
       if (!currentPlaylist?.id) return [];
@@ -54,7 +54,8 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
         throw error;
       }
 
-      return (data as PlaylistSong[]) || [];
+      console.log('Playlist songs data:', data); // Debug log
+      return data as PlaylistSong[];
     },
     enabled: !!currentPlaylist?.id
   });
@@ -140,7 +141,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: ps.songs.file_url
+              file_url: ps.songs.file_url // This should be the Bunny CDN URL
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}
