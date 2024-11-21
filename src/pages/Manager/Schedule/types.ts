@@ -13,6 +13,12 @@ export interface EventNotification {
   timing: number;
 }
 
+export interface EventRecurrence {
+  frequency: 'daily' | 'weekly' | 'monthly';
+  interval: number;
+  endDate?: string;
+}
+
 export interface ScheduleEvent {
   id: string;
   title: string;
@@ -22,11 +28,7 @@ export interface ScheduleEvent {
   end_time: string;
   category: EventCategory;
   color: EventColor;
-  recurrence?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
-    interval: number;
-    endDate?: string;
-  };
+  recurrence?: EventRecurrence;
   notifications?: EventNotification[];
   created_by?: string;
   company_id?: string;

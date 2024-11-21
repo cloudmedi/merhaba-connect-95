@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScheduleEvent, EventNotification } from "../types";
+import { ScheduleEvent, EventNotification, EventColor } from "../types";
 import type { Json } from "@/integrations/supabase/types/json";
 
 export const useScheduleEvents = () => {

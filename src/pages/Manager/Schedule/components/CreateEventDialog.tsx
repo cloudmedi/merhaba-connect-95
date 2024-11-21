@@ -7,7 +7,7 @@ import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent, EventCategory } from "../types";
+import { ScheduleEvent, EventCategory, EventNotification } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
@@ -25,7 +25,7 @@ interface EventFormData {
   endTime: string;
   category: EventCategory;
   branches: string[];
-  notifications: { type: 'email' | 'system' | 'both'; timing: number; }[];
+  notifications: EventNotification[];
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;
@@ -54,12 +54,11 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents }: Create
     const eventData: ScheduleEvent = {
       id: crypto.randomUUID(),
       title: formData.title,
-      start: startDateTime,
-      end: endDateTime,
-      playlistId: formData.playlistId,
+      start_time: startDateTime.toISOString(),
+      end_time: endDateTime.toISOString(),
+      playlist_id: formData.playlistId,
       category: formData.category,
       color: getEventColor(formData.category),
-      branches: formData.branches,
       notifications: formData.notifications,
       recurrence: formData.recurrence,
     };
