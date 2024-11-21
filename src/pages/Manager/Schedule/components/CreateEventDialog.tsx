@@ -40,13 +40,20 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       const startDateTime = new Date(initialTimeRange.start);
       const endDateTime = new Date(initialTimeRange.end);
 
+      // Saat ve dakika formatını düzgün şekilde ayarla
+      const formatTime = (date: Date) => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
+
       return {
         title: "",
         playlistId: "",
         startDate: startDateTime.toISOString().split('T')[0],
-        startTime: startDateTime.toTimeString().slice(0, 5),
+        startTime: formatTime(startDateTime),
         endDate: endDateTime.toISOString().split('T')[0],
-        endTime: endDateTime.toTimeString().slice(0, 5),
+        endTime: formatTime(endDateTime),
         category: "Regular Playlist",
         branches: [],
         notifications: [],
