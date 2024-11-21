@@ -80,18 +80,16 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
   const getFullUrl = (url: string | null) => {
     if (!url) return defaultArtwork;
     
+    // If it's already a full URL, return it
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-
-    // Transform Supabase storage URLs
+    
+    // If it's a Supabase storage URL, get the public URL
     if (url.startsWith('playlists/')) {
-      const { data } = supabase.storage
-        .from('playlists')
-        .getPublicUrl(url);
-      return data.publicUrl;
+      return `${process.env.VITE_SUPABASE_URL}/storage/v1/object/public/playlists/${url.replace('playlists/', '')}`;
     }
-
+    
     return defaultArtwork;
   };
 
@@ -137,12 +135,16 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
             <div className="p-4">
               <h3 className="font-medium text-base text-gray-900">{playlist.title}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  {playlist.genre}
-                </span>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  {playlist.mood}
-                </span>
+                {playlist.genre && (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                    {playlist.genre}
+                  </span>
+                )}
+                {playlist.mood && (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                    {playlist.mood}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -158,7 +160,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading = false 
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: ps.songs.file_url
+              file_url: getFullUrl(ps.songs.file_url)
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}
