@@ -10,7 +10,7 @@ import type { Playlist } from "@/types/api";
 const transformPlaylistToGridFormat = (playlist: Playlist): GridPlaylist => ({
   id: playlist.id,
   title: playlist.name,
-  artwork: playlist.artwork_url || "/placeholder.svg",
+  artwork_url: playlist.artwork_url,
   genre: "Various", // You might want to fetch this from the genres table
   mood: "Various", // You might want to fetch this from the moods table
 });
