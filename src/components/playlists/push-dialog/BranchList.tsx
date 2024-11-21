@@ -4,15 +4,23 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Branch } from "@/pages/Manager/Announcements/types";
+import { toast } from "sonner";
 
 interface BranchListProps {
   branches: Branch[];
   selectedBranches: string[];
   onBranchToggle: (branchId: string) => void;
   onSelectAll: (checked: boolean) => void;
+  isLoading?: boolean;
 }
 
-export function BranchList({ branches, selectedBranches, onBranchToggle, onSelectAll }: BranchListProps) {
+export function BranchList({ 
+  branches, 
+  selectedBranches, 
+  onBranchToggle, 
+  onSelectAll,
+  isLoading = false 
+}: BranchListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredBranches = branches.filter(branch =>
@@ -22,6 +30,23 @@ export function BranchList({ branches, selectedBranches, onBranchToggle, onSelec
 
   const areAllSelected = filteredBranches.length > 0 && 
     filteredBranches.every(branch => selectedBranches.includes(branch.id));
+
+  const handleBranchToggle = (branchId: string) => {
+    onBranchToggle(branchId);
+    toast.success(
+      selectedBranches.includes(branchId) 
+        ? "Branch removed" 
+        : "Branch added"
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[300px]">
+        <p className="text-gray-500">Loading branches...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -52,11 +77,11 @@ export function BranchList({ branches, selectedBranches, onBranchToggle, onSelec
             <div
               key={branch.id}
               className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
-              onClick={() => onBranchToggle(branch.id)}
+              onClick={() => handleBranchToggle(branch.id)}
             >
               <Checkbox
                 checked={selectedBranches.includes(branch.id)}
-                onCheckedChange={() => onBranchToggle(branch.id)}
+                onCheckedChange={() => handleBranchToggle(branch.id)}
               />
               <div>
                 <h4 className="text-sm font-medium">{branch.name}</h4>
@@ -66,6 +91,11 @@ export function BranchList({ branches, selectedBranches, onBranchToggle, onSelec
               </div>
             </div>
           ))}
+          {filteredBranches.length === 0 && (
+            <div className="col-span-2 text-center py-8 text-gray-500">
+              No branches found
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
