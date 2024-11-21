@@ -17,20 +17,12 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
-    // If it's already a full URL, return it
+    // If it's already a Bunny CDN URL or any other full URL, return it
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // If it's a storage path, construct the full URL
-    if (url.startsWith('artworks/')) {
-      const { data } = supabase.storage
-        .from('playlists')
-        .getPublicUrl(url);
-      return data.publicUrl;
-    }
-    
-    return url;
+    return "/placeholder.svg";
   };
 
   if (isLoading) {

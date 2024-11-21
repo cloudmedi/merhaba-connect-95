@@ -1,22 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MoreVertical, Play } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Playlist {
   id: string;
@@ -42,32 +31,42 @@ interface PlaylistsTableProps {
   isLoading?: boolean;
 }
 
-export function PlaylistsTable({ 
-  playlists, 
-  onPlay, 
-  onEdit, 
-  onDelete,
-  isLoading 
-}: PlaylistsTableProps) {
+export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading }: PlaylistsTableProps) {
   const { toast } = useToast();
 
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
-    // If it's already a full URL, return it
+    // If it's already a Bunny CDN URL or any other full URL, return it
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // If it's a storage path, construct the full URL
-    if (url.startsWith('artworks/')) {
-      const { data } = supabase.storage
+    return "/placeholder.svg";
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
         .from('playlists')
-        .getPublicUrl(url);
-      return data.publicUrl;
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      onDelete(id);
+      toast({
+        title: "Success",
+        description: "Playlist deleted successfully",
+      });
+    } catch (error: any) {
+      console.error('Error deleting playlist:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete playlist",
+        variant: "destructive",
+      });
     }
-    
-    return url;
   };
 
   if (isLoading) {

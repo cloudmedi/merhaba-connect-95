@@ -51,24 +51,20 @@ export function CreatePlaylist() {
         const file = playlistData.artwork;
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `artworks/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('playlists')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
+        // Upload to Bunny CDN via Edge Function
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('fileName', fileName);
+
+        const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-artwork', {
+          body: formData
+        });
 
         if (uploadError) throw uploadError;
         
-        // Get the public URL directly after upload
-        const { data: { publicUrl } } = supabase.storage
-          .from('playlists')
-          .getPublicUrl(filePath);
-          
-        artwork_url = publicUrl;
-        console.log("Uploaded artwork URL:", artwork_url); // Debug log
+        artwork_url = uploadData.url;
+        console.log("Uploaded artwork URL:", artwork_url);
       }
 
       const { data: playlist, error: playlistError } = await supabase
