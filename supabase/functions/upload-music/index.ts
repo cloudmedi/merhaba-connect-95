@@ -8,44 +8,64 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-
-    if (!file) {
+    // Check content type
+    const contentType = req.headers.get('content-type') || '';
+    if (!contentType.includes('multipart/form-data')) {
+      console.error('Invalid content type:', contentType);
       return new Response(
-        JSON.stringify({ error: 'No file uploaded' }),
+        JSON.stringify({ error: 'Invalid content type. Expected multipart/form-data' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      );
+    }
+
+    let formData;
+    try {
+      formData = await req.formData();
+    } catch (error) {
+      console.error('Error parsing form data:', error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse form data', details: error.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const file = formData.get('file');
+    if (!file || !(file instanceof File)) {
+      return new Response(
+        JSON.stringify({ error: 'No file uploaded or invalid file' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     // Extract metadata from the audio file
-    const arrayBuffer = await file.arrayBuffer()
-    const metadata = await mm.parseBlob(new Blob([arrayBuffer]))
+    const arrayBuffer = await file.arrayBuffer();
+    const metadata = await mm.parseBlob(new Blob([arrayBuffer]));
 
-    console.log('Extracted metadata:', JSON.stringify(metadata, null, 2))
+    console.log('Extracted metadata:', JSON.stringify(metadata, null, 2));
 
     // Upload to Bunny CDN
-    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
-    const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
-    const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST')
+    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
+    const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
+    const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST');
 
     if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
-      throw new Error('Missing Bunny CDN configuration')
+      throw new Error('Missing Bunny CDN configuration');
     }
 
-    const fileName = `${crypto.randomUUID()}-${file.name}`
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`
+    const fileName = `${crypto.randomUUID()}-${file.name}`;
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${fileName}`;
 
     // Upload file to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
@@ -55,19 +75,19 @@ serve(async (req) => {
         'Content-Type': file.type,
       },
       body: arrayBuffer,
-    })
+    });
 
     if (!uploadResponse.ok) {
-      console.error('Bunny CDN upload failed:', await uploadResponse.text())
-      throw new Error('Failed to upload to Bunny CDN')
+      console.error('Bunny CDN upload failed:', await uploadResponse.text());
+      throw new Error('Failed to upload to Bunny CDN');
     }
 
     // Get the user information from the auth header
-    const authHeader = req.headers.get('Authorization')?.split(' ')[1]
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader!)
+    const authHeader = req.headers.get('Authorization')?.split(' ')[1];
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader!);
 
     if (userError || !user) {
-      throw new Error('Unauthorized')
+      throw new Error('Unauthorized');
     }
 
     // Extract relevant metadata with fallbacks
@@ -81,12 +101,12 @@ serve(async (req) => {
       bunny_id: fileName,
       artwork_url: null,
       created_by: user.id
-    }
+    };
 
     // If there's cover art, upload it to Supabase Storage
     if (metadata.common.picture && metadata.common.picture.length > 0) {
-      const picture = metadata.common.picture[0]
-      const artworkFileName = `${crypto.randomUUID()}.${picture.format.split('/')[1]}`
+      const picture = metadata.common.picture[0];
+      const artworkFileName = `${crypto.randomUUID()}.${picture.format.split('/')[1]}`;
       
       const { data: artworkData, error: artworkError } = await supabase.storage
         .from('music')
@@ -94,14 +114,14 @@ serve(async (req) => {
           `artwork/${artworkFileName}`, 
           new Blob([picture.data], { type: picture.format }),
           { contentType: picture.format }
-        )
+        );
 
       if (!artworkError && artworkData) {
         const { data: { publicUrl } } = supabase.storage
           .from('music')
-          .getPublicUrl(`artwork/${artworkFileName}`)
+          .getPublicUrl(`artwork/${artworkFileName}`);
         
-        songData.artwork_url = publicUrl
+        songData.artwork_url = publicUrl;
       }
     }
 
@@ -110,17 +130,17 @@ serve(async (req) => {
       .from('songs')
       .insert(songData)
       .select()
-      .single()
+      .single();
 
     if (insertError) {
-      console.error('Database insert error:', insertError)
-      throw new Error('Failed to save song metadata')
+      console.error('Database insert error:', insertError);
+      throw new Error('Failed to save song metadata');
     }
 
     console.log('Successfully uploaded song:', {
       fileName,
       songData: savedSong
-    })
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -131,10 +151,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
-    )
+    );
 
   } catch (error) {
-    console.error('Upload error:', error)
+    console.error('Upload error:', error);
 
     return new Response(
       JSON.stringify({ 
@@ -145,6 +165,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
       }
-    )
+    );
   }
-})
+});

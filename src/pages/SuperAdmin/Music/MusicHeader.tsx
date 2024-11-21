@@ -16,23 +16,27 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
 
     for (const file of Array.from(files)) {
       try {
+        // Create FormData object
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error('No active session');
         }
 
-        const response = await supabase.functions.invoke('upload-music', {
+        // Call the Edge Function with proper headers
+        const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
           headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
+            Authorization: `Bearer ${session.access_token}`,
+            Accept: 'multipart/form-data',
+          },
+          responseType: 'json'
         });
 
-        if (response.error) {
-          throw new Error(response.error.message);
+        if (error) {
+          throw error;
         }
 
         toast({
@@ -40,11 +44,11 @@ export function MusicHeader({ onUpload }: MusicHeaderProps) {
           description: `${file.name} uploaded successfully`,
         });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Upload error:', error);
         toast({
           title: "Error",
-          description: `Failed to upload ${file.name}`,
+          description: error.message || `Failed to upload ${file.name}`,
           variant: "destructive",
         });
       }
