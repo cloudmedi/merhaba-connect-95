@@ -75,7 +75,7 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN')
 
-    // Get file metadata using the new music-metadata package
+    // Get file metadata using music-metadata package
     console.log('Parsing file metadata...')
     const metadata = await mm.parseBuffer(arrayBuffer, fileType, {
       duration: true,
@@ -108,7 +108,7 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || fileName.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
@@ -130,7 +130,7 @@ serve(async (req) => {
 
     if (insertError) {
       console.error('Failed to save song metadata:', insertError)
-      throw new Error('Failed to save song metadata')
+      throw new Error(`Failed to save song metadata: ${insertError.message}`)
     }
 
     console.log('Successfully saved song metadata:', song)
