@@ -44,7 +44,7 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
       if (!profile) throw new Error('No profile found');
 
       // Then fetch playlists that are either public or belong to the user's company
-      const { data, error } = await supabase
+      const query = supabase
         .from('playlists')
         .select(`
           id,
@@ -53,8 +53,16 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
           is_public,
           company_id
         `)
-        .or(`is_public.eq.true,company_id.is.null,company_id.eq.${profile.company_id}`)
         .ilike('name', `%${searchQuery}%`);
+
+      // Add the OR conditions separately
+      if (profile.company_id) {
+        query.or(`is_public.eq.true,company_id.eq.${profile.company_id}`);
+      } else {
+        query.or('is_public.eq.true');
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data;
