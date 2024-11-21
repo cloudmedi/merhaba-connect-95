@@ -5,3 +5,5 @@ verify_jwt = true
 [functions.upload-music.secrets]
 BUNNY_STORAGE_NAME = "music-cloudmedia"
 BUNNY_API_KEY = "your-bunny-api-key"
+BUNNY_STORAGE_HOST = "storage.bunnycdn.com"
+BUNNY_STORAGE_ZONE_NAME = "music-cloudmedia"
