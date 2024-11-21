@@ -11,14 +11,12 @@ import Reports from "./SuperAdmin/Reports";
 import Notifications from "./SuperAdmin/Notifications";
 import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
-import Devices from "./SuperAdmin/Devices";
 
 export default function SuperAdmin() {
   return (
     <Routes>
       <Route index element={<Dashboard />} />
       <Route path="users" element={<Users />} />
-      <Route path="devices" element={<Devices />} />
       <Route path="playlists" element={<Playlists />} />
       <Route path="playlists/create" element={<CreatePlaylist />} />
       <Route path="music" element={<Music />} />
