@@ -135,6 +135,12 @@ export const updateUser = async (id: string, updates: Partial<User> & { password
           name,
           subscription_status,
           subscription_ends_at
+        ),
+        licenses (
+          type,
+          start_date,
+          end_date,
+          quantity
         )
       `)
       .eq('id', id)

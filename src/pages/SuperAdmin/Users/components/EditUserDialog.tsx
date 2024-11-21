@@ -1,46 +1,50 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Crown, User } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
-import { userService } from "@/services/users";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User as UserType } from "@/types/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { User } from "@/types/auth";
-import { Lock, Mail, User as UserIcon, Building2 } from "lucide-react";
+import { userService } from "@/services/users";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  role: z.enum(["admin", "manager"]),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
-  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal('')),
+  password: z.string().optional(),
 });
 
 interface EditUserDialogProps {
-  user: User;
+  user: UserType;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
   const queryClient = useQueryClient();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
       email: user.email,
-      password: '',
-      companyName: user.company?.name || '',
+      role: user.role === "super_admin" ? "admin" : user.role,
+      companyName: user.company?.name || "",
+      password: "",
     },
   });
 
   const updateUserMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const updateData: Partial<User> & { 
+      const updateData: Partial<UserType> & { 
         password?: string; 
         company?: { 
           id?: string; 
@@ -52,6 +56,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
+        role: values.role,
         company: {
           id: user.company?.id,
           name: values.companyName,
@@ -60,20 +65,19 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         }
       };
 
-      if (values.password && values.password.length > 0) {
+      if (values.password) {
         updateData.password = values.password;
       }
 
-      const updatedUser = await userService.updateUser(user.id, updateData);
-      return updatedUser;
+      return userService.updateUser(user.id, updateData);
     },
     onSuccess: () => {
       toast.success("User updated successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
     },
-    onError: (error) => {
-      toast.error("Failed to update user: " + error);
+    onError: (error: Error) => {
+      toast.error("Failed to update user: " + error.message);
     },
   });
 
@@ -83,11 +87,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit User</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -98,8 +101,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" placeholder="Enter first name" {...field} />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -115,8 +118,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" placeholder="Enter last name" {...field} />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -131,10 +134,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" type="email" placeholder="Enter email" {...field} />
-                    </div>
+                    <Input type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -148,10 +148,40 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input className="pl-9" placeholder="Enter company name" {...field} />
-                    </div>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="admin" id="admin" />
+                        <label htmlFor="admin" className="cursor-pointer flex items-center">
+                          <Crown className="h-4 w-4 mr-1 text-[#9b87f5]" />
+                          Admin
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="manager" id="manager" />
+                        <label htmlFor="manager" className="cursor-pointer flex items-center">
+                          <User className="h-4 w-4 mr-1 text-[#9b87f5]" />
+                          Manager
+                        </label>
+                      </div>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -163,30 +193,26 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-red-500">New Password (Optional)</FormLabel>
+                  <FormLabel>Password (Optional)</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        className="pl-9" 
-                        type="password" 
-                        placeholder="Enter new password" 
-                        {...field} 
-                      />
-                    </div>
+                    <Input type="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                className="bg-[#9b87f5] hover:bg-[#7E69AB]"
+              <Button
+                type="submit"
+                className="bg-[#6366F1] text-white hover:bg-[#5558DD]"
                 disabled={updateUserMutation.isPending}
               >
                 {updateUserMutation.isPending ? "Updating..." : "Update User"}
