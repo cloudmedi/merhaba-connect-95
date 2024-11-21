@@ -9,12 +9,14 @@ import { ScheduleEvent } from "./types";
 import { exportEvents } from "./utils/eventUtils";
 import { Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useScheduleEvents } from "./hooks/useScheduleEvents";
+import { toast } from "sonner";
 
 export default function Schedule() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
-  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const { events, isLoading, updateEvent } = useScheduleEvents();
 
-  const handleEventDrop = (info: any) => {
+  const handleEventDrop = async (info: any) => {
     const updatedEvent = {
       ...info.event.extendedProps,
       id: info.event.id,
@@ -23,10 +25,17 @@ export default function Schedule() {
       end: info.event.end,
     };
 
-    setEvents(events.map(event => 
-      event.id === updatedEvent.id ? updatedEvent : event
-    ));
+    try {
+      await updateEvent.mutateAsync(updatedEvent);
+    } catch (error) {
+      toast.error("Failed to update event");
+      info.revert();
+    }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -88,8 +97,8 @@ export default function Schedule() {
           events={events.map(event => ({
             id: event.id,
             title: event.title,
-            start: event.start,
-            end: event.end,
+            start: event.start_time,
+            end: event.end_time,
             backgroundColor: event.color.primary,
             borderColor: event.color.primary,
             textColor: event.color.text,

@@ -666,6 +666,112 @@ export type Database = {
           },
         ]
       }
+      schedule_device_assignments: {
+        Row: {
+          created_at: string | null
+          device_id: string
+          schedule_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_id: string
+          schedule_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_device_assignments_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_device_assignments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_events: {
+        Row: {
+          category: string
+          color: Json
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string
+          id: string
+          notifications: Json | null
+          playlist_id: string | null
+          recurrence: Json | null
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          color?: Json
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          notifications?: Json | null
+          playlist_id?: string | null
+          recurrence?: Json | null
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          color?: Json
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          notifications?: Json | null
+          playlist_id?: string | null
+          recurrence?: Json | null
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_events_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           album: string | null

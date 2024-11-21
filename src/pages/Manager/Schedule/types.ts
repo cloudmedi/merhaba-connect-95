@@ -14,16 +14,29 @@ export interface EventNotification {
 export interface ScheduleEvent {
   id: string;
   title: string;
-  start: Date;
-  end: Date;
-  playlistId: string;
+  description?: string;
+  playlist_id?: string;
+  start_time: Date;
+  end_time: Date;
   category: EventCategory;
   color: EventColor;
-  branches: string[];
+  branches?: string[];
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;
     endDate?: Date;
   };
-  notifications: EventNotification[];
+  notifications?: EventNotification[];
+  created_by?: string;
+  company_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  playlist?: {
+    id: string;
+    name: string;
+    artwork_url?: string;
+  };
+  devices?: Array<{
+    device_id: string;
+  }>;
 }
