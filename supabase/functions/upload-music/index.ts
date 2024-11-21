@@ -37,11 +37,11 @@ serve(async (req) => {
     const metadata = await mm.parseBuffer(binaryData);
 
     // Upload to Bunny CDN
-    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
+    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME');
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
-    const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST');
+    const bunnyStorageHost = "storage.bunnycdn.com";
 
-    if (!bunnyStorageName || !bunnyApiKey || !bunnyStorageHost) {
+    if (!bunnyStorageName || !bunnyApiKey) {
       throw new Error('Missing Bunny CDN configuration');
     }
 
