@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/auth";
+import { Lock, Mail, User as UserIcon } from "lucide-react";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(),
 });
 
 interface EditUserDialogProps {
@@ -30,6 +32,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email,
+      password: '',
     },
   });
 
@@ -39,6 +42,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
+        password: values.password,
       });
     },
     onSuccess: () => {
@@ -71,7 +75,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter first name" {...field} />
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" placeholder="Enter first name" {...field} />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -85,7 +92,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter last name" {...field} />
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" placeholder="Enter last name" {...field} />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -99,7 +109,32 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Enter email" {...field} />
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" type="email" placeholder="Enter email" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Password (Optional)</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input 
+                        className="pl-9" 
+                        type="password" 
+                        placeholder="Enter new password" 
+                        {...field} 
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
