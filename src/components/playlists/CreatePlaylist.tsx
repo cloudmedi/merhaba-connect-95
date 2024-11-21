@@ -103,6 +103,20 @@ export function CreatePlaylist() {
         if (songsError) throw songsError;
       }
 
+      // Add categories to playlist if any selected
+      if (playlistData.selectedCategories.length > 0) {
+        const playlistCategories = playlistData.selectedCategories.map((category: any) => ({
+          playlist_id: playlist.id,
+          category_id: category.id
+        }));
+
+        const { error: categoriesError } = await supabase
+          .from('playlist_categories')
+          .insert(playlistCategories);
+
+        if (categoriesError) throw categoriesError;
+      }
+
       toast({
         title: "Success",
         description: "Playlist created successfully",
