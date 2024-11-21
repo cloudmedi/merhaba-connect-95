@@ -29,11 +29,18 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
   const [open, setOpen] = useState(false);
 
   const { data: branches, isLoading } = useQuery({
-    queryKey: ['companies'],
+    queryKey: ['branches'],
     queryFn: async () => {
+      // For now, we'll use the companies table as branches
+      // In a real implementation, you would have a separate branches table
       const { data, error } = await supabase
         .from('companies')
-        .select('*')
+        .select(`
+          id,
+          name,
+          created_at,
+          updated_at
+        `)
         .order('name');
 
       if (error) throw error;
