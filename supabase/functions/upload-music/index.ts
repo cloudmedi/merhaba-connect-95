@@ -28,35 +28,30 @@ serve(async (req) => {
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
 
     if (!bunnyApiKey || !bunnyStorageZoneName) {
-      console.error('Missing Bunny CDN configuration:', {
-        apiKey: !!bunnyApiKey,
-        zoneName: !!bunnyStorageZoneName
-      })
+      console.error('Missing Bunny CDN configuration')
       throw new Error('Missing Bunny CDN configuration')
     }
-
-    console.log('Bunny CDN configuration loaded:', {
-      zoneName: bunnyStorageZoneName
-    })
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
-    // Construct proper Bunny CDN URL and headers
+    // Construct Bunny CDN URL and headers
     const bunnyUrl = `https://storage.bunnycdn.com/${bunnyStorageZoneName}/${uniqueFileName}`
-    const bunnyHeaders = {
-      'AccessKey': bunnyApiKey,
-      'Content-Type': file.type || 'application/octet-stream'
-    }
+    
+    console.log('Uploading to Bunny CDN:', bunnyUrl)
 
-    console.log('Attempting upload to Bunny CDN:', bunnyUrl)
+    // Convert file to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer()
 
     // Upload to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
-      headers: bunnyHeaders,
-      body: file
+      headers: {
+        'AccessKey': bunnyApiKey,
+        'Content-Type': 'application/octet-stream'
+      },
+      body: arrayBuffer
     })
 
     if (!uploadResponse.ok) {
@@ -72,7 +67,6 @@ serve(async (req) => {
     console.log('Successfully uploaded to Bunny CDN')
 
     // Get file metadata
-    const arrayBuffer = await file.arrayBuffer()
     const metadata = await mm.parseBuffer(new Uint8Array(arrayBuffer), {
       duration: true,
       skipCovers: true,
