@@ -7,7 +7,7 @@ export default function Users() {
   return (
     <DashboardLayout title="Users">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <UsersFilters />
           <UsersHeader />
         </div>

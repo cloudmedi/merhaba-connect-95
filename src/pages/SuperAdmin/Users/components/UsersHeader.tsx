@@ -10,7 +10,7 @@ export function UsersHeader() {
     <>
       <Button 
         onClick={() => setOpen(true)} 
-        className="bg-[#9b87f5] hover:bg-[#7E69AB] ml-4"
+        className="bg-[#9b87f5] hover:bg-[#7E69AB] shrink-0"
       >
         <Plus className="mr-2 h-4 w-4" />
         Add User
