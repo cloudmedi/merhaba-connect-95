@@ -37,16 +37,16 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
   const [currentTab, setCurrentTab] = useState("details");
   const [formData, setFormData] = useState<EventFormData>(() => {
     if (initialTimeRange) {
-      const startDate = new Date(initialTimeRange.start);
-      const endDate = new Date(initialTimeRange.end);
-      
+      const startDateTime = new Date(initialTimeRange.start);
+      const endDateTime = new Date(initialTimeRange.end);
+
       return {
         title: "",
         playlistId: "",
-        startDate: startDate.toISOString().split('T')[0],
-        startTime: startDate.toTimeString().slice(0, 5),
-        endDate: endDate.toISOString().split('T')[0],
-        endTime: endDate.toTimeString().slice(0, 5),
+        startDate: startDateTime.toISOString().split('T')[0],
+        startTime: startDateTime.toTimeString().slice(0, 5),
+        endDate: endDateTime.toISOString().split('T')[0],
+        endTime: endDateTime.toTimeString().slice(0, 5),
         category: "Regular Playlist",
         branches: [],
         notifications: [],
