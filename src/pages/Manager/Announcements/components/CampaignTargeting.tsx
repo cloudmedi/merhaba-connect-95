@@ -19,6 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 interface CampaignTargetingProps {
   formData: CampaignFormData;
@@ -31,8 +32,6 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
   const { data: branches, isLoading } = useQuery({
     queryKey: ['branches'],
     queryFn: async () => {
-      // For now, we'll use the companies table as branches
-      // In a real implementation, you would have a separate branches table
       const { data, error } = await supabase
         .from('companies')
         .select(`
@@ -47,6 +46,19 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
       return data as Branch[];
     }
   });
+
+  const handleBranchSelect = (branchId: string) => {
+    const newBranches = formData.branches.includes(branchId)
+      ? formData.branches.filter(id => id !== branchId)
+      : [...formData.branches, branchId];
+    
+    onFormDataChange({ branches: newBranches });
+    toast.success(
+      formData.branches.includes(branchId) 
+        ? "Şube kaldırıldı" 
+        : "Şube eklendi"
+    );
+  };
 
   if (isLoading) {
     return (
@@ -88,12 +100,7 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
                   <CommandItem
                     key={branch.id}
                     value={branch.id}
-                    onSelect={(currentValue) => {
-                      const newBranches = formData.branches.includes(currentValue)
-                        ? formData.branches.filter((id) => id !== currentValue)
-                        : [...formData.branches, currentValue];
-                      onFormDataChange({ branches: newBranches });
-                    }}
+                    onSelect={() => handleBranchSelect(branch.id)}
                   >
                     <Check
                       className={cn(
@@ -109,6 +116,30 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
           </PopoverContent>
         </Popover>
       </div>
+
+      {formData.branches.length > 0 && (
+        <div className="rounded-lg border p-4 bg-gray-50">
+          <h4 className="text-sm font-medium mb-2">Seçili Şubeler</h4>
+          <div className="space-y-2">
+            {formData.branches.map(branchId => {
+              const branch = branches?.find(b => b.id === branchId);
+              return (
+                <div key={branchId} className="flex items-center justify-between">
+                  <span className="text-sm">{branch?.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBranchSelect(branchId)}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    Kaldır
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 export interface Campaign {
   id: string;
   title: string;
-  name?: string; // Adding for backward compatibility
+  name?: string;
   description?: string;
   status: "pending" | "playing";
   start_date?: string;
@@ -16,11 +16,10 @@ export interface Campaign {
     first_name: string | null;
     last_name: string | null;
   };
-  // Virtual properties for UI
   schedule?: string;
   scheduleTime?: string;
   fileCount?: number;
-  files?: CampaignFile[]; // Alias for announcement_files
+  files?: CampaignFile[];
 }
 
 export interface CampaignFile {
@@ -28,8 +27,8 @@ export interface CampaignFile {
   file_name: string;
   file_url: string;
   duration?: number;
-  name?: string; // Alias for file_name
-  size?: string; // Virtual property for display
+  name?: string;
+  size?: string;
 }
 
 export interface FileWithPreview {
