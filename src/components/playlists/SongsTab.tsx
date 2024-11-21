@@ -5,16 +5,18 @@ import { Plus, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Song {
-  id: number;
+  id: string;
   title: string;
-  artist: string;
-  duration: string;
+  artist: string | null;
+  duration: number | null;
+  artwork_url?: string;
+  file_url: string;
 }
 
 interface SongsTabProps {
   selectedSongs: Song[];
   onAddSong: (song: Song) => void;
-  onRemoveSong: (songId: number) => void;
+  onRemoveSong: (songId: string) => void;
 }
 
 export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabProps) {

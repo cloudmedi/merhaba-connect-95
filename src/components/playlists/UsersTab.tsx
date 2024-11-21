@@ -6,16 +6,17 @@ import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface User {
-  id: number;
-  name: string;
+  id: string;
   email: string;
+  first_name: string | null;
+  last_name: string | null;
   avatar?: string;
 }
 
 interface UsersTabProps {
   selectedUsers: User[];
   onSelectUser: (user: User) => void;
-  onUnselectUser: (userId: number) => void;
+  onUnselectUser: (userId: string) => void;
 }
 
 export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersTabProps) {
@@ -43,7 +44,7 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
     fetchUsers();
   }, [searchQuery]);
 
-  const isSelected = (userId: number) => selectedUsers.some(u => u.id === userId);
+  const isSelected = (userId: string) => selectedUsers.some(u => u.id === userId);
 
   return (
     <div className="space-y-4">
@@ -71,15 +72,19 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} />
+                    <img src={user.avatar} alt={user.first_name || ''} />
                   ) : (
                     <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
-                      {user.name?.charAt(0) || user.email.charAt(0)}
+                      {(user.first_name?.[0] || user.email[0]).toUpperCase()}
                     </div>
                   )}
                 </Avatar>
                 <div>
-                  <h4 className="text-sm font-medium">{user.name || 'Unnamed User'}</h4>
+                  <h4 className="text-sm font-medium">
+                    {user.first_name && user.last_name 
+                      ? `${user.first_name} ${user.last_name}`
+                      : 'Unnamed User'}
+                  </h4>
                   <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
               </div>
