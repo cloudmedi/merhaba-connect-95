@@ -15,12 +15,18 @@ export function MusicHeader() {
     setIsUploading(true);
     
     for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append('file', file);
-
       try {
+        // Convert file to ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
+        const fileBytes = new Uint8Array(arrayBuffer);
+
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
+          body: {
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            fileData: Array.from(fileBytes) // Convert Uint8Array to regular array for transmission
+          }
         });
 
         if (error) {

@@ -16,23 +16,22 @@ serve(async (req) => {
   try {
     console.log('Starting file upload process...')
     
-    // Get the form data
-    const formData = await req.formData()
-    const file = formData.get('file')
+    // Get the file data from the request body
+    const { fileName, fileType, fileSize, fileData } = await req.json()
 
-    if (!file || !(file instanceof File)) {
-      throw new Error('No file uploaded or invalid file')
+    if (!fileName || !fileType || !fileData) {
+      throw new Error('Missing required file information')
     }
 
     console.log('File received:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
+      name: fileName,
+      size: fileSize,
+      type: fileType
     })
 
     // Check file type
     const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(fileType)) {
       throw new Error(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`)
     }
 
@@ -47,15 +46,15 @@ serve(async (req) => {
     }
 
     // Generate unique filename
-    const fileExt = file.name.split('.').pop()
+    const fileExt = fileName.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
     // Construct Bunny CDN URL
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`
     console.log('Uploading to Bunny CDN:', bunnyUrl)
 
-    // Convert file to ArrayBuffer for upload
-    const arrayBuffer = await file.arrayBuffer()
+    // Convert array back to Uint8Array for upload
+    const arrayBuffer = new Uint8Array(fileData)
 
     // Upload to Bunny CDN
     console.log('Initiating Bunny CDN upload...')
@@ -78,7 +77,7 @@ serve(async (req) => {
 
     // Get file metadata
     console.log('Parsing file metadata...')
-    const metadata = await mm.parseBuffer(new Uint8Array(arrayBuffer), {
+    const metadata = await mm.parseBuffer(arrayBuffer, {
       duration: true,
       skipCovers: true,
       skipPostHeaders: true,
@@ -109,9 +108,9 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`
     const songData = {
-      title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
+      title: metadata.common.title || fileName.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
       album: metadata.common.album || null,
       genre: metadata.common.genre || [],
