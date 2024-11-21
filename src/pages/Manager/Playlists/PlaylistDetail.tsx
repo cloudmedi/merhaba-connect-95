@@ -2,11 +2,26 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { SongList } from "@/components/playlists/SongList";
+
+interface PlaylistData {
+  id: string;
+  name: string;
+  artwork_url: string | null;
+  genre: { name: string } | null;
+  mood: { name: string } | null;
+  songs: Array<{
+    id: string;
+    title: string;
+    artist: string | null;
+    duration: string;
+    file_url: string;
+    artwork_url: string | null;
+  }>;
+}
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -57,7 +72,7 @@ export function PlaylistDetail() {
           file_url: ps.songs.file_url,
           artwork_url: ps.songs.artwork_url
         }))
-      };
+      } as PlaylistData;
     },
     meta: {
       errorMessage: "Failed to load playlist"
@@ -101,7 +116,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8">
         <PlaylistHeader
           onBack={() => navigate("/manager/playlists")}
-          artworkUrl={playlist.artwork_url}
+          artworkUrl={playlist.artwork_url || undefined}
           name={playlist.name}
           genreName={playlist.genre?.name}
           moodName={playlist.mood?.name}
