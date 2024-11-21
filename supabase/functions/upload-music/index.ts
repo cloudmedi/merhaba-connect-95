@@ -4,7 +4,7 @@ import * as mm from 'https://esm.sh/music-metadata-browser'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
 }
 
 serve(async (req) => {
@@ -14,7 +14,22 @@ serve(async (req) => {
   }
 
   try {
-    // Get the form data from the request body
+    // Get the content type
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('multipart/form-data')) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid content type', 
+          details: 'Content type must be multipart/form-data' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+          status: 400 
+        }
+      );
+    }
+
+    // Parse form data
     let formData;
     try {
       formData = await req.formData();
@@ -32,8 +47,8 @@ serve(async (req) => {
       );
     }
 
+    // Get file from form data
     const file = formData.get('file');
-    
     if (!file || !(file instanceof File)) {
       return new Response(
         JSON.stringify({ error: 'No file uploaded or invalid file' }),
