@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Playlist } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { toast } from "sonner";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -66,36 +67,42 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
-    const defaultArtwork = "/placeholder.svg";
-    const artworkUrl = playlist.artwork_url || defaultArtwork;
-    
-    return {
-      id: playlist.id,
-      title: playlist.name,
-      artwork_url: artworkUrl,
-      genre: "Various",
-      mood: "Various",
-    };
-  };
+  const handlePlayPlaylist = async (playlist: Playlist) => {
+    try {
+      const { data: songs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
 
-  const businessPlaylists = filteredPlaylists
-    .filter(p => !p.is_public)
-    .map(transformPlaylistForGrid);
+      if (error) throw error;
 
-  const publicPlaylists = filteredPlaylists
-    .filter(p => p.is_public)
-    .map(transformPlaylistForGrid);
+      if (!songs || songs.length === 0) {
+        toast.error("Bu playlist'te çalınacak şarkı bulunmuyor.");
+        return;
+      }
 
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+      setCurrentPlaylist({
+        id: playlist.id,
+        title: playlist.name,
+        artwork_url: playlist.artwork_url,
+        genre: "Various",
+        mood: "Various",
+      });
+
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      toast.error("Playlist şarkıları yüklenirken bir hata oluştu.");
     }
-    if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
-    }
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   return (
@@ -121,16 +128,9 @@ export function PlaylistsContent() {
 
       <div className="space-y-12">
         <PlaylistGrid 
-          title="Business Playlists" 
-          description="Private playlists for business use"
-          playlists={businessPlaylists}
-          isLoading={isLoading}
-        />
-        
-        <PlaylistGrid 
-          title="Public Playlists" 
-          description="Playlists available to all users"
-          playlists={publicPlaylists}
+          title="Playlists" 
+          description="Manage your playlists"
+          playlists={filteredPlaylists}
           isLoading={isLoading}
         />
       </div>
@@ -139,13 +139,15 @@ export function PlaylistsContent() {
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg",
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,
               artist: ps.songs.artist || "Unknown Artist",
               duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
+              file_url: ps.songs.file_url.startsWith('http') 
+                ? ps.songs.file_url 
+                : `https://cloud-media.b-cdn.net/${ps.songs.file_url}`
             }))
           }}
           onClose={() => setCurrentPlaylist(null)}
