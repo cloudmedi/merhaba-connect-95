@@ -1,68 +1,66 @@
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Monitor,
-  Calendar,
-  Bell,
-  Settings,
-  Volume2
-} from "lucide-react";
-
-const navItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/manager",
-  },
-  {
-    title: "Devices",
-    icon: Monitor,
-    href: "/manager/devices",
-  },
-  {
-    title: "Schedule",
-    icon: Calendar,
-    href: "/manager/schedule",
-  },
-  {
-    title: "Notifications",
-    icon: Bell,
-    href: "/manager/notifications",
-  },
-  {
-    title: "Announcements",
-    icon: Volume2,
-    href: "/manager/announcements",
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    href: "/manager/settings",
-  },
-];
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Calendar, Home, Music, Radio, Settings, Users } from "lucide-react";
 
 export function ManagerNav() {
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
-    <nav className="w-[240px] bg-[#1C1C28] min-h-screen p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2 px-2 py-4">
-        <span className="text-lg font-semibold text-white">Manager Panel</span>
-      </div>
-      {navItems.map((item) => (
-        <NavLink
-          key={item.href}
-          to={item.href}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
-              isActive
-                ? "bg-[#6E59A5] text-white"
-                : "text-gray-400 hover:text-white hover:bg-[#6E59A5]/10"
-            }`
-          }
-        >
-          <item.icon className="w-5 h-5" />
-          <span>{item.title}</span>
-        </NavLink>
-      ))}
+    <nav className="grid items-start gap-2">
+      <Link
+        to="/manager"
+        className={cn(
+          "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          isActive("/manager") && "bg-accent"
+        )}
+      >
+        <Home className="mr-2 h-4 w-4" />
+        <span>Dashboard</span>
+      </Link>
+      <Link
+        to="/manager/playlists"
+        className={cn(
+          "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          isActive("/manager/playlists") && "bg-accent"
+        )}
+      >
+        <Music className="mr-2 h-4 w-4" />
+        <span>Playlists</span>
+      </Link>
+      <Link
+        to="/manager/announcements"
+        className={cn(
+          "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          isActive("/manager/announcements") && "bg-accent"
+        )}
+      >
+        <Radio className="mr-2 h-4 w-4" />
+        <span>Announcements</span>
+      </Link>
+      <Link
+        to="/manager/devices"
+        className={cn(
+          "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          isActive("/manager/devices") && "bg-accent"
+        )}
+      >
+        <Users className="mr-2 h-4 w-4" />
+        <span>Devices</span>
+      </Link>
+      <Link
+        to="/manager/settings"
+        className={cn(
+          "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+          isActive("/manager/settings") && "bg-accent"
+        )}
+      >
+        <Settings className="mr-2 h-4 w-4" />
+        <span>Settings</span>
+      </Link>
     </nav>
   );
 }
