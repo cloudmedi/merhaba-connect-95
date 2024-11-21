@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UploadMusicDialogProps {
   open: boolean;
@@ -19,7 +18,6 @@ interface UploadingFile {
 
 export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps) {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
-  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
 
   const handleFileSelect = async (files: FileList) => {
@@ -60,65 +58,48 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
   const uploadFile = async (file: File) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('music')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      const response = await fetch('/api/upload-music', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('music')
-        .getPublicUrl(fileName);
-
-      const { error: dbError } = await supabase
-        .from('songs')
-        .insert([{
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          file_url: publicUrl,
-          duration: 0,
-        }]);
-
-      if (dbError) throw dbError;
-
-      setUploadingFiles(prev => ({
-        ...prev,
-        [file.name]: {
-          ...prev[file.name],
-          status: 'completed',
-          progress: 100
-        }
-      }));
-
-      const updatedFiles = {
-        ...uploadingFiles,
-        [file.name]: {
-          ...uploadingFiles[file.name],
-          status: 'completed',
-          progress: 100
-        }
-      };
-
-      // Check if all files are completed
-      const allCompleted = Object.values(updatedFiles).every(
-        file => file.status === 'completed'
-      );
-
-      if (allCompleted) {
-        toast({
-          title: "Upload successful",
-          description: "All files have been uploaded successfully",
-        });
-        
-        // Close the dialog immediately and reset state
-        onOpenChange(false);
-        setUploadingFiles({});
+      if (!response.ok) {
+        throw new Error('Upload failed');
       }
+
+      setUploadingFiles(prev => {
+        const newFiles = {
+          ...prev,
+          [file.name]: {
+            ...prev[file.name],
+            status: 'completed',
+            progress: 100
+          }
+        };
+
+        // Check if all files are completed
+        const allCompleted = Object.values(newFiles).every(
+          file => file.status === 'completed'
+        );
+
+        if (allCompleted) {
+          toast({
+            title: "Upload successful",
+            description: "All files have been uploaded successfully",
+          });
+          
+          // Close dialog and reset state immediately
+          setTimeout(() => {
+            onOpenChange(false);
+            setUploadingFiles({});
+          }, 0);
+        }
+
+        return newFiles;
+      });
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -156,7 +137,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
         <UploadZone
           onFileSelect={handleFileSelect}
-          isDragging={isDragging}
+          isDragging={false}
         />
 
         {Object.entries(uploadingFiles).length > 0 && (
