@@ -23,23 +23,31 @@ export function CreatePlaylist() {
   const handleCreatePlaylist = async () => {
     if (!playlistData.title) {
       toast({
-        title: "Hata",
-        description: "Lütfen playlist başlığı giriniz",
+        title: "Error",
+        description: "Please enter a playlist title",
         variant: "destructive",
       });
       return;
     }
 
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       // Upload artwork if exists
       let artwork_url = null;
       if (playlistData.artwork) {
         const file = playlistData.artwork;
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('playlists')
-          .upload(`artworks/${fileName}`, file);
+          .upload(`artworks/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) throw uploadError;
         
@@ -49,10 +57,6 @@ export function CreatePlaylist() {
           
         artwork_url = publicUrl;
       }
-
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
 
       // Create playlist
       const { data: playlist, error: playlistError } = await supabase
@@ -86,25 +90,17 @@ export function CreatePlaylist() {
         if (songsError) throw songsError;
       }
 
-      // Add users to playlist if any selected
-      if (playlistData.selectedUsers.length > 0) {
-        // Here you would typically insert into a playlist_users table
-        // But since it's not in the schema, we'll need to handle user access differently
-        // For now, we'll just show a toast message
-        console.log('Selected users:', playlistData.selectedUsers);
-      }
-
       toast({
-        title: "Başarılı",
-        description: "Playlist başarıyla oluşturuldu",
+        title: "Success",
+        description: "Playlist created successfully",
       });
       
       navigate("/super-admin/playlists");
     } catch (error: any) {
-      console.error('Playlist oluşturma hatası:', error);
+      console.error('Error creating playlist:', error);
       toast({
-        title: "Hata",
-        description: error.message || "Playlist oluşturulamadı",
+        title: "Error",
+        description: error.message || "Failed to create playlist",
         variant: "destructive",
       });
     }
