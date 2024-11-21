@@ -71,7 +71,7 @@ export const useDevices = () => {
       )
       .subscribe((status) => {
         console.log('Subscription status:', status);
-        if (status === 'SUBSCRIPTION_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           toast.error('Failed to connect to real-time updates');
         }
       });
