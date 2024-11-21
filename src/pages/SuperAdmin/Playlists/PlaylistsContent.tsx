@@ -23,8 +23,8 @@ export function PlaylistsContent() {
         .from('playlists')
         .select(`
           *,
-          company:company_id(name),
-          profiles:created_by(first_name, last_name),
+          company:companies(name),
+          profiles:profiles(first_name, last_name),
           genre:genres(name),
           mood:moods(name)
         `)
@@ -55,11 +55,7 @@ export function PlaylistsContent() {
         .eq('playlist_id', currentPlaylist.id)
         .order('position');
 
-      if (error) {
-        console.error('Error fetching playlist songs:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     enabled: !!currentPlaylist?.id
