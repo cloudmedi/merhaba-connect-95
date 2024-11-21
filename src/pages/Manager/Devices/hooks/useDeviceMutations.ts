@@ -46,8 +46,8 @@ export const useDeviceMutations = () => {
         .update({
           ...device,
           last_seen: new Date().toISOString(),
-          system_info: device.system_info || undefined,
-          schedule: device.schedule || undefined
+          system_info: JSON.stringify(device.system_info || {}),
+          schedule: JSON.stringify(device.schedule || {})
         })
         .eq('id', id)
         .select(`

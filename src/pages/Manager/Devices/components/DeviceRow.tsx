@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDevices } from "../hooks/useDevices";
-import type { Device } from "../hooks/types";
+import type { Device, DeviceSystemInfo } from "../hooks/types";
 
 interface DeviceRowProps {
   device: Device;
@@ -101,7 +101,7 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Version:</span>
-                <span>{(device.system_info as DeviceSystemInfo).version || 'N/A'}</span>
+                <span>{device.system_info.version || 'N/A'}</span>
                 <SortButton column="system_info" />
               </div>
             </div>

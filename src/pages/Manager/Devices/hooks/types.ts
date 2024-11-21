@@ -2,13 +2,13 @@ import type { Json } from "@/integrations/supabase/types/json";
 
 export interface DeviceSystemInfo {
   version?: string;
-  // Add other system info properties as needed
+  [key: string]: Json | undefined;
 }
 
 export interface DeviceSchedule {
   powerOn?: string;
   powerOff?: string;
-  // Add other schedule properties as needed
+  [key: string]: Json | undefined;
 }
 
 export interface Device {
