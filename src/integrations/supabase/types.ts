@@ -710,6 +710,8 @@ export type Database = {
       }
       schedule_events: {
         Row: {
+          category: string
+          color: Json
           company_id: string | null
           created_at: string | null
           created_by: string | null
@@ -724,6 +726,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          category: string
+          color?: Json
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -738,6 +742,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          category?: string
+          color?: Json
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null

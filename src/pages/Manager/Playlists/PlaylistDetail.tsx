@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export default function PlaylistDetail() {
+export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
