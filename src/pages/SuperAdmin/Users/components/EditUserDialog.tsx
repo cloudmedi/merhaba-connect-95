@@ -11,18 +11,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/auth";
 import { Lock, Mail, User as UserIcon } from "lucide-react";
 
+interface EditUserDialogProps {
+  user: User;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
 });
-
-interface EditUserDialogProps {
-  user: User;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
 
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
   const queryClient = useQueryClient();
@@ -37,13 +37,18 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: (values: z.infer<typeof formSchema>) => {
-      return userService.updateUser(user.id, {
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const updateData: any = {
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
-        password: values.password,
-      });
+      };
+
+      if (values.password) {
+        updateData.password = values.password;
+      }
+
+      return userService.updateUser(user.id, updateData);
     },
     onSuccess: () => {
       toast.success("User updated successfully");
