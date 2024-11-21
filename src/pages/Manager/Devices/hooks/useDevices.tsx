@@ -24,6 +24,7 @@ export interface Device {
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
+  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('devices_changes')
@@ -65,7 +66,7 @@ export const useDevices = () => {
     queryFn: async () => {
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('company_id')
+        .select('*, licenses(*)')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
@@ -88,19 +89,23 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      // First check license limit
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('company_id')
+        .select('*, licenses(*)')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
+      const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
+      
+      // Count current devices
       const { count: currentDevices } = await supabase
         .from('devices')
         .select('*', { count: 'exact' })
         .eq('branch_id', device.branch_id);
 
-      if (currentDevices !== null && currentDevices >= 5) { // Using default limit of 5 for trial
-        throw new Error('License limit reached (5 devices). Please upgrade your license to add more devices.');
+      if (currentDevices !== null && currentDevices >= licenseQuantity) {
+        throw new Error(`License limit reached (${licenseQuantity} devices). Please upgrade your license to add more devices.`);
       }
 
       const { data, error } = await supabase
@@ -129,6 +134,7 @@ export const useDevices = () => {
 
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
+      console.log('Updating device:', id, device);
       const { data, error } = await supabase
         .from('devices')
         .update({
@@ -141,7 +147,10 @@ export const useDevices = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating device:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -155,12 +164,16 @@ export const useDevices = () => {
 
   const deleteDevice = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting device:', id);
       const { error } = await supabase
         .from('devices')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting device:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });

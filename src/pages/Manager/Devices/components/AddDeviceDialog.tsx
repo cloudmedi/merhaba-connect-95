@@ -8,11 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
-import type { Database } from "@/integrations/supabase/types";
-
-type DeviceInsert = Database['public']['Tables']['devices']['Insert'];
 
 export function AddDeviceDialog({
   open,
@@ -22,25 +20,23 @@ export function AddDeviceDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [name, setName] = useState("");
-  const [token, setToken] = useState("");
+  const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newDevice: DeviceInsert = {
+    await createDevice.mutateAsync({
       name,
-      token,
-      category: "player",
-      status: "offline",
-      system_info: {},
+      category,
+      status: 'offline',
       schedule: {},
-    };
+      system_info: {},
+    });
 
-    await createDevice.mutateAsync(newDevice);
     onOpenChange(false);
     setName("");
-    setToken("");
+    setCategory("player");
   };
 
   return (
@@ -61,20 +57,17 @@ export function AddDeviceDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="token">Device Token</Label>
-            <Input
-              id="token"
-              value={token}
-              onChange={(e) => {
-                // Only allow 6 digits
-                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
-                setToken(value);
-              }}
-              placeholder="Enter 6-digit token"
-              required
-              pattern="\d{6}"
-              title="Please enter a 6-digit token"
-            />
+            <Label htmlFor="category">Device Type</Label>
+            <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select device type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="player">Player</SelectItem>
+                <SelectItem value="display">Display</SelectItem>
+                <SelectItem value="controller">Controller</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>

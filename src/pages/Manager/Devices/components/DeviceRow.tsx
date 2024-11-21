@@ -101,7 +101,7 @@ export function DeviceRow({ device, isSelected, onSelect, sortConfig, onSort }: 
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Version:</span>
-                <span>{device.system_info.version || 'N/A'}</span>
+                <span>{device.system_info.version}</span>
                 <SortButton column="system_info" />
               </div>
             </div>
