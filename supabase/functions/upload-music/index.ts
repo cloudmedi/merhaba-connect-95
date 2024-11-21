@@ -8,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -103,11 +104,12 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader)
     if (userError || !user) {
+      console.error('User authentication error:', userError)
       throw new Error('Unauthorized')
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
@@ -123,7 +125,7 @@ serve(async (req) => {
 
     const { data: song, error: insertError } = await supabase
       .from('songs')
-      .insert(songData)
+      .insert([songData])
       .select()
       .single()
 
