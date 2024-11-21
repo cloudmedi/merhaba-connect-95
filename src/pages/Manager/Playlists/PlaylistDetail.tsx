@@ -54,9 +54,10 @@ export function PlaylistDetail() {
         songs: songsData.map(item => item.songs)
       };
     },
-    onError: (error) => {
-      toast.error("Failed to load playlist");
-      console.error("Error loading playlist:", error);
+    meta: {
+      onError: () => {
+        toast.error("Failed to load playlist");
+      }
     }
   });
 
