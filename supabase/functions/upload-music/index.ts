@@ -8,17 +8,21 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Starting file upload process...')
     const formData = await req.formData()
     const file = formData.get('file')
 
     if (!file) {
       throw new Error('No file uploaded')
     }
+
+    console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type)
 
     // Get Bunny CDN configuration
     const bunnyStorageZone = Deno.env.get('BUNNY_STORAGE_ZONE_NAME')
@@ -29,10 +33,14 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration')
     }
 
+    console.log('Bunny CDN configuration validated')
+
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZone}/${uniqueFileName}`
+
+    console.log('Uploading to Bunny CDN:', bunnyUrl)
 
     // Upload to Bunny CDN
     const uploadResponse = await fetch(bunnyUrl, {
@@ -45,8 +53,12 @@ serve(async (req) => {
     })
 
     if (!uploadResponse.ok) {
-      throw new Error(`Failed to upload to Bunny CDN: ${await uploadResponse.text()}`)
+      const errorText = await uploadResponse.text()
+      console.error('Bunny CDN upload failed:', errorText)
+      throw new Error(`Failed to upload to Bunny CDN: ${errorText}`)
     }
+
+    console.log('Successfully uploaded to Bunny CDN')
 
     // Get file metadata
     const arrayBuffer = await file.arrayBuffer()
@@ -55,6 +67,8 @@ serve(async (req) => {
       skipCovers: true,
       skipPostHeaders: true,
     })
+
+    console.log('File metadata parsed:', metadata)
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -75,7 +89,7 @@ serve(async (req) => {
     }
 
     // Save song metadata to Supabase
-    const cdnUrl = `https://${bunnyStorageZone}.b-cdn.net/${uniqueFileName}`
+    const cdnUrl = `https://${bunnyStorageZone}/${uniqueFileName}`
     const songData = {
       title: metadata.common.title || file.name.replace(/\.[^/.]+$/, ""),
       artist: metadata.common.artist || null,
@@ -87,6 +101,8 @@ serve(async (req) => {
       created_by: user.id
     }
 
+    console.log('Saving song metadata to Supabase:', songData)
+
     const { data: song, error: insertError } = await supabase
       .from('songs')
       .insert(songData)
@@ -94,8 +110,11 @@ serve(async (req) => {
       .single()
 
     if (insertError) {
+      console.error('Failed to save song metadata:', insertError)
       throw new Error('Failed to save song metadata')
     }
+
+    console.log('Successfully saved song metadata:', song)
 
     return new Response(
       JSON.stringify({ 
@@ -109,6 +128,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Upload process failed:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message 

@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UploadMusicDialogProps {
   open: boolean;
@@ -63,13 +64,18 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/upload-music', {
-        method: 'POST',
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await supabase.functions.invoke('upload-music', {
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
+      if (response.error) {
+        throw new Error(response.error.message);
       }
 
       setUploadingFiles(prev => ({
@@ -102,6 +108,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
     } catch (error: any) {
       console.error('Upload error:', error);
+      
       setUploadingFiles(prev => ({
         ...prev,
         [file.name]: {
@@ -119,14 +126,6 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
     }
   };
 
-  const removeFile = (fileName: string) => {
-    setUploadingFiles(prev => {
-      const newFiles = { ...prev };
-      delete newFiles[fileName];
-      return newFiles;
-    });
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -136,7 +135,6 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
         <UploadZone
           onFileSelect={handleFileSelect}
-          isDragging={false}
         />
 
         {Object.entries(uploadingFiles).length > 0 && (
@@ -146,7 +144,13 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
               <UploadProgress
                 key={fileName}
                 file={{ name: fileName, ...file }}
-                onRemove={() => removeFile(fileName)}
+                onRemove={() => {
+                  setUploadingFiles(prev => {
+                    const newFiles = { ...prev };
+                    delete newFiles[fileName];
+                    return newFiles;
+                  });
+                }}
               />
             ))}
           </div>
