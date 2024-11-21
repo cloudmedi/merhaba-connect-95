@@ -9,6 +9,8 @@ import SuperAdmin from "./pages/SuperAdmin";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
 import Manager from "./pages/Manager";
+import ManagerLogin from "./pages/Manager/Auth/Login";
+import ManagerRegister from "./pages/Manager/Auth/Register";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ export default function App() {
               <Route path="/super-admin/*" element={<SuperAdmin />} />
               
               {/* Manager Routes */}
+              <Route path="/manager/login" element={<ManagerLogin />} />
+              <Route path="/manager/register" element={<ManagerRegister />} />
               <Route path="/manager/*" element={<Manager />} />
             </Routes>
           </TooltipProvider>
