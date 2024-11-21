@@ -1,18 +1,27 @@
 export interface Campaign {
-  id: number;
-  name: string;
-  fileCount: number;
-  schedule?: string;
-  scheduleTime?: string;
+  id: string;
+  title: string;
+  description?: string;
   status: "pending" | "playing";
-  files: CampaignFile[];
+  start_date?: string;
+  end_date?: string;
+  repeat_type: string;
+  repeat_interval: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  announcement_files: CampaignFile[];
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+  };
 }
 
 export interface CampaignFile {
-  id: number;
-  name: string;
-  size: string;
-  duration: string;
+  id: string;
+  file_name: string;
+  file_url: string;
+  duration?: number;
 }
 
 export interface FileWithPreview {

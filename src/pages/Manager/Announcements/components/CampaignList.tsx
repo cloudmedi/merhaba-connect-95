@@ -1,34 +1,45 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody } from "@/components/ui/table";
 import { CampaignRow } from "./CampaignRow";
-import { Campaign } from "../types";
-
-const mockCampaigns: Campaign[] = [
-  {
-    id: 1,
-    name: "Karpa Market Ekim Kampanyası",
-    fileCount: 2,
-    schedule: "2024-03-01",
-    scheduleTime: "09:00",
-    status: "pending",
-    files: []
-  },
-  {
-    id: 2,
-    name: "Yılbaşı İndirimleri",
-    fileCount: 1,
-    status: "playing",
-    files: [
-      {
-        id: 1,
-        name: "YilbasiDuyuru.mp3",
-        size: "4.00 MB",
-        duration: "1:00"
-      }
-    ]
-  }
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CampaignList() {
+  const { data: campaigns, isLoading } = useQuery({
+    queryKey: ['announcements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select(`
+          *,
+          announcement_files (
+            id,
+            file_name,
+            file_url,
+            duration
+          ),
+          profiles (
+            first_name,
+            last_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -41,7 +52,7 @@ export function CampaignList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockCampaigns.map((campaign) => (
+          {campaigns?.map((campaign) => (
             <CampaignRow key={campaign.id} campaign={campaign} />
           ))}
         </TableBody>

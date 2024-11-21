@@ -4,10 +4,18 @@ import { Label } from "@/components/ui/label";
 import { FileUploadPreview } from "./FileUploadPreview";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
-export function CampaignBasicInfo() {
-  const [name, setName] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+interface CampaignBasicInfoProps {
+  formData: {
+    title: string;
+    description: string;
+    files: File[];
+  };
+  onFormDataChange: (data: Partial<typeof formData>) => void;
+}
+
+export function CampaignBasicInfo({ formData, onFormDataChange }: CampaignBasicInfoProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
 
@@ -27,9 +35,19 @@ export function CampaignBasicInfo() {
       <div>
         <Label>Kampanya Adı</Label>
         <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={formData.title}
+          onChange={(e) => onFormDataChange({ title: e.target.value })}
           placeholder="Kampanya adını girin"
+        />
+      </div>
+
+      <div>
+        <Label>Açıklama</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => onFormDataChange({ description: e.target.value })}
+          placeholder="Kampanya açıklamasını girin"
+          className="h-24"
         />
       </div>
 
@@ -37,10 +55,10 @@ export function CampaignBasicInfo() {
         <Label>Anonslar</Label>
         <div className="mt-2">
           <FileUploadPreview
-            files={files}
-            onFilesChange={setFiles}
-            maxFileSize={10} // MB
-            maxDuration={300} // 5 minutes in seconds
+            files={formData.files}
+            onFilesChange={(files) => onFormDataChange({ files })}
+            maxFileSize={10}
+            maxDuration={300}
           />
         </div>
       </div>
