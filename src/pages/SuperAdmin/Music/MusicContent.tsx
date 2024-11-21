@@ -4,8 +4,9 @@ import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
-// Mock data for demonstration
+// Mock data
 const mockSongs = [
   {
     id: "1",
@@ -15,6 +16,7 @@ const mockSongs = [
     genre: ["Pop", "Electronic"],
     duration: 180,
     artwork_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800",
+    created_at: new Date().toISOString()
   },
   {
     id: "2",
@@ -24,11 +26,13 @@ const mockSongs = [
     genre: ["Jazz"],
     duration: 240,
     artwork_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800",
+    created_at: new Date().toISOString()
   },
 ];
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<typeof mockSongs[0][]>([]);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<typeof mockSongs[0] | null>(null);
   const { toast } = useToast();
 
   const handleSelectAll = (checked: boolean) => {
@@ -44,6 +48,7 @@ export function MusicContent() {
   };
 
   const handlePlaySong = (song: typeof mockSongs[0]) => {
+    setCurrentlyPlaying(song);
     toast({
       title: "Now Playing",
       description: `${song.title} by ${song.artist}`,
@@ -51,10 +56,9 @@ export function MusicContent() {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen animate-fade-in">
-      <MusicHeader />
-      
-      <div className="space-y-4">
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-center justify-between gap-4">
+        <MusicHeader />
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
@@ -71,26 +75,58 @@ export function MusicContent() {
               });
               setSelectedSongs([]);
             }}
+            onAddGenre={() => {}}
+            onChangeGenre={() => {}}
+            onAddPlaylist={() => {}}
+            onChangePlaylist={() => {}}
+            onAddMood={() => {}}
+            onChangeMood={() => {}}
+            onChangeArtist={() => {}}
+            onChangeAlbum={() => {}}
+            onApprove={() => {}}
           />
         )}
-        
-        <MusicFilters
-          onGenreChange={() => {}}
-          onPlaylistChange={() => {}}
-          onRecentChange={() => {}}
-          genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
-          playlists={[]}
-        />
-        
-        <MusicTable
-          songs={mockSongs}
-          selectedSongs={selectedSongs}
-          onSelectAll={handleSelectAll}
-          onSelectSong={handleSelectSong}
-          onPlaySong={handlePlaySong}
-          isLoading={false}
-        />
       </div>
+      
+      <MusicFilters
+        onGenreChange={() => {}}
+        onPlaylistChange={() => {}}
+        onRecentChange={() => {}}
+        genres={Array.from(new Set(mockSongs.flatMap(song => song.genre || [])))}
+        playlists={[]}
+      />
+      
+      <MusicTable
+        songs={mockSongs}
+        selectedSongs={selectedSongs}
+        onSelectAll={handleSelectAll}
+        onSelectSong={handleSelectSong}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={() => {}}
+        itemsPerPage={10}
+        onPlaySong={handlePlaySong}
+        isLoading={false}
+      />
+
+      {currentlyPlaying && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg animate-slide-in-up">
+          <MusicPlayer
+            playlist={{
+              title: currentlyPlaying.title,
+              artwork: currentlyPlaying.artwork_url || "/placeholder.svg",
+              songs: [{
+                id: parseInt(currentlyPlaying.id),
+                title: currentlyPlaying.title,
+                artist: currentlyPlaying.artist || "Unknown Artist",
+                duration: currentlyPlaying.duration?.toString() || "0:00",
+                file_url: "/mock-audio.mp3"
+              }]
+            }}
+            onClose={() => setCurrentlyPlaying(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

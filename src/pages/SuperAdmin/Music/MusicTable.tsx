@@ -9,13 +9,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Play, MoreVertical, Music2 } from "lucide-react";
+import { MoreVertical, Play, Pause } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TablePagination } from "./components/TablePagination";
+import { EmptyState } from "./components/EmptyState";
 
 interface Song {
   id: string;
@@ -25,6 +27,7 @@ interface Song {
   genre?: string[];
   duration?: number;
   artwork_url?: string;
+  created_at: string;
 }
 
 interface MusicTableProps {
@@ -32,6 +35,10 @@ interface MusicTableProps {
   selectedSongs: Song[];
   onSelectAll: (checked: boolean) => void;
   onSelectSong: (song: Song, checked: boolean) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
   onPlaySong?: (song: Song) => void;
   isLoading?: boolean;
 }
@@ -41,6 +48,10 @@ export function MusicTable({
   selectedSongs,
   onSelectAll,
   onSelectSong,
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
   onPlaySong,
   isLoading
 }: MusicTableProps) {
@@ -56,6 +67,10 @@ export function MusicTable({
     );
   }
 
+  if (songs.length === 0) {
+    return <EmptyState />;
+  }
+
   const formatDuration = (duration: number | undefined) => {
     if (!duration) return "0:00";
     const minutes = Math.floor(duration / 60);
@@ -64,11 +79,11 @@ export function MusicTable({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="space-y-4 bg-white rounded-lg border">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-gray-100">
+            <TableRow className="hover:bg-transparent">
               <TableHead className="w-[30px]">
                 <Checkbox
                   checked={selectedSongs.length === songs.length}
@@ -87,9 +102,9 @@ export function MusicTable({
             {songs.map((song) => (
               <TableRow
                 key={song.id}
-                className="hover:bg-gray-50/50 group border-b border-gray-100"
+                className="hover:bg-gray-50/50 group"
               >
-                <TableCell>
+                <TableCell className="w-[30px]">
                   <Checkbox
                     checked={selectedSongs.some((s) => s.id === song.id)}
                     onCheckedChange={(checked) => onSelectSong(song, checked as boolean)}
@@ -97,13 +112,13 @@ export function MusicTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-4">
-                    <div className="relative group/artwork w-10 h-10">
+                    <div className="relative group w-10 h-10">
                       <img
                         src={song.artwork_url || "/placeholder.svg"}
                         alt={song.title}
-                        className="w-full h-full object-cover rounded-lg shadow-sm group-hover/artwork:opacity-75 transition-opacity"
+                        className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/artwork:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           size="icon"
                           variant="ghost"
@@ -119,13 +134,13 @@ export function MusicTable({
                 </TableCell>
                 <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>
                 <TableCell className="text-gray-600">{song.album || '-'}</TableCell>
-                <TableCell>
+                <TableCell className="text-gray-600">
                   {song.genre ? (
                     <div className="flex gap-2">
                       {song.genre.map((g) => (
                         <span
                           key={g}
-                          className="px-2 py-1 text-xs rounded-full bg-[#9b87f5]/10 text-[#9b87f5]"
+                          className="px-2 py-1 text-xs rounded-full bg-gray-100"
                         >
                           {g}
                         </span>
@@ -158,23 +173,18 @@ export function MusicTable({
                 </TableCell>
               </TableRow>
             ))}
-            {songs.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="h-32 text-center text-gray-500"
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <Music2 className="w-8 h-8 mb-2 text-gray-400" />
-                    <p>No songs found</p>
-                    <p className="text-sm">Upload some music to get started</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </ScrollArea>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={(currentPage - 1) * itemsPerPage}
+        endIndex={Math.min(currentPage * itemsPerPage, songs.length)}
+        totalItems={songs.length}
+      />
     </div>
   );
 }

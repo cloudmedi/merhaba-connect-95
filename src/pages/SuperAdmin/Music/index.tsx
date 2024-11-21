@@ -3,7 +3,10 @@ import { MusicContent } from "./MusicContent";
 
 export default function Music() {
   return (
-    <DashboardLayout>
+    <DashboardLayout 
+      title="Music Library"
+      description="Manage and organize your music collection"
+    >
       <MusicContent />
     </DashboardLayout>
   );

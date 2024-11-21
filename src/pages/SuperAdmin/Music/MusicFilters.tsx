@@ -18,10 +18,10 @@ export function MusicFilters({
   playlists,
 }: MusicFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-4 items-center p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="flex flex-wrap gap-6 items-center p-4 bg-white rounded-lg border">
       <div className="flex-1 min-w-[200px]">
         <Select onValueChange={onGenreChange}>
-          <SelectTrigger className="bg-gray-50 border-gray-200">
+          <SelectTrigger>
             <SelectValue placeholder="Filter by genre" />
           </SelectTrigger>
           <SelectContent>
@@ -37,7 +37,7 @@ export function MusicFilters({
 
       <div className="flex-1 min-w-[200px]">
         <Select onValueChange={onPlaylistChange}>
-          <SelectTrigger className="bg-gray-50 border-gray-200">
+          <SelectTrigger>
             <SelectValue placeholder="Filter by playlist" />
           </SelectTrigger>
           <SelectContent>
@@ -51,13 +51,12 @@ export function MusicFilters({
         </Select>
       </div>
 
-      <div className="flex items-center space-x-2 ml-auto">
+      <div className="flex items-center space-x-2">
         <Switch
           id="recent-mode"
           onCheckedChange={onRecentChange}
-          className="data-[state=checked]:bg-[#9b87f5]"
         />
-        <Label htmlFor="recent-mode" className="text-sm text-gray-600">Show recent uploads first</Label>
+        <Label htmlFor="recent-mode">Show recent uploads first</Label>
       </div>
     </div>
   );
