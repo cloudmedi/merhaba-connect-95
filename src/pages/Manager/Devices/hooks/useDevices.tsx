@@ -88,14 +88,12 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      // First check license limit
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      // Count current devices
       const { count: currentDevices } = await supabase
         .from('devices')
         .select('*', { count: 'exact' })
