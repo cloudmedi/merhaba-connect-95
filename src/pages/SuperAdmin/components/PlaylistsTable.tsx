@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Play } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -50,7 +50,6 @@ export function PlaylistsTable({
   isLoading 
 }: PlaylistsTableProps) {
   const { toast } = useToast();
-  const defaultArtwork = "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7";
 
   const handleDelete = async (id: string) => {
     try {
@@ -82,12 +81,6 @@ export function PlaylistsTable({
     );
   }
 
-  const getArtworkUrl = (url?: string) => {
-    if (!url) return defaultArtwork;
-    if (url.startsWith('http')) return url;
-    return `${url}`;
-  };
-
   return (
     <Card className="bg-white border-none shadow-sm">
       <CardContent className="p-0">
@@ -110,13 +103,9 @@ export function PlaylistsTable({
                     <div className="flex items-center gap-4">
                       <div className="relative group w-10 h-10">
                         <img
-                          src={getArtworkUrl(playlist.artwork_url)}
+                          src={playlist.artwork_url || "/placeholder.svg"}
                           alt={playlist.name}
                           className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
-                          onError={(e) => {
-                            const img = e.target as HTMLImageElement;
-                            img.src = defaultArtwork;
-                          }}
                         />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
@@ -125,10 +114,7 @@ export function PlaylistsTable({
                             className="w-6 h-6 rounded-full bg-black/50 hover:bg-black/70"
                             onClick={() => onPlay(playlist)}
                           >
-                            <span className="sr-only">Play</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-white">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
+                            <Play className="w-3 h-3 text-white" />
                           </Button>
                         </div>
                       </div>
