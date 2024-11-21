@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import type { Json } from "@/integrations/supabase/types/json";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface Device {
   id: string;
@@ -11,27 +11,19 @@ export interface Device {
   category: 'player' | 'display' | 'controller';
   status: 'online' | 'offline';
   ip_address?: string | null;
-  system_info: {
-    os?: string;
-    memory?: string;
-    storage?: string;
-    version?: string;
-  };
-  schedule: {
-    powerOn?: string;
-    powerOff?: string;
-  };
+  system_info: Json;
+  schedule: Json;
   token?: string;
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;
   location?: string | null;
+  branch_id?: string | null;
 }
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription with improved error handling
   useEffect(() => {
     const channel = supabase
       .channel('devices_changes')
@@ -43,19 +35,14 @@ export const useDevices = () => {
           table: 'devices'
         },
         (payload: RealtimePostgresChangesPayload<Device>) => {
-          console.log('Received real-time update:', payload);
-          
-          // Invalidate and refetch devices query
           queryClient.invalidateQueries({ queryKey: ['devices'] });
           
-          // Show toast notification based on the event
           const event = payload.eventType;
           const deviceName = (payload.new as Device)?.name || (payload.old as Device)?.name;
           
           if (event === 'INSERT') {
             toast.success(`Device "${deviceName}" has been added`);
           } else if (event === 'UPDATE') {
-            // Only show status change notifications
             const oldStatus = (payload.old as Device)?.status;
             const newStatus = (payload.new as Device)?.status;
             if (oldStatus !== newStatus) {
@@ -66,15 +53,9 @@ export const useDevices = () => {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-        if (status === 'CHANNEL_ERROR') {
-          toast.error('Failed to connect to real-time updates');
-        }
-      });
+      .subscribe();
 
     return () => {
-      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
@@ -82,52 +63,41 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      console.log('Fetching devices...');
-      const { data, error } = await supabase
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      const { data: devices, error } = await supabase
         .from('devices')
-        .select('*');
+        .select(`
+          *,
+          branches (
+            id,
+            name,
+            company_id
+          )
+        `)
+        .eq('branches.company_id', userProfile?.company_id);
 
       if (error) {
         console.error('Error fetching devices:', error);
         throw error;
       }
       
-      // Transform the data to match our Device interface
-      const transformedData: Device[] = data.map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category as 'player' | 'display' | 'controller',
-        status: item.status as 'online' | 'offline',
-        ip_address: item.ip_address,
-        system_info: item.system_info ? 
-          (typeof item.system_info === 'object' ? 
-            {
-              os: (item.system_info as any)?.os,
-              memory: (item.system_info as any)?.memory,
-              storage: (item.system_info as any)?.storage,
-              version: (item.system_info as any)?.version,
-            } : {}) : {},
-        schedule: item.schedule ? 
-          (typeof item.schedule === 'object' ? 
-            {
-              powerOn: (item.schedule as any)?.powerOn,
-              powerOff: (item.schedule as any)?.powerOff,
-            } : {}) : {},
-        token: item.token,
-        last_seen: item.last_seen,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        location: item.location
-      }));
-
-      console.log('Fetched devices:', transformedData);
-      return transformedData;
+      return devices || [];
     },
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      console.log('Creating device:', device);
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -140,25 +110,21 @@ export const useDevices = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating device:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla eklendi');
+      toast.success('Device added successfully');
     },
-    onError: (error) => {
-      toast.error('Cihaz eklenirken bir hata oluştu');
+    onError: (error: Error) => {
+      toast.error('Failed to add device');
       console.error('Error adding device:', error);
     },
   });
 
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
-      console.log('Updating device:', id, device);
       const { data, error } = await supabase
         .from('devices')
         .update({
@@ -171,10 +137,7 @@ export const useDevices = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error updating device:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -188,16 +151,12 @@ export const useDevices = () => {
 
   const deleteDevice = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Deleting device:', id);
       const { error } = await supabase
         .from('devices')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting device:', error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
