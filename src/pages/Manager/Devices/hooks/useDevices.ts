@@ -99,8 +99,20 @@ export const useDevices = () => {
         category: item.category as 'player' | 'display' | 'controller',
         status: item.status as 'online' | 'offline',
         ip_address: item.ip_address,
-        system_info: typeof item.system_info === 'object' ? item.system_info as Device['system_info'] : {},
-        schedule: typeof item.schedule === 'object' ? item.schedule as Device['schedule'] : {},
+        system_info: item.system_info ? 
+          (typeof item.system_info === 'object' ? 
+            {
+              os: (item.system_info as any)?.os,
+              memory: (item.system_info as any)?.memory,
+              storage: (item.system_info as any)?.storage,
+              version: (item.system_info as any)?.version,
+            } : {}) : {},
+        schedule: item.schedule ? 
+          (typeof item.schedule === 'object' ? 
+            {
+              powerOn: (item.schedule as any)?.powerOn,
+              powerOff: (item.schedule as any)?.powerOff,
+            } : {}) : {},
         token: item.token,
         last_seen: item.last_seen,
         created_at: item.created_at,
@@ -122,6 +134,8 @@ export const useDevices = () => {
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
+          system_info: device.system_info || {},
+          schedule: device.schedule || {}
         })
         .select()
         .single();
@@ -150,6 +164,8 @@ export const useDevices = () => {
         .update({
           ...device,
           last_seen: new Date().toISOString(),
+          system_info: device.system_info || undefined,
+          schedule: device.schedule || undefined
         })
         .eq('id', id)
         .select()
