@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function MusicHeader() {
   const { toast } = useToast();
@@ -18,19 +19,13 @@ export function MusicHeader() {
       formData.append('file', file);
 
       try {
-        const response = await fetch('/functions/v1/upload-music', {
-          method: 'POST',
+        const { data, error } = await supabase.functions.invoke('upload-music', {
           body: formData,
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
-          }
         });
 
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
+        if (error) {
+          throw error;
         }
-
-        const result = await response.json();
         
         toast({
           title: "Upload successful",
