@@ -1,14 +1,14 @@
 export type EventCategory = 'Marketing' | 'Special Promotion' | 'Holiday Music' | 'Regular Playlist' | 'Background Music';
 
-export type EventColor = {
+export interface EventColor {
   primary: string;
   secondary: string;
   text: string;
-};
+}
 
 export interface EventNotification {
   type: 'email' | 'system' | 'both';
-  timing: number; // minutes before event
+  timing: number;
 }
 
 export interface ScheduleEvent {
@@ -20,7 +20,6 @@ export interface ScheduleEvent {
   end_time: string;
   category: EventCategory;
   color: EventColor;
-  branches?: string[];
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly';
     interval: number;

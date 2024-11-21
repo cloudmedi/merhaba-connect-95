@@ -9,8 +9,8 @@ export const checkEventConflicts = (
       (new Date(newEvent.start_time) <= new Date(existingEvent.end_time) && 
        new Date(newEvent.end_time) >= new Date(existingEvent.start_time));
     
-    const hasBranchOverlap = newEvent.branches?.some(branch =>
-      existingEvent.branches?.includes(branch)
+    const hasBranchOverlap = newEvent.devices?.some(device =>
+      existingEvent.devices?.some(existingDevice => existingDevice.device_id === device.device_id)
     );
 
     return hasTimeConflict && hasBranchOverlap;
@@ -48,13 +48,13 @@ END:VEVENT
     link.click();
   } else {
     const csvContent = [
-      ['Title', 'Start', 'End', 'Category', 'Branches'].join(','),
+      ['Title', 'Start', 'End', 'Category', 'Devices'].join(','),
       ...events.map(event => [
         event.title,
         event.start_time,
         event.end_time,
         event.category,
-        event.branches?.join(';')
+        event.devices?.map(d => d.device_id).join(';')
       ].join(','))
     ].join('\n');
 

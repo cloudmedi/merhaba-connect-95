@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScheduleEvent } from "../types";
+import { ScheduleEvent, EventColor } from "../types";
 
 export const useScheduleEvents = () => {
   const queryClient = useQueryClient();
@@ -25,7 +25,11 @@ export const useScheduleEvents = () => {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as ScheduleEvent[];
+      return data.map((event: any) => ({
+        ...event,
+        color: event.color as EventColor,
+        notifications: event.notifications as EventNotification[],
+      })) as ScheduleEvent[];
     },
   });
 
@@ -33,24 +37,29 @@ export const useScheduleEvents = () => {
     mutationFn: async (event: Omit<ScheduleEvent, 'id'>) => {
       const { data: userData } = await supabase.auth.getUser();
       
+      const eventData = {
+        ...event,
+        created_by: userData.user?.id,
+        color: event.color as unknown as Json,
+        notifications: event.notifications as unknown as Json,
+        recurrence: event.recurrence as unknown as Json,
+      };
+
       const { data, error } = await supabase
         .from('schedule_events')
-        .insert({
-          ...event,
-          created_by: userData.user?.id,
-        })
+        .insert(eventData)
         .select()
         .single();
 
       if (error) throw error;
 
-      if (event.branches?.length) {
+      if (event.devices?.length) {
         const { error: assignmentError } = await supabase
           .from('schedule_device_assignments')
           .insert(
-            event.branches.map(deviceId => ({
+            event.devices.map(device => ({
               schedule_id: data.id,
-              device_id: deviceId
+              device_id: device.device_id
             }))
           );
 
@@ -71,24 +80,26 @@ export const useScheduleEvents = () => {
 
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
+      const eventData = {
+        title: event.title,
+        description: event.description,
+        playlist_id: event.playlist_id,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        category: event.category,
+        color: event.color as unknown as Json,
+        recurrence: event.recurrence as unknown as Json,
+        notifications: event.notifications as unknown as Json,
+      };
+
       const { error: updateError } = await supabase
         .from('schedule_events')
-        .update({
-          title: event.title,
-          description: event.description,
-          playlist_id: event.playlist_id,
-          start_time: event.start_time,
-          end_time: event.end_time,
-          category: event.category,
-          color: event.color,
-          recurrence: event.recurrence,
-          notifications: event.notifications,
-        })
+        .update(eventData)
         .eq('id', event.id);
 
       if (updateError) throw updateError;
 
-      if (event.branches) {
+      if (event.devices) {
         const { error: deleteError } = await supabase
           .from('schedule_device_assignments')
           .delete()
@@ -96,13 +107,13 @@ export const useScheduleEvents = () => {
 
         if (deleteError) throw deleteError;
 
-        if (event.branches.length > 0) {
+        if (event.devices.length > 0) {
           const { error: assignmentError } = await supabase
             .from('schedule_device_assignments')
             .insert(
-              event.branches.map(deviceId => ({
+              event.devices.map(device => ({
                 schedule_id: event.id,
-                device_id: deviceId
+                device_id: device.device_id
               }))
             );
 
