@@ -6,6 +6,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { SongList } from "@/components/playlists/SongList";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface PlaylistData {
   id: string;
@@ -32,6 +33,7 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
+      // Fetch playlist details
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -42,8 +44,12 @@ export function PlaylistDetail() {
         .eq('id', id)
         .single();
 
-      if (playlistError) throw playlistError;
+      if (playlistError) {
+        toast.error("Playlist yüklenirken bir hata oluştu");
+        throw playlistError;
+      }
 
+      // Fetch playlist songs
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -60,7 +66,10 @@ export function PlaylistDetail() {
         .eq('playlist_id', id)
         .order('position');
 
-      if (songsError) throw songsError;
+      if (songsError) {
+        toast.error("Şarkılar yüklenirken bir hata oluştu");
+        throw songsError;
+      }
 
       return {
         ...playlist,
@@ -73,9 +82,6 @@ export function PlaylistDetail() {
           artwork_url: ps.songs.artwork_url
         }))
       } as PlaylistData;
-    },
-    meta: {
-      errorMessage: "Failed to load playlist"
     }
   });
 
@@ -98,7 +104,7 @@ export function PlaylistDetail() {
     return (
       <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
         <div className="text-center text-gray-500">
-          Playlist not found
+          Playlist bulunamadı
         </div>
       </div>
     );
