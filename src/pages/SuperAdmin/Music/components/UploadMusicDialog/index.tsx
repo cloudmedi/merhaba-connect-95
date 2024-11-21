@@ -48,7 +48,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         [file.name]: {
           file,
           progress: 0,
-          status: 'uploading'
+          status: 'uploading' as const
         }
       }));
 
@@ -70,36 +70,28 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         throw new Error('Upload failed');
       }
 
-      setUploadingFiles(prev => {
-        const newFiles = {
-          ...prev,
-          [file.name]: {
-            ...prev[file.name],
-            status: 'completed',
-            progress: 100
-          }
-        };
-
-        // Check if all files are completed
-        const allCompleted = Object.values(newFiles).every(
-          file => file.status === 'completed'
-        );
-
-        if (allCompleted) {
-          toast({
-            title: "Upload successful",
-            description: "All files have been uploaded successfully",
-          });
-          
-          // Close dialog and reset state immediately
-          setTimeout(() => {
-            onOpenChange(false);
-            setUploadingFiles({});
-          }, 0);
+      setUploadingFiles(prev => ({
+        ...prev,
+        [file.name]: {
+          ...prev[file.name],
+          status: 'completed' as const,
+          progress: 100
         }
+      }));
 
-        return newFiles;
-      });
+      // Check if all files are completed
+      const allCompleted = Object.values(uploadingFiles).every(
+        file => file.status === 'completed'
+      );
+
+      if (allCompleted) {
+        toast({
+          title: "Upload successful",
+          description: "All files have been uploaded successfully",
+        });
+        onOpenChange(false);
+        setUploadingFiles({});
+      }
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -107,7 +99,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
         ...prev,
         [file.name]: {
           ...prev[file.name],
-          status: 'error',
+          status: 'error' as const,
           error: error.message
         }
       }));
