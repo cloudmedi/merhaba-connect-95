@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useDevices } from "../hooks/useDevices";
 
@@ -20,7 +19,8 @@ export function AddDeviceDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<"player" | "display" | "controller">("player");
+  const [token, setToken] = useState("");
+  const [location, setLocation] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +28,9 @@ export function AddDeviceDialog({
     
     await createDevice.mutateAsync({
       name,
-      category,
+      token,
+      location,
+      category: "player", // Default category since we removed the selection
       status: 'offline',
       schedule: {},
       system_info: {},
@@ -36,7 +38,8 @@ export function AddDeviceDialog({
 
     onOpenChange(false);
     setName("");
-    setCategory("player");
+    setToken("");
+    setLocation("");
   };
 
   return (
@@ -57,17 +60,30 @@ export function AddDeviceDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">Device Type</Label>
-            <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select device type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="player">Player</SelectItem>
-                <SelectItem value="display">Display</SelectItem>
-                <SelectItem value="controller">Controller</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="token">Device Token</Label>
+            <Input
+              id="token"
+              value={token}
+              onChange={(e) => {
+                // Only allow 6 digits
+                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                setToken(value);
+              }}
+              placeholder="Enter 6-digit token"
+              required
+              pattern="\d{6}"
+              title="Please enter a 6-digit token"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter device location"
+              required
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
