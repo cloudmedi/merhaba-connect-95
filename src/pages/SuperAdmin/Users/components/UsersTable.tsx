@@ -83,7 +83,7 @@ export function UsersTable() {
           subscriptionEndsAt: profile.companies.subscription_ends_at
         } : undefined,
         license: profile.licenses?.[0] ? {
-          type: profile.licenses[0].type,
+          type: profile.licenses[0].type as 'trial' | 'premium',
           start_date: profile.licenses[0].start_date,
           end_date: profile.licenses[0].end_date,
           quantity: profile.licenses[0].quantity
