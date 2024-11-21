@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExportButtons } from "@/components/ExportButtons";
+import { useLocations } from "../hooks/useLocations";
 
 interface DeviceFiltersProps {
   searchTerm: string;
@@ -37,6 +38,8 @@ export function DeviceFilters({
   data,
   columns,
 }: DeviceFiltersProps) {
+  const { data: locations = [] } = useLocations();
+
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
       <div className="flex-1 flex flex-col sm:flex-row gap-2">
@@ -76,10 +79,11 @@ export function DeviceFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Locations</SelectItem>
-            <SelectItem value="north">North Region</SelectItem>
-            <SelectItem value="south">South Region</SelectItem>
-            <SelectItem value="east">East Region</SelectItem>
-            <SelectItem value="west">West Region</SelectItem>
+            {locations.map((location) => (
+              <SelectItem key={location} value={location}>
+                {location}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
