@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import * as mm from 'https://esm.sh/music-metadata-browser'
+import * as mm from 'https://esm.sh/music-metadata'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,9 +75,9 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN')
 
-    // Get file metadata
+    // Get file metadata using the new music-metadata package
     console.log('Parsing file metadata...')
-    const metadata = await mm.parseBuffer(arrayBuffer, {
+    const metadata = await mm.parseBuffer(arrayBuffer, fileType, {
       duration: true,
       skipCovers: true,
       skipPostHeaders: true,
