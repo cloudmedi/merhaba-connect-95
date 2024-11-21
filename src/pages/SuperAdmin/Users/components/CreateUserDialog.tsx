@@ -10,6 +10,7 @@ import { BasicInfoSection } from "./CreateUserForm/BasicInfoSection";
 import { LicenseSection } from "./CreateUserForm/LicenseSection";
 import { createUserFormSchema } from "./CreateUserForm/schema";
 import type { CreateUserFormValues } from "./CreateUserForm/types";
+import { addDays } from "date-fns";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -30,7 +31,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       license: {
         type: "trial",
         start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+        end_date: addDays(new Date(), 14).toISOString(), // 14 days trial
         quantity: 1,
       },
     },
@@ -39,7 +40,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const createUserMutation = useMutation({
     mutationFn: userService.createUser,
     onSuccess: () => {
-      toast.success("User created successfully");
+      toast.success("User created successfully with 14-day trial period");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
       form.reset();
@@ -57,7 +58,9 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#1A1F2C]">Create New User</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold text-[#1A1F2C]">
+            Create New User
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
