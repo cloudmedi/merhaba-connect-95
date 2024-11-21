@@ -218,6 +218,39 @@ export type Database = {
           },
         ]
       }
+      playlist_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          playlist_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          playlist_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          playlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_categories_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlist_songs: {
         Row: {
           created_at: string | null
