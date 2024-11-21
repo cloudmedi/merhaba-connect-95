@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useApiMetrics } from "@/hooks/useApiMetrics";
+import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
 export function ApiPerformance() {
   const { data: metrics = [] } = useApiMetrics();
@@ -21,31 +22,20 @@ export function ApiPerformance() {
           >
             <BarChart 
               data={metrics}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              {...commonChartProps}
             >
               <XAxis 
-                dataKey="endpoint" 
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                width={60}
-                padding={{ left: 0, right: 0 }}
+                {...commonXAxisProps}
+                dataKey="endpoint"
               />
-              <YAxis 
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                width={60}
-                padding={{ top: 20, bottom: 20 }}
-                tickCount={5}
-              />
+              <YAxis {...commonYAxisProps} />
               <ChartTooltip />
               <Bar 
                 dataKey="total_requests" 
                 fill="#3b82f6"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
-                isAnimationActive={false}
+                {...commonChartProps}
               />
             </BarChart>
           </ChartContainer>

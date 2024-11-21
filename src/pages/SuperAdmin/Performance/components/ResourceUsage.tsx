@@ -4,6 +4,7 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis } from "recharts";
 import { Cpu, Database, HardDrive } from "lucide-react";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
+import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
 export function ResourceUsage() {
   const { data: metrics = [] } = useSystemMetrics();
@@ -70,25 +71,14 @@ export function ResourceUsage() {
           >
             <LineChart 
               data={metrics}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              {...commonChartProps}
             >
               <XAxis 
+                {...commonXAxisProps}
                 dataKey="measured_at"
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
                 tickFormatter={(value) => new Date(value).toLocaleTimeString()}
-                width={60}
-                padding={{ left: 0, right: 0 }}
               />
-              <YAxis 
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                width={60}
-                padding={{ top: 20, bottom: 20 }}
-                tickCount={5}
-              />
+              <YAxis {...commonYAxisProps} />
               <ChartTooltip />
               <Line
                 type="monotone"
@@ -97,7 +87,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
-                isAnimationActive={false}
+                {...commonChartProps}
               />
               <Line
                 type="monotone"
@@ -106,7 +96,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
-                isAnimationActive={false}
+                {...commonChartProps}
               />
               <Line
                 type="monotone"
@@ -115,7 +105,7 @@ export function ResourceUsage() {
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
-                isAnimationActive={false}
+                {...commonChartProps}
               />
             </LineChart>
           </ChartContainer>

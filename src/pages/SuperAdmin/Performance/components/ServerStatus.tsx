@@ -3,6 +3,7 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis } from "recharts";
 import { Signal, Clock, AlertTriangle } from "lucide-react";
 import { useSystemMetrics } from "@/hooks/useSystemMetrics";
+import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
 export function ServerStatus() {
   const { data: metrics = [] } = useSystemMetrics();
@@ -11,8 +12,6 @@ export function ServerStatus() {
     response_time: 145,
     error_rate: 0.1,
   };
-
-  // ... keep existing code (status cards)
 
   return (
     <div className="space-y-6">
@@ -79,7 +78,7 @@ export function ServerStatus() {
           >
             <AreaChart 
               data={metrics}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              {...commonChartProps}
             >
               <defs>
                 <linearGradient id="responseTimeGradient" x1="0" y1="0" x2="0" y2="1">
@@ -88,22 +87,11 @@ export function ServerStatus() {
                 </linearGradient>
               </defs>
               <XAxis 
+                {...commonXAxisProps}
                 dataKey="measured_at"
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
                 tickFormatter={(value) => new Date(value).toLocaleTimeString()}
-                width={60}
-                padding={{ left: 0, right: 0 }}
               />
-              <YAxis 
-                stroke="#94a3b8"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                tickLine={{ stroke: '#94a3b8' }}
-                width={60}
-                padding={{ top: 20, bottom: 20 }}
-                tickCount={5}
-              />
+              <YAxis {...commonYAxisProps} />
               <ChartTooltip />
               <Area
                 type="monotone"
@@ -111,7 +99,7 @@ export function ServerStatus() {
                 stroke="#3b82f6"
                 strokeWidth={2}
                 fill="url(#responseTimeGradient)"
-                isAnimationActive={false}
+                {...commonChartProps}
               />
             </AreaChart>
           </ChartContainer>
