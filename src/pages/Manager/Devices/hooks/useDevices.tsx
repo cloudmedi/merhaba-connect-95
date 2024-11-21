@@ -108,7 +108,7 @@ export const useDevices = () => {
       
       const { count: currentDevices } = await supabase
         .from('devices')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('branch_id', device.branch_id);
 
       if (currentDevices !== null && currentDevices >= licenseQuantity) {
@@ -124,7 +124,7 @@ export const useDevices = () => {
           system_info: device.system_info || {},
           schedule: device.schedule || {}
         })
-        .select()
+        .select('*, branches(*)')
         .single();
 
       if (error) throw error;
@@ -150,7 +150,7 @@ export const useDevices = () => {
           schedule: device.schedule || undefined
         })
         .eq('id', id)
-        .select()
+        .select('*, branches(*)')
         .single();
 
       if (error) throw error;
