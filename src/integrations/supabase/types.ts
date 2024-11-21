@@ -258,7 +258,6 @@ export type Database = {
           name: string
           subscription_ends_at: string | null
           subscription_status: string | null
-          trial_notification_sent: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -267,7 +266,6 @@ export type Database = {
           name: string
           subscription_ends_at?: string | null
           subscription_status?: string | null
-          trial_notification_sent?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -276,7 +274,6 @@ export type Database = {
           name?: string
           subscription_ends_at?: string | null
           subscription_status?: string | null
-          trial_notification_sent?: Json | null
           updated_at?: string | null
         }
         Relationships: []
