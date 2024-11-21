@@ -77,15 +77,47 @@ export const createUser = async (userData: CreateUserFormValues) => {
 };
 
 export const updateUser = async (id: string, updates: Partial<User>) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
+  try {
+    // First update the profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        email: updates.email,
+        role: updates.role,
+        is_active: updates.isActive,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (profileError) throw profileError;
+
+    // If company name is updated, update the company table
+    if (updates.company?.name && profile.company_id) {
+      const { error: companyError } = await supabase
+        .from('companies')
+        .update({ name: updates.company.name })
+        .eq('id', profile.company_id);
+
+      if (companyError) throw companyError;
+    }
+
+    // If password is provided, update it through auth API
+    if (updates.password) {
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: updates.password
+      });
+
+      if (passwordError) throw passwordError;
+    }
+
+    return profile;
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
 };
 
 export const deleteUser = async (userId: string) => {

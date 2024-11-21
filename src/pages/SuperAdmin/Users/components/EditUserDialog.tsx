@@ -9,13 +9,14 @@ import { toast } from "sonner";
 import { userService } from "@/services/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/auth";
-import { Lock, Mail, User as UserIcon } from "lucide-react";
+import { Lock, Mail, User as UserIcon, Building2 } from "lucide-react";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  companyName: z.string().min(2, "Company name must be at least 2 characters"),
 });
 
 interface EditUserDialogProps {
@@ -33,6 +34,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       lastName: user.lastName || '',
       email: user.email,
       password: '',
+      companyName: user.company?.name || '',
     },
   });
 
@@ -43,6 +45,10 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         lastName: values.lastName,
         email: values.email,
         password: values.password,
+        company: {
+          ...user.company,
+          name: values.companyName
+        }
       });
     },
     onSuccess: () => {
@@ -121,10 +127,27 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
             <FormField
               control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input className="pl-9" placeholder="Enter company name" {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password (Optional)</FormLabel>
+                  <FormLabel className="text-red-500">New Password (Optional)</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
