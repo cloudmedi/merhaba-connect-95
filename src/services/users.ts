@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth';
 import { companyService } from './company';
 import { licenseService } from './license';
@@ -21,38 +21,28 @@ export const userService = {
           name,
           subscription_status,
           subscription_ends_at
+        ),
+        licenses (
+          type,
+          start_date,
+          end_date,
+          quantity
         )
-      `)
-      .eq('role', 'manager');
+      `);
 
     if (filters?.search) {
       query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
     }
 
-    if (filters?.status) {
+    if (filters?.role && filters?.role !== 'all') {
+      query = query.eq('role', filters.role);
+    }
+
+    if (filters?.status && filters?.status !== 'all') {
       query = query.eq('is_active', filters.status === 'active');
     }
 
-    if (filters?.license) {
-      query = query.eq('companies.subscription_status', filters.license);
-    }
-
-    if (filters?.expiry) {
-      const today = new Date().toISOString();
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      const futureDate = thirtyDaysFromNow.toISOString();
-
-      if (filters.expiry === 'this-month') {
-        query = query.gte('companies.subscription_ends_at', today)
-                    .lte('companies.subscription_ends_at', futureDate);
-      } else if (filters.expiry === 'expired') {
-        query = query.lt('companies.subscription_ends_at', today);
-      }
-    }
-
     const { data, error } = await query;
-    
     if (error) throw error;
     return data;
   },
@@ -81,9 +71,9 @@ export const userService = {
 
     if (authError) throw authError;
 
-    // 3. Create user record in users table
+    // 3. Create user record in profiles table
     const { data: user, error: userError } = await supabase
-      .from('users')
+      .from('profiles')
       .insert({
         id: authUser.user!.id,
         email: userData.email,
@@ -91,7 +81,6 @@ export const userService = {
         last_name: userData.lastName,
         role: userData.role,
         company_id: company.id,
-        company_name: userData.companyName,
         is_active: true
       })
       .select()
@@ -113,8 +102,14 @@ export const userService = {
 
   async updateUser(id: string, updates: Partial<User>) {
     const { data, error } = await supabase
-      .from('users')
-      .update(updates)
+      .from('profiles')
+      .update({
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        email: updates.email,
+        role: updates.role,
+        is_active: updates.isActive,
+      })
       .eq('id', id)
       .select()
       .single();
@@ -125,7 +120,7 @@ export const userService = {
 
   async deleteUser(id: string) {
     const { error } = await supabase
-      .from('users')
+      .from('profiles')
       .delete()
       .eq('id', id);
     
@@ -134,10 +129,10 @@ export const userService = {
 
   async toggleUserStatus(id: string, isActive: boolean) {
     const { data, error } = await supabase
-      .from('users')
-      .update({ isActive })
+      .from('profiles')
+      .update({ is_active: isActive })
       .eq('id', id)
-      .select('*')
+      .select()
       .single();
     
     if (error) throw error;
@@ -146,12 +141,12 @@ export const userService = {
 
   async renewLicense(userId: string) {
     const { data, error } = await supabase
-      .from('users')
+      .from('licenses')
       .update({ 
-        license: 'premium',
-        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+        type: 'premium',
+        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
       })
-      .eq('id', userId)
+      .eq('user_id', userId)
       .select()
       .single();
     
