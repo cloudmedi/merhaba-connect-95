@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_metrics: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          error_count: number
+          id: string
+          measured_at: string | null
+          response_time: number
+          success_rate: number
+          total_requests: number
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          error_count?: number
+          id?: string
+          measured_at?: string | null
+          response_time?: number
+          success_rate?: number
+          total_requests?: number
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          error_count?: number
+          id?: string
+          measured_at?: string | null
+          response_time?: number
+          success_rate?: number
+          total_requests?: number
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -389,12 +422,51 @@ export type Database = {
           },
         ]
       }
+      system_metrics: {
+        Row: {
+          cpu_usage: number
+          created_at: string | null
+          error_rate: number
+          id: string
+          measured_at: string | null
+          memory_usage: number
+          response_time: number
+          server_uptime: number
+          storage_usage: number
+        }
+        Insert: {
+          cpu_usage?: number
+          created_at?: string | null
+          error_rate?: number
+          id?: string
+          measured_at?: string | null
+          memory_usage?: number
+          response_time?: number
+          server_uptime?: number
+          storage_usage?: number
+        }
+        Update: {
+          cpu_usage?: number
+          created_at?: string | null
+          error_rate?: number
+          id?: string
+          measured_at?: string | null
+          memory_usage?: number
+          response_time?: number
+          server_uptime?: number
+          storage_usage?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      collect_system_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

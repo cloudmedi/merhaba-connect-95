@@ -3,15 +3,16 @@ import { Progress } from "@/components/ui/progress";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis } from "recharts";
 import { Cpu, Database, HardDrive } from "lucide-react";
-
-const mockData = Array.from({ length: 24 }, (_, i) => ({
-  time: `${i}:00`,
-  cpu: Math.random() * 30 + 20,
-  memory: Math.random() * 40 + 30,
-  storage: Math.random() * 20 + 60,
-}));
+import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 
 export function ResourceUsage() {
+  const { data: metrics = [] } = useSystemMetrics();
+  const latestMetric = metrics[0] || {
+    cpu_usage: 45,
+    memory_usage: 62,
+    storage_usage: 78,
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -22,8 +23,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">CPU Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">45%</h3>
-              <Progress value={45} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.cpu_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.cpu_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -35,8 +36,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">62%</h3>
-              <Progress value={62} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.memory_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.memory_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -48,8 +49,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Storage Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">78%</h3>
-              <Progress value={78} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.storage_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.storage_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -66,14 +67,15 @@ export function ResourceUsage() {
             }}
           >
             <LineChart 
-              data={mockData}
+              data={metrics}
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <XAxis 
-                dataKey="time" 
+                dataKey="measured_at"
                 stroke="#94a3b8"
                 tick={{ fill: '#64748b', fontSize: 12 }}
                 tickLine={{ stroke: '#94a3b8' }}
+                tickFormatter={(value) => new Date(value).toLocaleTimeString()}
               />
               <YAxis 
                 stroke="#94a3b8"
@@ -83,7 +85,7 @@ export function ResourceUsage() {
               <ChartTooltip />
               <Line
                 type="monotone"
-                dataKey="cpu"
+                dataKey="cpu_usage"
                 stroke="#3b82f6"
                 strokeWidth={2}
                 dot={{ r: 4 }}
@@ -91,7 +93,7 @@ export function ResourceUsage() {
               />
               <Line
                 type="monotone"
-                dataKey="memory"
+                dataKey="memory_usage"
                 stroke="#9333ea"
                 strokeWidth={2}
                 dot={{ r: 4 }}
@@ -99,7 +101,7 @@ export function ResourceUsage() {
               />
               <Line
                 type="monotone"
-                dataKey="storage"
+                dataKey="storage_usage"
                 stroke="#10b981"
                 strokeWidth={2}
                 dot={{ r: 4 }}
