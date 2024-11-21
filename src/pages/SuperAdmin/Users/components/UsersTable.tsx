@@ -3,9 +3,8 @@ import { UserTableRow } from "./UserTableRow";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
-import { User } from "@/types/auth";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import { TablePagination } from "./TablePagination";
+import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { useState } from "react";
 
 const ITEMS_PER_PAGE = 20;
