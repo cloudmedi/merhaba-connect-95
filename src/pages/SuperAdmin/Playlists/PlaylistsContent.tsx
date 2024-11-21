@@ -32,7 +32,6 @@ export function PlaylistsContent() {
     }
   });
 
-  // Query for playlist songs when a playlist is selected
   const { data: playlistSongs } = useQuery({
     queryKey: ['playlist-songs', currentPlaylist?.id],
     queryFn: async () => {
@@ -67,13 +66,18 @@ export function PlaylistsContent() {
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => ({
-    id: playlist.id,
-    title: playlist.name,
-    artwork: playlist.artwork_url || "/placeholder.svg",
-    genre: "Various",
-    mood: "Various",
-  });
+  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
+    const defaultArtwork = "/placeholder.svg";
+    const artworkUrl = playlist.artwork_url || defaultArtwork;
+    
+    return {
+      id: playlist.id,
+      title: playlist.name,
+      artwork_url: artworkUrl,
+      genre: "Various",
+      mood: "Various",
+    };
+  };
 
   const businessPlaylists = filteredPlaylists
     .filter(p => !p.is_public)
@@ -135,7 +139,7 @@ export function PlaylistsContent() {
         <MusicPlayer
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork,
+            artwork: currentPlaylist.artwork_url,
             songs: playlistSongs.map(ps => ({
               id: ps.songs.id,
               title: ps.songs.title,

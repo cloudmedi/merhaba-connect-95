@@ -1,7 +1,7 @@
 export interface GridPlaylist {
   id: string;
   title: string;
-  artwork: string;
+  artwork_url: string;
   genre: string;
   mood: string;
 }
