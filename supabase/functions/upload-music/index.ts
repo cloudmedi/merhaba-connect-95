@@ -4,7 +4,7 @@ import * as mm from 'https://esm.sh/music-metadata-browser'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
 }
 
 serve(async (req) => {
@@ -14,8 +14,25 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    console.log('Content-Type:', req.headers.get('content-type'));
+    
+    // Ensure we have the right content type
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('multipart/form-data')) {
+      console.error('Invalid content type:', contentType);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid content type', 
+          details: `Expected multipart/form-data but got ${contentType}` 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
+          status: 400 
+        }
+      );
+    }
 
+    // Parse form data
     let formData;
     try {
       formData = await req.formData();
@@ -34,6 +51,7 @@ serve(async (req) => {
       );
     }
 
+    // Get file from form data
     const file = formData.get('file');
     if (!file || !(file instanceof File)) {
       console.error('No valid file found in form data');
@@ -43,7 +61,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('File received:', file.name, 'Size:', file.size, 'Type:', file.type);
+    console.log('File received:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
 
     // Initialize Supabase client
     const supabase = createClient(
