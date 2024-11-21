@@ -29,7 +29,7 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, email, first_name, last_name')
           .ilike('email', `%${searchQuery}%`);
 
         if (error) throw error;
@@ -71,13 +71,9 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
             >
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.first_name || ''} />
-                  ) : (
-                    <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
-                      {(user.first_name?.[0] || user.email[0]).toUpperCase()}
-                    </div>
-                  )}
+                  <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
+                    {(user.first_name?.[0] || user.email[0]).toUpperCase()}
+                  </div>
                 </Avatar>
                 <div>
                   <h4 className="text-sm font-medium">
