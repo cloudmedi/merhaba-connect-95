@@ -22,6 +22,7 @@ export function AddDeviceDialog({
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
+  const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,6 +32,7 @@ export function AddDeviceDialog({
       name,
       category,
       location,
+      token,
       status: 'offline',
       schedule: {},
       system_info: {},
@@ -40,6 +42,7 @@ export function AddDeviceDialog({
     setName("");
     setCategory("player");
     setLocation("");
+    setToken("");
   };
 
   return (
@@ -79,6 +82,15 @@ export function AddDeviceDialog({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Enter device location"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="token">Device Token</Label>
+            <Input
+              id="token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Enter device token"
             />
           </div>
           <DialogFooter>
