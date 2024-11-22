@@ -3,6 +3,7 @@ import { ManagerHeader } from "@/components/ManagerHeader";
 import { ManagerNav } from "@/components/ManagerNav";
 import ManagerDashboard from "./Dashboard";
 import { PlaylistDetail } from "./Playlists/PlaylistDetail";
+import Playlists from "./Playlists";
 import Devices from "./Devices";
 import Schedule from "./Schedule";
 import Announcements from "./Announcements";
@@ -16,6 +17,7 @@ export default function Manager() {
         <main className="p-8">
           <Routes>
             <Route path="/" element={<ManagerDashboard />} />
+            <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlists/:id" element={<PlaylistDetail />} />
             <Route path="/devices" element={<Devices />} />
             <Route path="/schedule" element={<Schedule />} />
