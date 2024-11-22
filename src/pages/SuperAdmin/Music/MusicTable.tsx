@@ -75,21 +75,17 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  // Bunny CDN URL'sini oluşturan yardımcı fonksiyon
   const getBunnyUrl = (song: Song): string => {
     if (!song) return '';
     
-    // Eğer bunny_id varsa, direkt olarak Bunny CDN URL'sini oluştur
     if (song.bunny_id) {
       return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
     }
     
-    // Eğer file_url bir HTTP URL ise direkt kullan
     if (song.file_url.startsWith('http')) {
       return song.file_url;
     }
     
-    // Aksi takdirde Bunny CDN URL'sini oluştur
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
