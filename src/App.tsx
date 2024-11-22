@@ -11,6 +11,9 @@ import Schedule from "./pages/Manager/Schedule";
 import Announcements from "./pages/Manager/Announcements";
 import Settings from "./pages/Manager/Settings";
 import Notifications from "./pages/Manager/Notifications";
+import { AuthProvider } from "@/hooks/useAuth";
+import ManagerLogin from "./pages/Manager/Auth/Login";
+import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +21,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Index />,
+  },
+  {
+    path: "/manager/login",
+    element: <ManagerLogin />,
+  },
+  {
+    path: "/super-admin/login",
+    element: <SuperAdminLogin />,
   },
   {
     path: "/manager",
@@ -62,8 +73,10 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
