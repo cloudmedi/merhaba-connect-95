@@ -21,8 +21,8 @@ const getGreeting = () => {
 };
 
 const getUserDisplayName = (user: any) => {
-  if (user?.firstName) return user.firstName;
-  if (user?.email) return user.email.split('@')[0];
+  if (user?.firstName) return `, ${user.firstName}`;
+  if (user?.email) return `, ${user.email.split('@')[0]}`;
   return '';
 };
 
@@ -37,7 +37,7 @@ export function ManagerHeader() {
     toast.success("Super Admin paneline geri dönüldü");
   };
 
-  const greeting = `${getGreeting()}, ${getUserDisplayName(user)}`;
+  const greeting = `${getGreeting()}${getUserDisplayName(user)}`;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
