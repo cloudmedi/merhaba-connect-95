@@ -5,12 +5,10 @@ import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
-import { MusicPlayer } from "@/components/MusicPlayer";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<any | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,7 +24,8 @@ export function MusicContent() {
     currentPage,
     setCurrentPage,
     totalPages,
-    itemsPerPage
+    itemsPerPage,
+    totalCount
   } = useMusicLibrary();
 
   const handleSelectAll = (checked: boolean) => {
@@ -41,14 +40,6 @@ export function MusicContent() {
     }
   };
 
-  const handlePlaySong = (song: any) => {
-    setCurrentlyPlaying(song);
-    toast({
-      title: "Now Playing",
-      description: `${song.title} by ${song.artist || 'Unknown Artist'}`,
-    });
-  };
-
   const handleCreatePlaylist = () => {
     if (selectedSongs.length === 0) {
       toast({
@@ -59,7 +50,6 @@ export function MusicContent() {
       return;
     }
 
-    // Navigate to create playlist page with selected songs
     navigate("/super-admin/playlists/create", {
       state: { selectedSongs }
     });
@@ -113,28 +103,9 @@ export function MusicContent() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
-        onPlaySong={handlePlaySong}
         isLoading={isLoading}
+        totalCount={totalCount}
       />
-
-      {currentlyPlaying && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg animate-slide-in-up">
-          <MusicPlayer
-            playlist={{
-              title: currentlyPlaying.title,
-              artwork: currentlyPlaying.artwork_url || "/placeholder.svg",
-              songs: [{
-                id: currentlyPlaying.id,
-                title: currentlyPlaying.title,
-                artist: currentlyPlaying.artist || "Unknown Artist",
-                duration: currentlyPlaying.duration?.toString() || "0:00",
-                file_url: currentlyPlaying.file_url
-              }]
-            }}
-            onClose={() => setCurrentlyPlaying(null)}
-          />
-        </div>
-      )}
     </div>
   );
 }

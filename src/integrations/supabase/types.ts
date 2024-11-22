@@ -721,6 +721,13 @@ export type Database = {
             foreignKeyName: "playlist_songs_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
+            referencedRelation: "song_play_statistics"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
@@ -941,6 +948,68 @@ export type Database = {
           },
         ]
       }
+      song_play_history: {
+        Row: {
+          branch_id: string | null
+          bunny_stream_id: string | null
+          created_at: string | null
+          device_id: string | null
+          id: string
+          last_played_at: string | null
+          play_count_today: number | null
+          song_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          bunny_stream_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_played_at?: string | null
+          play_count_today?: number | null
+          song_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          bunny_stream_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_played_at?: string | null
+          play_count_today?: number | null
+          song_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_play_history_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_play_history_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_play_history_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "song_play_statistics"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "song_play_history_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           album: string | null
@@ -1032,12 +1101,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      song_play_statistics: {
+        Row: {
+          artist: string | null
+          avg_daily_plays: number | null
+          last_played: string | null
+          song_id: string | null
+          song_title: string | null
+          total_plays: number | null
+          unique_branches: number | null
+          unique_devices: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      cleanup_song_history: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       collect_system_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_song_statistics: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_branch_id?: string
+        }
+        Returns: {
+          song_id: string
+          song_title: string
+          artist: string
+          play_count: number
+          unique_devices: number
+          peak_hour: number
+          peak_day: string
+        }[]
       }
     }
     Enums: {

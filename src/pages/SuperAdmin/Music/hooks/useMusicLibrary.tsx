@@ -22,10 +22,10 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 100;
+  const itemsPerPage = 20; // Changed to 20 items per page
 
   const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent],
+    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
       let query = supabase
         .from('songs')
@@ -39,6 +39,11 @@ export const useMusicLibrary = () => {
         query = query.order('created_at', { ascending: false });
       }
 
+      // Add pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      query = query.range(from, to);
+
       const { data, error } = await query;
 
       if (error) {
@@ -50,11 +55,33 @@ export const useMusicLibrary = () => {
     }
   });
 
-  const filteredSongs = songs || [];
-  const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
+  // Get total count for pagination
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['songs-count', filterGenre, filterPlaylist],
+    queryFn: async () => {
+      let query = supabase
+        .from('songs')
+        .select('id', { count: 'exact' });
+
+      if (filterGenre !== "all-genres") {
+        query = query.contains('genre', [filterGenre]);
+      }
+
+      const { count, error } = await query;
+
+      if (error) {
+        console.error('Error fetching songs count:', error);
+        throw error;
+      }
+
+      return count || 0;
+    }
+  });
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   return {
-    songs: filteredSongs,
+    songs,
     isLoading,
     filterGenre,
     setFilterGenre,
@@ -65,6 +92,7 @@ export const useMusicLibrary = () => {
     currentPage,
     setCurrentPage,
     totalPages,
-    itemsPerPage
+    itemsPerPage,
+    totalCount
   };
 };

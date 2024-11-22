@@ -13,6 +13,7 @@ import { EmptyState } from "./components/EmptyState";
 import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
+import DataTableLoader from "@/components/loaders/DataTableLoader";
 
 interface Song {
   id: string;
@@ -37,6 +38,7 @@ interface MusicTableProps {
   itemsPerPage: number;
   onPlaySong?: (song: Song) => void;
   isLoading?: boolean;
+  totalCount: number;
 }
 
 export function MusicTable({
@@ -48,20 +50,13 @@ export function MusicTable({
   totalPages,
   onPageChange,
   itemsPerPage,
-  isLoading
+  isLoading,
+  totalCount
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-48 bg-gray-200 rounded"></div>
-          <div className="h-4 w-64 bg-gray-200 rounded"></div>
-          <div className="h-4 w-52 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    );
+    return <DataTableLoader />;
   }
 
   if (songs.length === 0) {
@@ -76,9 +71,10 @@ export function MusicTable({
   };
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+  const startIndex = (currentPage - 1) * itemsPerPage;
 
   return (
-    <div className="space-y-4 bg-white rounded-lg border">
+    <div className="space-y-4">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
@@ -117,9 +113,9 @@ export function MusicTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={(currentPage - 1) * itemsPerPage}
-        endIndex={Math.min(currentPage * itemsPerPage, songs.length)}
-        totalItems={songs.length}
+        startIndex={startIndex}
+        endIndex={Math.min(startIndex + itemsPerPage, totalCount)}
+        totalItems={totalCount}
       />
 
       {currentlyPlaying && (
