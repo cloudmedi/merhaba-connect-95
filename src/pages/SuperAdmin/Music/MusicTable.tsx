@@ -75,16 +75,8 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  const handlePlaySong = (song: Song) => {
-    const songIndex = songs.findIndex(s => s.id === song.id);
-    setCurrentSongIndex(songIndex);
-    setCurrentlyPlaying(song);
-  };
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-
   // Bunny CDN URL'sini oluşturan yardımcı fonksiyon
-  const getBunnyUrl = (song: Song) => {
+  const getBunnyUrl = (song: Song): string => {
     if (!song) return '';
     
     // Eğer bunny_id varsa, direkt olarak Bunny CDN URL'sini oluştur
@@ -100,6 +92,23 @@ export function MusicTable({
     // Aksi takdirde Bunny CDN URL'sini oluştur
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
+
+  const handlePlaySong = (song: Song) => {
+    const songIndex = songs.findIndex(s => s.id === song.id);
+    setCurrentSongIndex(songIndex);
+    setCurrentlyPlaying(song);
+  };
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const transformedSongs = songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist || "Unknown Artist",
+    duration: song.duration?.toString() || "0:00",
+    file_url: getBunnyUrl(song),
+    bunny_id: song.bunny_id
+  }));
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
@@ -152,13 +161,7 @@ export function MusicTable({
           playlist={{
             title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
-            songs: songs.map(song => ({
-              id: song.id,
-              title: song.title,
-              artist: song.artist || "Unknown Artist",
-              duration: song.duration?.toString() || "0:00",
-              file_url: getBunnyUrl(song)
-            }))
+            songs: transformedSongs
           }}
           initialSongIndex={currentSongIndex}
           onClose={() => setCurrentlyPlaying(null)}
