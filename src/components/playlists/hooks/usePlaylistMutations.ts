@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -9,6 +10,8 @@ interface SavePlaylistParams {
 }
 
 export function usePlaylistMutations() {
+  const queryClient = useQueryClient();
+
   const handleSavePlaylist = async ({
     playlistData,
     isEditMode,
@@ -52,7 +55,6 @@ export function usePlaylistMutations() {
         name: playlistData.title,
         description: playlistData.description,
         artwork_url,
-        is_public: false,
         created_by: user.id,
         genre_id: playlistData.selectedGenres[0]?.id || null,
         mood_id: playlistData.selectedMoods[0]?.id || null,
@@ -60,9 +62,19 @@ export function usePlaylistMutations() {
 
       let playlist;
       if (isEditMode && existingPlaylist) {
+        // Keep the existing is_public value when updating
+        const { data: currentPlaylist } = await supabase
+          .from('playlists')
+          .select('is_public')
+          .eq('id', existingPlaylist.id)
+          .single();
+
         const { data, error } = await supabase
           .from('playlists')
-          .update(playlistPayload)
+          .update({
+            ...playlistPayload,
+            is_public: currentPlaylist?.is_public ?? false
+          })
           .eq('id', existingPlaylist.id)
           .select()
           .single();
@@ -76,7 +88,7 @@ export function usePlaylistMutations() {
       } else {
         const { data, error } = await supabase
           .from('playlists')
-          .insert([playlistPayload])
+          .insert([{ ...playlistPayload, is_public: false }])
           .select()
           .single();
 
@@ -112,6 +124,9 @@ export function usePlaylistMutations() {
 
         if (categoriesError) throw categoriesError;
       }
+
+      // Invalidate queries to refresh the UI
+      await queryClient.invalidateQueries({ queryKey: ['playlists'] });
 
       onSuccess?.();
     } catch (error: any) {
