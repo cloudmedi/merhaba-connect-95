@@ -721,6 +721,13 @@ export type Database = {
             foreignKeyName: "playlist_songs_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
+            referencedRelation: "song_play_statistics"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
@@ -991,6 +998,13 @@ export type Database = {
             foreignKeyName: "song_play_history_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
+            referencedRelation: "song_play_statistics"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "song_play_history_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
             referencedRelation: "songs"
             referencedColumns: ["id"]
           },
@@ -1087,7 +1101,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      song_play_statistics: {
+        Row: {
+          artist: string | null
+          avg_daily_plays: number | null
+          last_played: string | null
+          song_id: string | null
+          song_title: string | null
+          total_plays: number | null
+          unique_branches: number | null
+          unique_devices: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_song_history: {
@@ -1097,6 +1123,22 @@ export type Database = {
       collect_system_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_song_statistics: {
+        Args: {
+          p_start_date: string
+          p_end_date: string
+          p_branch_id?: string
+        }
+        Returns: {
+          song_id: string
+          song_title: string
+          artist: string
+          play_count: number
+          unique_devices: number
+          peak_hour: number
+          peak_day: string
+        }[]
       }
     }
     Enums: {
