@@ -22,46 +22,15 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // Changed to 20 items per page
+  const itemsPerPage = 20;
 
-  const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from('songs')
-        .select('*');
-
-      if (filterGenre !== "all-genres") {
-        query = query.contains('genre', [filterGenre]);
-      }
-
-      if (sortByRecent) {
-        query = query.order('created_at', { ascending: false });
-      }
-
-      // Add pagination
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-      query = query.range(from, to);
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching songs:', error);
-        throw error;
-      }
-
-      return data as Song[];
-    }
-  });
-
-  // Get total count for pagination
+  // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', filterGenre, filterPlaylist],
     queryFn: async () => {
       let query = supabase
         .from('songs')
-        .select('id', { count: 'exact' });
+        .select('*', { count: 'exact', head: true });
 
       if (filterGenre !== "all-genres") {
         query = query.contains('genre', [filterGenre]);
@@ -78,7 +47,38 @@ export const useMusicLibrary = () => {
     }
   });
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  // Then fetch paginated songs
+  const { data: songs = [], isLoading } = useQuery({
+    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
+    queryFn: async () => {
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let query = supabase
+        .from('songs')
+        .select('*')
+        .range(from, to);
+
+      if (filterGenre !== "all-genres") {
+        query = query.contains('genre', [filterGenre]);
+      }
+
+      if (sortByRecent) {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching songs:', error);
+        throw error;
+      }
+
+      return data as Song[];
+    }
+  });
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
   return {
     songs,
