@@ -8,7 +8,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  avatarUrl?: string | null;  // Added this line
+  avatar_url?: string | null;  // Changed from avatarUrl to avatar_url to match DB schema
   company?: {
     id: string;
     name: string;
