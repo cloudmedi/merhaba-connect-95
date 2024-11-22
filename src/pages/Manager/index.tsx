@@ -6,6 +6,7 @@ import { PlaylistDetail } from "./Playlists/PlaylistDetail";
 import Devices from "./Devices";
 import Schedule from "./Schedule";
 import Announcements from "./Announcements";
+import Notifications from "./Notifications";
 
 export default function Manager() {
   return (
@@ -20,6 +21,7 @@ export default function Manager() {
             <Route path="/devices" element={<Devices />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/announcements" element={<Announcements />} />
+            <Route path="/notifications" element={<Notifications />} />
           </Routes>
         </main>
       </div>
