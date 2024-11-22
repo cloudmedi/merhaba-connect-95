@@ -23,7 +23,8 @@ export const useDeviceQueries = () => {
           branches (
             id,
             name,
-            company_id
+            company_id,
+            location
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
