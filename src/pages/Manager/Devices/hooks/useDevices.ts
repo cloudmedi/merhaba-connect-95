@@ -4,9 +4,11 @@ import { toast } from "sonner";
 import type { Device } from "./types";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   useEffect(() => {
     const channel = supabase
@@ -45,23 +47,10 @@ export const useDevices = () => {
   }, [queryClient]);
 
   const { data: devices = [], isLoading, error } = useQuery({
-    queryKey: ['devices'],
+    queryKey: ['devices', user?.companyId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user?.id) {
-        console.error('No authenticated user found');
-        return [];
-      }
-
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        console.error('No company ID found for user');
+      if (!user?.id || !user?.companyId) {
+        console.error('No authenticated user or company ID found');
         return [];
       }
 
@@ -75,14 +64,16 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branches.company_id', userProfile.company_id);
+        .eq('branches.company_id', user.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching devices:', error);
+        throw error;
+      }
       
-      // Transform the data to match the Device type
       const transformedData = (data || []).map(device => ({
         ...device,
-        category: device.category as Device['category'], // Ensure category is of correct type
+        category: device.category as Device['category'],
         status: (device.status || 'offline') as Device['status'],
         system_info: device.system_info || {},
         schedule: device.schedule || {}
@@ -90,6 +81,7 @@ export const useDevices = () => {
 
       return transformedData as Device[];
     },
+    enabled: !!user?.id && !!user?.companyId,
   });
 
   const createDevice = useMutation({
