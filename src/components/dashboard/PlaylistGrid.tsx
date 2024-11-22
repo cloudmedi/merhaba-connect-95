@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
 import { GridPlaylist } from "./types";
-import { CatalogLoader } from "@/components/loaders/CatalogLoader";
+import CatalogLoader from "@/components/loaders/CatalogLoader";
 
 interface PlaylistGridProps {
   title: string;
@@ -41,7 +41,7 @@ export function PlaylistGrid({
         <Button 
           variant="ghost" 
           className="text-sm text-gray-500 hover:text-gray-900"
-          onClick={() => navigate('/super-admin/playlists')}
+          onClick={() => navigate('/manager/playlists')}
         >
           View All
         </Button>
@@ -52,7 +52,7 @@ export function PlaylistGrid({
           <Card
             key={playlist.id}
             className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
-            onClick={() => navigate(`/super-admin/playlists/${playlist.id}`)}
+            onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
           >
             <div className="aspect-square relative overflow-hidden">
               {playlist.artwork_url ? (
