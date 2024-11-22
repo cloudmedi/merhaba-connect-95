@@ -27,7 +27,7 @@ export const useDeviceQueries = () => {
         .from('devices')
         .select(`
           *,
-          branches (
+          branches:branch_id (
             id,
             name,
             company_id
