@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OnlineUsers } from "./header/OnlineUsers";
-import { UserMenu } from "./header/UserMenu";
 
 interface OnlineUser {
   id: string;
@@ -31,7 +30,7 @@ const getUserDisplayName = (user: any) => {
 
 export function ManagerHeader() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const managerView = localStorage.getItem('managerView');
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
 
@@ -112,8 +111,6 @@ export function ManagerHeader() {
             <Bell className="h-5 w-5 text-gray-600" />
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
           </Button>
-
-          <UserMenu user={user} logout={logout} />
         </div>
       </div>
     </header>
