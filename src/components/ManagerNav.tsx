@@ -40,11 +40,11 @@ export function ManagerNav() {
   return (
     <nav className="w-[280px] bg-gradient-to-b from-[#1A1F2C] to-[#2C3444] min-h-screen py-6 px-4 flex flex-col shadow-xl">
       {/* Logo */}
-      <div className="flex items-center justify-center px-4 mb-8">
+      <div className="flex items-center justify-center px-4 mb-12">
         <img 
           src="/lovable-uploads/95fad160-3252-4701-ad41-8fcdc51f7a63.png" 
           alt="Veeq Logo" 
-          className="h-12 w-auto object-contain"
+          className="h-20 w-auto object-contain"
         />
       </div>
 
