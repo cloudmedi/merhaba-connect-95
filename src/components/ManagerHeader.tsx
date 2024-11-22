@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +14,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
+interface OnlineUser {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  lastSeen: string;
+}
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -30,6 +45,49 @@ export function ManagerHeader() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const managerView = localStorage.getItem('managerView');
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Presence kanalını oluştur
+    const channel = supabase.channel('online-users', {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
+
+    // Kullanıcı durumunu izle
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = channel.presenceState();
+        const users = Object.values(presenceState).flat().map((p: any) => ({
+          id: p.user_id,
+          email: p.email,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          lastSeen: new Date().toISOString(),
+        }));
+        setOnlineUsers(users);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user]);
 
   const handleReturnToSuperAdmin = () => {
     localStorage.removeItem('managerView');
@@ -61,6 +119,49 @@ export function ManagerHeader() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
+          {/* Online Users */}
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <div className="flex -space-x-2">
+                  {onlineUsers.slice(0, 3).map((onlineUser) => (
+                    <Avatar key={onlineUser.id} className="h-6 w-6 border-2 border-white">
+                      <div className="flex h-full w-full items-center justify-center bg-[#9b87f5] text-white text-xs">
+                        {onlineUser.firstName?.[0] || onlineUser.email[0].toUpperCase()}
+                      </div>
+                    </Avatar>
+                  ))}
+                </div>
+                {onlineUsers.length > 3 && (
+                  <span className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-[#9b87f5] text-xs text-white flex items-center justify-center">
+                    +{onlineUsers.length - 3}
+                  </span>
+                )}
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Çevrimiçi Yöneticiler</h4>
+                <div className="space-y-1">
+                  {onlineUsers.map((onlineUser) => (
+                    <div key={onlineUser.id} className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <div className="flex h-full w-full items-center justify-center bg-[#9b87f5] text-white text-xs">
+                          {onlineUser.firstName?.[0] || onlineUser.email[0].toUpperCase()}
+                        </div>
+                      </Avatar>
+                      <span className="text-sm">
+                        {onlineUser.firstName && onlineUser.lastName
+                          ? `${onlineUser.firstName} ${onlineUser.lastName}`
+                          : onlineUser.email}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5 text-gray-600" />
