@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, UserRound } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,7 +45,7 @@ export function ManagerHeader() {
                 <Button variant="ghost" className="h-9 w-9 p-0 rounded-full">
                   <Avatar className="h-9 w-9">
                     <div className="bg-[#9b87f5] text-white h-full w-full flex items-center justify-center">
-                      <UserRound className="h-5 w-5" />
+                      {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
                     </div>
                   </Avatar>
                 </Button>
@@ -59,6 +59,15 @@ export function ManagerHeader() {
                   </span>
                   <span className="text-xs text-gray-500 font-normal mt-0.5">{user?.role}</span>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/manager/settings/profile')} className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/manager/settings')} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Ayarlar
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />

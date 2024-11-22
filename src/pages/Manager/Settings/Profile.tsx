@@ -29,9 +29,9 @@ export default function ProfileSettings() {
         .eq('id', user?.id);
 
       if (error) throw error;
-      toast.success("Profile updated successfully");
+      toast.success("Profil başarıyla güncellendi");
     } catch (error) {
-      toast.error("Failed to update profile");
+      toast.error("Profil güncellenirken bir hata oluştu");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -41,8 +41,8 @@ export default function ProfileSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Profile Settings</h1>
-        <p className="text-sm text-gray-500">Manage your account settings and preferences</p>
+        <h1 className="text-2xl font-semibold">Profil Ayarları</h1>
+        <p className="text-sm text-gray-500">Hesap bilgilerinizi ve tercihlerinizi yönetin</p>
       </div>
 
       <Card className="p-6">
@@ -50,7 +50,7 @@ export default function ProfileSettings() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label htmlFor="firstName" className="text-sm font-medium">
-                First Name
+                Ad
               </label>
               <Input
                 id="firstName"
@@ -60,7 +60,7 @@ export default function ProfileSettings() {
             </div>
             <div className="space-y-2">
               <label htmlFor="lastName" className="text-sm font-medium">
-                Last Name
+                Soyad
               </label>
               <Input
                 id="lastName"
@@ -72,7 +72,7 @@ export default function ProfileSettings() {
 
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
-              Email
+              E-posta
             </label>
             <Input
               id="email"
@@ -82,7 +82,7 @@ export default function ProfileSettings() {
               className="bg-gray-50"
             />
             <p className="text-xs text-gray-500">
-              Contact support to change your email address
+              E-posta adresinizi değiştirmek için destek ekibiyle iletişime geçin
             </p>
           </div>
 
@@ -92,7 +92,7 @@ export default function ProfileSettings() {
               disabled={isLoading}
               className="bg-[#9b87f5] hover:bg-[#7E69AB]"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
             </Button>
           </div>
         </form>
