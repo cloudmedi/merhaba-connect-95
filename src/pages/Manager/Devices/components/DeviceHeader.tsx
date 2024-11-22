@@ -12,19 +12,21 @@ export function DeviceHeader() {
   const navigate = useNavigate();
   const [showNewDeviceDialog, setShowNewDeviceDialog] = useState(false);
   
-  // If no user is authenticated, redirect to login
   if (!user) {
     navigate("/manager/login");
     return null;
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">{t('devices.title')}</h1>
-      <p className="text-gray-500 mt-1">{t('devices.subtitle')}</p>
+    <div className="flex items-center justify-between mb-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">{t('devices.title')}</h1>
+        <p className="text-gray-500 mt-1">{t('devices.subtitle')}</p>
+      </div>
+      
       <Button 
-        className="mt-4"
         onClick={() => setShowNewDeviceDialog(true)}
+        className="bg-[#6E59A5] hover:bg-[#5B4A8A]"
       >
         <Plus className="w-4 h-4 mr-2" />
         {t('devices.addDevice')}
