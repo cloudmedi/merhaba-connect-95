@@ -12,6 +12,7 @@ import { userService } from "@/services/users";
 import { toast } from "sonner";
 import { User } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserActionsProps {
   user: User;
@@ -28,7 +29,14 @@ export function UserActions({ user }: UserActionsProps) {
   const navigate = useNavigate();
 
   const deleteUserMutation = useMutation({
-    mutationFn: () => userService.deleteUser(user.id),
+    mutationFn: async () => {
+      // First delete the auth user
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+      if (authError) throw authError;
+
+      // Then delete the profile (this will cascade to related data)
+      return userService.deleteUser(user.id);
+    },
     onSuccess: () => {
       toast.success("Kullanıcı başarıyla silindi");
       queryClient.invalidateQueries({ queryKey: ['users'] });
