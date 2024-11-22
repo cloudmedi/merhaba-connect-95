@@ -14,9 +14,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Helper function to validate role
-const validateRole = (role: string | null): "super_admin" | "manager" | "admin" => {
-  if (role === "super_admin" || role === "manager" || role === "admin") {
-    return role;
+const validateRole = (role: string | null): "super_admin" | "manager" => {
+  if (role === "super_admin") {
+    return "super_admin";
   }
   return "manager"; // Default fallback role
 };
