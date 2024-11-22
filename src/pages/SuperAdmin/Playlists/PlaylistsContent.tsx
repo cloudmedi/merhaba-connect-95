@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Playlist } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
@@ -14,6 +14,7 @@ export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['playlists'],
@@ -29,7 +30,9 @@ export function PlaylistsContent() {
 
       if (error) throw error;
       return data as unknown as Playlist[];
-    }
+    },
+    staleTime: 5000, // Verinin 5 saniye boyunca "taze" kabul edilmesi
+    cacheTime: 300000, // Cache'in 5 dakika tutulması
   });
 
   const { data: playlistSongs } = useQuery({
@@ -52,32 +55,24 @@ export function PlaylistsContent() {
         .eq('playlist_id', currentPlaylist.id)
         .order('position');
 
-      if (error) {
-        console.error('Error fetching playlist songs:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
-    enabled: !!currentPlaylist?.id
+    enabled: !!currentPlaylist?.id,
+    staleTime: 5000,
   });
 
   const filteredPlaylists = playlists?.filter(playlist =>
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
-    const defaultArtwork = "/placeholder.svg";
-    const artworkUrl = playlist.artwork_url || defaultArtwork;
-    
-    return {
-      id: playlist.id,
-      title: playlist.name,
-      artwork_url: artworkUrl,
-      genre: "Various",
-      mood: "Various",
-    };
-  };
+  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => ({
+    id: playlist.id,
+    title: playlist.name,
+    artwork_url: playlist.artwork_url || "/placeholder.svg",
+    genre: "Various",
+    mood: "Various",
+  });
 
   const businessPlaylists = filteredPlaylists
     .filter(p => !p.is_public)
@@ -113,7 +108,7 @@ export function PlaylistsContent() {
         </div>
         <Button 
           onClick={() => navigate("create")}
-          className="bg-[#6366F1] text-white hover:bg-[#5558DD] w-full sm:w-auto"
+          className="bg-[#FFD700] text-black hover:bg-[#E6C200] w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" /> Create New Playlist
         </Button>
