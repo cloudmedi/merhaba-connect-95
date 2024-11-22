@@ -13,6 +13,7 @@ const navItems = [
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/manager",
+    exact: true
   },
   {
     title: "Devices",
@@ -53,15 +54,16 @@ export function ManagerNav() {
           <NavLink
             key={item.href}
             to={item.href}
+            end={item.exact}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-[#9b87f5]/20 text-[#9b87f5]"
                   : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`
             }
           >
-            <item.icon className={`h-5 w-5 transition-colors`} />
+            <item.icon className={`h-5 w-5`} />
             <span>{item.title}</span>
           </NavLink>
         ))}
