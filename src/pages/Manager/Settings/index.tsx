@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import ProfileSettings from "./Profile";
+import { NotificationSettings } from "./NotificationSettings";
+import { AppearanceSettings } from "./AppearanceSettings";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -17,30 +19,39 @@ export default function Settings() {
           </div>
 
           <Card className="p-6">
-            <Tabs defaultValue="account" onValueChange={(value) => {
-              if (value === "account") {
+            <Tabs defaultValue="hesap" onValueChange={(value) => {
+              if (value === "hesap") {
                 navigate("/manager/settings/profile");
               }
             }}>
-              <TabsList>
-                <TabsTrigger value="account">Hesap</TabsTrigger>
-                <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
-                <TabsTrigger value="appearance">Görünüm</TabsTrigger>
+              <TabsList className="w-full border-b pb-0 mb-4">
+                <TabsTrigger 
+                  value="hesap"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-[#6E59A5] rounded-none"
+                >
+                  Hesap
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="bildirimler"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-[#6E59A5] rounded-none"
+                >
+                  Bildirimler
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="gorunum"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-[#6E59A5] rounded-none"
+                >
+                  Görünüm
+                </TabsTrigger>
               </TabsList>
-              <TabsContent value="account" className="p-4">
-                <div className="text-gray-500">
-                  Hesap ayarları burada görüntülenecek
-                </div>
+              <TabsContent value="hesap">
+                <ProfileSettings />
               </TabsContent>
-              <TabsContent value="notifications" className="p-4">
-                <div className="text-gray-500">
-                  Bildirim tercihleri burada görüntülenecek
-                </div>
+              <TabsContent value="bildirimler">
+                <NotificationSettings />
               </TabsContent>
-              <TabsContent value="appearance" className="p-4">
-                <div className="text-gray-500">
-                  Görünüm ayarları burada görüntülenecek
-                </div>
+              <TabsContent value="gorunum">
+                <AppearanceSettings />
               </TabsContent>
             </Tabs>
           </Card>
