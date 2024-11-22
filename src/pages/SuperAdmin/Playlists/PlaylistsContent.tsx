@@ -29,9 +29,7 @@ export function PlaylistsContent() {
 
       if (error) throw error;
       return data as unknown as Playlist[];
-    },
-    staleTime: 5000,
-    gcTime: 300000, // Replaced cacheTime with gcTime
+    }
   });
 
   const { data: playlistSongs } = useQuery({
@@ -54,25 +52,32 @@ export function PlaylistsContent() {
         .eq('playlist_id', currentPlaylist.id)
         .order('position');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching playlist songs:', error);
+        throw error;
+      }
+
       return data;
     },
-    enabled: !!currentPlaylist?.id,
-    staleTime: 5000,
-    gcTime: 300000, // Replaced cacheTime with gcTime
+    enabled: !!currentPlaylist?.id
   });
 
   const filteredPlaylists = playlists?.filter(playlist =>
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => ({
-    id: playlist.id,
-    title: playlist.name,
-    artwork_url: playlist.artwork_url || "/placeholder.svg",
-    genre: "Various",
-    mood: "Various",
-  });
+  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
+    const defaultArtwork = "/placeholder.svg";
+    const artworkUrl = playlist.artwork_url || defaultArtwork;
+    
+    return {
+      id: playlist.id,
+      title: playlist.name,
+      artwork_url: artworkUrl,
+      genre: "Various",
+      mood: "Various",
+    };
+  };
 
   const businessPlaylists = filteredPlaylists
     .filter(p => !p.is_public)
@@ -108,7 +113,7 @@ export function PlaylistsContent() {
         </div>
         <Button 
           onClick={() => navigate("create")}
-          className="bg-[#FFD700] text-black hover:bg-[#E6C200] w-full sm:w-auto"
+          className="bg-[#6366F1] text-white hover:bg-[#5558DD] w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" /> Create New Playlist
         </Button>
