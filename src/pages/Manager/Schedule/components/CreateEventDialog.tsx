@@ -6,37 +6,120 @@ import { BranchSelectionStep } from "./BranchSelectionStep";
 import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
 import { PreviewStep } from "./PreviewStep";
-import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { EventCategory } from "../types";
+import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
+import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingEvents: any[];
+  existingEvents: ScheduleEvent[];
   initialTimeRange?: {
     start: string;
     end: string;
   } | null;
 }
 
-export function CreateEventDialog({ 
-  open, 
-  onOpenChange, 
-  existingEvents, 
-  initialTimeRange 
-}: CreateEventDialogProps) {
-  const { t } = useTranslation();
-  const [currentTab, setCurrentTab] = useState("details");
-  const [formData, setFormData] = useState(() => getInitialFormData(initialTimeRange));
+interface EventFormData {
+  title: string;
+  playlistId: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  category: EventCategory;
+  branches: string[];
+  notifications: EventNotification[];
+  recurrence?: EventRecurrence;
+}
 
+export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
+  const [currentTab, setCurrentTab] = useState("details");
+  const [formData, setFormData] = useState<EventFormData>(() => getInitialFormData(initialTimeRange));
+
+  // Form verilerini initialTimeRange değiştiğinde güncelle
   useEffect(() => {
     if (initialTimeRange) {
       setFormData(getInitialFormData(initialTimeRange));
     }
   }, [initialTimeRange]);
 
+  function getInitialFormData(timeRange: { start: string; end: string; } | null | undefined): EventFormData {
+    if (timeRange) {
+      const startDateTime = new Date(timeRange.start);
+      const endDateTime = new Date(timeRange.end);
+
+      const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+
+      const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      };
+
+      console.log("Creating form data with:", {
+        startDateTime,
+        endDateTime,
+        formattedStartDate: formatDate(startDateTime),
+        formattedStartTime: formatTime(startDateTime),
+        formattedEndDate: formatDate(endDateTime),
+        formattedEndTime: formatTime(endDateTime)
+      });
+
+      return {
+        title: "",
+        playlistId: "",
+        startDate: formatDate(startDateTime),
+        startTime: formatTime(startDateTime),
+        endDate: formatDate(endDateTime),
+        endTime: formatTime(endDateTime),
+        category: "Regular Playlist",
+        branches: [],
+        notifications: [],
+      };
+    }
+    
+    return {
+      title: "",
+      playlistId: "",
+      startDate: "",
+      startTime: "",
+      endDate: "",
+      endTime: "",
+      category: "Regular Playlist",
+      branches: [],
+      notifications: [],
+    };
+  }
+
   const handleCreate = async () => {
+    const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+
+    const eventData: ScheduleEvent = {
+      id: crypto.randomUUID(),
+      title: formData.title,
+      start_time: startDateTime.toISOString(),
+      end_time: endDateTime.toISOString(),
+      playlist_id: formData.playlistId,
+      category: formData.category,
+      color: getEventColor(formData.category),
+      notifications: formData.notifications,
+      recurrence: formData.recurrence,
+    };
+
+    const conflicts = checkEventConflicts(eventData, existingEvents);
+    if (conflicts.length > 0) {
+      toast.error("Event conflicts detected", {
+        description: "This event overlaps with existing events",
+      });
+      return;
+    }
+
     toast.success("Event created successfully");
     onOpenChange(false);
     resetForm();
@@ -50,27 +133,38 @@ export function CreateEventDialog({
       startTime: "",
       endDate: "",
       endTime: "",
-      category: "Regular Playlist" as EventCategory,
+      category: "Regular Playlist",
       branches: [],
-      notifications: []
+      notifications: [],
     });
     setCurrentTab("details");
+  };
+
+  const getEventColor = (category: EventCategory): EventColor => {
+    const colors: Record<EventCategory, EventColor> = {
+      'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
+      'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },
+      'Holiday Music': { primary: '#0EA5E9', secondary: '#D3E4FD', text: '#1A1F2C' },
+      'Regular Playlist': { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' },
+      'Background Music': { primary: '#8E9196', secondary: '#F1F0FB', text: '#1A1F2C' }
+    };
+    return colors[category];
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>{t('schedule.createEvent.title')}</DialogTitle>
+          <DialogTitle>Create Schedule Event</DialogTitle>
         </DialogHeader>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
           <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="details">{t('schedule.createEvent.steps.details')}</TabsTrigger>
-            <TabsTrigger value="recurrence">{t('schedule.createEvent.steps.recurrence')}</TabsTrigger>
-            <TabsTrigger value="notifications">{t('schedule.createEvent.steps.notifications')}</TabsTrigger>
-            <TabsTrigger value="branches">{t('schedule.createEvent.steps.branches')}</TabsTrigger>
-            <TabsTrigger value="preview">{t('schedule.createEvent.steps.preview')}</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="recurrence">Recurrence</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="branches">Branches</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
           <div className="mt-4">
@@ -107,6 +201,7 @@ export function CreateEventDialog({
                 onBranchesChange={(branches) => setFormData({ ...formData, branches })}
                 onNext={() => setCurrentTab("preview")}
                 onBack={() => setCurrentTab("notifications")}
+                onCreate={handleCreate}
               />
             </TabsContent>
 
@@ -122,35 +217,4 @@ export function CreateEventDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function getInitialFormData(timeRange: { start: string; end: string; } | null | undefined) {
-  if (timeRange) {
-    const startDateTime = new Date(timeRange.start);
-    const endDateTime = new Date(timeRange.end);
-
-    return {
-      title: "",
-      playlistId: "",
-      startDate: startDateTime.toISOString().split('T')[0],
-      startTime: startDateTime.toTimeString().split(' ')[0],
-      endDate: endDateTime.toISOString().split('T')[0],
-      endTime: endDateTime.toTimeString().split(' ')[0],
-      category: "Regular Playlist" as EventCategory,
-      branches: [],
-      notifications: []
-    };
-  }
-
-  return {
-    title: "",
-    playlistId: "",
-    startDate: "",
-    startTime: "",
-    endDate: "",
-    endTime: "",
-    category: "Regular Playlist" as EventCategory,
-    branches: [],
-    notifications: []
-  };
 }
