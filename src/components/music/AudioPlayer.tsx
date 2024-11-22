@@ -26,6 +26,7 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious, volume = 1 }: AudioP
 
   useEffect(() => {
     if (error) {
+      console.error('Audio player error:', error);
       toast.error("Failed to play audio", {
         description: error,
       });
