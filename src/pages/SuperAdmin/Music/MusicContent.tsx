@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
@@ -6,9 +7,6 @@ import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -58,36 +56,12 @@ export function MusicContent() {
         description: "Song deleted successfully",
       });
 
+      // Refresh the songs list
       refetch();
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to delete song",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    try {
-      const { error } = await supabase
-        .from('songs')
-        .delete()
-        .in('id', selectedSongs.map(song => song.id));
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `${selectedSongs.length} songs deleted successfully`,
-      });
-
-      setSelectedSongs([]);
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete songs",
         variant: "destructive",
       });
     }
@@ -115,26 +89,28 @@ export function MusicContent() {
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
         <MusicHeader />
-        <div className="flex gap-2">
-          {selectedSongs.length > 0 && (
-            <>
-              <Button
-                onClick={handleCreatePlaylist}
-                className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
-              >
-                Create Playlist ({selectedSongs.length} songs)
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleDeleteSelected}
-                className="gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Selected ({selectedSongs.length})
-              </Button>
-            </>
-          )}
-        </div>
+        {selectedSongs.length > 0 && (
+          <MusicActions
+            selectedCount={selectedSongs.length}
+            onCreatePlaylist={handleCreatePlaylist}
+            onDeleteSelected={() => {
+              toast({
+                title: "Songs Deleted",
+                description: `${selectedSongs.length} songs have been deleted`,
+              });
+              setSelectedSongs([]);
+            }}
+            onAddGenre={() => {}}
+            onChangeGenre={() => {}}
+            onAddPlaylist={() => {}}
+            onChangePlaylist={() => {}}
+            onAddMood={() => {}}
+            onChangeMood={() => {}}
+            onChangeArtist={() => {}}
+            onChangeAlbum={() => {}}
+            onApprove={() => {}}
+          />
+        )}
       </div>
       
       <MusicFilters

@@ -1,12 +1,26 @@
-import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Table, TableBody } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "./components/EmptyState";
+import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import { TableHeader } from "./components/TableHeader";
-import { TableFooter } from "./components/TableFooter";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Song {
   id: string;
@@ -67,17 +81,27 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + songs.length, totalCount);
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
-          <TableHeader 
-            onSelectAll={onSelectAll}
-            isAllSelected={selectedSongs.length === songs.length}
-            hasItems={songs.length > 0}
-          />
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b">
+              <TableHead className="w-[30px]">
+                <Checkbox
+                  checked={selectedSongs.length === songs.length}
+                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                />
+              </TableHead>
+              <TableHead className="font-medium text-gray-700">Title</TableHead>
+              <TableHead className="font-medium text-gray-700">Artist</TableHead>
+              <TableHead className="font-medium text-gray-700">Album</TableHead>
+              <TableHead className="font-medium text-gray-700">Genres</TableHead>
+              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             {songs.map((song) => (
               <SongTableRow
@@ -95,14 +119,41 @@ export function MusicTable({
         </Table>
       </ScrollArea>
 
-      <TableFooter 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
-        totalCount={totalCount}
-      />
+      <div className="flex items-center justify-between px-4 py-3 border-t">
+        <p className="text-sm text-gray-600">
+          Showing {startIndex + 1}-{Math.min(startIndex + songs.length, totalCount)} of {totalCount} songs
+        </p>
+        
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => onPageChange(currentPage - 1)}
+                className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
+              />
+            </PaginationItem>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  onClick={() => onPageChange(page)}
+                  isActive={currentPage === page}
+                  className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => onPageChange(currentPage + 1)}
+                className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
 
       {currentlyPlaying && (
         <MusicPlayer
