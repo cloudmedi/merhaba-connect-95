@@ -24,9 +24,17 @@ export function ProfileFooter() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-3 h-auto px-4 py-2 bg-white hover:bg-gray-50 shadow-sm border rounded-xl">
             <Avatar className="h-8 w-8">
-              <div className="bg-[#9b87f5]/10 text-[#9b87f5] h-full w-full flex items-center justify-center font-medium">
-                {user.firstName?.[0] || user.email[0].toUpperCase()}
-              </div>
+              {user.avatar_url ? (
+                <img 
+                  src={user.avatar_url} 
+                  alt="Profile" 
+                  className="h-full w-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="bg-[#9b87f5]/10 text-[#9b87f5] h-full w-full flex items-center justify-center font-medium">
+                  {user.firstName?.[0] || user.email[0].toUpperCase()}
+                </div>
+              )}
             </Avatar>
             <div className="flex flex-col items-start">
               <span className="text-sm font-medium text-gray-700">
