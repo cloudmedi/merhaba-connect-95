@@ -21,61 +21,53 @@
   "schedule": {
     "title": "Schedule",
     "subtitle": "Manage your playlists and announcements schedule",
-    "createEvent": "Create Event",
-    "export": "Export",
-    "today": "Today",
-    "week": "Week",
-    "day": "Day",
-    "calendar": {
-      "sun": "Sun",
-      "mon": "Mon",
-      "tue": "Tue",
-      "wed": "Wed",
-      "thu": "Thu",
-      "fri": "Fri",
-      "sat": "Sat"
+    "createEvent": {
+      "title": "Create Schedule Event",
+      "steps": {
+        "details": "Details",
+        "recurrence": "Recurrence",
+        "notifications": "Notifications",
+        "branches": "Branches",
+        "preview": "Preview"
+      },
+      "details": {
+        "eventTitle": "Event Title",
+        "eventTitlePlaceholder": "Enter event title",
+        "category": "Category",
+        "selectCategory": "Select category",
+        "selectPlaylist": "Select Playlist",
+        "searchPlaylists": "Search playlists...",
+        "startDate": "Start Date",
+        "startTime": "Start Time",
+        "endDate": "End Date",
+        "endTime": "End Time",
+        "noPlaylists": "No playlists found",
+        "loadingPlaylists": "Loading playlists...",
+        "publicPlaylist": "Public Playlist",
+        "companyPlaylist": "Company Playlist"
+      },
+      "recurrence": {
+        "frequency": "Recurrence Frequency",
+        "interval": "Interval",
+        "endDate": "End Date (Optional)",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "notifications": {
+        "type": "Notification Type",
+        "timing": "Minutes Before",
+        "addNotification": "Add Notification",
+        "email": "Email",
+        "system": "System",
+        "both": "Both"
+      },
+      "buttons": {
+        "back": "Back",
+        "next": "Next",
+        "cancel": "Cancel",
+        "create": "Create"
+      }
     }
-  },
-  "devices": {
-    "title": "Devices",
-    "subtitle": "Manage your connected devices",
-    "addDevice": "Add Device",
-    "totalDevices": "Total Devices",
-    "onlineDevices": "Online Devices",
-    "offlineDevices": "Offline Devices",
-    "warnings": "Warnings",
-    "operational": "operational",
-    "tabs": {
-      "devices": "Devices",
-      "autoGroups": "Auto Groups",
-      "customGroups": "Custom Groups"
-    },
-    "filters": {
-      "searchPlaceholder": "Search devices...",
-      "allStatus": "All Status",
-      "allTypes": "All Types",
-      "allLocations": "All Locations"
-    }
-  },
-  "settings": {
-    "title": "Settings",
-    "language": {
-      "title": "Language",
-      "description": "Choose application language",
-      "turkish": "Turkish",
-      "english": "English"
-    }
-  },
-  "auth": {
-    "login": "Login",
-    "register": "Register",
-    "logout": "Logout",
-    "email": "Email",
-    "password": "Password"
-  },
-  "notifications": {
-    "success": "Success",
-    "error": "Error",
-    "languageChanged": "Language settings updated"
   }
 }

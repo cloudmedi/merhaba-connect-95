@@ -21,19 +21,53 @@
   "schedule": {
     "title": "Program",
     "subtitle": "Çalma listelerinizi ve duyuru programınızı yönetin",
-    "createEvent": "Etkinlik Oluştur",
-    "export": "Dışa Aktar",
-    "today": "Bugün",
-    "week": "Hafta",
-    "day": "Gün",
-    "calendar": {
-      "sun": "Paz",
-      "mon": "Pzt",
-      "tue": "Sal",
-      "wed": "Çar",
-      "thu": "Per",
-      "fri": "Cum",
-      "sat": "Cmt"
+    "createEvent": {
+      "title": "Program Etkinliği Oluştur",
+      "steps": {
+        "details": "Detaylar",
+        "recurrence": "Tekrar",
+        "notifications": "Bildirimler",
+        "branches": "Şubeler",
+        "preview": "Önizleme"
+      },
+      "details": {
+        "eventTitle": "Etkinlik Başlığı",
+        "eventTitlePlaceholder": "Etkinlik başlığını girin",
+        "category": "Kategori",
+        "selectCategory": "Kategori seçin",
+        "selectPlaylist": "Çalma listesi seçin",
+        "searchPlaylists": "Çalma listelerini ara...",
+        "startDate": "Başlangıç Tarihi",
+        "startTime": "Başlangıç Saati",
+        "endDate": "Bitiş Tarihi",
+        "endTime": "Bitiş Saati",
+        "noPlaylists": "Çalma listesi bulunamadı",
+        "loadingPlaylists": "Çalma listeleri yükleniyor...",
+        "publicPlaylist": "Genel Çalma Listesi",
+        "companyPlaylist": "Şirket Çalma Listesi"
+      },
+      "recurrence": {
+        "frequency": "Tekrar Sıklığı",
+        "interval": "Aralık",
+        "endDate": "Bitiş Tarihi (İsteğe Bağlı)",
+        "daily": "Günlük",
+        "weekly": "Haftalık",
+        "monthly": "Aylık"
+      },
+      "notifications": {
+        "type": "Bildirim Türü",
+        "timing": "Dakika Önce",
+        "addNotification": "Bildirim Ekle",
+        "email": "E-posta",
+        "system": "Sistem",
+        "both": "Her İkisi"
+      },
+      "buttons": {
+        "back": "Geri",
+        "next": "İleri",
+        "cancel": "İptal",
+        "create": "Oluştur"
+      }
     }
   },
   "devices": {
