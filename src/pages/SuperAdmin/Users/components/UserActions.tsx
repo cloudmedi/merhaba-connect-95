@@ -12,7 +12,6 @@ import { userService } from "@/services/users";
 import { toast } from "sonner";
 import { User } from "@/types/auth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UserActionsProps {
   user: User;
@@ -29,25 +28,7 @@ export function UserActions({ user }: UserActionsProps) {
   const navigate = useNavigate();
 
   const deleteUserMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        // First delete the auth user using admin API
-        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-        if (authError) throw authError;
-
-        // Then delete the profile (this will cascade to related data)
-        await userService.deleteUser(user.id);
-
-        // Force sign out if the deleted user is currently logged in
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser?.id === user.id) {
-          await supabase.auth.signOut();
-        }
-      } catch (error: any) {
-        console.error('Error deleting user:', error);
-        throw new Error(error.message || 'Failed to delete user');
-      }
-    },
+    mutationFn: () => userService.deleteUser(user.id),
     onSuccess: () => {
       toast.success("Kullanıcı başarıyla silindi");
       queryClient.invalidateQueries({ queryKey: ['users'] });

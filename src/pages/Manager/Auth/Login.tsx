@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
@@ -13,6 +13,7 @@ export default function ManagerLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +21,13 @@ export default function ManagerLogin() {
 
     try {
       await login(email, password);
-      // Navigation is handled in useAuth hook after successful login
+      navigate("/manager");
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || "Login failed");
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +72,14 @@ export default function ManagerLogin() {
               disabled={isLoading}
             >
               {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/manager/register")}
+            >
+              Register as Manager
             </Button>
           </form>
         </CardContent>

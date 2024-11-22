@@ -1,102 +1,41 @@
 import { AuthResponse, LoginCredentials } from "@/types/auth";
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from './supabase';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const authService = {
   async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-      if (signInError) {
-        console.error('Supabase signin error:', signInError);
-        throw new Error('Invalid email or password');
-      }
+    if (error) throw error;
 
-      if (!authData.user || !authData.session) {
-        throw new Error('Login failed - no user data returned');
-      }
-
-      // Fetch the user's profile data with proper error handling
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          companies (
-            id,
-            name,
-            subscription_status,
-            subscription_ends_at
-          )
-        `)
-        .eq('id', authData.user.id)
-        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        await supabase.auth.signOut();
-        throw new Error('Failed to fetch user profile');
-      }
-
-      if (!profile) {
-        await supabase.auth.signOut();
-        throw new Error('User profile not found. Please contact support.');
-      }
-
-      if (!profile.is_active) {
-        await supabase.auth.signOut();
-        throw new Error('Your account has been deactivated');
-      }
-
-      // Validate role type
-      const validRoles = ["super_admin", "manager", "admin"] as const;
-      if (!validRoles.includes(profile.role as any)) {
-        await supabase.auth.signOut();
-        throw new Error('Invalid user role');
-      }
-
-      // For manager role, ensure they have a company assigned
-      if (profile.role === 'manager' && !profile.company_id) {
-        await supabase.auth.signOut();
-        throw new Error('Manager account not properly configured - no company assigned');
-      }
-
-      return {
-        user: {
-          id: authData.user.id,
-          email: authData.user.email!,
-          firstName: profile.first_name || '',
-          lastName: profile.last_name || '',
-          role: profile.role as "super_admin" | "manager" | "admin",
-          companyId: profile.company_id,
-          isActive: profile.is_active,
-          createdAt: authData.user.created_at,
-          updatedAt: profile.updated_at || authData.user.created_at,
-          company: profile.companies ? {
-            id: profile.companies.id,
-            name: profile.companies.name,
-            subscriptionStatus: profile.companies.subscription_status,
-            subscriptionEndsAt: profile.companies.subscription_ends_at
-          } : undefined
-        },
-        token: authData.session.access_token
-      };
-    } catch (error: any) {
-      console.error('Login error:', error);
-      throw error;
+    if (!user || !session) {
+      throw new Error('Login failed');
     }
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email!,
+        firstName: user.user_metadata.firstName || '',
+        lastName: user.user_metadata.lastName || '',
+        role: user.user_metadata.role,
+        companyId: user.user_metadata.companyId,
+        isActive: true,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at || user.created_at
+      },
+      token: session.access_token
+    };
   },
 
   async logout(): Promise<void> {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      localStorage.removeItem('token');
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      throw new Error('Logout failed');
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    localStorage.removeItem('token');
   },
 
   getToken(): string | null {
