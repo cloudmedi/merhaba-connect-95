@@ -77,7 +77,6 @@ export function ManagerHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-6">
-        {/* Left Section */}
         <div className="flex flex-1 items-center gap-4">
           <h1 className="text-lg font-semibold text-gray-900 animate-fade-in">
             {getGreeting()}
@@ -93,7 +92,6 @@ export function ManagerHeader() {
           )}
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center gap-4">
           <OnlineUsers onlineUsers={onlineUsers} />
           <Button variant="ghost" size="icon" className="relative">
