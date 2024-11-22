@@ -12,7 +12,7 @@ export default function ManagerLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export default function ManagerLogin() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await login(email, password);
       navigate("/manager");
     } catch (error: any) {
       toast({

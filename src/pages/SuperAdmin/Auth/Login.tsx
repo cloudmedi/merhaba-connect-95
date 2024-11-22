@@ -12,7 +12,7 @@ export default function SuperAdminLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,7 +20,7 @@ export default function SuperAdminLogin() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await login(email, password);
       navigate("/super-admin");
     } catch (error: any) {
       toast({
