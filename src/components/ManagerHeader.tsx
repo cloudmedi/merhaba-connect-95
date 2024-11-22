@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMemo } from "react";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -21,14 +22,15 @@ const getGreeting = () => {
 };
 
 const getUserDisplayName = (user: any) => {
-  if (user?.firstName) return user.firstName;
-  if (user?.email) return user.email.split('@')[0];
+  if (!user) return '';
+  if (user.firstName) return user.firstName;
+  if (user.email) return user.email.split('@')[0];
   return '';
 };
 
 export function ManagerHeader() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const managerView = localStorage.getItem('managerView');
 
   const handleReturnToSuperAdmin = () => {
@@ -37,7 +39,21 @@ export function ManagerHeader() {
     toast.success("Super Admin paneline geri dönüldü");
   };
 
-  const greeting = `${getGreeting()}, ${getUserDisplayName(user)}`;
+  const greeting = useMemo(() => {
+    const displayName = getUserDisplayName(user);
+    const baseGreeting = getGreeting();
+    return displayName ? `${baseGreeting}, ${displayName}` : baseGreeting;
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-white">
+        <div className="flex h-16 items-center gap-4 px-6">
+          <div className="h-6 w-48 animate-pulse bg-gray-200 rounded"></div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
