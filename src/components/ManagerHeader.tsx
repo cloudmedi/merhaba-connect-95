@@ -21,9 +21,8 @@ const getGreeting = () => {
 };
 
 const getUserDisplayName = (user: any) => {
-  if (!user) return '';
-  if (user.firstName) return user.firstName;
-  if (user.email) return user.email.split('@')[0];
+  if (user?.firstName) return user.firstName;
+  if (user?.email) return user.email.split('@')[0];
   return '';
 };
 
@@ -38,19 +37,14 @@ export function ManagerHeader() {
     toast.success("Super Admin paneline geri dönüldü");
   };
 
-  // Eğer user null ise, boş bir div döndür
-  if (!user) {
-    return <div className="h-16 border-b bg-white" />;
-  }
-
-  const greeting = `${getGreeting()}${getUserDisplayName(user) ? `, ${getUserDisplayName(user)}` : ''}`;
+  const greeting = `${getGreeting()}, ${getUserDisplayName(user)}`;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-6">
         {/* Left Section */}
         <div className="flex flex-1 items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-gray-900 animate-fade-in">
             {greeting}
           </h1>
           {managerView && (
