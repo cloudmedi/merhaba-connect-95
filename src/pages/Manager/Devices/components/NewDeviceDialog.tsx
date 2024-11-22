@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
-import { generateDeviceToken } from "@/utils/deviceUtils";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -23,7 +22,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
-  const [token] = useState(generateDeviceToken()); // Auto-generate token
+  const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,8 +35,8 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         location,
         token,
         status: 'offline',
-        system_info: {},
         schedule: {},
+        system_info: {},
         branches: null
       });
 
@@ -53,6 +52,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setName("");
     setCategory("player");
     setLocation("");
+    setToken("");
   };
 
   return (
@@ -99,12 +99,9 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
             <Input
               id="token"
               value={token}
-              readOnly
-              className="font-mono text-lg tracking-wider text-center bg-gray-50"
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Enter device token"
             />
-            <p className="text-sm text-gray-500">
-              Use this token to register your device. Keep it safe!
-            </p>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
