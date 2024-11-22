@@ -53,12 +53,12 @@ export function AddDeviceDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Device Name</Label>
+            <Label htmlFor="name">Branch</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter device name"
+              placeholder="Enter branch name"
               required
             />
           </div>
