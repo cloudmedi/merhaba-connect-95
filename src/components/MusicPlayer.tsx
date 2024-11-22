@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { X, Volume2, VolumeX } from "lucide-react";
-import { AudioPlayer } from "./music/AudioPlayer";
+import { X } from "lucide-react";
+import AudioPlayer from 'react-h5-audio-player';
+import 'react-h5-audio-player/lib/styles.css';
 import { toast } from "sonner";
-import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
 
 interface MusicPlayerProps {
@@ -15,7 +15,6 @@ interface MusicPlayerProps {
       artist: string;
       duration: string | number;
       file_url: string;
-      bunny_id?: string;
     }>;
   };
   onClose: () => void;
@@ -24,8 +23,6 @@ interface MusicPlayerProps {
 
 export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
-  const [volume, setVolume] = useState(75);
-  const [isMuted, setIsMuted] = useState(false);
   
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
@@ -55,16 +52,6 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     }
   };
 
-  const handleVolumeChange = (values: number[]) => {
-    setVolume(values[0]);
-    setIsMuted(values[0] === 0);
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    setVolume(isMuted ? 75 : 0);
-  };
-
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -82,36 +69,32 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
 
         <div className="flex-1">
           <AudioPlayer
-            audioUrl={currentSong?.file_url}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            volume={isMuted ? 0 : volume / 100}
+            src={currentSong?.file_url}
+            showSkipControls
+            showJumpControls={false}
+            onClickNext={handleNext}
+            onClickPrevious={handlePrevious}
+            onEnded={handleNext}
+            autoPlayAfterSrcChange={true}
+            layout="horizontal"
+            customControlsSection={[
+              "MAIN_CONTROLS",
+              "VOLUME_CONTROLS",
+            ]}
+            customProgressBarSection={[
+              "PROGRESS_BAR",
+              "CURRENT_TIME",
+              "DURATION",
+            ]}
+            className="player-override"
+            style={{
+              background: 'transparent',
+              boxShadow: 'none',
+            }}
           />
         </div>
 
-        <div className="flex items-center gap-4 flex-1 justify-end">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-400 hover:text-white"
-              onClick={toggleMute}
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="h-5 w-5" />
-              ) : (
-                <Volume2 className="h-5 w-5" />
-              )}
-            </Button>
-            <Slider
-              value={[isMuted ? 0 : volume]}
-              onValueChange={handleVolumeChange}
-              max={100}
-              step={1}
-              className="w-24"
-            />
-          </div>
-          
+        <div className="flex items-center justify-end flex-1">
           <Button 
             variant="ghost" 
             size="icon"
