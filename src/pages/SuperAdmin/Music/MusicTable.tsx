@@ -82,6 +82,24 @@ export function MusicTable({
 
   const startIndex = (currentPage - 1) * itemsPerPage;
 
+  // Bunny CDN URL'sini oluşturan yardımcı fonksiyon
+  const getBunnyUrl = (song: Song) => {
+    if (!song) return '';
+    
+    // Eğer bunny_id varsa, direkt olarak Bunny CDN URL'sini oluştur
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    // Eğer file_url bir HTTP URL ise direkt kullan
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    
+    // Aksi takdirde Bunny CDN URL'sini oluştur
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
+
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <ScrollArea className="h-[calc(100vh-400px)]">
@@ -138,7 +156,7 @@ export function MusicTable({
               title: song.title,
               artist: song.artist || "Unknown Artist",
               duration: song.duration?.toString() || "0:00",
-              file_url: song.file_url
+              file_url: getBunnyUrl(song)
             }))
           }}
           initialSongIndex={currentSongIndex}
