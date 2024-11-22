@@ -4,13 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export function AppearanceSettings() {
-  const [theme, setTheme] = useState("system");
   const [language, setLanguage] = useState("tr");
-
-  const handleThemeChange = (value: string) => {
-    setTheme(value);
-    toast.success("Tema ayarları güncellendi");
-  };
 
   const handleLanguageChange = (value: string) => {
     setLanguage(value);
@@ -21,58 +15,6 @@ export function AppearanceSettings() {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label className="text-base">Tema</Label>
-          <p className="text-sm text-gray-500 mb-4">
-            Uygulama temasını seçin
-          </p>
-          <RadioGroup
-            value={theme}
-            onValueChange={handleThemeChange}
-            className="grid grid-cols-3 gap-4"
-          >
-            <div>
-              <RadioGroupItem
-                value="light"
-                id="light"
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor="light"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
-              >
-                <span>Açık</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem
-                value="dark"
-                id="dark"
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor="dark"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
-              >
-                <span>Koyu</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem
-                value="system"
-                id="system"
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor="system"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
-              >
-                <span>Sistem</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div className="mt-6">
           <Label className="text-base">Dil</Label>
           <p className="text-sm text-gray-500 mb-4">
             Uygulama dilini seçin
