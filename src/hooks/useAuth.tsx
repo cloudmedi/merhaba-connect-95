@@ -26,13 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*, companies (*)')
+            .select(`
+              *,
+              companies (
+                id,
+                name,
+                subscription_status,
+                subscription_ends_at
+              )
+            `)
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle(); // Use maybeSingle instead of single
 
-          if (profileError || !profile) {
+          if (profileError) {
             console.error('Profile fetch error:', profileError);
             await supabase.auth.signOut();
+            setIsLoading(false);
+            return;
+          }
+
+          if (!profile) {
+            console.error('No profile found');
+            await supabase.auth.signOut();
+            toast.error('User profile not found. Please contact support.');
             setIsLoading(false);
             return;
           }

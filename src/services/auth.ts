@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 export const authService = {
   async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
     try {
-      // First attempt to sign in with Supabase
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -19,17 +18,30 @@ export const authService = {
         throw new Error('Login failed - no user data returned');
       }
 
-      // Fetch the user's profile data
+      // Fetch the user's profile data with proper error handling
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*, companies (*)')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            subscription_status,
+            subscription_ends_at
+          )
+        `)
         .eq('id', authData.user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
 
-      if (profileError || !profile) {
+      if (profileError) {
         console.error('Profile fetch error:', profileError);
         await supabase.auth.signOut();
-        throw new Error('User profile not found');
+        throw new Error('Failed to fetch user profile');
+      }
+
+      if (!profile) {
+        await supabase.auth.signOut();
+        throw new Error('User profile not found. Please contact support.');
       }
 
       if (!profile.is_active) {
