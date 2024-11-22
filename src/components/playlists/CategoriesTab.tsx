@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Category {
   id: string;
@@ -19,24 +20,52 @@ interface CategoriesTabProps {
 export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselectCategory }: CategoriesTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .ilike('name', `%${searchQuery}%`);
-      
-      if (error) {
-        console.error('Error fetching categories:', error);
-        return;
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .ilike('name', `%${searchQuery}%`);
+        
+        if (error) {
+          throw error;
+        }
+        
+        setCategories(data || []);
+      } catch (err: any) {
+        console.error('Error fetching categories:', err);
+        setError(err.message);
+        toast.error('Failed to load categories. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setCategories(data || []);
     };
 
     fetchCategories();
   }, [searchQuery]);
+
+  if (error) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500">Error loading categories. Please try refreshing the page.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-gray-500">Loading categories...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

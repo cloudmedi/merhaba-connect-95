@@ -12,10 +12,20 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
   },
+  db: {
+    schema: 'public',
+  },
 });
+
+// Add error handling for network issues
+supabase.handleNetworkError = (error: Error) => {
+  console.error('Supabase network error:', error);
+  throw new Error('Unable to connect to the database. Please check your internet connection.');
+};
