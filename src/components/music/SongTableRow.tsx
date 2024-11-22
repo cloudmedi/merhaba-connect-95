@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AudioPreview } from "./AudioPreview";
+import { DownloadButton } from "./DownloadButton";
 
 interface Song {
   id: string;
@@ -88,24 +89,27 @@ export function SongTableRow({
         {formatDuration(song.duration)}
       </TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem className="cursor-pointer">
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600 cursor-pointer">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <DownloadButton song={song} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem className="cursor-pointer">
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600 cursor-pointer">
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </TableCell>
     </TableRow>
   );
