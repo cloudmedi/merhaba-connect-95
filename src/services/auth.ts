@@ -16,6 +16,13 @@ export const authService = {
       throw new Error('Login failed');
     }
 
+    // Get profile data including avatar_url
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
     return {
       user: {
         id: user.id,
@@ -25,6 +32,7 @@ export const authService = {
         role: user.user_metadata.role,
         companyId: user.user_metadata.companyId,
         isActive: true,
+        avatar_url: profile?.avatar_url || null,
         createdAt: user.created_at,
         updatedAt: user.updated_at || user.created_at
       },
