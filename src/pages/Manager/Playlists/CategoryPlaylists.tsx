@@ -1,10 +1,13 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export function CategoryPlaylists() {
   const { categoryId } = useParams();
+  const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
     queryKey: ['category-playlists', categoryId],
@@ -58,6 +61,14 @@ export function CategoryPlaylists() {
   return (
     <div className="p-8">
       <div className="mb-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/manager")}
+          className="mb-4 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
         <h1 className="text-2xl font-bold text-gray-900">{data.category.name}</h1>
         {data.category.description && (
           <p className="text-gray-500 mt-1">{data.category.description}</p>
