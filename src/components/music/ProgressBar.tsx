@@ -12,7 +12,7 @@ export function ProgressBar({ progress, onProgressChange }: ProgressBarProps) {
       onValueChange={onProgressChange}
       max={100}
       step={0.1}
-      className="h-1.5 cursor-pointer"
+      className="w-full cursor-pointer"
     />
   );
 }

@@ -15,23 +15,33 @@ export function PlayerControls({
   onNext,
 }: PlayerControlsProps) {
   return (
-    <div className="flex items-center space-x-4">
-      <Button variant="ghost" size="icon" onClick={onPrevious}>
-        <SkipBack className="h-4 w-4" />
+    <div className="flex items-center space-x-2">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onPrevious}
+        className="text-gray-400 hover:text-white"
+      >
+        <SkipBack className="h-5 w-5" />
       </Button>
       <Button
         size="icon"
-        className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+        className="bg-[#6366F1] text-white hover:bg-[#5558DD] h-8 w-8"
         onClick={onPlayPause}
       >
         {isPlaying ? (
-          <Pause className="h-4 w-4" />
+          <Pause className="h-5 w-5" />
         ) : (
-          <Play className="h-4 w-4" />
+          <Play className="h-5 w-5" />
         )}
       </Button>
-      <Button variant="ghost" size="icon" onClick={onNext}>
-        <SkipForward className="h-4 w-4" />
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onNext}
+        className="text-gray-400 hover:text-white"
+      >
+        <SkipForward className="h-5 w-5" />
       </Button>
     </div>
   );

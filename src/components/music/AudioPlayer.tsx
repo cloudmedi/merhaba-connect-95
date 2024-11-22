@@ -2,21 +2,18 @@ import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { Loader2 } from "lucide-react";
 import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
-import { VolumeControl } from "./VolumeControl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 interface AudioPlayerProps {
   audioUrl?: string;
   onNext?: () => void;
   onPrevious?: () => void;
+  volume?: number;
 }
 
-export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) {
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState([75]);
-  
+export function AudioPlayer({ audioUrl, onNext, onPrevious, volume = 1 }: AudioPlayerProps) {
   const {
     isPlaying,
     progress,
@@ -24,7 +21,7 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
     error,
     togglePlay,
     seek,
-    setVolume: setAudioVolume
+    setVolume
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
@@ -35,21 +32,9 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
     }
   }, [error]);
 
-  const handleVolumeChange = (values: number[]) => {
-    setVolume(values);
-    setAudioVolume(values[0] / 100);
-  };
-
-  const handleVolumeToggle = () => {
-    setIsMuted(!isMuted);
-    if (isMuted) {
-      setVolume([75]);
-      setAudioVolume(0.75);
-    } else {
-      setVolume([0]);
-      setAudioVolume(0);
-    }
-  };
+  useEffect(() => {
+    setVolume(volume);
+  }, [volume, setVolume]);
 
   if (error) {
     return (
@@ -68,23 +53,14 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
   }
 
   return (
-    <div className="flex flex-col items-center space-y-2 min-w-[300px]">
+    <div className="flex flex-col items-center gap-2">
       <ProgressBar progress={progress} onProgressChange={(values) => seek(values[0])} />
-      <div className="flex items-center justify-between w-full">
-        <PlayerControls
-          isPlaying={isPlaying}
-          onPrevious={onPrevious}
-          onPlayPause={togglePlay}
-          onNext={onNext}
-        />
-        <VolumeControl
-          volume={volume}
-          isMuted={isMuted}
-          onVolumeToggle={handleVolumeToggle}
-          onVolumeChange={handleVolumeChange}
-          onClose={() => {}}
-        />
-      </div>
+      <PlayerControls
+        isPlaying={isPlaying}
+        onPrevious={onPrevious}
+        onPlayPause={togglePlay}
+        onNext={onNext}
+      />
     </div>
   );
 }
