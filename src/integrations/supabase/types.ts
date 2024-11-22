@@ -941,6 +941,61 @@ export type Database = {
           },
         ]
       }
+      song_play_history: {
+        Row: {
+          branch_id: string | null
+          bunny_stream_id: string | null
+          created_at: string | null
+          device_id: string | null
+          id: string
+          last_played_at: string | null
+          play_count_today: number | null
+          song_id: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          bunny_stream_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_played_at?: string | null
+          play_count_today?: number | null
+          song_id?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          bunny_stream_id?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_played_at?: string | null
+          play_count_today?: number | null
+          song_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_play_history_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_play_history_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_play_history_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           album: string | null
@@ -1035,6 +1090,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_song_history: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       collect_system_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
