@@ -10,16 +10,13 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    persistSession: true,
+    detectSessionInUrl: true
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
-  },
-  db: {
-    schema: 'public',
   },
 });
