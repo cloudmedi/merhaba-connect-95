@@ -8,7 +8,9 @@ interface PlaylistDetailHeaderProps {
     artwork_url?: string;
     genre?: { name: string };
     mood?: { name: string };
-    songs?: any[];
+    songs?: {
+      duration: number;
+    }[];
   };
   onPlay: () => void;
   onPush: () => void;
@@ -17,6 +19,22 @@ interface PlaylistDetailHeaderProps {
 export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
   const navigate = useNavigate();
   
+  const calculateTotalDuration = () => {
+    if (!playlist.songs || playlist.songs.length === 0) return "0 min";
+    
+    const totalSeconds = playlist.songs.reduce((acc, song) => {
+      return acc + (song.duration || 0);
+    }, 0);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes} min`;
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 text-gray-500">
@@ -53,6 +71,8 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
             <span>{playlist.mood?.name || "Various"}</span>
             <span>•</span>
             <span>{playlist.songs?.length || 0} songs</span>
+            <span>•</span>
+            <span>{calculateTotalDuration()}</span>
           </div>
           <Button 
             onClick={onPush}
