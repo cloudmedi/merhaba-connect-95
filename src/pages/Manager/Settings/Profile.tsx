@@ -15,7 +15,6 @@ export default function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
-  // Redirect if no user
   if (!user?.id) {
     navigate('/manager/login');
     return null;
