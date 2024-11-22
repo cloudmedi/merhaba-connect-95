@@ -40,9 +40,9 @@ export function PlaylistGrid({
   };
 
   const handleCardClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
-    // Eğer tıklanan element play butonu ise, event'i durdur ve onPlay'i çağır
+    // If clicked element is the play button or its container, trigger play
     const target = e.target as HTMLElement;
-    if (target.closest('.play-button')) {
+    if (target.closest('.play-button-overlay')) {
       e.stopPropagation();
       onPlay?.(playlist);
       return;
@@ -90,12 +90,14 @@ export function PlaylistGrid({
                 </div>
               )}
               {onPlay && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                  <button
-                    className="play-button opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+                <div className="play-button-overlay absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30 transition-all duration-300"
                   >
                     <PlayIcon className="w-6 h-6" />
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
