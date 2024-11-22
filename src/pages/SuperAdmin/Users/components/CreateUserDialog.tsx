@@ -52,20 +52,22 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         if (companyError) throw companyError;
 
-        // 2. Auth kullanıcısını oluştur
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        // 2. Auth kullanıcısını oluştur - admin API yerine signUp kullan
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
-          email_confirm: true,
-          user_metadata: {
-            firstName: values.firstName,
-            lastName: values.lastName,
-            role: values.role,
-            companyId: company.id
+          options: {
+            data: {
+              firstName: values.firstName,
+              lastName: values.lastName,
+              role: values.role,
+              companyId: company.id
+            }
           }
         });
 
         if (authError) throw authError;
+        if (!authData.user) throw new Error('User creation failed');
 
         // 3. Trigger otomatik olarak profiles tablosuna kayıt ekleyecek
         // Biraz bekleyelim
