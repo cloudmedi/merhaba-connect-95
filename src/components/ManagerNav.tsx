@@ -5,6 +5,7 @@ import {
   Calendar,
   Settings,
   Volume2,
+  Music2
 } from "lucide-react";
 
 const navItems = [
@@ -39,13 +40,12 @@ const navItems = [
 export function ManagerNav() {
   return (
     <nav className="w-[280px] bg-gradient-to-b from-[#1A1F2C] to-[#2C3444] min-h-screen py-6 px-4 flex flex-col shadow-xl">
-      {/* Logo */}
-      <div className="flex items-center justify-center px-4 mb-12">
-        <img 
-          src="/lovable-uploads/95fad160-3252-4701-ad41-8fcdc51f7a63.png" 
-          alt="Veeq Logo" 
-          className="h-20 w-auto object-contain"
-        />
+      {/* Logo & Title */}
+      <div className="flex items-center gap-3 px-4 mb-8">
+        <Music2 className="h-8 w-8 text-[#9b87f5]" />
+        <span className="text-xl font-semibold tracking-tight text-white">
+          Merhaba Music
+        </span>
       </div>
 
       {/* Navigation Links */}
