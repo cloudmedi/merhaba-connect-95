@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,14 +27,19 @@ export function ManagerHeader() {
   return (
     <header className="bg-white border-b p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-800">Manager Panel</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-gray-800">Manager Panel</h1>
+          <span className="text-gray-500 text-sm">
+            Merhaba, {user?.firstName || user?.email?.split('@')[0]}
+          </span>
+        </div>
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 h-auto p-2 hover:bg-gray-50">
                 <Avatar className="h-8 w-8">
-                  <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center font-medium">
-                    {user?.firstName?.[0] || user?.email?.[0].toUpperCase()}
+                  <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
+                    <UserRound className="h-5 w-5" />
                   </div>
                 </Avatar>
                 <div className="flex flex-col items-start">
