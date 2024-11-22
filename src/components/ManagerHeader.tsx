@@ -3,6 +3,7 @@ import { ArrowLeft, LogOut, Settings, User, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Avatar } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -12,6 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -29,6 +39,7 @@ const getUserDisplayName = (user: any) => {
 export function ManagerHeader() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const managerView = localStorage.getItem('managerView');
 
   const handleReturnToSuperAdmin = () => {
@@ -62,10 +73,57 @@ export function ManagerHeader() {
         {/* Right Section */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5 text-gray-600" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5 text-gray-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle className="flex justify-between items-center">
+                  <span>Bildirimler</span>
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                      Tümünü Okundu İşaretle
+                    </Button>
+                  )}
+                </SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+                {notifications.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-8">
+                    Henüz bildirim bulunmuyor
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-4 rounded-lg border ${
+                          notification.status === 'unread'
+                            ? 'bg-gray-50'
+                            : 'bg-white'
+                        }`}
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <h4 className="font-medium">{notification.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-400 mt-2 block">
+                          {format(new Date(notification.created_at), 'dd MMM yyyy HH:mm')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
 
           {/* Profile Dropdown */}
           <DropdownMenu>
