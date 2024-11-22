@@ -58,7 +58,7 @@ export function DiagnosticTools() {
   const runTest = (testId: string) => {
     setTests(tests.map(test => {
       if (test.id === testId) {
-        return { ...test, status: "running", progress: 0 };
+        return { ...test, status: "running" as const, progress: 0 };
       }
       return test;
     }));
@@ -74,7 +74,7 @@ export function DiagnosticTools() {
               toast.success(`${test.name} completed successfully`);
               return { 
                 ...test, 
-                status: "completed", 
+                status: "completed" as const, 
                 progress: 100,
                 result: "All parameters within normal range"
               };
@@ -91,7 +91,7 @@ export function DiagnosticTools() {
   const stopTest = (testId: string) => {
     setTests(tests.map(test => {
       if (test.id === testId) {
-        return { ...test, status: "idle", progress: 0 };
+        return { ...test, status: "idle" as const, progress: 0 };
       }
       return test;
     }));
