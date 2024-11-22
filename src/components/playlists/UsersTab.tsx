@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: string;
@@ -22,26 +23,44 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No authenticated user');
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile?.company_id) throw new Error('No company found');
+
         const { data, error } = await supabase
           .from('profiles')
           .select('id, email, first_name, last_name')
+          .eq('company_id', profile.company_id)
           .ilike('email', `%${searchQuery}%`);
 
         if (error) throw error;
         setUsers(data || []);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching users:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load users",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchUsers();
-  }, [searchQuery]);
+  }, [searchQuery, toast]);
 
   const isSelected = (userId: string) => selectedUsers.some(u => u.id === userId);
 
