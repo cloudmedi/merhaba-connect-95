@@ -9,6 +9,8 @@ import Playlists from "./Playlists";
 import Devices from "./Devices";
 import Schedule from "./Schedule";
 import Announcements from "./Announcements";
+import Settings from "./Settings";
+import ProfileSettings from "./Settings/Profile";
 
 export default function Manager() {
   return (
@@ -26,6 +28,8 @@ export default function Manager() {
             <Route path="/devices" element={<Devices />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/announcements" element={<Announcements />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/profile" element={<ProfileSettings />} />
           </Routes>
         </main>
       </div>
