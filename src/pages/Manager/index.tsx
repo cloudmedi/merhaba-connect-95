@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { ManagerHeader } from "@/components/ManagerHeader";
 import { ManagerNav } from "@/components/ManagerNav";
+import { ProfileFooter } from "@/components/ProfileFooter";
 import ManagerDashboard from "./Dashboard";
 import { PlaylistDetail } from "./Playlists/PlaylistDetail";
 import { CategoryPlaylists } from "./Playlists/CategoryPlaylists";
@@ -26,6 +27,7 @@ export default function Manager() {
             <Route path="/announcements" element={<Announcements />} />
           </Routes>
         </main>
+        <ProfileFooter />
       </div>
     </div>
   );
