@@ -49,11 +49,11 @@ export function AddDeviceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Device</DialogTitle>
+          <DialogTitle>Add New Branch</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Branch</Label>
+            <Label htmlFor="name">Branch Name</Label>
             <Input
               id="name"
               value={name}
@@ -81,7 +81,7 @@ export function AddDeviceDialog({
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter device location"
+              placeholder="Enter branch location"
             />
           </div>
           <div className="space-y-2">
@@ -95,7 +95,7 @@ export function AddDeviceDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
-              {createDevice.isPending ? "Adding..." : "Add Device"}
+              {createDevice.isPending ? "Adding..." : "Add Branch"}
             </Button>
           </DialogFooter>
         </form>
