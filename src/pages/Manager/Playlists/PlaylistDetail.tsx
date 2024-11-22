@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,14 +17,13 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      console.log('Fetching playlist data...');
       const { data: playlistData, error: playlistError } = await supabase
         .from('playlists')
         .select(`
           id,
           name,
-          genre:genres(name),
-          mood:moods(name),
+          genre:genres(id, name),
+          mood:moods(id, name),
           artwork_url,
           songs:playlist_songs(
             position,
@@ -46,14 +45,11 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
-      console.log('Raw playlist data:', playlistData);
-
       // Transform the songs data structure
       const transformedSongs = playlistData.songs
         .sort((a: any, b: any) => a.position - b.position)
         .map((item: any) => {
           const song = item.songs;
-          console.log('Processing song:', song);
           
           // Construct the full Bunny CDN URL
           let fileUrl = song.file_url;
@@ -62,8 +58,6 @@ export function PlaylistDetail() {
           } else if (!fileUrl.startsWith('http')) {
             fileUrl = `https://cloud-media.b-cdn.net/${fileUrl}`;
           }
-
-          console.log('Final song URL:', fileUrl);
 
           return {
             id: song.id,
@@ -74,8 +68,6 @@ export function PlaylistDetail() {
             bunny_id: song.bunny_id
           };
         });
-
-      console.log('Transformed songs:', transformedSongs);
 
       return {
         ...playlistData,
@@ -119,7 +111,6 @@ export function PlaylistDetail() {
 
   const handleSongSelect = (song: any) => {
     const songIndex = playlist.songs.findIndex((s: any) => s.id === song.id);
-    console.log('Selected song index:', songIndex, 'Song:', song);
     setCurrentSongIndex(songIndex);
     setIsPlaying(true);
   };
