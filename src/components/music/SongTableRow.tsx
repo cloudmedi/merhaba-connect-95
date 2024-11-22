@@ -39,6 +39,11 @@ export function SongTableRow({
   defaultArtwork,
   onDelete,
 }: SongTableRowProps) {
+  const getOptimizedImageUrl = (url: string) => {
+    if (!url || !url.includes('b-cdn.net')) return url;
+    return `${url}?width=150&quality=85&format=webp`;
+  };
+
   return (
     <TableRow className="hover:bg-gray-50/50 group">
       <TableCell className="w-[30px]">
@@ -51,7 +56,7 @@ export function SongTableRow({
         <div className="flex items-center gap-4">
           <div className="relative group w-10 h-10">
             <img
-              src={song.artwork_url || defaultArtwork}
+              src={getOptimizedImageUrl(song.artwork_url || defaultArtwork)}
               alt={song.title}
               className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
               onError={(e) => {

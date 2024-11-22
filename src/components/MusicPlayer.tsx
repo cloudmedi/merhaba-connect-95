@@ -65,12 +65,17 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     setVolume(isMuted ? 75 : 0);
   };
 
+  const getOptimizedImageUrl = (url: string) => {
+    if (!url || !url.includes('b-cdn.net')) return url;
+    return `${url}?width=400&quality=85&format=webp`;
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-4 flex-1">
           <img 
-            src={playlist.artwork} 
+            src={getOptimizedImageUrl(playlist.artwork)} 
             alt={currentSong?.title}
             className="w-12 h-12 rounded-lg object-cover"
           />
