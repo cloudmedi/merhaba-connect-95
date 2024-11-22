@@ -1,27 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody } from "@/components/ui/table";
 import { EmptyState } from "./components/EmptyState";
-import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { TableHeader } from "./components/TableHeader";
+import { TableFooter } from "./components/TableFooter";
 
 interface Song {
   id: string;
@@ -88,22 +73,11 @@ export function MusicTable({
     <div className="space-y-4 bg-white rounded-lg shadow">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="w-[30px]">
-                <Checkbox
-                  checked={selectedSongs.length === songs.length && songs.length > 0}
-                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
-                />
-              </TableHead>
-              <TableHead className="font-medium text-gray-700">Title</TableHead>
-              <TableHead className="font-medium text-gray-700">Artist</TableHead>
-              <TableHead className="font-medium text-gray-700">Album</TableHead>
-              <TableHead className="font-medium text-gray-700">Genres</TableHead>
-              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeader 
+            onSelectAll={onSelectAll}
+            isAllSelected={selectedSongs.length === songs.length}
+            hasItems={songs.length > 0}
+          />
           <TableBody>
             {songs.map((song) => (
               <SongTableRow
@@ -121,66 +95,14 @@ export function MusicTable({
         </Table>
       </ScrollArea>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <p className="text-sm text-gray-600">
-          Showing {startIndex + 1}-{endIndex} of {totalCount} songs
-        </p>
-        
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => onPageChange(currentPage - 1)}
-                className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
-              />
-            </PaginationItem>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(page => {
-                const distance = Math.abs(page - currentPage);
-                return distance === 0 || distance === 1 || page === 1 || page === totalPages;
-              })
-              .map((page, index, array) => {
-                if (index > 0 && array[index - 1] !== page - 1) {
-                  return (
-                    <React.Fragment key={`ellipsis-${page}`}>
-                      <PaginationItem>
-                        <PaginationLink className="cursor-default">...</PaginationLink>
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => onPageChange(page)}
-                          isActive={currentPage === page}
-                          className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    </React.Fragment>
-                  );
-                }
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => onPageChange(page)}
-                      isActive={currentPage === page}
-                      className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => onPageChange(currentPage + 1)}
-                className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <TableFooter 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalCount={totalCount}
+      />
 
       {currentlyPlaying && (
         <MusicPlayer
