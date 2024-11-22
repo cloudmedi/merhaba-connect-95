@@ -16,6 +16,7 @@ interface MusicPlayerProps {
       artist: string;
       duration: string | number;
       file_url: string;
+      bunny_id?: string;
     }>;
   };
   onClose: () => void;
@@ -38,6 +39,18 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
   }
 
   const currentSong = playlist.songs[currentSongIndex];
+
+  // Bunny CDN URL'ini oluştur
+  const getFullUrl = (song: typeof currentSong) => {
+    if (!song.file_url) return '';
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
@@ -82,7 +95,7 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
 
         <div className="flex-1">
           <AudioPlayer
-            audioUrl={currentSong?.file_url}
+            audioUrl={getFullUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}

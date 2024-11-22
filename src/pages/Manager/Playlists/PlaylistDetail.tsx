@@ -42,28 +42,17 @@ export function PlaylistDetail() {
 
       if (playlistError) throw playlistError;
 
-      // Transform the songs data structure and handle Bunny CDN URLs
+      // Transform the songs data structure
       const transformedSongs = playlistData.songs
         .sort((a: any, b: any) => a.position - b.position)
-        .map((item: any) => {
-          let fileUrl = item.songs.file_url;
-          
-          // If we have a bunny_id, construct the full CDN URL
-          if (item.songs.bunny_id) {
-            fileUrl = `https://cloud-media.b-cdn.net/${item.songs.bunny_id}`;
-          } else if (!fileUrl.startsWith('http')) {
-            // If it's a relative URL, make it absolute
-            fileUrl = `https://cloud-media.b-cdn.net/${fileUrl}`;
-          }
-
-          return {
-            id: item.songs.id,
-            title: item.songs.title,
-            artist: item.songs.artist || "Unknown Artist",
-            duration: item.songs.duration,
-            file_url: fileUrl
-          };
-        });
+        .map((item: any) => ({
+          id: item.songs.id,
+          title: item.songs.title,
+          artist: item.songs.artist || "Unknown Artist",
+          duration: item.songs.duration,
+          file_url: item.songs.file_url,
+          bunny_id: item.songs.bunny_id
+        }));
 
       return {
         ...playlistData,
