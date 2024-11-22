@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export function ManagerHeader() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const managerView = localStorage.getItem('managerView');
 
   const handleReturnToSuperAdmin = () => {
@@ -17,16 +19,21 @@ export function ManagerHeader() {
     <header className="bg-white border-b p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800">Manager Panel</h1>
-        {managerView && (
-          <Button 
-            variant="outline" 
-            onClick={handleReturnToSuperAdmin}
-            className="flex items-center gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Super Admin'e Geri Dön
-          </Button>
-        )}
+        <div className="flex items-center gap-4">
+          <p className="text-gray-600">
+            Hoş geldin, <span className="font-medium">{user?.email}</span>
+          </p>
+          {managerView && (
+            <Button 
+              variant="outline" 
+              onClick={handleReturnToSuperAdmin}
+              className="flex items-center gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Super Admin'e Geri Dön
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   );
