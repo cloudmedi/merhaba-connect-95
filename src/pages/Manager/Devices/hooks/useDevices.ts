@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Device } from "./types";
 import { useEffect } from "react";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
@@ -18,17 +19,17 @@ export const useDevices = () => {
           schema: 'public',
           table: 'devices'
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Device>) => {
           queryClient.invalidateQueries({ queryKey: ['devices'] });
           
           const event = payload.eventType;
-          const deviceName = payload.new?.name || payload.old?.name;
+          const deviceName = (payload.new as Device)?.name || (payload.old as Device)?.name;
           
           if (event === 'INSERT') {
             toast.success(`Device "${deviceName}" has been added`);
           } else if (event === 'UPDATE') {
-            const oldStatus = payload.old?.status;
-            const newStatus = payload.new?.status;
+            const oldStatus = (payload.old as Device)?.status;
+            const newStatus = (payload.new as Device)?.status;
             if (oldStatus !== newStatus) {
               toast.info(`Device "${deviceName}" is now ${newStatus}`);
             }
