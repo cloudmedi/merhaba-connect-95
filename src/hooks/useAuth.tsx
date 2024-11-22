@@ -29,12 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (profile) {
+          // Ensure role is one of the allowed types
+          const role = profile.role === 'super_admin' ? 'super_admin' :
+                      profile.role === 'admin' ? 'admin' : 'manager';
+
           setUser({
             id: profile.id,
             email: profile.email,
             firstName: profile.first_name,
             lastName: profile.last_name,
-            role: profile.role,
+            role: role as 'super_admin' | 'manager' | 'admin',
             companyId: profile.company_id,
             isActive: profile.is_active,
             createdAt: profile.created_at,
