@@ -14,7 +14,7 @@ interface PlaylistGridProps {
   playlists: GridPlaylist[];
   isLoading?: boolean;
   onPlay?: (playlist: GridPlaylist) => void;
-  categoryId?: string; // Kategori ID'sini ekledik
+  categoryId?: string;
 }
 
 export function PlaylistGrid({
@@ -37,6 +37,19 @@ export function PlaylistGrid({
     } else {
       navigate('/manager/playlists');
     }
+  };
+
+  const handleCardClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
+    // Eğer tıklanan element play butonu ise, event'i durdur ve onPlay'i çağır
+    const target = e.target as HTMLElement;
+    if (target.closest('.play-button')) {
+      e.stopPropagation();
+      onPlay?.(playlist);
+      return;
+    }
+    
+    // Diğer durumlarda playlist detay sayfasına yönlendir
+    navigate(`/manager/playlists/${playlist.id}`);
   };
 
   return (
@@ -62,7 +75,7 @@ export function PlaylistGrid({
           <Card
             key={playlist.id}
             className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
-            onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
+            onClick={(e) => handleCardClick(e, playlist)}
           >
             <div className="aspect-square relative overflow-hidden">
               {playlist.artwork_url ? (
@@ -79,11 +92,7 @@ export function PlaylistGrid({
               {onPlay && (
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onPlay(playlist);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+                    className="play-button opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
                   >
                     <PlayIcon className="w-6 h-6" />
                   </button>
