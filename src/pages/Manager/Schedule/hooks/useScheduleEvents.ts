@@ -3,20 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScheduleEvent, EventNotification, EventColor } from "../types";
 import type { Json } from "@/integrations/supabase/types/json";
-import { useAuth } from "@/hooks/useAuth";
 
 export const useScheduleEvents = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   const { data: events = [], isLoading, error } = useQuery({
-    queryKey: ['schedule-events', user?.companyId],
+    queryKey: ['schedule-events'],
     queryFn: async () => {
-      if (!user?.id || !user?.companyId) {
-        console.error('No authenticated user or company ID found');
-        return [];
-      }
-
       const { data, error } = await supabase
         .from('schedule_events')
         .select(`
@@ -30,21 +23,15 @@ export const useScheduleEvents = () => {
             device_id
           )
         `)
-        .eq('company_id', user.companyId)
         .order('start_time', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching schedule events:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data.map((event: any) => ({
         ...event,
         color: event.color as EventColor,
         notifications: event.notifications as EventNotification[],
       })) as ScheduleEvent[];
     },
-    enabled: !!user?.id && !!user?.companyId,
   });
 
   const createEvent = useMutation({

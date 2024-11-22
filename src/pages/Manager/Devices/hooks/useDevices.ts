@@ -4,12 +4,11 @@ import { toast } from "sonner";
 import type { Device } from "./types";
 import { useEffect } from "react";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { useAuth } from "@/hooks/useAuth";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
+  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('devices_changes')
@@ -47,10 +46,15 @@ export const useDevices = () => {
   }, [queryClient]);
 
   const { data: devices = [], isLoading, error } = useQuery({
-    queryKey: ['devices', user?.companyId],
+    queryKey: ['devices'],
     queryFn: async () => {
-      if (!user?.id || !user?.companyId) {
-        console.error('No authenticated user or company ID found');
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!userProfile?.company_id) {
         return [];
       }
 
@@ -64,43 +68,20 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branches.company_id', user.companyId);
+        .eq('branches.company_id', userProfile.company_id);
 
-      if (error) {
-        console.error('Error fetching devices:', error);
-        throw error;
-      }
-      
-      const transformedData = (data || []).map(device => ({
-        ...device,
-        category: device.category as Device['category'],
-        status: (device.status || 'offline') as Device['status'],
-        system_info: device.system_info || {},
-        schedule: device.schedule || {}
-      }));
-
-      return transformedData as Device[];
+      if (error) throw error;
+      return data as Device[];
     },
-    enabled: !!user?.id && !!user?.companyId,
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user?.id) {
-        throw new Error('No authenticated user found');
-      }
-
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('*, licenses(*)')
-        .eq('id', user.id)
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
-
-      if (!userProfile) {
-        throw new Error('User profile not found');
-      }
 
       const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
       

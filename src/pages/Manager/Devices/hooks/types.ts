@@ -1,8 +1,8 @@
 import type { Json } from "@/integrations/supabase/types";
 
-export interface DeviceSystemInfo extends Record<string, Json | undefined> {
-  health?: 'healthy' | 'warning' | 'error';
+export interface DeviceSystemInfo {
   version?: string;
+  [key: string]: Json | undefined;
 }
 
 export interface DeviceSchedule {
@@ -15,7 +15,7 @@ export interface Device {
   id: string;
   name: string;
   category: 'player' | 'display' | 'controller';
-  status: 'online' | 'offline' | 'maintenance';
+  status: 'online' | 'offline';
   ip_address?: string | null;
   system_info: DeviceSystemInfo;
   schedule: DeviceSchedule;
