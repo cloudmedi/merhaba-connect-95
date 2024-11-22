@@ -60,7 +60,7 @@ export const authService = {
         },
         token: session.access_token
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       throw error;
     }

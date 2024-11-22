@@ -22,6 +22,7 @@ export default function ManagerLogin() {
       await login(email, password);
       // Navigation is handled in useAuth hook after successful login
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || "Login failed");
     } finally {
       setIsLoading(false);
