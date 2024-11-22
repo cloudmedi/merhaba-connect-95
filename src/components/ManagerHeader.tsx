@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,7 +96,6 @@ export function ManagerHeader() {
               onClick={handleReturnToSuperAdmin}
               className="flex items-center gap-2 text-[#9b87f5] border-[#9b87f5] hover:bg-[#9b87f5]/5"
             >
-              <ArrowLeft className="h-4 w-4" />
               Super Admin'e Geri Dön
             </Button>
           )}
@@ -105,8 +104,6 @@ export function ManagerHeader() {
         {/* Right Section */}
         <div className="flex items-center gap-4">
           <OnlineUsers onlineUsers={onlineUsers} />
-
-          {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5 text-gray-600" />
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
