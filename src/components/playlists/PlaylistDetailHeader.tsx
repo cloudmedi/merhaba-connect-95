@@ -11,9 +11,10 @@ interface PlaylistDetailHeaderProps {
     songs?: any[];
   };
   onPlay: () => void;
+  onPush: () => void;  // Added this prop to the interface
 }
 
-export function PlaylistDetailHeader({ playlist, onPlay }: PlaylistDetailHeaderProps) {
+export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
   const navigate = useNavigate();
   
   return (
@@ -54,6 +55,7 @@ export function PlaylistDetailHeader({ playlist, onPlay }: PlaylistDetailHeaderP
             <span>{playlist.songs?.length || 0} songs</span>
           </div>
           <Button 
+            onClick={onPush}
             className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
           >
             Push
