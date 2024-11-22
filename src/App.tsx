@@ -32,7 +32,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/manager",
-    element: <Manager />,
+    element: (
+      <AuthProvider>
+        <Manager />
+      </AuthProvider>
+    ),
     children: [
       {
         path: "playlists/genre/:genreId",
