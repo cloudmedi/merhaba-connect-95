@@ -24,34 +24,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*, companies (*)')
             .eq('id', session.user.id)
             .single();
 
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role as "super_admin" | "manager" | "admin",
-              companyId: profile.company_id,
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              company: profile.companies ? {
-                id: profile.companies.id,
-                name: profile.companies.name,
-                subscriptionStatus: profile.companies.subscription_status,
-                subscriptionEndsAt: profile.companies.subscription_ends_at
-              } : undefined
-            });
+          if (profileError || !profile) {
+            console.error('Profile fetch error:', profileError);
+            await supabase.auth.signOut();
+            setIsLoading(false);
+            return;
           }
+
+          if (!profile.is_active) {
+            await supabase.auth.signOut();
+            toast.error('Your account has been deactivated');
+            setIsLoading(false);
+            return;
+          }
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            role: profile.role as "super_admin" | "manager" | "admin",
+            companyId: profile.company_id,
+            isActive: profile.is_active,
+            createdAt: session.user.created_at,
+            updatedAt: profile.updated_at || session.user.created_at,
+            company: profile.companies ? {
+              id: profile.companies.id,
+              name: profile.companies.name,
+              subscriptionStatus: profile.companies.subscription_status,
+              subscriptionEndsAt: profile.companies.subscription_ends_at
+            } : undefined
+          });
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        await supabase.auth.signOut();
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Invalid login credentials. Please check your email and password.');
+      toast.error(error.message || 'Login failed');
       throw error;
     }
   };
