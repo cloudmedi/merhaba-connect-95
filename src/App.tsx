@@ -5,6 +5,7 @@ import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import { GenrePlaylists } from "./pages/Manager/Playlists/GenrePlaylists";
 import { MoodPlaylists } from "./pages/Manager/Playlists/MoodPlaylists";
+import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: "playlists/mood/:moodId",
         element: <MoodPlaylists />,
+      },
+      {
+        path: "playlists/:id",
+        element: <PlaylistDetail />,
       },
     ],
   },
