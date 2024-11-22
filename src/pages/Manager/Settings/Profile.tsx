@@ -8,10 +8,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileSettings() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  
+  // Redirect if no user
+  if (!user?.id) {
+    navigate('/manager/login');
+    return null;
+  }
+
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -26,14 +35,14 @@ export default function ProfileSettings() {
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!event.target.files || event.target.files.length === 0) {
+      if (!event.target.files || event.target.files.length === 0 || !user?.id) {
         return;
       }
 
       setIsLoading(true);
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}.${fileExt}`;
+      const filePath = `${user.id}.${fileExt}`;
 
       // Upload image to Storage
       const { error: uploadError } = await supabase.storage
@@ -51,12 +60,12 @@ export default function ProfileSettings() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', user?.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
       toast.success("Profil fotoğrafı güncellendi");
-      window.location.reload(); // Refresh to show new avatar
+      window.location.reload();
     } catch (error) {
       toast.error("Profil fotoğrafı güncellenirken bir hata oluştu");
       console.error(error);
@@ -67,6 +76,11 @@ export default function ProfileSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) {
+      toast.error("Kullanıcı bilgisi bulunamadı");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -76,7 +90,7 @@ export default function ProfileSettings() {
           first_name: formData.firstName,
           last_name: formData.lastName,
         })
-        .eq('id', user?.id);
+        .eq('id', user.id);
 
       if (error) throw error;
       toast.success("Profil başarıyla güncellendi");
@@ -129,9 +143,9 @@ export default function ProfileSettings() {
       <Card className="p-8">
         <div className="flex items-center gap-6 mb-6">
           <Avatar className="w-20 h-20">
-            <AvatarImage src={user?.avatarUrl} />
+            <AvatarImage src={user?.avatar_url} />
             <AvatarFallback className="bg-primary/10">
-              {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
+              {user?.firstName?.[0] || user?.email?.[0]}
             </AvatarFallback>
           </Avatar>
           <div>
