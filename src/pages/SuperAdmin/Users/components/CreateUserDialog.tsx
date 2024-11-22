@@ -4,12 +4,12 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { userService } from "@/services/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BasicInfoSection } from "./CreateUserForm/BasicInfoSection";
 import { LicenseSection } from "./CreateUserForm/LicenseSection";
 import { createUserFormSchema } from "./CreateUserForm/schema";
 import type { CreateUserFormValues } from "./CreateUserForm/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -30,22 +30,74 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       license: {
         type: "trial",
         start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         quantity: 1,
       },
     },
   });
 
   const createUserMutation = useMutation({
-    mutationFn: userService.createUser,
+    mutationFn: async (values: CreateUserFormValues) => {
+      try {
+        // 1. Önce şirketi oluştur
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: values.companyName,
+            subscription_status: values.license.type,
+            subscription_ends_at: values.license.end_date
+          })
+          .select()
+          .single();
+
+        if (companyError) throw companyError;
+
+        // 2. Auth kullanıcısını oluştur
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: values.email,
+          password: values.password,
+          email_confirm: true,
+          user_metadata: {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            role: values.role,
+            companyId: company.id
+          }
+        });
+
+        if (authError) throw authError;
+
+        // 3. Trigger otomatik olarak profiles tablosuna kayıt ekleyecek
+        // Biraz bekleyelim
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 4. Lisans oluştur
+        const { error: licenseError } = await supabase
+          .from('licenses')
+          .insert({
+            user_id: authData.user.id,
+            type: values.license.type,
+            start_date: values.license.start_date,
+            end_date: values.license.end_date,
+            quantity: values.license.quantity
+          });
+
+        if (licenseError) throw licenseError;
+
+        return { success: true };
+      } catch (error: any) {
+        console.error('Error creating user:', error);
+        throw error;
+      }
+    },
     onSuccess: () => {
-      toast.success("User created successfully");
+      toast.success("Kullanıcı başarıyla oluşturuldu");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
       form.reset();
     },
     onError: (error: any) => {
-      toast.error("Failed to create user: " + error.message);
+      toast.error("Kullanıcı oluşturulurken hata: " + error.message);
     },
   });
 
@@ -57,7 +109,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#1A1F2C]">Create New User</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold text-[#1A1F2C]">Yeni Kullanıcı Oluştur</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -67,14 +119,14 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                İptal
               </Button>
               <Button 
                 type="submit" 
                 className="bg-[#9b87f5] hover:bg-[#7E69AB]"
                 disabled={createUserMutation.isPending}
               >
-                {createUserMutation.isPending ? "Creating..." : "Create User"}
+                {createUserMutation.isPending ? "Oluşturuluyor..." : "Kullanıcı Oluştur"}
               </Button>
             </div>
           </form>
