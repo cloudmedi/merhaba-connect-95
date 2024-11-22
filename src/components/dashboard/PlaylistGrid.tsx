@@ -14,6 +14,7 @@ interface PlaylistGridProps {
   playlists: GridPlaylist[];
   isLoading?: boolean;
   onPlay?: (playlist: GridPlaylist) => void;
+  categoryId?: string; // Kategori ID'sini ekledik
 }
 
 export function PlaylistGrid({
@@ -22,12 +23,21 @@ export function PlaylistGrid({
   playlists = [],
   isLoading,
   onPlay,
+  categoryId,
 }: PlaylistGridProps) {
   const navigate = useNavigate();
 
   if (isLoading) {
     return <CatalogLoader />;
   }
+
+  const handleViewAll = () => {
+    if (categoryId) {
+      navigate(`/manager/playlists/category/${categoryId}`);
+    } else {
+      navigate('/manager/playlists');
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -41,7 +51,7 @@ export function PlaylistGrid({
         <Button 
           variant="ghost" 
           className="text-sm text-gray-500 hover:text-gray-900"
-          onClick={() => navigate('/manager/playlists')}
+          onClick={handleViewAll}
         >
           View All
         </Button>

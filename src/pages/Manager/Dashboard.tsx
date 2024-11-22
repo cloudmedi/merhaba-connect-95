@@ -24,14 +24,12 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['manager-categories'],
     queryFn: async () => {
-      // First, fetch categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
 
       if (categoriesError) throw categoriesError;
 
-      // For each category, fetch associated public playlists through playlist_categories
       const categoriesWithPlaylists = await Promise.all(
         categoriesData.map(async (category) => {
           const { data: playlistsData, error: playlistsError } = await supabase
@@ -47,7 +45,6 @@ export default function ManagerDashboard() {
               )
             `)
             .eq('category_id', category.id)
-            // Only fetch playlists where is_public is true
             .eq('playlists.is_public', true);
 
           if (playlistsError) throw playlistsError;
@@ -69,7 +66,6 @@ export default function ManagerDashboard() {
 
   const filteredCategories = categories?.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    // Only show categories that have public playlists
     category.playlists.length > 0
   ) || [];
 
@@ -107,6 +103,7 @@ export default function ManagerDashboard() {
               key={category.id}
               title={category.name}
               description={category.description}
+              categoryId={category.id}
               playlists={category.playlists.map(playlist => ({
                 id: playlist.id,
                 title: playlist.name,
