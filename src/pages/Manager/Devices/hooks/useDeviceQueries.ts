@@ -6,21 +6,29 @@ export const useDeviceQueries = () => {
   return useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      const { data: userProfile } = await supabase
+      // First get the user's profile and company_id
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        throw profileError;
+      }
+
       if (!userProfile?.company_id) {
+        // Return empty array if no company_id (prevents null equality check)
         return [];
       }
 
+      // Then fetch devices with proper join
       const { data, error } = await supabase
         .from('devices')
         .select(`
           *,
-          branches!inner (
+          branches (
             id,
             name,
             company_id,
@@ -34,7 +42,7 @@ export const useDeviceQueries = () => {
         throw error;
       }
 
-      return data as Device[];
+      return (data as Device[]) || [];
     },
   });
 };
