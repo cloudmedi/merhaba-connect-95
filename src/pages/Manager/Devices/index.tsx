@@ -5,7 +5,6 @@ import { DeviceHeader } from "./components/DeviceHeader";
 import { DeviceFilters } from "./components/DeviceFilters";
 import { DeviceStats } from "./components/DeviceStats";
 import { DeviceGroups } from "./components/DeviceGroups";
-import { DeviceMaps } from "./components/DeviceMaps";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
@@ -33,9 +32,8 @@ export default function Devices() {
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <DeviceHeader />
       <DeviceStats />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="w-full">
         <DeviceGroups />
-        <DeviceMaps />
       </div>
       <DeviceFilters 
         searchTerm={searchTerm}
