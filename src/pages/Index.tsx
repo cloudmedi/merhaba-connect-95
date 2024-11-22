@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Music2, Building2, Desktop } from "lucide-react";
+import { Music2, Building2, Monitor } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export default function Index() {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Desktop className="h-5 w-5" />
+              <Monitor className="h-5 w-5" />
               Desktop Player
             </CardTitle>
             <CardDescription>Download desktop application for branch players</CardDescription>
