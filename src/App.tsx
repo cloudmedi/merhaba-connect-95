@@ -14,6 +14,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ManagerLogin from "./pages/Manager/Auth/Login";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
+import Announcements from "./pages/Manager/Announcements";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
       {
         path: "schedule",
         element: <Schedule />,
+      },
+      {
+        path: "announcements",
+        element: <Announcements />,
       },
       {
         path: "settings/*",
