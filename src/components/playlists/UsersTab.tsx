@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface User {
   id: string;
@@ -22,13 +23,33 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        if (!user?.id) {
+          console.log('No authenticated user found');
+          setIsLoading(false);
+          return;
+        }
+
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (!userProfile?.company_id) {
+          console.log('No company ID found for user');
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('profiles')
           .select('id, email, first_name, last_name')
+          .eq('company_id', userProfile.company_id)
           .ilike('email', `%${searchQuery}%`);
 
         if (error) throw error;
@@ -41,7 +62,7 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
     };
 
     fetchUsers();
-  }, [searchQuery]);
+  }, [searchQuery, user?.id]);
 
   const isSelected = (userId: string) => selectedUsers.some(u => u.id === userId);
 
