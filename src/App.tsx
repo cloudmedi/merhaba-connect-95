@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
-import GenrePlaylists from "./pages/Manager/Playlists/GenrePlaylists";
-import MoodPlaylists from "./pages/Manager/Playlists/MoodPlaylists";
+import { GenrePlaylists } from "./pages/Manager/Playlists/GenrePlaylists";
+import { MoodPlaylists } from "./pages/Manager/Playlists/MoodPlaylists";
 
 const queryClient = new QueryClient();
 
