@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/users";
 import { toast } from "sonner";
 import { User } from "@/types/auth";
+import { useNavigate } from "react-router-dom";
 
 interface UserActionsProps {
   user: User;
@@ -24,6 +25,7 @@ export function UserActions({ user }: UserActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const deleteUserMutation = useMutation({
     mutationFn: () => userService.deleteUser(user.id),
@@ -36,6 +38,22 @@ export function UserActions({ user }: UserActionsProps) {
       toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
     },
   });
+
+  const handleSwitchToManager = () => {
+    if (user.role !== 'manager') {
+      toast.error("Bu kullanıcı bir yönetici değil");
+      return;
+    }
+
+    localStorage.setItem('managerView', JSON.stringify({
+      id: user.id,
+      email: user.email,
+      companyId: user.companyId
+    }));
+
+    navigate(`/manager`);
+    toast.success("Yönetici paneline yönlendiriliyorsunuz");
+  };
 
   return (
     <>
@@ -59,6 +77,11 @@ export function UserActions({ user }: UserActionsProps) {
           <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
             Geçmiş
           </DropdownMenuItem>
+          {user.role === 'manager' && (
+            <DropdownMenuItem onClick={handleSwitchToManager}>
+              Manager Hesabına Geç
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem 
             className="text-red-600"
             onClick={() => setShowDeleteDialog(true)}
