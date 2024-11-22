@@ -11,7 +11,7 @@ interface PlaylistDetailHeaderProps {
     songs?: any[];
   };
   onPlay: () => void;
-  onPush: () => void;  // Added this prop to the interface
+  onPush: () => void;
 }
 
 export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
@@ -21,7 +21,7 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
     <div className="space-y-8">
       <div className="flex items-center gap-2 text-gray-500">
         <button 
-          onClick={() => navigate("/manager/playlists")}
+          onClick={() => navigate("/manager")}
           className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
