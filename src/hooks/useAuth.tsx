@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User } from '@/types/auth';
 import { authService } from '@/services/auth';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -13,79 +12,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const isValidRole = (role: string): role is User['role'] => {
-  return ['super_admin', 'manager', 'admin'].includes(role);
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            const role = isValidRole(profile.role) ? profile.role : 'manager';
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name,
-              lastName: profile.last_name,
-              role: role,
-              isActive: profile.is_active,
-              avatar_url: profile.avatar_url,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at
-            });
-          }
+      const token = authService.getToken();
+      if (token) {
+        try {
+          // TODO: Implement token verification and user data fetch
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Auth initialization failed:', error);
+          authService.logout();
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-      } finally {
+      } else {
         setIsLoading(false);
       }
     };
 
     initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          const role = isValidRole(profile.role) ? profile.role : 'manager';
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: role,
-            isActive: profile.is_active,
-            avatar_url: profile.avatar_url,
-            createdAt: session.user.created_at,
-            updatedAt: profile.updated_at
-          });
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -112,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logout();
       setUser(null);
       
+      // Redirect based on current path
       const isManagerPath = window.location.pathname.startsWith('/manager');
       if (isManagerPath) {
         window.location.href = '/manager/login';
