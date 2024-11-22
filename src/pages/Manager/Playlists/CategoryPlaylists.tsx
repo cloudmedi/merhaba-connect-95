@@ -67,7 +67,7 @@ export function CategoryPlaylists() {
           className="mb-4 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
+          Back
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">{data.category.name}</h1>
         {data.category.description && (
