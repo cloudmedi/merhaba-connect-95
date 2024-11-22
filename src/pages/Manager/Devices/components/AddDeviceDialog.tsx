@@ -36,6 +36,7 @@ export function AddDeviceDialog({
       status: 'offline',
       schedule: {},
       system_info: {},
+      branches: null // Add this to satisfy the type requirement
     });
 
     onOpenChange(false);
@@ -49,16 +50,16 @@ export function AddDeviceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Branch</DialogTitle>
+          <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Branch Name</Label>
+            <Label htmlFor="name">Device Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter branch name"
+              placeholder="Enter device name"
               required
             />
           </div>
@@ -81,7 +82,7 @@ export function AddDeviceDialog({
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter branch location"
+              placeholder="Enter device location"
             />
           </div>
           <div className="space-y-2">
@@ -95,7 +96,7 @@ export function AddDeviceDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
-              {createDevice.isPending ? "Adding..." : "Add Branch"}
+              {createDevice.isPending ? "Adding..." : "Add Device"}
             </Button>
           </DialogFooter>
         </form>

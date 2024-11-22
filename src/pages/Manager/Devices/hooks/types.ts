@@ -1,4 +1,4 @@
-import type { Json } from "@/integrations/supabase/types/json";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface DeviceSystemInfo {
   version?: string;
@@ -26,9 +26,9 @@ export interface Device {
   location?: string | null;
   branch_id?: string | null;
   location_id?: string | null;
-  branches: {
+  branches?: {
     id: string;
     name: string;
     company_id: string | null;
-  };
+  } | null;
 }
