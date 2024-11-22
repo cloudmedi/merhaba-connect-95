@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/auth';
-import { authService } from '@/services/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -17,47 +17,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      const token = authService.getToken();
-      if (token) {
-        try {
-          // TODO: Implement token verification and user data fetch
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-          authService.logout();
-          setIsLoading(false);
-        }
-      } else {
-        setIsLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
       }
-    };
+      setIsLoading(false);
+    });
 
-    initAuth();
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
-      authService.setToken(response.token);
-      setUser(response.user);
-      
-      toast.success('Login successful');
-      
-      if (response.user.role === 'super_admin') {
-        window.location.href = '/super-admin';
-      } else {
-        window.location.href = '/manager';
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          firstName: data.user.user_metadata.firstName || '',
+          lastName: data.user.user_metadata.lastName || '',
+          role: data.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at || data.user.created_at
+        });
+        
+        toast.success('Login successful');
+        
+        if (data.user.user_metadata.role === 'super_admin') {
+          window.location.href = '/super-admin';
+        } else {
+          window.location.href = '/manager';
+        }
       }
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+    } catch (error: any) {
+      toast.error('Login failed: ' + error.message);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await authService.logout();
+      await supabase.auth.signOut();
       setUser(null);
       
       // Redirect based on current path
@@ -68,10 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/super-admin/login';
       }
       
-      toast.success('Çıkış yapıldı');
-    } catch (error) {
+      toast.success('Logged out successfully');
+    } catch (error: any) {
       console.error('Logout failed:', error);
-      toast.error('Çıkış yapılırken bir hata oluştu');
+      toast.error('Failed to log out');
     }
   };
 
