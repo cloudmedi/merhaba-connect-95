@@ -39,7 +39,24 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
   }
 
   const currentSong = playlist.songs[currentSongIndex];
-  console.log('Current song in player:', currentSong);
+
+  // Bunny CDN URL'sini oluşturan yardımcı fonksiyon
+  const getBunnyUrl = (song: typeof currentSong) => {
+    if (!song) return '';
+    
+    // Eğer bunny_id varsa, direkt olarak Bunny CDN URL'sini oluştur
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    // Eğer file_url bir HTTP URL ise direkt kullan
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    
+    // Aksi takdirde Bunny CDN URL'sini oluştur
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
@@ -84,7 +101,7 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
 
         <div className="flex-1">
           <AudioPlayer
-            audioUrl={currentSong?.file_url}
+            audioUrl={getBunnyUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}

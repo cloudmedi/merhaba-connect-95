@@ -10,12 +10,11 @@ export function useAudioPlayer(audioUrl: string | undefined) {
 
   useEffect(() => {
     if (!audioUrl) {
-      setError("Ses dosyası URL'i bulunamadı");
+      setError("Audio URL is missing");
       return;
     }
 
-    console.log('Attempting to load audio from URL:', audioUrl); // Debug log
-
+    console.log('Loading audio from URL:', audioUrl);
     setIsLoading(true);
     setError(null);
 
@@ -23,28 +22,28 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audioRef.current = audio;
 
     const handleCanPlay = () => {
-      console.log('Audio can play now'); // Debug log
+      console.log('Audio can play now');
       setIsLoading(false);
       setDuration(audio.duration);
       if (isPlaying) {
         audio.play().catch(e => {
           console.error('Error playing audio:', e);
-          setError("Ses dosyası oynatılamadı");
+          setError("Failed to play audio");
           setIsPlaying(false);
         });
       }
     };
 
     const handleLoadStart = () => {
-      console.log('Audio loading started'); // Debug log
+      console.log('Audio loading started');
       setIsLoading(true);
       setError(null);
     };
 
-    const handleError = (e: ErrorEvent) => {
-      console.error('Audio error:', e);
+    const handleError = () => {
+      console.error('Audio error:', audio.error);
       setIsLoading(false);
-      setError(`Ses dosyası yüklenemedi. URL: ${audioUrl}`);
+      setError(`Failed to load audio: ${audio.error?.message || 'Unknown error'}`);
       setIsPlaying(false);
     };
 
@@ -66,7 +65,6 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
-    // Force audio preload
     audio.preload = 'auto';
     audio.load();
 
@@ -92,7 +90,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     } else {
       audioRef.current.play().catch(e => {
         console.error('Error playing audio:', e);
-        setError("Ses dosyası oynatılamadı");
+        setError("Failed to play audio");
       });
     }
     setIsPlaying(!isPlaying);
@@ -107,8 +105,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
 
   const setVolume = (value: number) => {
     if (!audioRef.current) return;
-    const volume = Math.max(0, Math.min(1, value / 100));
-    audioRef.current.volume = volume;
+    audioRef.current.volume = Math.max(0, Math.min(1, value));
   };
 
   return {
