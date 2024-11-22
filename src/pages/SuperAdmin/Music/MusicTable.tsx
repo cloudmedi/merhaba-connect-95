@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TablePagination } from "./components/TablePagination";
 import { EmptyState } from "./components/EmptyState";
 import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -81,56 +80,23 @@ export function MusicTable({
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const startIndex = (currentPage - 1) * itemsPerPage;
 
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    const halfVisible = Math.floor(maxVisiblePages / 2);
-    
-    let startPage = Math.max(1, currentPage - halfVisible);
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    
-    // Always show first page
-    if (startPage > 1) {
-      pages.push(1);
-      if (startPage > 2) pages.push('...');
-    }
-    
-    // Add visible page numbers
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    
-    // Always show last page
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) pages.push('...');
-      pages.push(totalPages);
-    }
-    
-    return pages;
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-white rounded-lg shadow">
       <ScrollArea className="h-[calc(100vh-400px)]">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
+            <TableRow className="hover:bg-transparent border-b">
               <TableHead className="w-[30px]">
                 <Checkbox
                   checked={selectedSongs.length === songs.length}
                   onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
               </TableHead>
-              <TableHead className="font-medium">Title</TableHead>
-              <TableHead className="font-medium">Artist</TableHead>
-              <TableHead className="font-medium">Album</TableHead>
-              <TableHead className="font-medium">Genres</TableHead>
-              <TableHead className="font-medium text-right">Duration</TableHead>
+              <TableHead className="font-medium text-gray-700">Title</TableHead>
+              <TableHead className="font-medium text-gray-700">Artist</TableHead>
+              <TableHead className="font-medium text-gray-700">Album</TableHead>
+              <TableHead className="font-medium text-gray-700">Genres</TableHead>
+              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -150,9 +116,9 @@ export function MusicTable({
         </Table>
       </ScrollArea>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount} songs
+      <div className="flex items-center justify-between px-4 py-3 border-t">
+        <p className="text-sm text-gray-600">
+          Showing {startIndex + 1}-{Math.min(startIndex + songs.length, totalCount)} of {totalCount} songs
         </p>
         
         <Pagination>
@@ -160,30 +126,26 @@ export function MusicTable({
             <PaginationItem>
               <PaginationPrevious 
                 onClick={() => onPageChange(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
               />
             </PaginationItem>
 
-            {getPageNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {page === '...' ? (
-                  <span className="px-4 py-2">...</span>
-                ) : (
-                  <PaginationLink
-                    onClick={() => onPageChange(page as number)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                )}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  onClick={() => onPageChange(page)}
+                  isActive={currentPage === page}
+                  className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
+                >
+                  {page}
+                </PaginationLink>
               </PaginationItem>
             ))}
 
             <PaginationItem>
               <PaginationNext 
                 onClick={() => onPageChange(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
               />
             </PaginationItem>
           </PaginationContent>
