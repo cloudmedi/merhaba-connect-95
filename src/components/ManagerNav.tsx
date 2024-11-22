@@ -42,7 +42,7 @@ export function ManagerNav() {
       {/* Logo */}
       <div className="flex items-center justify-center px-4 mb-8">
         <img 
-          src="/lovable-uploads/93efb0e3-414c-445d-8fd5-2b2cd82fe0bf.png" 
+          src="/lovable-uploads/95fad160-3252-4701-ad41-8fcdc51f7a63.png" 
           alt="Veeq Logo" 
           className="h-12 w-auto object-contain"
         />
