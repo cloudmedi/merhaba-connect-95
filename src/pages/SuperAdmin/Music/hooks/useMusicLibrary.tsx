@@ -48,7 +48,7 @@ export const useMusicLibrary = () => {
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
+      const to = from + (itemsPerPage - 1);
 
       let query = supabase
         .from('songs')
