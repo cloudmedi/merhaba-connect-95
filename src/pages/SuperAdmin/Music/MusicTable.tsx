@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -9,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "./components/EmptyState";
-import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
@@ -43,7 +43,6 @@ interface MusicTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
-  onPlaySong?: (song: Song) => void;
   isLoading?: boolean;
   totalCount: number;
   onDelete: (id: string) => void;
@@ -63,6 +62,7 @@ export function MusicTable({
   onDelete
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -81,6 +81,24 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const handlePlaySong = (song: Song) => {
+    const songIndex = songs.findIndex(s => s.id === song.id);
+    setCurrentSongIndex(songIndex);
+    setCurrentlyPlaying(song);
+  };
+
+  const handleNext = () => {
+    const nextIndex = (currentSongIndex + 1) % songs.length;
+    setCurrentSongIndex(nextIndex);
+    setCurrentlyPlaying(songs[nextIndex]);
+  };
+
+  const handlePrevious = () => {
+    const prevIndex = currentSongIndex === 0 ? songs.length - 1 : currentSongIndex - 1;
+    setCurrentSongIndex(prevIndex);
+    setCurrentlyPlaying(songs[prevIndex]);
+  };
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
@@ -109,7 +127,7 @@ export function MusicTable({
                 song={song}
                 isSelected={selectedSongs.some((s) => s.id === song.id)}
                 onSelect={(checked) => onSelectSong(song, checked)}
-                onPlay={() => setCurrentlyPlaying(song)}
+                onPlay={() => handlePlaySong(song)}
                 formatDuration={formatDuration}
                 defaultArtwork={defaultArtwork}
                 onDelete={() => onDelete(song.id)}
@@ -158,15 +176,15 @@ export function MusicTable({
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
-            title: currentlyPlaying.title,
+            title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
-            songs: [{
-              id: currentlyPlaying.id,
-              title: currentlyPlaying.title,
-              artist: currentlyPlaying.artist || "Unknown Artist",
-              duration: currentlyPlaying.duration?.toString() || "0:00",
-              file_url: currentlyPlaying.file_url
-            }]
+            songs: songs.map(song => ({
+              id: song.id,
+              title: song.title,
+              artist: song.artist || "Unknown Artist",
+              duration: song.duration?.toString() || "0:00",
+              file_url: song.file_url
+            }))
           }}
           onClose={() => setCurrentlyPlaying(null)}
         />
