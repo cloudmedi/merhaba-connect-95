@@ -1,32 +1,11 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export function AppearanceSettings() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') || 'system'
-    }
-    return 'system'
-  });
-
+  const [theme, setTheme] = useState("system");
   const [language, setLanguage] = useState("tr");
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      root.classList.remove('light', 'dark')
-      root.classList.add(systemTheme)
-    } else {
-      root.classList.remove('light', 'dark')
-      root.classList.add(theme)
-    }
-    
-    localStorage.setItem('theme', theme)
-  }, [theme]);
 
   const handleThemeChange = (value: string) => {
     setTheme(value);
@@ -43,7 +22,7 @@ export function AppearanceSettings() {
       <div className="space-y-4">
         <div>
           <Label className="text-base">Tema</Label>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-gray-500 mb-4">
             Uygulama temasını seçin
           </p>
           <RadioGroup
@@ -59,7 +38,7 @@ export function AppearanceSettings() {
               />
               <Label
                 htmlFor="light"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
                 <span>Açık</span>
               </Label>
@@ -72,7 +51,7 @@ export function AppearanceSettings() {
               />
               <Label
                 htmlFor="dark"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
                 <span>Koyu</span>
               </Label>
@@ -85,7 +64,7 @@ export function AppearanceSettings() {
               />
               <Label
                 htmlFor="system"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
                 <span>Sistem</span>
               </Label>
@@ -95,7 +74,7 @@ export function AppearanceSettings() {
 
         <div className="mt-6">
           <Label className="text-base">Dil</Label>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm text-gray-500 mb-4">
             Uygulama dilini seçin
           </p>
           <RadioGroup
@@ -111,7 +90,7 @@ export function AppearanceSettings() {
               />
               <Label
                 htmlFor="tr"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
                 <span>Türkçe</span>
               </Label>
@@ -124,7 +103,7 @@ export function AppearanceSettings() {
               />
               <Label
                 htmlFor="en"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
                 <span>English</span>
               </Label>
