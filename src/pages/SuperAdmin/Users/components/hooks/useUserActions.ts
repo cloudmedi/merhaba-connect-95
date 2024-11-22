@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/users";
 import { User } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useUserActions(user: User) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -35,20 +36,42 @@ export function useUserActions(user: User) {
     },
   });
 
-  const handleNavigateToManager = () => {
+  const handleNavigateToManager = async () => {
     if (user.role !== 'manager') {
       toast.error("Bu kullanıcı bir yönetici değil");
       return;
     }
 
-    localStorage.setItem('managerView', JSON.stringify({
-      id: user.id,
-      email: user.email,
-      companyId: user.companyId
-    }));
+    try {
+      // Get current session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        toast.error("Oturum bulunamadı");
+        return;
+      }
 
-    navigate(`/manager`);
-    toast.success("Yönetici paneline yönlendiriliyorsunuz");
+      // Store the super admin's session
+      localStorage.setItem('superAdminSession', JSON.stringify({
+        token: currentSession.access_token,
+        userId: currentSession.user.id
+      }));
+
+      // Store manager info for the switch
+      localStorage.setItem('managerView', JSON.stringify({
+        id: user.id,
+        email: user.email,
+        companyId: user.companyId,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }));
+
+      // Navigate to manager dashboard
+      navigate('/manager');
+      toast.success("Yönetici paneline yönlendiriliyorsunuz");
+    } catch (error) {
+      console.error('Error switching to manager account:', error);
+      toast.error("Hesap değiştirme işlemi başarısız oldu");
+    }
   };
 
   const renewLicenseMutation = useMutation({
