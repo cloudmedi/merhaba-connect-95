@@ -8,6 +8,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  avatarUrl?: string | null;  // Added this line
   company?: {
     id: string;
     name: string;
