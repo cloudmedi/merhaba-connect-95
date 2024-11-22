@@ -1,25 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useState } from "react";
-import { NewDeviceDialog } from "./NewDeviceDialog";
+import { useTranslation } from "react-i18next";
 
 export function DeviceHeader() {
-  const [showNewDeviceDialog, setShowNewDeviceDialog] = useState(false);
-
+  const { t } = useTranslation();
+  
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Devices</h2>
-        <p className="text-sm text-gray-500">Manage your connected devices</p>
-      </div>
-      <Button onClick={() => setShowNewDeviceDialog(true)} className="bg-[#6E59A5] hover:bg-[#5A478A]">
-        <Plus className="mr-2 h-4 w-4" />
-        Add Device
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">{t('devices.title')}</h1>
+      <p className="text-gray-500 mt-1">{t('devices.subtitle')}</p>
+      <Button className="mt-4">
+        <Plus className="w-4 h-4 mr-2" />
+        {t('devices.addDevice')}
       </Button>
-      <NewDeviceDialog 
-        open={showNewDeviceDialog} 
-        onOpenChange={setShowNewDeviceDialog} 
-      />
     </div>
   );
 }

@@ -12,8 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
+import { useTranslation } from "react-i18next";
 
 export default function Devices() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -39,13 +41,13 @@ export default function Devices() {
         alt="No devices" 
         className="w-32 h-32 mb-4 opacity-50"
       />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">{t('devices.noDevicesFound')}</h3>
       <p className="text-sm text-gray-500 mb-4 max-w-sm">
-        Get started by adding your first device. You can manage all your devices from here.
+        {t('devices.noDevicesDescription')}
       </p>
       <Button>
         <Plus className="w-4 h-4 mr-2" />
-        Add New Device
+        {t('devices.addDevice')}
       </Button>
     </div>
   );
@@ -57,9 +59,9 @@ export default function Devices() {
       
       <Tabs defaultValue="devices" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="devices">Devices</TabsTrigger>
-          <TabsTrigger value="auto-groups">Auto Groups</TabsTrigger>
-          <TabsTrigger value="custom-groups">Custom Groups</TabsTrigger>
+          <TabsTrigger value="devices">{t('devices.tabs.devices')}</TabsTrigger>
+          <TabsTrigger value="auto-groups">{t('devices.tabs.autoGroups')}</TabsTrigger>
+          <TabsTrigger value="custom-groups">{t('devices.tabs.customGroups')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="devices">

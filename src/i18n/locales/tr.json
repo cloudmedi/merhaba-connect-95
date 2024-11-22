@@ -18,6 +18,27 @@
     "announcements": "Duyurular",
     "settings": "Ayarlar"
   },
+  "devices": {
+    "title": "Cihazlar",
+    "subtitle": "Bağlı cihazlarınızı yönetin",
+    "addDevice": "Cihaz Ekle",
+    "totalDevices": "Toplam Cihaz",
+    "onlineDevices": "Çevrimiçi Cihazlar",
+    "offlineDevices": "Çevrimdışı Cihazlar",
+    "warnings": "Uyarılar",
+    "operational": "operasyonel",
+    "tabs": {
+      "devices": "Cihazlar",
+      "autoGroups": "Otomatik Gruplar",
+      "customGroups": "Özel Gruplar"
+    },
+    "filters": {
+      "searchPlaceholder": "Cihazları ara...",
+      "allStatus": "Tüm Durumlar",
+      "allTypes": "Tüm Tipler",
+      "allLocations": "Tüm Konumlar"
+    }
+  },
   "settings": {
     "title": "Ayarlar",
     "language": {

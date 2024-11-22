@@ -18,6 +18,27 @@
     "announcements": "Announcements",
     "settings": "Settings"
   },
+  "devices": {
+    "title": "Devices",
+    "subtitle": "Manage your connected devices",
+    "addDevice": "Add Device",
+    "totalDevices": "Total Devices",
+    "onlineDevices": "Online Devices",
+    "offlineDevices": "Offline Devices",
+    "warnings": "Warnings",
+    "operational": "operational",
+    "tabs": {
+      "devices": "Devices",
+      "autoGroups": "Auto Groups",
+      "customGroups": "Custom Groups"
+    },
+    "filters": {
+      "searchPlaceholder": "Search devices...",
+      "allStatus": "All Status",
+      "allTypes": "All Types",
+      "allLocations": "All Locations"
+    }
+  },
   "settings": {
     "title": "Settings",
     "language": {
