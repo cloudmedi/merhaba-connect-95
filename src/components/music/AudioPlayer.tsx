@@ -68,9 +68,9 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious }: AudioPlayerProps) 
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col items-center space-y-2 min-w-[300px]">
       <ProgressBar progress={progress} onProgressChange={(values) => seek(values[0])} />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between w-full">
         <PlayerControls
           isPlaying={isPlaying}
           onPrevious={onPrevious}

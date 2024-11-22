@@ -13,14 +13,7 @@ import { EmptyState } from "./components/EmptyState";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { TablePagination } from "./components/TablePagination";
 
 interface Song {
   id: string;
@@ -80,7 +73,6 @@ export function MusicTable({
   };
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
-  const startIndex = (currentPage - 1) * itemsPerPage;
 
   const handlePlaySong = (song: Song) => {
     const songIndex = songs.findIndex(s => s.id === song.id);
@@ -88,17 +80,7 @@ export function MusicTable({
     setCurrentlyPlaying(song);
   };
 
-  const handleNext = () => {
-    const nextIndex = (currentSongIndex + 1) % songs.length;
-    setCurrentSongIndex(nextIndex);
-    setCurrentlyPlaying(songs[nextIndex]);
-  };
-
-  const handlePrevious = () => {
-    const prevIndex = currentSongIndex === 0 ? songs.length - 1 : currentSongIndex - 1;
-    setCurrentSongIndex(prevIndex);
-    setCurrentlyPlaying(songs[prevIndex]);
-  };
+  const startIndex = (currentPage - 1) * itemsPerPage;
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
@@ -137,41 +119,14 @@ export function MusicTable({
         </Table>
       </ScrollArea>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <p className="text-sm text-gray-600">
-          Showing {startIndex + 1}-{Math.min(startIndex + songs.length, totalCount)} of {totalCount} songs
-        </p>
-        
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => onPageChange(currentPage - 1)}
-                className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
-              />
-            </PaginationItem>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  onClick={() => onPageChange(page)}
-                  isActive={currentPage === page}
-                  className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => onPageChange(currentPage + 1)}
-                className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={startIndex}
+        endIndex={Math.min(startIndex + songs.length, totalCount)}
+        totalItems={totalCount}
+      />
 
       {currentlyPlaying && (
         <MusicPlayer
@@ -186,6 +141,7 @@ export function MusicTable({
               file_url: song.file_url
             }))
           }}
+          initialSongIndex={currentSongIndex}
           onClose={() => setCurrentlyPlaying(null)}
         />
       )}
