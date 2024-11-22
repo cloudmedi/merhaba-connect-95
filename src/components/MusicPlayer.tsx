@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import AudioPlayer from 'react-h5-audio-player';
+import AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -78,13 +78,13 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
             autoPlayAfterSrcChange={true}
             layout="horizontal"
             customControlsSection={[
-              "MAIN_CONTROLS",
-              "VOLUME_CONTROLS",
+              RHAP_UI.MAIN_CONTROLS,
+              RHAP_UI.VOLUME_CONTROLS,
             ]}
             customProgressBarSection={[
-              "PROGRESS_BAR",
-              "CURRENT_TIME",
-              "DURATION",
+              RHAP_UI.PROGRESS_BAR,
+              RHAP_UI.CURRENT_TIME,
+              RHAP_UI.DURATION,
             ]}
             className="player-override"
             style={{
