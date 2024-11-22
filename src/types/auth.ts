@@ -12,14 +12,10 @@ export interface User {
   company?: {
     id: string;
     name: string;
-    subscriptionStatus: string;
-    subscriptionEndsAt: string | null;
-  };
-  license?: {
-    type: string;
-    start_date: string;
-    end_date: string | null;
-    quantity: number;
+    subscription_status: string;
+    subscription_ends_at: string | null;
+    trial_status?: string;
+    trial_ends_at?: string | null;
   };
 }
 

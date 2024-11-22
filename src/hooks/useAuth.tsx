@@ -59,7 +59,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           avatar_url: profile.avatar_url,
           createdAt: profile.created_at,
           updatedAt: profile.updated_at,
-          company: profile.companies,
+          company: profile.companies ? {
+            id: profile.companies.id,
+            name: profile.companies.name,
+            subscription_status: profile.companies.subscription_status,
+            subscription_ends_at: profile.companies.subscription_ends_at,
+            trial_status: profile.companies.trial_status,
+            trial_ends_at: profile.companies.trial_ends_at
+          } : undefined
         });
       }
     } catch (error) {
