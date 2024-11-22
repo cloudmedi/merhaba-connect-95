@@ -2,17 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { OnlineUsers } from "./header/OnlineUsers";
-
-interface OnlineUser {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  lastSeen: string;
-}
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -24,35 +13,6 @@ const getGreeting = () => {
 export function ManagerHeader() {
   const navigate = useNavigate();
   const managerView = localStorage.getItem('managerView');
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-
-  useEffect(() => {
-    const channel = supabase.channel('online-users', {
-      config: {
-        presence: {
-          key: 'online',
-        },
-      },
-    });
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const presenceState = channel.presenceState();
-        const users = Object.values(presenceState).flat().map((p: any) => ({
-          id: p.user_id,
-          email: p.email,
-          firstName: p.firstName,
-          lastName: p.lastName,
-          lastSeen: new Date().toISOString(),
-        }));
-        setOnlineUsers(users);
-      })
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, []);
 
   const handleReturnToSuperAdmin = () => {
     localStorage.removeItem('managerView');
@@ -79,7 +39,6 @@ export function ManagerHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          <OnlineUsers onlineUsers={onlineUsers} />
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5 text-gray-600" />
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
