@@ -52,7 +52,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         if (companyError) throw companyError;
 
-        // 2. Auth kullanıcısını oluştur - admin API yerine signUp kullan
+        // 2. Auth kullanıcısını oluştur - metadata'ya firstName ve lastName ekle
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
