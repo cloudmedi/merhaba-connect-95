@@ -1,6 +1,6 @@
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Play } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -8,7 +8,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AudioPreview } from "./AudioPreview";
 
 interface Song {
   id: string;
@@ -61,10 +60,14 @@ export function SongTableRow({
               }}
             />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <AudioPreview 
-                fileUrl={song.file_url}
-                onPlay={onPlay}
-              />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
+                onClick={onPlay}
+              >
+                <Play className="w-4 h-4 text-white" />
+              </Button>
             </div>
           </div>
           <span className="font-medium text-gray-900">{song.title}</span>
