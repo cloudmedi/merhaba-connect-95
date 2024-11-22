@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Settings, User, Search, Bell } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, User, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,16 +45,6 @@ export function ManagerHeader() {
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
-            {/* Search Bar */}
-            <div className="hidden md:flex relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input 
-                type="search" 
-                placeholder="Ara..." 
-                className="pl-10 bg-gray-50 border-gray-200"
-              />
-            </div>
-
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5 text-gray-600" />
