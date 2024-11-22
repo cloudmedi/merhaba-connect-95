@@ -6,6 +6,7 @@ import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
+import { supabase } from "@/integrations/supabase/client";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -25,7 +26,8 @@ export function MusicContent() {
     setCurrentPage,
     totalPages,
     itemsPerPage,
-    totalCount
+    totalCount,
+    refetch
   } = useMusicLibrary();
 
   const handleSelectAll = (checked: boolean) => {
@@ -37,6 +39,31 @@ export function MusicContent() {
       setSelectedSongs(prev => [...prev, song]);
     } else {
       setSelectedSongs(prev => prev.filter(s => s.id !== song.id));
+    }
+  };
+
+  const handleDeleteSong = async (songId: string) => {
+    try {
+      const { error } = await supabase
+        .from('songs')
+        .delete()
+        .eq('id', songId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Song deleted successfully",
+      });
+
+      // Refresh the songs list
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete song",
+        variant: "destructive",
+      });
     }
   };
 
@@ -105,6 +132,7 @@ export function MusicContent() {
         itemsPerPage={itemsPerPage}
         isLoading={isLoading}
         totalCount={totalCount}
+        onDelete={handleDeleteSong}
       />
     </div>
   );

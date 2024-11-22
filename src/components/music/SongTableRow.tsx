@@ -28,6 +28,7 @@ interface SongTableRowProps {
   onPlay: () => void;
   formatDuration: (duration?: number) => string;
   defaultArtwork: string;
+  onDelete: (id: string) => void;
 }
 
 export function SongTableRow({
@@ -37,6 +38,7 @@ export function SongTableRow({
   onPlay,
   formatDuration,
   defaultArtwork,
+  onDelete,
 }: SongTableRowProps) {
   return (
     <TableRow className="hover:bg-gray-50/50 group">
@@ -101,7 +103,10 @@ export function SongTableRow({
             <DropdownMenuItem className="cursor-pointer">
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600 cursor-pointer">
+            <DropdownMenuItem 
+              className="text-red-600 cursor-pointer"
+              onClick={() => onDelete(song.id)}
+            >
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

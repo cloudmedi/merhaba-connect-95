@@ -46,6 +46,7 @@ interface MusicTableProps {
   onPlaySong?: (song: Song) => void;
   isLoading?: boolean;
   totalCount: number;
+  onDelete: (id: string) => void;
 }
 
 export function MusicTable({
@@ -58,7 +59,8 @@ export function MusicTable({
   onPageChange,
   itemsPerPage,
   isLoading,
-  totalCount
+  totalCount,
+  onDelete
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
 
@@ -110,6 +112,7 @@ export function MusicTable({
                 onPlay={() => setCurrentlyPlaying(song)}
                 formatDuration={formatDuration}
                 defaultArtwork={defaultArtwork}
+                onDelete={() => onDelete(song.id)}
               />
             ))}
           </TableBody>
