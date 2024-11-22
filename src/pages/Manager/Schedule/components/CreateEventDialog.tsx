@@ -1,26 +1,31 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
-import { EventDetailsStep } from "./steps/EventDetailsStep";
-import { BranchSelectionStep } from "./steps/BranchSelectionStep";
-import { RecurrenceStep } from "./steps/RecurrenceStep";
-import { NotificationStep } from "./steps/NotificationStep";
-import { PreviewStep } from "./steps/PreviewStep";
+import { EventDetailsStep } from "./EventDetailsStep";
+import { BranchSelectionStep } from "./BranchSelectionStep";
+import { RecurrenceStep } from "./RecurrenceStep";
+import { NotificationStep } from "./NotificationStep";
+import { PreviewStep } from "./PreviewStep";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { ScheduleEvent } from "../types";
+import { EventCategory } from "../types";
 
 interface CreateEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingEvents: ScheduleEvent[];
+  existingEvents: any[];
   initialTimeRange?: {
     start: string;
     end: string;
   } | null;
 }
 
-export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
+export function CreateEventDialog({ 
+  open, 
+  onOpenChange, 
+  existingEvents, 
+  initialTimeRange 
+}: CreateEventDialogProps) {
   const { t } = useTranslation();
   const [currentTab, setCurrentTab] = useState("details");
   const [formData, setFormData] = useState(() => getInitialFormData(initialTimeRange));
@@ -32,7 +37,6 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
   }, [initialTimeRange]);
 
   const handleCreate = async () => {
-    // Implement the creation logic here
     toast.success("Event created successfully");
     onOpenChange(false);
     resetForm();
@@ -46,9 +50,9 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       startTime: "",
       endDate: "",
       endTime: "",
-      category: "Regular Playlist",
+      category: "Regular Playlist" as EventCategory,
       branches: [],
-      notifications: [],
+      notifications: []
     });
     setCurrentTab("details");
   };
@@ -132,9 +136,9 @@ function getInitialFormData(timeRange: { start: string; end: string; } | null | 
       startTime: startDateTime.toTimeString().split(' ')[0],
       endDate: endDateTime.toISOString().split('T')[0],
       endTime: endDateTime.toTimeString().split(' ')[0],
-      category: "Regular Playlist",
+      category: "Regular Playlist" as EventCategory,
       branches: [],
-      notifications: [],
+      notifications: []
     };
   }
 
@@ -145,8 +149,8 @@ function getInitialFormData(timeRange: { start: string; end: string; } | null | 
     startTime: "",
     endDate: "",
     endTime: "",
-    category: "Regular Playlist",
+    category: "Regular Playlist" as EventCategory,
     branches: [],
-    notifications: [],
+    notifications: []
   };
 }
