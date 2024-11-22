@@ -32,7 +32,8 @@ export function PlaylistDetail() {
               title,
               artist,
               duration,
-              file_url
+              file_url,
+              bunny_id
             )
           )
         `)
@@ -41,16 +42,28 @@ export function PlaylistDetail() {
 
       if (playlistError) throw playlistError;
 
-      // Transform the songs data structure
+      // Transform the songs data structure and handle Bunny CDN URLs
       const transformedSongs = playlistData.songs
         .sort((a: any, b: any) => a.position - b.position)
-        .map((item: any) => ({
-          id: item.songs.id,
-          title: item.songs.title,
-          artist: item.songs.artist || "Unknown Artist",
-          duration: item.songs.duration,
-          file_url: item.songs.file_url
-        }));
+        .map((item: any) => {
+          let fileUrl = item.songs.file_url;
+          
+          // If we have a bunny_id, construct the full CDN URL
+          if (item.songs.bunny_id) {
+            fileUrl = `https://cloud-media.b-cdn.net/${item.songs.bunny_id}`;
+          } else if (!fileUrl.startsWith('http')) {
+            // If it's a relative URL, make it absolute
+            fileUrl = `https://cloud-media.b-cdn.net/${fileUrl}`;
+          }
+
+          return {
+            id: item.songs.id,
+            title: item.songs.title,
+            artist: item.songs.artist || "Unknown Artist",
+            duration: item.songs.duration,
+            file_url: fileUrl
+          };
+        });
 
       return {
         ...playlistData,
@@ -58,7 +71,8 @@ export function PlaylistDetail() {
       };
     },
     meta: {
-      onError: () => {
+      onError: (error: Error) => {
+        console.error('Error loading playlist:', error);
         toast.error("Failed to load playlist");
       }
     }
@@ -103,6 +117,7 @@ export function PlaylistDetail() {
         <PlaylistDetailHeader 
           playlist={playlist}
           onPlay={() => setIsPlaying(true)}
+          onPush={() => setIsPushDialogOpen(true)}
         />
 
         <SongList 
