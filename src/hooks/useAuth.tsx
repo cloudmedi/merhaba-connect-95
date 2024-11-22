@@ -17,7 +17,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -26,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         await fetchUserProfile(session.user.id);
@@ -43,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, companies(*)')
         .eq('id', userId)
         .single();
 
@@ -55,12 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: profile.email,
           firstName: profile.first_name,
           lastName: profile.last_name,
-          role: profile.role,
+          role: profile.role as 'super_admin' | 'manager' | 'admin',
           companyId: profile.company_id,
           isActive: profile.is_active,
           avatar_url: profile.avatar_url,
           createdAt: profile.created_at,
           updatedAt: profile.updated_at,
+          company: profile.companies,
         });
       }
     } catch (error) {
