@@ -1,26 +1,27 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export function AppearanceSettings() {
-  const [language, setLanguage] = useState("tr");
+  const { t, i18n } = useTranslation();
 
   const handleLanguageChange = (value: string) => {
-    setLanguage(value);
-    toast.success("Dil ayarları güncellendi");
+    i18n.changeLanguage(value);
+    localStorage.setItem('language', value);
+    toast.success(t('notifications.languageChanged'));
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label className="text-base">Dil</Label>
+          <Label className="text-base">{t('settings.language.title')}</Label>
           <p className="text-sm text-gray-500 mb-4">
-            Uygulama dilini seçin
+            {t('settings.language.description')}
           </p>
           <RadioGroup
-            value={language}
+            value={i18n.language}
             onValueChange={handleLanguageChange}
             className="grid grid-cols-2 gap-4"
           >
@@ -34,7 +35,7 @@ export function AppearanceSettings() {
                 htmlFor="tr"
                 className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
-                <span>Türkçe</span>
+                <span>{t('settings.language.turkish')}</span>
               </Label>
             </div>
             <div>
@@ -47,7 +48,7 @@ export function AppearanceSettings() {
                 htmlFor="en"
                 className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-[#6E59A5] [&:has([data-state=checked])]:border-[#6E59A5] cursor-pointer"
               >
-                <span>English</span>
+                <span>{t('settings.language.english')}</span>
               </Label>
             </div>
           </RadioGroup>

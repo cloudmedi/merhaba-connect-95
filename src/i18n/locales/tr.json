@@ -1,0 +1,34 @@
+{
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "back": "Geri",
+    "next": "İleri",
+    "search": "Ara",
+    "filter": "Filtrele",
+    "loading": "Yükleniyor..."
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": {
+      "title": "Dil",
+      "description": "Uygulama dilini seçin",
+      "turkish": "Türkçe",
+      "english": "İngilizce"
+    }
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "logout": "Çıkış Yap",
+    "email": "E-posta",
+    "password": "Şifre"
+  },
+  "notifications": {
+    "success": "Başarılı",
+    "error": "Hata",
+    "languageChanged": "Dil ayarları güncellendi"
+  }
+}
