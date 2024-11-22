@@ -3,6 +3,7 @@ import { useDevices } from "./hooks/useDevices";
 import { DeviceList } from "./components/DeviceList";
 import { DeviceHeader } from "./components/DeviceHeader";
 import { DeviceFilters } from "./components/DeviceFilters";
+import { DeviceStats } from "./components/DeviceStats";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
@@ -23,6 +24,7 @@ export default function Devices() {
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <DeviceHeader />
+      <DeviceStats />
       <DeviceFilters 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -30,7 +32,7 @@ export default function Devices() {
         onStatusFilterChange={setStatusFilter}
       />
       <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
-        <ScrollArea className="h-[calc(100vh-280px)] rounded-lg">
+        <ScrollArea className="h-[calc(100vh-420px)] rounded-lg">
           <DeviceList devices={filteredDevices} />
         </ScrollArea>
       </Card>
