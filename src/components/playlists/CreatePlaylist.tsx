@@ -86,7 +86,7 @@ export function CreatePlaylist() {
             title: "Success",
             description: `Playlist ${isEditMode ? 'updated' : 'created'} successfully`,
           });
-          navigate("/super-admin/playlists");
+          navigate("/super-admin/playlists", { replace: true });
         },
         onError: (error) => {
           toast({
@@ -112,7 +112,7 @@ export function CreatePlaylist() {
       
       <div className="flex-1">
         <PlaylistHeader
-          onCancel={() => navigate("/super-admin/playlists")}
+          onCancel={() => navigate("/super-admin/playlists", { replace: true })}
           onCreate={onSave}
           isEditMode={isEditMode}
         />
