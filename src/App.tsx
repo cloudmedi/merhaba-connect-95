@@ -25,11 +25,19 @@ const router = createBrowserRouter([
   },
   {
     path: "/manager/login",
-    element: <ManagerLogin />,
+    element: (
+      <AuthProvider>
+        <ManagerLogin />
+      </AuthProvider>
+    ),
   },
   {
     path: "/super-admin/login",
-    element: <SuperAdminLogin />,
+    element: (
+      <AuthProvider>
+        <SuperAdminLogin />
+      </AuthProvider>
+    ),
   },
   {
     path: "/manager",
