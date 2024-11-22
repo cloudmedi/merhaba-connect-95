@@ -18,6 +18,24 @@
     "announcements": "Duyurular",
     "settings": "Ayarlar"
   },
+  "schedule": {
+    "title": "Program",
+    "subtitle": "Çalma listelerinizi ve duyuru programınızı yönetin",
+    "createEvent": "Etkinlik Oluştur",
+    "export": "Dışa Aktar",
+    "today": "Bugün",
+    "week": "Hafta",
+    "day": "Gün",
+    "calendar": {
+      "sun": "Paz",
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt"
+    }
+  },
   "devices": {
     "title": "Cihazlar",
     "subtitle": "Bağlı cihazlarınızı yönetin",

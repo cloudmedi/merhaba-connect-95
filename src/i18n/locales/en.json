@@ -18,6 +18,24 @@
     "announcements": "Announcements",
     "settings": "Settings"
   },
+  "schedule": {
+    "title": "Schedule",
+    "subtitle": "Manage your playlists and announcements schedule",
+    "createEvent": "Create Event",
+    "export": "Export",
+    "today": "Today",
+    "week": "Week",
+    "day": "Day",
+    "calendar": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
   "devices": {
     "title": "Devices",
     "subtitle": "Manage your connected devices",
