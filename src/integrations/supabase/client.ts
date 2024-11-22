@@ -24,8 +24,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   },
 });
 
-// Add error handling for network issues
-supabase.handleNetworkError = (error: Error) => {
+// Add global error handler for fetch operations
+supabase.rest.on('error', (error) => {
   console.error('Supabase network error:', error);
-  throw new Error('Unable to connect to the database. Please check your internet connection.');
-};
+  if (error instanceof Error) {
+    throw new Error('Unable to connect to the database. Please check your internet connection.');
+  }
+});
