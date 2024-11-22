@@ -34,13 +34,10 @@ export function PlaylistGrid({
   const handleViewAll = () => {
     if (categoryId) {
       navigate(`/manager/playlists/category/${categoryId}`);
-    } else {
-      navigate('/manager/playlists');
     }
   };
 
   const handleCardClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
-    // If clicked element is the play button or its container, trigger play
     const target = e.target as HTMLElement;
     if (target.closest('.play-button-overlay')) {
       e.stopPropagation();
@@ -48,7 +45,6 @@ export function PlaylistGrid({
       return;
     }
     
-    // Diğer durumlarda playlist detay sayfasına yönlendir
     navigate(`/manager/playlists/${playlist.id}`);
   };
 
@@ -61,13 +57,15 @@ export function PlaylistGrid({
             <p className="text-sm text-gray-500">{description}</p>
           )}
         </div>
-        <Button 
-          variant="ghost" 
-          className="text-sm text-gray-500 hover:text-gray-900"
-          onClick={handleViewAll}
-        >
-          View All
-        </Button>
+        {categoryId && (
+          <Button 
+            variant="ghost" 
+            className="text-sm text-gray-500 hover:text-gray-900"
+            onClick={handleViewAll}
+          >
+            View All
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">

@@ -12,7 +12,7 @@ export function CategoryPlaylists() {
   const { data, isLoading } = useQuery({
     queryKey: ['category-playlists', categoryId],
     queryFn: async () => {
-      // Önce kategori bilgilerini al
+      // First get category details
       const { data: category, error: categoryError } = await supabase
         .from('categories')
         .select('*')
@@ -21,7 +21,7 @@ export function CategoryPlaylists() {
 
       if (categoryError) throw categoryError;
 
-      // Kategoriye ait playlistleri al
+      // Then get playlists for this category
       const { data: playlistsData, error: playlistsError } = await supabase
         .from('playlist_categories')
         .select(`
@@ -34,8 +34,7 @@ export function CategoryPlaylists() {
             mood:moods(name)
           )
         `)
-        .eq('category_id', categoryId)
-        .eq('playlists.is_public', true);
+        .eq('category_id', categoryId);
 
       if (playlistsError) throw playlistsError;
 

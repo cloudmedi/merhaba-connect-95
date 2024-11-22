@@ -5,10 +5,10 @@ import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import { GenrePlaylists } from "./pages/Manager/Playlists/GenrePlaylists";
 import { MoodPlaylists } from "./pages/Manager/Playlists/MoodPlaylists";
+import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 import { PlaylistDetail } from "@/components/playlists/PlaylistDetail";
 import Devices from "./pages/Manager/Devices";
 import Schedule from "./pages/Manager/Schedule";
-import Announcements from "./pages/Manager/Announcements";
 import Settings from "./pages/Manager/Settings";
 import { AuthProvider } from "@/hooks/useAuth";
 import ManagerLogin from "./pages/Manager/Auth/Login";
@@ -47,6 +47,10 @@ const router = createBrowserRouter([
         element: <MoodPlaylists />,
       },
       {
+        path: "playlists/category/:categoryId",
+        element: <CategoryPlaylists />,
+      },
+      {
         path: "playlists/:id",
         element: <PlaylistDetail />,
       },
@@ -57,10 +61,6 @@ const router = createBrowserRouter([
       {
         path: "schedule",
         element: <Schedule />,
-      },
-      {
-        path: "announcements",
-        element: <Announcements />,
       },
       {
         path: "settings/*",
