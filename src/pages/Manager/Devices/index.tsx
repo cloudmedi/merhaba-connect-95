@@ -35,11 +35,33 @@ export default function Devices() {
       <DeviceHeader />
       <DeviceStats />
       
-      <Tabs defaultValue="auto-groups">
+      <Tabs defaultValue="devices" className="w-full">
         <TabsList>
+          <TabsTrigger value="devices">Devices</TabsTrigger>
           <TabsTrigger value="auto-groups">Auto Groups</TabsTrigger>
           <TabsTrigger value="custom-groups">Custom Groups</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="devices">
+          <div className="space-y-6">
+            <DeviceFilters 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              locationFilter={locationFilter}
+              onLocationFilterChange={setLocationFilter}
+            />
+            
+            <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
+              <ScrollArea className="h-[calc(100vh-680px)] rounded-lg">
+                <DeviceList devices={filteredDevices} />
+              </ScrollArea>
+            </Card>
+          </div>
+        </TabsContent>
         
         <TabsContent value="auto-groups">
           <DeviceGroups />
@@ -49,23 +71,6 @@ export default function Devices() {
           <BranchGroupsTab />
         </TabsContent>
       </Tabs>
-
-      <DeviceFilters 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-        locationFilter={locationFilter}
-        onLocationFilterChange={setLocationFilter}
-      />
-      
-      <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
-        <ScrollArea className="h-[calc(100vh-680px)] rounded-lg">
-          <DeviceList devices={filteredDevices} />
-        </ScrollArea>
-      </Card>
     </div>
   );
 }
