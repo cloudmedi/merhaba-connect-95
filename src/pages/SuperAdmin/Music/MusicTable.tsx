@@ -24,6 +24,7 @@ interface Song {
   duration?: number;
   artwork_url?: string;
   file_url: string;
+  bunny_id?: string;
   created_at: string;
 }
 
