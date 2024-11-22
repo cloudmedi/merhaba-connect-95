@@ -101,26 +101,24 @@ serve(async (req) => {
       const artworkData = picture.data
       const artworkType = picture.format
       const artworkExt = artworkType.split('/')[1] || 'jpg'
-      const artworkFileName = `${crypto.randomUUID()}.${artworkExt}`
+      const artworkFileName = `artworks/${crypto.randomUUID()}.${artworkExt}`
 
-      console.log('Uploading artwork to Supabase storage...')
-      const { data: artworkData2, error: artworkError } = await supabase
-        .storage
-        .from('music')
-        .upload(`artworks/${artworkFileName}`, artworkData, {
-          contentType: artworkType,
-          cacheControl: '3600'
-        })
+      console.log('Uploading artwork to Bunny CDN...')
+      const artworkBunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${artworkFileName}`
+      
+      const artworkUploadResponse = await fetch(artworkBunnyUrl, {
+        method: 'PUT',
+        headers: {
+          'AccessKey': bunnyApiKey,
+          'Content-Type': artworkType
+        },
+        body: artworkData
+      })
 
-      if (artworkError) {
-        console.error('Failed to upload artwork:', artworkError)
+      if (!artworkUploadResponse.ok) {
+        console.error('Failed to upload artwork to Bunny CDN')
       } else {
-        const { data: { publicUrl } } = supabase
-          .storage
-          .from('music')
-          .getPublicUrl(`artworks/${artworkFileName}`)
-        
-        artworkUrl = publicUrl
+        artworkUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${artworkFileName}`
         console.log('Artwork uploaded successfully:', artworkUrl)
       }
     }
