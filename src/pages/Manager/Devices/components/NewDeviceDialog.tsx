@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
+import { generateDeviceToken } from "@/utils/deviceUtils";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -22,17 +23,12 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
-  const [token, setToken] = useState("");
+  const [token] = useState(generateDeviceToken()); // Auto-generate token
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!token || token.length !== 6) {
-      toast.error('Please enter a valid 6-digit token');
-      return;
-    }
-
     try {
       await createDevice.mutateAsync({
         name,
@@ -40,8 +36,8 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         location,
         token,
         status: 'offline',
-        schedule: {},
         system_info: {},
+        schedule: {},
         branches: null
       });
 
@@ -57,7 +53,6 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setName("");
     setCategory("player");
     setLocation("");
-    setToken("");
   };
 
   return (
@@ -104,18 +99,11 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
             <Input
               id="token"
               value={token}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
-                setToken(value);
-              }}
-              placeholder="Enter 6-digit device token"
-              required
-              maxLength={6}
-              pattern="\d{6}"
-              className="font-mono text-lg tracking-wider text-center"
+              readOnly
+              className="font-mono text-lg tracking-wider text-center bg-gray-50"
             />
             <p className="text-sm text-gray-500">
-              Enter the 6-digit token shown on your device
+              Use this token to register your device. Keep it safe!
             </p>
           </div>
           <DialogFooter>
