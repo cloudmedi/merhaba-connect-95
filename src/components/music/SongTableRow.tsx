@@ -39,6 +39,14 @@ export function SongTableRow({
   formatDuration,
   defaultArtwork,
 }: SongTableRowProps) {
+  const downloadableSong = {
+    id: song.id,
+    title: song.title,
+    artist: song.artist || 'Unknown Artist',
+    file_url: song.file_url,
+    artwork_url: song.artwork_url
+  };
+
   return (
     <TableRow className="hover:bg-gray-50/50 group">
       <TableCell className="w-[30px]">
@@ -90,7 +98,7 @@ export function SongTableRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <DownloadButton song={song} />
+          <DownloadButton song={downloadableSong} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -28,7 +28,10 @@ export function DownloadButton({ song }: DownloadButtonProps) {
   };
 
   const handleDownload = async () => {
-    await downloadSong(song);
+    await downloadSong({
+      ...song,
+      artwork_url: song.artwork_url || ''
+    });
     checkIfDownloaded();
   };
 
