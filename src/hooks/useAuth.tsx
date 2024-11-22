@@ -13,6 +13,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to validate role
+const validateRole = (role: string | null): "super_admin" | "manager" | "admin" => {
+  if (role === "super_admin" || role === "manager" || role === "admin") {
+    return role;
+  }
+  return "manager"; // Default fallback role
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: session.user.email!,
               firstName: profile.first_name,
               lastName: profile.last_name,
-              role: profile.role,
+              role: validateRole(profile.role),
               companyId: profile.company_id,
               isActive: profile.is_active,
               avatar_url: profile.avatar_url,
@@ -66,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: session.user.email!,
             firstName: profile.first_name,
             lastName: profile.last_name,
-            role: profile.role,
+            role: validateRole(profile.role),
             companyId: profile.company_id,
             isActive: profile.is_active,
             avatar_url: profile.avatar_url,
