@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,24 +10,6 @@ interface PlayHistory {
 
 export function useSmartPlaylist(branchId: string | undefined, deviceId: string | undefined) {
   const queryClient = useQueryClient();
-
-  // Get play history for the current branch
-  const { data: playHistory } = useQuery({
-    queryKey: ['play-history', branchId],
-    queryFn: async () => {
-      if (!branchId) return [];
-      
-      const { data, error } = await supabase
-        .from('song_play_history')
-        .select('*')
-        .eq('branch_id', branchId)
-        .order('last_played_at', { ascending: false });
-
-      if (error) throw error;
-      return data as PlayHistory[];
-    },
-    enabled: !!branchId
-  });
 
   // Record play history
   const recordPlay = useMutation({
@@ -74,9 +56,6 @@ export function useSmartPlaylist(branchId: string | undefined, deviceId: string 
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['play-history', branchId] });
-    },
     onError: (error) => {
       toast.error("Failed to record play history", {
         description: error.message
@@ -86,42 +65,16 @@ export function useSmartPlaylist(branchId: string | undefined, deviceId: string 
 
   // Get next song recommendation
   const getNextSong = (currentSongId: string, playlist: any[]) => {
-    if (!playHistory || playlist.length === 0) return 0;
+    // If no songs in playlist, return 0
+    if (playlist.length === 0) return 0;
 
-    // Filter out songs that have reached daily limit
-    const availableSongs = playlist.filter(song => {
-      const history = playHistory.find(h => h.song_id === song.id);
-      return !history || history.play_count_today < 10; // Max 10 plays per day
-    });
-
-    if (availableSongs.length === 0) return 0;
-
-    // Sort by last played time and play count
-    const sortedSongs = availableSongs.sort((a, b) => {
-      const historyA = playHistory.find(h => h.song_id === a.id);
-      const historyB = playHistory.find(h => h.song_id === b.id);
-      
-      if (!historyA) return -1;
-      if (!historyB) return 1;
-
-      // Prioritize songs with fewer plays today
-      if (historyA.play_count_today !== historyB.play_count_today) {
-        return historyA.play_count_today - historyB.play_count_today;
-      }
-
-      // Then consider last played time
-      return new Date(historyA.last_played_at).getTime() - 
-             new Date(historyB.last_played_at).getTime();
-    });
-
-    // Find index of recommended song in original playlist
-    const recommendedSong = sortedSongs[0];
-    return playlist.findIndex(song => song.id === recommendedSong.id);
+    // For now, just return next song index
+    const currentIndex = playlist.findIndex(song => song.id === currentSongId);
+    return currentIndex === playlist.length - 1 ? 0 : currentIndex + 1;
   };
 
   return {
     recordPlay,
-    getNextSong,
-    playHistory
+    getNextSong
   };
 }
