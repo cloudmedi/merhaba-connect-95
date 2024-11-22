@@ -1,41 +1,43 @@
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import SuperAdmin from "./pages/SuperAdmin";
+import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
 import Manager from "./pages/Manager";
-import { GenrePlaylists } from "./pages/Manager/Playlists/GenrePlaylists";
-import { MoodPlaylists } from "./pages/Manager/Playlists/MoodPlaylists";
+import ManagerLogin from "./pages/Manager/Auth/Login";
+import ManagerRegister from "./pages/Manager/Auth/Register";
 
 const queryClient = new QueryClient();
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-  },
-  {
-    path: "/manager",
-    element: <Manager />,
-    children: [
-      {
-        path: "playlists/genre/:genreId",
-        element: <GenrePlaylists />,
-      },
-      {
-        path: "playlists/mood/:moodId",
-        element: <MoodPlaylists />,
-      },
-    ],
-  },
-]);
-
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              
+              {/* Super Admin Routes */}
+              <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+              <Route path="/super-admin/register" element={<SuperAdminRegister />} />
+              <Route path="/super-admin/*" element={<SuperAdmin />} />
+              
+              {/* Manager Routes */}
+              <Route path="/manager/login" element={<ManagerLogin />} />
+              <Route path="/manager/register" element={<ManagerRegister />} />
+              <Route path="/manager/*" element={<Manager />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
-
-export default App;

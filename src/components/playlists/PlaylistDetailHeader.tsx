@@ -6,8 +6,8 @@ interface PlaylistDetailHeaderProps {
   playlist: {
     name: string;
     artwork_url?: string;
-    genre?: { name: string; id?: string };
-    mood?: { name: string; id?: string };
+    genre?: { name: string };
+    mood?: { name: string };
     songs?: {
       duration: number;
     }[];
@@ -33,18 +33,6 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
       return `${hours}h ${minutes}m`;
     }
     return `${minutes} min`;
-  };
-
-  const handleGenreClick = () => {
-    if (playlist.genre?.id) {
-      navigate(`/manager/playlists/genre/${playlist.genre.id}`);
-    }
-  };
-
-  const handleMoodClick = () => {
-    if (playlist.mood?.id) {
-      navigate(`/manager/playlists/mood/${playlist.mood.id}`);
-    }
   };
 
   return (
@@ -78,19 +66,9 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <button
-              onClick={handleGenreClick}
-              className={`hover:text-primary transition-colors ${playlist.genre?.id ? 'cursor-pointer' : 'cursor-default'}`}
-            >
-              {playlist.genre?.name || "Various"}
-            </button>
+            <span>{playlist.genre?.name || "Various"}</span>
             <span>•</span>
-            <button
-              onClick={handleMoodClick}
-              className={`hover:text-primary transition-colors ${playlist.mood?.id ? 'cursor-pointer' : 'cursor-default'}`}
-            >
-              {playlist.mood?.name || "Various"}
-            </button>
+            <span>{playlist.mood?.name || "Various"}</span>
             <span>•</span>
             <span>{playlist.songs?.length || 0} songs</span>
             <span>•</span>
