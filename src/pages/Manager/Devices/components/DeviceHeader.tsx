@@ -26,7 +26,7 @@ export function DeviceHeader() {
       
       <Button 
         onClick={() => setShowNewDeviceDialog(true)}
-        className="bg-[#6E59A5] hover:bg-[#5B4A8A]"
+        className="bg-[#6E59A5] hover:bg-[#5B4A8A] text-white"
       >
         <Plus className="w-4 h-4 mr-2" />
         {t('devices.addDevice')}
