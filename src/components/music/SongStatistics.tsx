@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface SongStatistic {
   song_id: string;
@@ -17,7 +19,7 @@ interface SongStatistic {
 }
 
 export function SongStatistics() {
-  const { data: statistics = [], isLoading } = useQuery({
+  const { data: statistics = [], isLoading, refetch } = useQuery({
     queryKey: ['song-statistics'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,6 +31,25 @@ export function SongStatistics() {
       return data as SongStatistic[];
     }
   });
+
+  useEffect(() => {
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('song-stats-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'song_play_history',
+      }, () => {
+        refetch();
+        toast.info("Müzik istatistikleri güncellendi");
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   if (isLoading) {
     return (
