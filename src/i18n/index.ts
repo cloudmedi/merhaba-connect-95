@@ -15,7 +15,7 @@ i18n
         translation: translationTR
       }
     },
-    lng: localStorage.getItem('language') || 'tr',
+    lng: localStorage.getItem('language') || 'tr', // Default to Turkish
     fallbackLng: 'tr',
     interpolation: {
       escapeValue: false

@@ -10,6 +10,14 @@
     "filter": "Filter",
     "loading": "Loading..."
   },
+  "navigation": {
+    "managerPanel": "Manager Panel",
+    "dashboard": "Dashboard",
+    "devices": "Devices",
+    "schedule": "Schedule",
+    "announcements": "Announcements",
+    "settings": "Settings"
+  },
   "settings": {
     "title": "Settings",
     "language": {

@@ -10,6 +10,14 @@
     "filter": "Filtrele",
     "loading": "Yükleniyor..."
   },
+  "navigation": {
+    "managerPanel": "Yönetici Paneli",
+    "dashboard": "Panel",
+    "devices": "Cihazlar",
+    "schedule": "Program",
+    "announcements": "Duyurular",
+    "settings": "Ayarlar"
+  },
   "settings": {
     "title": "Ayarlar",
     "language": {
