@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlaylistRow } from "./PlaylistRow";
 import { useQueryClient } from "@tanstack/react-query";
