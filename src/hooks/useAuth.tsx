@@ -59,11 +59,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authService.logout();
       setUser(null);
-      window.location.href = '/';
-      toast.success('Logged out successfully');
+      
+      // Redirect based on current path
+      const isManagerPath = window.location.pathname.startsWith('/manager');
+      if (isManagerPath) {
+        window.location.href = '/manager/login';
+      } else {
+        window.location.href = '/super-admin/login';
+      }
+      
+      toast.success('Çıkış yapıldı');
     } catch (error) {
       console.error('Logout failed:', error);
-      toast.error('Logout failed');
+      toast.error('Çıkış yapılırken bir hata oluştu');
     }
   };
 
