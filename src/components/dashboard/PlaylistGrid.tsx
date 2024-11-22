@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GridPlaylist } from "./types";
-import { Play } from "lucide-react";
+import { Play, Music2 } from "lucide-react";
 
 interface PlaylistGridProps {
   title: string;
@@ -17,12 +17,10 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
   const getArtworkUrl = (url: string | null | undefined) => {
     if (!url) return "/placeholder.svg";
     
-    // If it's already a full URL (including Bunny CDN URLs), return it as is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // If it's a Bunny CDN path without the full URL, construct the full URL
     if (!url.includes('://')) {
       return `https://cloud-media.b-cdn.net/${url}`;
     }
@@ -34,11 +32,11 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-          {description && <p className="text-sm text-gray-500">{description}</p>}
+          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="animate-pulse">
               <div className="aspect-square bg-gray-200 rounded-lg" />
               <div className="mt-2 h-4 bg-gray-200 rounded w-3/4" />
@@ -52,28 +50,43 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && <p className="text-sm text-gray-500">{description}</p>}
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+        </div>
+        <Button 
+          variant="ghost" 
+          className="text-sm text-gray-500 hover:text-gray-900"
+          onClick={() => navigate('/playlists')}
+        >
+          View All
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {playlists.map((playlist) => (
           <Card
             key={playlist.id}
-            className="group cursor-pointer overflow-hidden"
+            className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
             onClick={() => navigate(`/super-admin/playlists/${playlist.id}`)}
           >
-            <div className="aspect-square relative overflow-hidden rounded-t-lg">
-              <img
-                src={getArtworkUrl(playlist.artwork_url)}
-                alt={playlist.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                onError={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  img.src = "/placeholder.svg";
-                }}
-              />
+            <div className="aspect-square relative overflow-hidden">
+              {playlist.artwork_url ? (
+                <img
+                  src={getArtworkUrl(playlist.artwork_url)}
+                  alt={playlist.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    img.src = "/placeholder.svg";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <Music2 className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200" />
               <Button
                 size="icon"
@@ -84,11 +97,11 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
               </Button>
             </div>
             <div className="p-3">
-              <h3 className="font-medium text-gray-900 truncate">{playlist.title}</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{playlist.genre}</span>
+              <h3 className="font-medium text-sm text-gray-900 truncate">{playlist.title}</h3>
+              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                <span className="truncate">{playlist.genre}</span>
                 <span>•</span>
-                <span>{playlist.mood}</span>
+                <span className="truncate">{playlist.mood}</span>
               </div>
             </div>
           </Card>
