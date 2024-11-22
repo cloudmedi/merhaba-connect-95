@@ -7,6 +7,7 @@ import { CreateGroupDialog } from "./branch-groups/CreateGroupDialog";
 import { GroupList } from "./branch-groups/GroupList";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import DataTableLoader from "@/components/loaders/DataTableLoader";
 import type { Branch } from "@/pages/Manager/Announcements/types";
 
 export function BranchGroupsTab() {
