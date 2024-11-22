@@ -34,7 +34,7 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
         // First get the current user's profile to check role
         const { data: currentProfile } = await supabase
           .from('profiles')
-          .select('role, company_id')
+          .select('role')
           .eq('id', user.id)
           .single();
 
@@ -49,9 +49,17 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
           query = query.ilike('email', `%${searchQuery}%`);
         }
 
-        // If not super_admin and has company_id, filter by company_id
-        if (currentProfile.role !== 'super_admin' && currentProfile.company_id) {
-          query = query.eq('company_id', currentProfile.company_id);
+        // Only filter by company_id if not super_admin
+        if (currentProfile.role !== 'super_admin') {
+          const { data: userCompany } = await supabase
+            .from('profiles')
+            .select('company_id')
+            .eq('id', user.id)
+            .single();
+
+          if (userCompany?.company_id) {
+            query = query.eq('company_id', userCompany.company_id);
+          }
         }
 
         const { data, error } = await query;
