@@ -3,6 +3,7 @@ import { User } from '@/types/auth';
 import { authService } from '@/services/auth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -20,29 +21,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = authService.getToken();
-      if (token) {
-        try {
-          // TODO: Implement token verification and user data fetch
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-          authService.logout();
-          setIsLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*, companies (*)')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              firstName: profile.first_name || '',
+              lastName: profile.last_name || '',
+              role: profile.role as "super_admin" | "manager" | "admin",
+              companyId: profile.company_id,
+              isActive: profile.is_active,
+              createdAt: session.user.created_at,
+              updatedAt: profile.updated_at || session.user.created_at,
+              company: profile.companies ? {
+                id: profile.companies.id,
+                name: profile.companies.name,
+                subscriptionStatus: profile.companies.subscription_status,
+                subscriptionEndsAt: profile.companies.subscription_ends_at
+              } : undefined
+            });
+          }
         }
-      } else {
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     try {
       const response = await authService.login({ email, password });
-      authService.setToken(response.token);
       setUser(response.user);
+      authService.setToken(response.token);
       
       toast.success('Login successful');
       
@@ -54,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate('/manager'); // Default to manager for other roles
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Login failed. Please check your credentials.');
       throw error;
     }
@@ -66,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       navigate('/');
       toast.success('Logged out successfully');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout error:', error);
       toast.error('Logout failed');
     }
   };

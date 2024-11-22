@@ -4,28 +4,37 @@ import { supabase } from '@/integrations/supabase/client';
 export const authService = {
   async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
     try {
-      const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+      // First attempt to sign in with Supabase
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
-
-      if (!user || !session) {
-        throw new Error('Login failed');
+      if (signInError) {
+        console.error('Supabase signin error:', signInError);
+        throw signInError;
       }
 
-      // Check if the user profile exists and is active
+      if (!authData.user || !authData.session) {
+        throw new Error('Login failed - no user data returned');
+      }
+
+      // Fetch the user's profile data
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*, companies (*)')
-        .eq('id', user.id)
+        .eq('id', authData.user.id)
         .single();
 
-      if (profileError || !profile) {
-        // If profile doesn't exist, sign out the user and throw error
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
         await supabase.auth.signOut();
-        throw new Error('User account has been deleted or deactivated');
+        throw new Error('Failed to fetch user profile');
+      }
+
+      if (!profile) {
+        await supabase.auth.signOut();
+        throw new Error('User profile not found');
       }
 
       if (!profile.is_active) {
@@ -42,15 +51,15 @@ export const authService = {
 
       return {
         user: {
-          id: user.id,
-          email: user.email!,
+          id: authData.user.id,
+          email: authData.user.email!,
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
           role: profile.role as "super_admin" | "manager" | "admin",
           companyId: profile.company_id,
           isActive: profile.is_active,
-          createdAt: user.created_at,
-          updatedAt: profile.updated_at || user.created_at,
+          createdAt: authData.user.created_at,
+          updatedAt: profile.updated_at || authData.user.created_at,
           company: profile.companies ? {
             id: profile.companies.id,
             name: profile.companies.name,
@@ -58,18 +67,24 @@ export const authService = {
             subscriptionEndsAt: profile.companies.subscription_ends_at
           } : undefined
         },
-        token: session.access_token
+        token: authData.session.access_token
       };
     } catch (error: any) {
       console.error('Login error:', error);
-      throw error;
+      // Ensure we're throwing a user-friendly error message
+      throw new Error(error.message || 'Login failed. Please check your credentials.');
     }
   },
 
   async logout(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    localStorage.removeItem('token');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      localStorage.removeItem('token');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      throw new Error('Logout failed');
+    }
   },
 
   getToken(): string | null {
