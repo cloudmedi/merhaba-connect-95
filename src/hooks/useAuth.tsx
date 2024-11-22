@@ -13,6 +13,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isValidRole = (role: string): role is User['role'] => {
+  return ['super_admin', 'manager', 'admin'].includes(role);
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,12 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .single();
 
           if (profile) {
+            const role = isValidRole(profile.role) ? profile.role : 'manager';
             setUser({
               id: session.user.id,
               email: session.user.email!,
               firstName: profile.first_name,
               lastName: profile.last_name,
-              role: profile.role,
+              role: role,
               isActive: profile.is_active,
               avatar_url: profile.avatar_url,
               createdAt: session.user.created_at,
@@ -60,12 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (profile) {
+          const role = isValidRole(profile.role) ? profile.role : 'manager';
           setUser({
             id: session.user.id,
             email: session.user.email!,
             firstName: profile.first_name,
             lastName: profile.last_name,
-            role: profile.role,
+            role: role,
             isActive: profile.is_active,
             avatar_url: profile.avatar_url,
             createdAt: session.user.created_at,
