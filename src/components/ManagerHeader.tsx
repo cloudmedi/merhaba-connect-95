@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Settings, User } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, User, Search, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +26,12 @@ export function ManagerHeader() {
   };
 
   return (
-    <header className="bg-white border-b">
+    <header className="bg-white border-b sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-6">
-        <div className="flex items-center justify-end h-14">
-          <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Left Section */}
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-semibold text-gray-900">Manager Panel</h1>
             {managerView && (
               <Button 
                 variant="outline" 
@@ -39,7 +42,27 @@ export function ManagerHeader() {
                 Super Admin'e Geri Dön
               </Button>
             )}
+          </div>
 
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+            {/* Search Bar */}
+            <div className="hidden md:flex relative w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input 
+                type="search" 
+                placeholder="Ara..." 
+                className="pl-10 bg-gray-50 border-gray-200"
+              />
+            </div>
+
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="w-5 h-5 text-gray-600" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            </Button>
+
+            {/* Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-9 w-9 p-0 rounded-full">
@@ -57,7 +80,9 @@ export function ManagerHeader() {
                       ? `${user.firstName} ${user.lastName}`
                       : user?.email}
                   </span>
-                  <span className="text-xs text-gray-500 font-normal mt-0.5">{user?.role}</span>
+                  <span className="text-xs text-gray-500 font-normal mt-0.5">
+                    {user?.role}
+                  </span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/manager/settings/profile')} className="cursor-pointer">
