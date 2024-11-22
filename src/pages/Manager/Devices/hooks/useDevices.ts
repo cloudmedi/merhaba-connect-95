@@ -53,6 +53,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device added successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to add device: ' + error.message);
     },
   });
 
@@ -73,6 +77,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to update device: ' + error.message);
     },
   });
 
@@ -87,6 +95,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to delete device: ' + error.message);
     },
   });
 
