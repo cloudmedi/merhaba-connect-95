@@ -13,6 +13,7 @@ import Settings from "./pages/Manager/Settings";
 import { AuthProvider } from "@/hooks/useAuth";
 import ManagerLogin from "./pages/Manager/Auth/Login";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import SuperAdmin from "./pages/SuperAdmin";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
         element: <Settings />,
       },
     ],
+  },
+  {
+    path: "/super-admin/*",
+    element: (
+      <AuthProvider>
+        <SuperAdmin />
+      </AuthProvider>
+    ),
   },
 ]);
 
