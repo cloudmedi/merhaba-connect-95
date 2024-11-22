@@ -16,31 +16,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Function to fetch and set user profile
+  const fetchAndSetUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (profile) {
+        setUser({
+          id: userId,
+          email: profile.email,
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          role: profile.role as 'super_admin' | 'manager' | 'admin',
+          isActive: profile.is_active,
+          companyId: profile.company_id,
+          createdAt: profile.created_at,
+          updatedAt: profile.updated_at
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
-    // Check active session
-    const checkSession = async () => {
+    // Initial session check
+    const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name,
-              lastName: profile.last_name,
-              role: profile.role,
-              isActive: profile.is_active,
-              companyId: profile.company_id,
-              createdAt: profile.created_at,
-              updatedAt: profile.updated_at
-            });
-          }
+        if (session?.user?.id) {
+          await fetchAndSetUserProfile(session.user.id);
         }
       } catch (error) {
         console.error('Session check failed:', error);
@@ -49,30 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    checkSession();
+    initializeAuth();
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: profile.role,
-            isActive: profile.is_active,
-            companyId: profile.company_id,
-            createdAt: profile.created_at,
-            updatedAt: profile.updated_at
-          });
-        }
+      if (event === 'SIGNED_IN' && session?.user?.id) {
+        await fetchAndSetUserProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
@@ -92,10 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (signInError) throw signInError;
-
-      if (!authUser) {
-        throw new Error('No user returned after login');
-      }
+      if (!authUser?.id) throw new Error('No user returned after login');
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -104,17 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (profileError) throw profileError;
-
-      if (!profile.is_active) {
-        throw new Error('Account is inactive');
-      }
+      if (!profile.is_active) throw new Error('Account is inactive');
 
       setUser({
         id: authUser.id,
         email: authUser.email!,
         firstName: profile.first_name,
         lastName: profile.last_name,
-        role: profile.role,
+        role: profile.role as 'super_admin' | 'manager' | 'admin',
         isActive: profile.is_active,
         companyId: profile.company_id,
         createdAt: profile.created_at,
