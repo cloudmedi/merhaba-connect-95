@@ -81,25 +81,7 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
-
-    return pageNumbers;
-  };
+  const endIndex = Math.min(startIndex + songs.length, totalCount);
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
@@ -109,7 +91,7 @@ export function MusicTable({
             <TableRow className="hover:bg-transparent border-b">
               <TableHead className="w-[30px]">
                 <Checkbox
-                  checked={selectedSongs.length === songs.length}
+                  checked={selectedSongs.length === songs.length && songs.length > 0}
                   onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
               </TableHead>
@@ -152,17 +134,42 @@ export function MusicTable({
               />
             </PaginationItem>
 
-            {getPageNumbers().map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  onClick={() => onPageChange(page)}
-                  isActive={currentPage === page}
-                  className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => {
+                const distance = Math.abs(page - currentPage);
+                return distance === 0 || distance === 1 || page === 1 || page === totalPages;
+              })
+              .map((page, index, array) => {
+                if (index > 0 && array[index - 1] !== page - 1) {
+                  return (
+                    <React.Fragment key={`ellipsis-${page}`}>
+                      <PaginationItem>
+                        <PaginationLink className="cursor-default">...</PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => onPageChange(page)}
+                          isActive={currentPage === page}
+                          className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </React.Fragment>
+                  );
+                }
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => onPageChange(page)}
+                      isActive={currentPage === page}
+                      className={`cursor-pointer ${currentPage === page ? "bg-primary text-white hover:bg-primary/90" : "hover:bg-gray-100"}`}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
 
             <PaginationItem>
               <PaginationNext 

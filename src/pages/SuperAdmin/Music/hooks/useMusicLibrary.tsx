@@ -11,9 +11,9 @@ export interface Song {
   duration?: number | null;
   file_url: string;
   artwork_url?: string | null;
-  created_at: string;
   bunny_id?: string | null;
   created_by?: string | null;
+  created_at: string;
   updated_at?: string | null;
 }
 
@@ -48,7 +48,7 @@ export const useMusicLibrary = () => {
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
-      const to = from + (itemsPerPage - 1);
+      const to = from + itemsPerPage - 1;
 
       let query = supabase
         .from('songs')
@@ -68,6 +68,7 @@ export const useMusicLibrary = () => {
       const { data, error } = await query;
 
       if (error) throw error;
+      console.log('Fetched songs:', data?.length); // Debug log
       return data as Song[];
     }
   });
