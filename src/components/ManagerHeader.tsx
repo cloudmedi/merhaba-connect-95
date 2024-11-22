@@ -26,8 +26,8 @@ export function ManagerHeader() {
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-[1400px] mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="flex items-center justify-between h-16 px-4 md:px-6">
           {/* Left Section */}
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-semibold text-gray-900">Manager Panel</h1>
