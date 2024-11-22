@@ -12,8 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "@/hooks/useAuth";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -21,8 +19,6 @@ interface NewDeviceDialogProps {
 }
 
 export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
-  const { t } = useTranslation();
-  const { user } = useAuth();
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
@@ -31,11 +27,6 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast.error(t('common.error.unauthorized'));
-      return;
-    }
     
     try {
       await createDevice.mutateAsync({
@@ -49,11 +40,11 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         branches: null
       });
 
-      toast.success(t('notifications.deviceAdded'));
+      toast.success('Device added successfully');
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      toast.error(t('notifications.deviceAddError'));
+      toast.error('Failed to add device');
     }
   };
 
@@ -68,24 +59,24 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('devices.addDevice')}</DialogTitle>
+          <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">{t('devices.form.name')}</Label>
+            <Label htmlFor="name">Device Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t('devices.form.namePlaceholder')}
+              placeholder="Enter device name"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">{t('devices.form.type')}</Label>
+            <Label htmlFor="category">Device Type</Label>
             <Select value={category} onValueChange={(value: "player" | "display" | "controller") => setCategory(value)}>
               <SelectTrigger>
-                <SelectValue placeholder={t('devices.form.type')} />
+                <SelectValue placeholder="Select device type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="player">Player</SelectItem>
@@ -95,26 +86,26 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="location">{t('devices.form.location')}</Label>
+            <Label htmlFor="location">Location</Label>
             <Input
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder={t('devices.form.locationPlaceholder')}
+              placeholder="Enter device location"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="token">{t('devices.form.token')}</Label>
+            <Label htmlFor="token">Device Token</Label>
             <Input
               id="token"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder={t('devices.form.tokenPlaceholder')}
+              placeholder="Enter device token"
             />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
-              {createDevice.isPending ? t('common.loading') : t('common.add')}
+              {createDevice.isPending ? "Adding..." : "Add Device"}
             </Button>
           </DialogFooter>
         </form>

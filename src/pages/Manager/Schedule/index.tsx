@@ -11,12 +11,8 @@ import { Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useScheduleEvents } from "./hooks/useScheduleEvents";
 import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
-import trLocale from '@fullcalendar/core/locales/tr';
-import enLocale from '@fullcalendar/core/locales/en-gb';
 
 export default function Schedule() {
-  const { t, i18n } = useTranslation();
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<{
     start: string;
@@ -42,6 +38,13 @@ export default function Schedule() {
   };
 
   const handleSelect = (selectInfo: any) => {
+    console.log("Selected Range:", {
+      start: selectInfo.start,
+      end: selectInfo.end,
+      startStr: selectInfo.startStr,
+      endStr: selectInfo.endStr
+    });
+    
     setSelectedTimeRange({
       start: selectInfo.start.toISOString(),
       end: selectInfo.end.toISOString()
@@ -50,7 +53,7 @@ export default function Schedule() {
   };
 
   if (isLoading) {
-    return <div>{t('common.loading')}</div>;
+    return <div>Loading...</div>;
   }
 
   const formattedEvents = events.map(event => ({
@@ -58,9 +61,9 @@ export default function Schedule() {
     title: event.title,
     start: new Date(event.start_time),
     end: new Date(event.end_time),
-    backgroundColor: event.color?.primary,
-    borderColor: event.color?.primary,
-    textColor: event.color?.text,
+    backgroundColor: event.color.primary,
+    borderColor: event.color.primary,
+    textColor: event.color.text,
     extendedProps: event
   }));
 
@@ -68,15 +71,15 @@ export default function Schedule() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{t('schedule.title')}</h1>
-          <p className="text-sm text-gray-500">{t('schedule.subtitle')}</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Schedule</h1>
+          <p className="text-sm text-gray-500">Manage your playlists and announcements schedule</p>
         </div>
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />
-                {t('schedule.export')}
+                Export
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -93,7 +96,7 @@ export default function Schedule() {
             onClick={() => setIsCreateEventOpen(true)}
             className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
           >
-            {t('schedule.createEvent')}
+            + Create Event
           </Button>
         </div>
       </div>
@@ -106,12 +109,6 @@ export default function Schedule() {
             left: 'prev,next today',
             center: 'title',
             right: 'timeGridWeek,timeGridDay'
-          }}
-          locale={i18n.language === 'tr' ? trLocale : enLocale}
-          buttonText={{
-            today: t('schedule.today'),
-            week: t('schedule.week'),
-            day: t('schedule.day')
           }}
           slotMinTime="00:00:00"
           slotMaxTime="24:00:00"

@@ -1,18 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Activity, Signal, AlertTriangle, HardDrive } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
-import { useTranslation } from "react-i18next";
-import type { DeviceSystemInfo } from "../hooks/types";
 
 export function DeviceStats() {
   const { devices } = useDevices();
-  const { t } = useTranslation();
   
   const stats = {
     total: devices.length,
     online: devices.filter(d => d.status === 'online').length,
     offline: devices.filter(d => d.status === 'offline').length,
-    warning: devices.filter(d => (d.system_info as DeviceSystemInfo).health === 'warning').length
+    warning: devices.filter(d => d.system_info.health === 'warning').length
   };
 
   const healthPercentage = ((stats.online / stats.total) * 100) || 0;
@@ -22,7 +19,7 @@ export function DeviceStats() {
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{t('devices.totalDevices')}</p>
+            <p className="text-sm font-medium text-gray-500">Total Devices</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</h3>
           </div>
           <div className="p-3 bg-blue-100 rounded-full">
@@ -34,10 +31,10 @@ export function DeviceStats() {
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{t('devices.onlineDevices')}</p>
+            <p className="text-sm font-medium text-gray-500">Online Devices</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.online}</h3>
             <p className="text-xs text-emerald-600 mt-1">
-              {Math.round(healthPercentage)}% {t('devices.operational')}
+              {Math.round(healthPercentage)}% operational
             </p>
           </div>
           <div className="p-3 bg-emerald-100 rounded-full">
@@ -49,7 +46,7 @@ export function DeviceStats() {
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{t('devices.offlineDevices')}</p>
+            <p className="text-sm font-medium text-gray-500">Offline Devices</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.offline}</h3>
           </div>
           <div className="p-3 bg-gray-100 rounded-full">
@@ -61,7 +58,7 @@ export function DeviceStats() {
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">{t('devices.warnings')}</p>
+            <p className="text-sm font-medium text-gray-500">Warnings</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.warning}</h3>
           </div>
           <div className="p-3 bg-yellow-100 rounded-full">
