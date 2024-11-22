@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
 
 export default function ProfileSettings() {
   const { user } = useAuth();
@@ -13,6 +14,12 @@ export default function ProfileSettings() {
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     email: user?.email || "",
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,6 +39,37 @@ export default function ProfileSettings() {
       toast.success("Profil başarıyla güncellendi");
     } catch (error) {
       toast.error("Profil güncellenirken bir hata oluştu");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("Yeni şifreler eşleşmiyor");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success("Şifre başarıyla güncellendi");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      toast.error("Şifre güncellenirken bir hata oluştu");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -96,6 +134,59 @@ export default function ProfileSettings() {
             </Button>
           </div>
         </form>
+
+        <Separator className="my-8" />
+
+        <div>
+          <h2 className="text-lg font-medium mb-4">Şifre Değiştir</h2>
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="currentPassword" className="text-sm font-medium">
+                Mevcut Şifre
+              </label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="text-sm font-medium">
+                Yeni Şifre
+              </label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium">
+                Yeni Şifre (Tekrar)
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="bg-[#9b87f5] hover:bg-[#7E69AB]"
+              >
+                {isLoading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+              </Button>
+            </div>
+          </form>
+        </div>
       </Card>
     </div>
   );
