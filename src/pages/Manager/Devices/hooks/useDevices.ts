@@ -8,7 +8,6 @@ import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
-  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('devices_changes')
@@ -79,7 +78,17 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match the Device type
+      const transformedData = (data || []).map(device => ({
+        ...device,
+        category: device.category as Device['category'], // Ensure category is of correct type
+        status: (device.status || 'offline') as Device['status'],
+        system_info: device.system_info || {},
+        schedule: device.schedule || {}
+      }));
+
+      return transformedData as Device[];
     },
   });
 
