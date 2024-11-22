@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { OnlineUsers } from "./header/OnlineUsers";
@@ -24,17 +23,14 @@ const getGreeting = () => {
 
 export function ManagerHeader() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const managerView = localStorage.getItem('managerView');
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-
     const channel = supabase.channel('online-users', {
       config: {
         presence: {
-          key: user.id,
+          key: 'online',
         },
       },
     });
@@ -51,22 +47,12 @@ export function ManagerHeader() {
         }));
         setOnlineUsers(users);
       })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({
-            user_id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            online_at: new Date().toISOString(),
-          });
-        }
-      });
+      .subscribe();
 
     return () => {
       channel.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   const handleReturnToSuperAdmin = () => {
     localStorage.removeItem('managerView');
