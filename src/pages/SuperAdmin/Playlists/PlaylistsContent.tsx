@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Playlist } from "@/types/api";
 import type { GridPlaylist } from "@/components/dashboard/types";
@@ -14,7 +14,6 @@ export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['playlists'],
@@ -31,8 +30,8 @@ export function PlaylistsContent() {
       if (error) throw error;
       return data as unknown as Playlist[];
     },
-    staleTime: 5000, // Verinin 5 saniye boyunca "taze" kabul edilmesi
-    cacheTime: 300000, // Cache'in 5 dakika tutulması
+    staleTime: 5000,
+    gcTime: 300000, // Replaced cacheTime with gcTime
   });
 
   const { data: playlistSongs } = useQuery({
@@ -60,6 +59,7 @@ export function PlaylistsContent() {
     },
     enabled: !!currentPlaylist?.id,
     staleTime: 5000,
+    gcTime: 300000, // Replaced cacheTime with gcTime
   });
 
   const filteredPlaylists = playlists?.filter(playlist =>

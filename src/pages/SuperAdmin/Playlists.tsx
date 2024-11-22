@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { PlaylistsContent } from "./PlaylistsContent";
+import { PlaylistsContent } from "./Playlists/PlaylistsContent";
 
 export default function Playlists() {
   return (
