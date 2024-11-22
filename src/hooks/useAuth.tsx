@@ -17,15 +17,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Function to fetch and set user profile
-  const fetchAndSetUserProfile = async (userId: string) => {
+  const fetchAndSetUserProfile = async (userId: string | undefined) => {
     try {
+      if (!userId) {
+        console.error('No user ID provided to fetchAndSetUserProfile');
+        setUser(null);
+        return;
+      }
+
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setUser(null);
+        return;
+      }
 
       if (profile) {
         setUser({
@@ -41,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error in fetchAndSetUserProfile:', error);
       setUser(null);
     }
   };
@@ -50,12 +60,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Initial session check
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+
         if (session?.user?.id) {
           await fetchAndSetUserProfile(session.user.id);
+        } else {
+          setUser(null);
         }
       } catch (error) {
         console.error('Session check failed:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
