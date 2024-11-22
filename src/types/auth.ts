@@ -8,6 +8,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  avatar_url?: string | null;
   company?: {
     id: string;
     name: string;
