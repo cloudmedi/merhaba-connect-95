@@ -42,11 +42,15 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
 
         let query = supabase
           .from('profiles')
-          .select('id, email, first_name, last_name')
-          .ilike('email', `%${searchQuery}%`);
+          .select('id, email, first_name, last_name');
 
-        // If not super_admin, filter by company_id
-        if (currentProfile.role !== 'super_admin') {
+        // Add search filter if query exists
+        if (searchQuery) {
+          query = query.ilike('email', `%${searchQuery}%`);
+        }
+
+        // If not super_admin and has company_id, filter by company_id
+        if (currentProfile.role !== 'super_admin' && currentProfile.company_id) {
           query = query.eq('company_id', currentProfile.company_id);
         }
 
