@@ -27,44 +27,8 @@ export function ManagerHeader() {
   return (
     <header className="bg-white border-b">
       <div className="max-w-[1400px] mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <h1 className="text-xl font-semibold text-gray-900">Manager Panel</h1>
-            <div className="h-6 w-[1px] bg-gray-200" />
-            <span className="text-gray-600">
-              Merhaba, <span className="font-medium">{user?.firstName || user?.email?.split('@')[0]}</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-3 h-auto py-2 px-3 hover:bg-gray-50 border rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <div className="bg-[#9b87f5] text-white h-full w-full flex items-center justify-center">
-                      <UserRound className="h-5 w-5" />
-                    </div>
-                  </Avatar>
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium text-gray-700">
-                      {user?.firstName && user?.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : user?.email}
-                    </span>
-                    <span className="text-xs text-gray-500 capitalize">{user?.role}</span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Çıkış Yap
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
+        <div className="flex items-center justify-end h-14">
+          <div className="flex items-center gap-6">
             {managerView && (
               <Button 
                 variant="outline" 
@@ -75,6 +39,33 @@ export function ManagerHeader() {
                 Super Admin'e Geri Dön
               </Button>
             )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 p-0 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <div className="bg-[#9b87f5] text-white h-full w-full flex items-center justify-center">
+                      <UserRound className="h-5 w-5" />
+                    </div>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex flex-col">
+                  <span className="font-medium">
+                    {user?.firstName && user?.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : user?.email}
+                  </span>
+                  <span className="text-xs text-gray-500 font-normal mt-0.5">{user?.role}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
