@@ -181,6 +181,84 @@ export type Database = {
         }
         Relationships: []
       }
+      branch_group_assignments: {
+        Row: {
+          branch_id: string
+          created_at: string | null
+          group_id: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string | null
+          group_id: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string | null
+          group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_group_assignments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_group_assignments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "branch_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_groups: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_groups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           company_id: string | null
