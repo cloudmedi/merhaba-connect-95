@@ -16,6 +16,7 @@ export default function Manager() {
       <ManagerNav />
       <div className="flex-1">
         <ManagerHeader />
+        <ProfileFooter />
         <main className="p-8">
           <Routes>
             <Route path="/" element={<ManagerDashboard />} />
@@ -27,7 +28,6 @@ export default function Manager() {
             <Route path="/announcements" element={<Announcements />} />
           </Routes>
         </main>
-        <ProfileFooter />
       </div>
     </div>
   );

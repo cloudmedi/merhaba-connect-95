@@ -17,10 +17,10 @@ export function ProfileFooter() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-0 right-0 p-4 bg-white border-t border-l shadow-lg rounded-tl-xl">
+    <div className="fixed top-4 right-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-2 h-auto p-2">
+          <Button variant="ghost" className="flex items-center gap-2 h-auto p-2 bg-white hover:bg-gray-50 shadow-sm border rounded-lg">
             <Avatar className="h-8 w-8">
               <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center font-medium">
                 {user.firstName?.[0] || user.email[0].toUpperCase()}
