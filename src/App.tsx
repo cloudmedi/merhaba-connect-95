@@ -10,7 +10,6 @@ import Devices from "./pages/Manager/Devices";
 import Schedule from "./pages/Manager/Schedule";
 import Announcements from "./pages/Manager/Announcements";
 import Settings from "./pages/Manager/Settings";
-import Notifications from "./pages/Manager/Notifications";
 import { AuthProvider } from "@/hooks/useAuth";
 import ManagerLogin from "./pages/Manager/Auth/Login";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
@@ -61,10 +60,6 @@ const router = createBrowserRouter([
       {
         path: "announcements",
         element: <Announcements />,
-      },
-      {
-        path: "notifications",
-        element: <Notifications />,
       },
       {
         path: "settings/*",

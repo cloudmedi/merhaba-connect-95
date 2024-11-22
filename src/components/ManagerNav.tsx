@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Monitor,
   Calendar,
-  Bell,
   Settings,
   Volume2
 } from "lucide-react";
@@ -23,11 +22,6 @@ const navItems = [
     title: "Schedule",
     icon: Calendar,
     href: "/manager/schedule",
-  },
-  {
-    title: "Notifications",
-    icon: Bell,
-    href: "/manager/notifications",
   },
   {
     title: "Announcements",
