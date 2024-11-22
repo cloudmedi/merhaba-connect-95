@@ -13,6 +13,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Günaydın";
+  if (hour >= 12 && hour < 17) return "İyi Günler";
+  return "İyi Akşamlar";
+};
+
+const getUserDisplayName = (user: any) => {
+  if (user?.firstName) return user.firstName;
+  if (user?.email) return user.email.split('@')[0];
+  return '';
+};
+
 export function ManagerHeader() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -24,12 +37,16 @@ export function ManagerHeader() {
     toast.success("Super Admin paneline geri dönüldü");
   };
 
+  const greeting = `${getGreeting()}, ${getUserDisplayName(user)}`;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-6">
         {/* Left Section */}
         <div className="flex flex-1 items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">Manager Panel</h1>
+          <h1 className="text-lg font-semibold text-gray-900 animate-fade-in">
+            {greeting}
+          </h1>
           {managerView && (
             <Button 
               variant="outline" 
