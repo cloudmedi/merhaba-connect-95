@@ -19,7 +19,6 @@ export const useDeviceQueries = () => {
       }
 
       if (!userProfile?.company_id) {
-        // Return empty array if no company_id (prevents null equality check)
         return [];
       }
 
@@ -31,8 +30,7 @@ export const useDeviceQueries = () => {
           branches (
             id,
             name,
-            company_id,
-            location
+            company_id
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
