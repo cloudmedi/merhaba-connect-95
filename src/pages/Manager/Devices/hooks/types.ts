@@ -25,9 +25,10 @@ export interface Device {
   updated_at?: string;
   location?: string | null;
   branch_id?: string | null;
-  branches?: {
+  location_id?: string | null;
+  branches: {
     id: string;
     name: string;
     company_id: string | null;
-  } | null;
+  };
 }
