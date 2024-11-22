@@ -1,5 +1,15 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { BranchGroup } from "@/pages/Manager/Devices/hooks/types";
+
+interface BranchGroup {
+  id: string;
+  name: string;
+  description?: string;
+  branches?: {
+    id: string;
+    name: string;
+    location?: string;
+  }[];
+}
 
 interface GroupListProps {
   groups: BranchGroup[];

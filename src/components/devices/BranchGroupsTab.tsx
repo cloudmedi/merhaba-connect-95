@@ -5,6 +5,7 @@ import { Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateGroupDialog } from "./branch-groups/CreateGroupDialog";
 import { GroupList } from "./branch-groups/GroupList";
+import { toast } from "sonner";
 import type { Branch } from "@/pages/Manager/Announcements/types";
 
 export function BranchGroupsTab() {
