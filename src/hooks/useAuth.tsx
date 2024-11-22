@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed. Please check your credentials.');
+      toast.error('Invalid login credentials. Please check your email and password.');
       throw error;
     }
   };
