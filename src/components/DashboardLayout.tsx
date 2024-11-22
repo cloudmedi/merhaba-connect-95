@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { AdminNav } from "./AdminNav";
+import { ProfileFooter } from "./ProfileFooter";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,7 +12,10 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
   return (
     <div className="flex min-h-screen bg-[#F8F9FC]">
       <AdminNav />
-      <main className="flex-1 overflow-auto w-full md:w-[calc(100%-16rem)] ml-0 md:ml-64 pt-16 md:pt-0">
+      <div className="flex-1 overflow-auto w-full md:w-[calc(100%-16rem)] ml-0 md:ml-64">
+        <div className="relative">
+          <ProfileFooter />
+        </div>
         <div className="p-4 md:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             {title && (
@@ -25,7 +29,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
             {children}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

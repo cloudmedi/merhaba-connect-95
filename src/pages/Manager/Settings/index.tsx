@@ -1,33 +1,34 @@
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileSettings } from "./ProfileSettings";
 
 export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Ayarlar</h1>
-        <p className="text-sm text-gray-500">Hesap ve uygulama ayarlarınızı yönetin</p>
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="text-sm text-gray-500">Manage your account and application settings</p>
       </div>
 
       <Card className="p-6">
-        <Tabs defaultValue="profile">
+        <Tabs defaultValue="account">
           <TabsList>
-            <TabsTrigger value="profile">Profil</TabsTrigger>
-            <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
-            <TabsTrigger value="appearance">Görünüm</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
           </TabsList>
-          <TabsContent value="profile" className="p-4">
-            <ProfileSettings />
+          <TabsContent value="account" className="p-4">
+            <div className="text-gray-500">
+              Account settings will be implemented here
+            </div>
           </TabsContent>
           <TabsContent value="notifications" className="p-4">
             <div className="text-gray-500">
-              Bildirim tercihleri yakında eklenecek
+              Notification preferences will be implemented here
             </div>
           </TabsContent>
           <TabsContent value="appearance" className="p-4">
             <div className="text-gray-500">
-              Görünüm ayarları yakında eklenecek
+              Appearance settings will be implemented here
             </div>
           </TabsContent>
         </Tabs>
