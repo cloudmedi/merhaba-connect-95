@@ -58,7 +58,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
         <Button 
           variant="ghost" 
           className="text-sm text-gray-500 hover:text-gray-900"
-          onClick={() => navigate('/playlists')}
+          onClick={() => navigate('/manager/playlists')}
         >
           View All
         </Button>
@@ -69,7 +69,7 @@ export function PlaylistGrid({ title, description, playlists, isLoading }: Playl
           <Card
             key={playlist.id}
             className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
-            onClick={() => navigate(`/super-admin/playlists/${playlist.id}`)}
+            onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
           >
             <div className="aspect-square relative overflow-hidden">
               {playlist.artwork_url ? (
