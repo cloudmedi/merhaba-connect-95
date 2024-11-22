@@ -17,7 +17,7 @@ export function ProfileFooter() {
   if (!user) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="absolute top-4 right-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2 h-auto p-2 bg-white hover:bg-gray-50 shadow-sm border rounded-lg">
@@ -39,7 +39,7 @@ export function ProfileFooter() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout} className="text-red-600">
+          <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             Çıkış Yap
           </DropdownMenuItem>
