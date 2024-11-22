@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/auth';
 import { authService } from '@/services/auth';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -16,7 +15,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -47,9 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.success('Login successful');
       
       if (response.user.role === 'super_admin') {
-        navigate('/super-admin');
+        window.location.href = '/super-admin';
       } else {
-        navigate('/manager');
+        window.location.href = '/manager';
       }
     } catch (error) {
       toast.error('Login failed. Please check your credentials.');
@@ -61,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authService.logout();
       setUser(null);
-      navigate('/');
+      window.location.href = '/';
       toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
