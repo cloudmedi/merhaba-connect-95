@@ -31,19 +31,26 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('No authenticated user');
 
-        const { data: profile } = await supabase
+        // First get the current user's profile to check role
+        const { data: currentProfile } = await supabase
           .from('profiles')
-          .select('company_id')
+          .select('role, company_id')
           .eq('id', user.id)
           .single();
 
-        if (!profile?.company_id) throw new Error('No company found');
+        if (!currentProfile) throw new Error('No profile found');
 
-        const { data, error } = await supabase
+        let query = supabase
           .from('profiles')
           .select('id, email, first_name, last_name')
-          .eq('company_id', profile.company_id)
           .ilike('email', `%${searchQuery}%`);
+
+        // If not super_admin, filter by company_id
+        if (currentProfile.role !== 'super_admin') {
+          query = query.eq('company_id', currentProfile.company_id);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         setUsers(data || []);
