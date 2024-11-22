@@ -39,7 +39,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const createUserMutation = useMutation({
     mutationFn: async (values: CreateUserFormValues) => {
       try {
-        // 1. Create company first
+        // 1. Önce şirketi oluştur
         const { data: company, error: companyError } = await supabase
           .from('companies')
           .insert({
@@ -52,7 +52,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         if (companyError) throw companyError;
 
-        // 2. Create auth user with firstName and lastName in metadata
+        // 2. Auth kullanıcısını oluştur - admin API yerine signUp kullan
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
@@ -69,10 +69,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         if (authError) throw authError;
         if (!authData.user) throw new Error('User creation failed');
 
-        // 3. Wait for trigger to create profile
+        // 3. Trigger otomatik olarak profiles tablosuna kayıt ekleyecek
+        // Biraz bekleyelim
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // 4. Create license
+        // 4. Lisans oluştur
         const { error: licenseError } = await supabase
           .from('licenses')
           .insert({

@@ -71,7 +71,7 @@ export function UsersTable() {
         email: profile.email,
         firstName: profile.first_name,
         lastName: profile.last_name,
-        role: profile.role as 'super_admin' | 'manager',
+        role: profile.role as 'super_admin' | 'manager' | 'admin',
         companyId: profile.company_id,
         isActive: profile.is_active,
         createdAt: profile.created_at,

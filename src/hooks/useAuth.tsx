@@ -1,137 +1,103 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types/auth';
-import { authService } from '@/services/auth';
-import { toast } from 'sonner';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  isLoading: boolean;
+  updateUserProfile: (updatedUser: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to validate role
-const validateRole = (role: string | null): "super_admin" | "manager" => {
-  if (role === "super_admin") {
-    return "super_admin";
-  }
-  return "manager"; // Default fallback role
-};
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name,
-              lastName: profile.last_name,
-              role: validateRole(profile.role),
-              companyId: profile.company_id,
-              isActive: profile.is_active,
-              avatar_url: profile.avatar_url,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: validateRole(profile.role),
-            companyId: profile.company_id,
-            isActive: profile.is_active,
-            avatar_url: profile.avatar_url,
-            createdAt: session.user.created_at,
-            updatedAt: profile.updated_at
-          });
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const fetchUserProfile = async (userId: string) => {
     try {
-      const response = await authService.login({ email, password });
-      authService.setToken(response.token);
-      setUser(response.user);
-      
-      toast.success('Giriş başarılı');
-      
-      if (response.user.role === 'super_admin') {
-        window.location.href = '/super-admin';
-      } else {
-        window.location.href = '/manager';
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*, companies(*)')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      if (profile) {
+        setUser({
+          id: profile.id,
+          email: profile.email,
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          role: profile.role as 'super_admin' | 'manager' | 'admin',
+          companyId: profile.company_id,
+          isActive: profile.is_active,
+          avatar_url: profile.avatar_url,
+          createdAt: profile.created_at,
+          updatedAt: profile.updated_at,
+          company: profile.companies ? {
+            id: profile.companies.id,
+            name: profile.companies.name,
+            subscription_status: profile.companies.subscription_status,
+            subscription_ends_at: profile.companies.subscription_ends_at,
+            trial_status: profile.companies.trial_status,
+            trial_ends_at: profile.companies.trial_ends_at
+          } : undefined
+        });
       }
     } catch (error) {
-      toast.error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
-      throw error;
+      console.error('Error fetching user profile:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const login = async (email: string, password: string) => {
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    if (user) await fetchUserProfile(user.id);
   };
 
   const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-      
-      const isManagerPath = window.location.pathname.startsWith('/manager');
-      if (isManagerPath) {
-        window.location.href = '/manager/login';
-      } else {
-        window.location.href = '/super-admin/login';
-      }
-      
-      toast.success('Çıkış yapıldı');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      toast.error('Çıkış yapılırken bir hata oluştu');
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setUser(null);
+  };
+
+  const updateUserProfile = (updatedUser: User) => {
+    setUser(updatedUser);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

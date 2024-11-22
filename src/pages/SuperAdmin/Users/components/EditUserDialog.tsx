@@ -17,7 +17,7 @@ const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["super_admin", "manager"]),
+  role: z.enum(["admin", "manager"]),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   password: z.string().optional(),
 });
@@ -37,7 +37,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       email: user.email,
-      role: user.role,
+      role: user.role === "super_admin" ? "admin" : user.role,
       companyName: user.company?.name || "",
       password: "",
     },

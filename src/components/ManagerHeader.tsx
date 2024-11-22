@@ -13,36 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Günaydın";
-  if (hour >= 12 && hour < 17) return "İyi Günler";
-  return "İyi Akşamlar";
-};
-
 export function ManagerHeader() {
   const navigate = useNavigate();
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout } = useAuth();
   const managerView = localStorage.getItem('managerView');
-
-  // Early return for loading state
-  if (isLoading) {
-    return (
-      <header className="sticky top-0 z-50 w-full border-b bg-white">
-        <div className="flex h-16 items-center gap-4 px-6">
-          <div className="h-6 w-48 animate-pulse bg-gray-200 rounded"></div>
-        </div>
-      </header>
-    );
-  }
-
-  // Early return if no user
-  if (!user) {
-    return null;
-  }
-
-  const displayName = user.firstName || user.email?.split('@')[0] || '';
-  const greeting = displayName ? `${getGreeting()}, ${displayName}` : getGreeting();
 
   const handleReturnToSuperAdmin = () => {
     localStorage.removeItem('managerView');
@@ -55,9 +29,7 @@ export function ManagerHeader() {
       <div className="flex h-16 items-center gap-4 px-6">
         {/* Left Section */}
         <div className="flex flex-1 items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">
-            {greeting}
-          </h1>
+          <h1 className="text-lg font-semibold text-gray-900">Manager Panel</h1>
           {managerView && (
             <Button 
               variant="outline" 
@@ -84,7 +56,7 @@ export function ManagerHeader() {
               <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
                 <Avatar className="h-9 w-9">
                   <div className="flex h-full w-full items-center justify-center bg-[#9b87f5] text-white">
-                    {user.firstName?.[0] || user.email?.[0]?.toUpperCase()}
+                    {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase()}
                   </div>
                 </Avatar>
               </Button>
@@ -92,12 +64,12 @@ export function ManagerHeader() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="flex flex-col">
                 <span className="font-medium">
-                  {user.firstName && user.lastName
+                  {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
-                    : user.email}
+                    : user?.email}
                 </span>
                 <span className="mt-0.5 text-xs font-normal text-gray-500">
-                  {user.role}
+                  {user?.role}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
