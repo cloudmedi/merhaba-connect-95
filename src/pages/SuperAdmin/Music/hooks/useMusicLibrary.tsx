@@ -22,7 +22,7 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // Changed from 10 to 20
+  const itemsPerPage = 20;
 
   // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
@@ -38,11 +38,7 @@ export const useMusicLibrary = () => {
 
       const { count, error } = await query;
 
-      if (error) {
-        console.error('Error fetching songs count:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return count || 0;
     }
   });
@@ -65,15 +61,13 @@ export const useMusicLibrary = () => {
 
       if (sortByRecent) {
         query = query.order('created_at', { ascending: false });
+      } else {
+        query = query.order('title');
       }
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error('Error fetching songs:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data as Song[];
     }
   });

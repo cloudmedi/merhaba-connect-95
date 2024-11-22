@@ -81,6 +81,25 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
   const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return pageNumbers;
+  };
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
@@ -121,7 +140,7 @@ export function MusicTable({
 
       <div className="flex items-center justify-between px-4 py-3 border-t">
         <p className="text-sm text-gray-600">
-          Showing {startIndex + 1}-{Math.min(startIndex + songs.length, totalCount)} of {totalCount} songs
+          Showing {startIndex + 1}-{endIndex} of {totalCount} songs
         </p>
         
         <Pagination>
@@ -133,7 +152,7 @@ export function MusicTable({
               />
             </PaginationItem>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {getPageNumbers().map((page) => (
               <PaginationItem key={page}>
                 <PaginationLink
                   onClick={() => onPageChange(page)}
