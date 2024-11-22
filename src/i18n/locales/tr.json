@@ -8,7 +8,8 @@
     "next": "İleri",
     "search": "Ara",
     "filter": "Filtrele",
-    "loading": "Yükleniyor..."
+    "loading": "Yükleniyor...",
+    "add": "Ekle"
   },
   "navigation": {
     "managerPanel": "Yönetici Paneli",
@@ -45,6 +46,8 @@
     "offlineDevices": "Çevrimdışı Cihazlar",
     "warnings": "Uyarılar",
     "operational": "operasyonel",
+    "noDevicesFound": "Cihaz bulunamadı",
+    "noDevicesDescription": "Henüz hiç cihaz eklenmemiş. Yeni bir cihaz eklemek için aşağıdaki butonu kullanın.",
     "tabs": {
       "devices": "Cihazlar",
       "autoGroups": "Otomatik Gruplar",
@@ -55,6 +58,15 @@
       "allStatus": "Tüm Durumlar",
       "allTypes": "Tüm Tipler",
       "allLocations": "Tüm Konumlar"
+    },
+    "form": {
+      "name": "Cihaz Adı",
+      "namePlaceholder": "Cihaz adını girin",
+      "type": "Cihaz Tipi",
+      "location": "Konum",
+      "locationPlaceholder": "Konum girin",
+      "token": "Cihaz Token",
+      "tokenPlaceholder": "Cihaz token'ını girin"
     }
   },
   "settings": {
@@ -76,6 +88,8 @@
   "notifications": {
     "success": "Başarılı",
     "error": "Hata",
-    "languageChanged": "Dil ayarları güncellendi"
+    "languageChanged": "Dil ayarları güncellendi",
+    "deviceAdded": "Cihaz başarıyla eklendi",
+    "deviceAddError": "Cihaz eklenirken bir hata oluştu"
   }
 }
