@@ -1,83 +1,114 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types/auth';
-import { authService } from '@/services/auth';
-import { toast } from 'sonner';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
+  user: any;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const initAuth = async () => {
-      const token = authService.getToken();
-      if (token) {
-        try {
-          // TODO: Implement token verification and user data fetch
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-          authService.logout();
-          setIsLoading(false);
-        }
-      } else {
-        setIsLoading(false);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        checkUserStatus(session.user.id);
       }
-    };
+    });
 
-    initAuth();
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        await checkUserStatus(session.user.id);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const checkUserStatus = async (userId: string) => {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return;
+    }
+
+    if (!profile.is_active) {
+      toast.error("Your account has been blocked. Please contact the administrator.");
+      await signOut();
+      return;
+    }
+
+    setUser(profile);
+  };
+
+  const signIn = async (email: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
-      authService.setToken(response.token);
-      setUser(response.user);
-      
-      toast.success('Login successful');
-      
-      if (response.user.role === 'super_admin') {
-        window.location.href = '/super-admin';
-      } else {
-        window.location.href = '/manager';
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (!profile.is_active) {
+          toast.error("Your account has been blocked. Please contact the administrator.");
+          await signOut();
+          return;
+        }
+
+        setUser(profile);
+        navigate(profile.role === 'super_admin' ? '/super-admin' : '/manager');
       }
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
-      throw error;
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     try {
-      await authService.logout();
+      await supabase.auth.signOut();
       setUser(null);
-      window.location.href = '/';
-      toast.success('Logged out successfully');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      toast.error('Logout failed');
+      navigate('/login');
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

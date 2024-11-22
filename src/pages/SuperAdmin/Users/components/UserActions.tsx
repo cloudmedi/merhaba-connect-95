@@ -23,25 +23,38 @@ export function UserActions({ user }: UserActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
+  const toggleBlockMutation = useMutation({
+    mutationFn: () => userService.toggleUserStatus(user.id, !user.isActive),
+    onSuccess: () => {
+      toast.success(`User has been ${user.isActive ? 'blocked' : 'unblocked'}`);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowBlockDialog(false);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update user status: " + error.message);
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: () => userService.deleteUser(user.id),
     onSuccess: () => {
-      toast.success("Kullanıcı başarıyla silindi");
+      toast.success("User deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowDeleteDialog(false);
     },
     onError: (error: Error) => {
-      toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
+      toast.error("Failed to delete user: " + error.message);
     },
   });
 
   const handleSwitchToManager = () => {
     if (user.role !== 'manager') {
-      toast.error("Bu kullanıcı bir yönetici değil");
+      toast.error("This user is not a manager");
       return;
     }
 
@@ -52,7 +65,7 @@ export function UserActions({ user }: UserActionsProps) {
     }));
 
     navigate(`/manager`);
-    toast.success("Yönetici paneline yönlendiriliyorsunuz");
+    toast.success("Redirecting to manager panel");
   };
 
   return (
@@ -66,27 +79,33 @@ export function UserActions({ user }: UserActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
-            Görüntüle
+            View
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-            Düzenle
+            Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowRenewDialog(true)}>
-            Lisansı Yenile
+            Renew License
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
-            Geçmiş
+            History
           </DropdownMenuItem>
           {user.role === 'manager' && (
             <DropdownMenuItem onClick={handleSwitchToManager}>
-              Manager Hesabına Geç
+              Switch to Manager Account
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem 
+            className={user.isActive ? "text-red-600" : "text-green-600"}
+            onClick={() => setShowBlockDialog(true)}
+          >
+            {user.isActive ? 'Block User' : 'Unblock User'}
+          </DropdownMenuItem>
           <DropdownMenuItem 
             className="text-red-600"
             onClick={() => setShowDeleteDialog(true)}
           >
-            Sil
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -115,21 +134,50 @@ export function UserActions({ user }: UserActionsProps) {
         onOpenChange={setShowHistoryDialog}
       />
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+            <AlertDialogTitle>
+              {user.isActive ? 'Block User' : 'Unblock User'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Bu işlem geri alınamaz. Kullanıcı ve ilişkili tüm veriler kalıcı olarak silinecektir.
+              {user.isActive 
+                ? 'This action will prevent the user from accessing the system. They will be logged out and unable to log back in until unblocked.'
+                : 'This action will restore the user\'s access to the system.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => toggleBlockMutation.mutate()}
+              className={user.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+            >
+              {toggleBlockMutation.isPending 
+                ? "Processing..." 
+                : user.isActive 
+                  ? "Block User" 
+                  : "Unblock User"
+              }
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The user and all associated data will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteUserMutation.mutate()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
+              {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
