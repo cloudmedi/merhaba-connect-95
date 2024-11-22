@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
-import { generateDeviceToken } from "@/utils/tokenGenerator";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -26,16 +25,14 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
 
-  // Generate token when dialog opens
-  useState(() => {
-    if (open) {
-      setToken(generateDeviceToken());
-    }
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!token || token.length !== 6) {
+      toast.error('Please enter a valid 6-digit token');
+      return;
+    }
+
     try {
       await createDevice.mutateAsync({
         name,
@@ -60,7 +57,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setName("");
     setCategory("player");
     setLocation("");
-    setToken(generateDeviceToken()); // Generate new token when form resets
+    setToken("");
   };
 
   return (
@@ -104,26 +101,21 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="token">Device Token</Label>
-            <div className="flex gap-2">
-              <Input
-                id="token"
-                value={token}
-                readOnly
-                className="bg-gray-50 font-mono text-lg tracking-wider text-center"
-              />
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(token);
-                  toast.success('Token copied to clipboard');
-                }}
-              >
-                Copy
-              </Button>
-            </div>
+            <Input
+              id="token"
+              value={token}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                setToken(value);
+              }}
+              placeholder="Enter 6-digit device token"
+              required
+              maxLength={6}
+              pattern="\d{6}"
+              className="font-mono text-lg tracking-wider text-center"
+            />
             <p className="text-sm text-gray-500">
-              Enter this token in your device application to complete pairing
+              Enter the 6-digit token shown on your device
             </p>
           </div>
           <DialogFooter>
