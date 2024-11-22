@@ -34,7 +34,8 @@ export const authService = {
       }
 
       // Validate role type
-      if (!isValidRole(profile.role)) {
+      const validRoles = ["super_admin", "manager", "admin"] as const;
+      if (!validRoles.includes(profile.role as any)) {
         await supabase.auth.signOut();
         throw new Error('Invalid user role');
       }
@@ -83,8 +84,3 @@ export const authService = {
     return !!this.getToken();
   }
 };
-
-// Helper function to validate role
-function isValidRole(role: string): role is "super_admin" | "manager" | "admin" {
-  return ["super_admin", "manager", "admin"].includes(role);
-}
