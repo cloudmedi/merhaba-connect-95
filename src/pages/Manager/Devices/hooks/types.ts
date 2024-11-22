@@ -2,6 +2,7 @@ import type { Json } from "@/integrations/supabase/types";
 
 export interface DeviceSystemInfo {
   version?: string;
+  health?: 'healthy' | 'warning' | 'error';
   [key: string]: Json | undefined;
 }
 

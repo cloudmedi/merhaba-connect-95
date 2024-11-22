@@ -12,7 +12,7 @@ export const useDevices = () => {
     queryKey: ['devices', user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        return [];
+        throw new Error('User not authenticated');
       }
 
       const { data: userProfile } = await supabase
@@ -38,7 +38,9 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+      
+      // Cast the response to match our Device type
+      return (data as Device[]) || [];
     },
     enabled: !!user?.id
   });
@@ -65,6 +67,7 @@ export const useDevices = () => {
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
+          system_info: { health: 'healthy', ...device.system_info },
         })
         .select()
         .single();
@@ -74,6 +77,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Device added successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to add device: ' + error.message);
     }
   });
 

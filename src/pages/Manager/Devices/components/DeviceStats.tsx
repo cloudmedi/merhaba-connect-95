@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Activity, Signal, AlertTriangle, HardDrive } from "lucide-react";
 import { useDevices } from "../hooks/useDevices";
 import { useTranslation } from "react-i18next";
+import type { DeviceSystemInfo } from "../hooks/types";
 
 export function DeviceStats() {
   const { devices } = useDevices();
@@ -11,7 +12,7 @@ export function DeviceStats() {
     total: devices.length,
     online: devices.filter(d => d.status === 'online').length,
     offline: devices.filter(d => d.status === 'offline').length,
-    warning: devices.filter(d => d.system_info.health === 'warning').length
+    warning: devices.filter(d => (d.system_info as DeviceSystemInfo).health === 'warning').length
   };
 
   const healthPercentage = ((stats.online / stats.total) * 100) || 0;
