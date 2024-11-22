@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
+import { generateDeviceToken } from "@/utils/tokenGenerator";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -24,6 +25,13 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
   const { createDevice } = useDevices();
+
+  // Generate token when dialog opens
+  useState(() => {
+    if (open) {
+      setToken(generateDeviceToken());
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +60,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setName("");
     setCategory("player");
     setLocation("");
-    setToken("");
+    setToken(generateDeviceToken()); // Generate new token when form resets
   };
 
   return (
@@ -96,12 +104,27 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="token">Device Token</Label>
-            <Input
-              id="token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter device token"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="token"
+                value={token}
+                readOnly
+                className="bg-gray-50 font-mono text-lg tracking-wider text-center"
+              />
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(token);
+                  toast.success('Token copied to clipboard');
+                }}
+              >
+                Copy
+              </Button>
+            </div>
+            <p className="text-sm text-gray-500">
+              Enter this token in your device application to complete pairing
+            </p>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={createDevice.isPending}>
