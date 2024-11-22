@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AudioPreview } from "./AudioPreview";
-import { DownloadButton } from "./DownloadButton";
 
 interface Song {
   id: string;
@@ -39,14 +38,6 @@ export function SongTableRow({
   formatDuration,
   defaultArtwork,
 }: SongTableRowProps) {
-  const downloadableSong = {
-    id: song.id,
-    title: song.title,
-    artist: song.artist || 'Unknown Artist',
-    file_url: song.file_url,
-    artwork_url: song.artwork_url
-  };
-
   return (
     <TableRow className="hover:bg-gray-50/50 group">
       <TableCell className="w-[30px]">
@@ -97,27 +88,24 @@ export function SongTableRow({
         {formatDuration(song.duration)}
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <DownloadButton song={downloadableSong} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem className="cursor-pointer">
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600 cursor-pointer">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem className="cursor-pointer">
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600 cursor-pointer">
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );

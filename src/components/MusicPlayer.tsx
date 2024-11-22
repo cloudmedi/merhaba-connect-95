@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 import { TrackInfo } from "./music/TrackInfo";
 import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
-import { useSmartPlaylist } from "@/hooks/useSmartPlaylist";
 
 interface MusicPlayerProps {
   playlist: {
@@ -18,28 +17,11 @@ interface MusicPlayerProps {
     }>;
   };
   onClose: () => void;
-  branchId?: string;
-  deviceId?: string;
 }
 
-export function MusicPlayer({ 
-  playlist, 
-  onClose,
-  branchId,
-  deviceId 
-}: MusicPlayerProps) {
+export function MusicPlayer({ playlist, onClose }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const { recordPlay, getNextSong } = useSmartPlaylist(branchId, deviceId);
   const currentSong = playlist.songs?.[currentSongIndex];
-
-  useEffect(() => {
-    if (currentSong) {
-      recordPlay.mutate({ 
-        songId: currentSong.id.toString(),
-        bunnyStreamId: currentSong.file_url.split('/').pop()
-      });
-    }
-  }, [currentSong?.id]);
 
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("Bu playlist'te çalınacak şarkı bulunmuyor.");
@@ -49,11 +31,9 @@ export function MusicPlayer({
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      const nextIndex = getNextSong(
-        currentSong?.id.toString() || '',
-        playlist.songs
+      setCurrentSongIndex((prev) => 
+        prev === playlist.songs!.length - 1 ? 0 : prev + 1
       );
-      setCurrentSongIndex(nextIndex);
     }
   };
 
