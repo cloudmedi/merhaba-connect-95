@@ -2,9 +2,47 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Device } from "./types";
+import { useEffect } from "react";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('devices_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices'
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+          
+          const event = payload.eventType;
+          const deviceName = payload.new?.name || payload.old?.name;
+          
+          if (event === 'INSERT') {
+            toast.success(`Device "${deviceName}" has been added`);
+          } else if (event === 'UPDATE') {
+            const oldStatus = payload.old?.status;
+            const newStatus = payload.new?.status;
+            if (oldStatus !== newStatus) {
+              toast.info(`Device "${deviceName}" is now ${newStatus}`);
+            }
+          } else if (event === 'DELETE') {
+            toast.success(`Device "${deviceName}" has been removed`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
@@ -38,6 +76,23 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('*, licenses(*)')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
+      
+      const { count: currentDevices } = await supabase
+        .from('devices')
+        .select('*', { count: 'exact', head: true })
+        .eq('branch_id', device.branch_id);
+
+      if (currentDevices !== null && currentDevices >= licenseQuantity) {
+        throw new Error(`License limit reached (${licenseQuantity} devices). Please upgrade your license to add more devices.`);
+      }
+
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -56,7 +111,7 @@ export const useDevices = () => {
       toast.success('Device added successfully');
     },
     onError: (error: Error) => {
-      toast.error('Failed to add device: ' + error.message);
+      toast.error(error.message);
     },
   });
 
