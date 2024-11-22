@@ -48,13 +48,21 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.id) {
+        console.error('No authenticated user found');
+        return [];
+      }
+
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('id', user.id)
         .single();
 
       if (!userProfile?.company_id) {
+        console.error('No company ID found for user');
         return [];
       }
 
@@ -71,17 +79,27 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data as Device[];
+      return data || [];
     },
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('*, licenses(*)')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('id', user.id)
         .single();
+
+      if (!userProfile) {
+        throw new Error('User profile not found');
+      }
 
       const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
       
