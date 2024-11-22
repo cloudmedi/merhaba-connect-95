@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -32,11 +32,16 @@ export function ManagerHeader() {
   const navigate = useNavigate();
   const { user, logout, isLoading } = useAuth();
   const managerView = localStorage.getItem('managerView');
+  const [displayName, setDisplayName] = useState('');
+  const [greeting, setGreeting] = useState('');
 
-  const greeting = useMemo(() => {
-    const displayName = getUserDisplayName(user);
-    const baseGreeting = getGreeting();
-    return displayName ? `${baseGreeting}, ${displayName}` : baseGreeting;
+  useEffect(() => {
+    if (user) {
+      const name = getUserDisplayName(user);
+      setDisplayName(name);
+      const baseGreeting = getGreeting();
+      setGreeting(name ? `${baseGreeting}, ${name}` : baseGreeting);
+    }
   }, [user]);
 
   const handleReturnToSuperAdmin = () => {
