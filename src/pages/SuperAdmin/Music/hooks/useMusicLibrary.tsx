@@ -22,7 +22,7 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Changed to show 10 items per page
+  const itemsPerPage = 10;
 
   // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
@@ -48,7 +48,7 @@ export const useMusicLibrary = () => {
   });
 
   // Then fetch paginated songs
-  const { data: songs = [], isLoading } = useQuery({
+  const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
@@ -93,6 +93,7 @@ export const useMusicLibrary = () => {
     setCurrentPage,
     totalPages,
     itemsPerPage,
-    totalCount
+    totalCount,
+    refetch
   };
 };
