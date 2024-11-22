@@ -1,114 +1,53 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Settings, Power, RefreshCw, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Device } from "../hooks/types";
-import { useDevices } from "../hooks/useDevices";
-import { toast } from "sonner";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MaintenanceTab } from "./maintenance/MaintenanceTab";
+import type { Device } from "../hooks/types";
 
-interface DeviceListItemProps {
-  device: Device;
-}
-
-export function DeviceListItem({ device }: DeviceListItemProps) {
-  const { updateDevice, deleteDevice } = useDevices();
-
-  const handlePowerToggle = async () => {
-    try {
-      await updateDevice.mutateAsync({
-        id: device.id,
-        status: device.status === 'online' ? 'offline' : 'online'
-      });
-      toast.success(`Device ${device.status === 'online' ? 'powered off' : 'powered on'}`);
-    } catch (error) {
-      toast.error('Failed to toggle device power');
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteDevice.mutateAsync(device.id);
-      toast.success('Device deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete device');
-    }
-  };
+export function DeviceListItem({ device }: { device: Device }) {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="p-4 hover:shadow-lg transition-shadow duration-300 bg-white/80 backdrop-blur-sm">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="font-semibold text-lg text-gray-900">{device.name}</h3>
-          <p className="text-sm text-gray-500">{device.location || 'No location set'}</p>
-        </div>
-        <Badge 
-          variant={device.status === "online" ? "default" : "secondary"}
-          className={`${
-            device.status === "online" 
-              ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" 
-              : "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20"
-          }`}
-        >
-          {device.status === "online" ? "Online" : "Offline"}
-        </Badge>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-        <div>
-          <span className="text-gray-400">Type:</span>
-          <span className="ml-2 capitalize">{device.category}</span>
-        </div>
-        <div>
-          <span className="text-gray-400">IP:</span>
-          <span className="ml-2">{device.ip_address || 'N/A'}</span>
-        </div>
-        <div>
-          <span className="text-gray-400">Last Seen:</span>
-          <span className="ml-2">{device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</span>
-        </div>
-        <div>
-          <span className="text-gray-400">Version:</span>
-          <span className="ml-2">{device.system_info.version || 'N/A'}</span>
-        </div>
+    <div className="space-y-2">
+      <div
+        className="p-4 rounded-lg border bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+        onClick={() => setIsOpen(true)}
+      >
+        <h3 className="text-lg font-semibold">{device.name}</h3>
+        <p className="text-sm text-gray-500">{device.ip_address}</p>
+        <p className="text-sm text-gray-500">Status: {device.status}</p>
+        <p className="text-sm text-gray-500">Last Seen: {device.last_seen}</p>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handlePowerToggle}
-          className="hover:bg-gray-100"
-        >
-          <Power className="h-4 w-4 text-gray-600" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => updateDevice.mutateAsync({ id: device.id, status: 'offline' })}
-          className="hover:bg-gray-100"
-        >
-          <RefreshCw className="h-4 w-4 text-gray-600" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="hover:bg-gray-100">
-              <Settings className="h-4 w-4 text-gray-600" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Device
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </Card>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Device Details: {device.name}</DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="info" className="flex-1">
+            <TabsList>
+              <TabsTrigger value="info">Information</TabsTrigger>
+              <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="info">
+              <div className="p-4">
+                <h4 className="text-lg font-semibold">Device Information</h4>
+                <p className="text-sm text-gray-500">Category: {device.category}</p>
+                <p className="text-sm text-gray-500">Location: {device.location}</p>
+                <p className="text-sm text-gray-500">Status: {device.status}</p>
+                <p className="text-sm text-gray-500">Created At: {device.created_at}</p>
+                <p className="text-sm text-gray-500">Updated At: {device.updated_at}</p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="maintenance">
+              <MaintenanceTab />
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
