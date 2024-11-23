@@ -1,7 +1,7 @@
 import { Bell, LogOut, Settings, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +40,17 @@ const navItems = [
 export function ManagerHeader() {
   const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const navigate = useNavigate();
   const firstName = user?.firstName || 'User';
+
+  const handleNotificationClick = async (notification: any) => {
+    await markAsRead(notification.id);
+    
+    // If notification has playlist metadata, navigate to that playlist
+    if (notification.metadata?.playlist_id) {
+      navigate(`/manager/playlists/${notification.metadata.playlist_id}`);
+    }
+  };
 
   return (
     <div className="bg-[#F5F5F5] px-4 md:px-8 py-3 border-b border-gray-200">
@@ -98,20 +108,31 @@ export function ManagerHeader() {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-3 rounded-lg text-sm ${
+                        className={`p-3 rounded-lg text-sm cursor-pointer ${
                           notification.status === "unread"
                             ? "bg-gray-50"
                             : "bg-white"
                         }`}
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => handleNotificationClick(notification)}
                       >
-                        <p className="font-medium">{notification.title}</p>
-                        <p className="text-gray-600">{notification.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatDistanceToNow(new Date(notification.created_at), {
-                            addSuffix: true,
-                          })}
-                        </p>
+                        <div className="flex gap-3">
+                          {notification.metadata?.artwork_url && (
+                            <img 
+                              src={notification.metadata.artwork_url} 
+                              alt=""
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium">{notification.title}</p>
+                            <p className="text-gray-600">{notification.message}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {formatDistanceToNow(new Date(notification.created_at), {
+                                addSuffix: true,
+                              })}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     ))
                   )}
