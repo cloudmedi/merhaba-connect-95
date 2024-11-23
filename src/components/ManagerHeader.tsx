@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function ManagerHeader() {
   const { user } = useAuth();
-  const firstName = user?.user_metadata?.firstName || user?.user_metadata?.first_name || 'User';
+  const firstName = user?.firstName || 'User';
 
   return (
     <div className="bg-gradient-to-b from-[#282828] to-[#121212] px-4 md:px-8 py-3">
