@@ -15,13 +15,24 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Create FormData
-        const formData = new FormData();
-        formData.append('file', file);
+        // Convert file to base64
+        const reader = new FileReader();
+        const fileBase64Promise = new Promise((resolve) => {
+          reader.onload = () => {
+            const base64 = reader.result?.toString().split(',')[1];
+            resolve(base64);
+          };
+        });
+        reader.readAsDataURL(file);
+        const fileBase64 = await fileBase64Promise;
 
         // Call the upload-music edge function
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
+          body: {
+            fileData: fileBase64,
+            fileName: file.name,
+            contentType: file.type
+          }
         });
 
         if (error) {

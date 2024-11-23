@@ -7,51 +7,16 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase configuration');
+    const { fileData, fileName, contentType } = await req.json();
+
+    if (!fileData || !fileName) {
+      throw new Error('File data and fileName are required');
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get user information from the token
-    const authHeader = req.headers.get('Authorization');
-    let user;
-
-    if (authHeader) {
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
-
-      if (userError) {
-        console.error('User authentication error:', userError);
-      } else {
-        user = authUser;
-      }
-    }
-
-    if (!user) {
-      user = { id: 'system' }; // Fallback for testing
-    }
-
-    // Get form data from request
-    const formData = await req.formData();
-    const file = formData.get('file');
-    
-    if (!file) {
-      throw new Error('No file provided');
-    }
-
-    console.log('Processing file:', file.name, 'Size:', file.size);
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
@@ -62,32 +27,24 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration');
     }
 
-    // Check file size (Bunny CDN limit is 5GB)
-    const maxFileSize = 5 * 1024 * 1024 * 1024; // 5GB in bytes
-    if (file.size > maxFileSize) {
-      throw new Error('File size exceeds the 5GB limit');
-    }
+    // Convert base64 to Uint8Array
+    const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0));
 
-    // Generate unique filename for Bunny CDN
-    const fileExt = file.name.split('.').pop();
+    // Generate unique filename
+    const fileExt = fileName.split('.').pop();
     const uniqueFileName = `music/${crypto.randomUUID()}.${fileExt}`;
-    
-    console.log('Uploading to Bunny CDN...');
 
-    // Get file data as array buffer
-    const fileData = await file.arrayBuffer();
-
-    // Upload directly to Bunny Storage
+    // Upload to Bunny CDN
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
-    console.log('Uploading to:', bunnyUrl);
+    console.log('Uploading to Bunny CDN:', bunnyUrl);
 
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': file.type || 'audio/mpeg',
+        'Content-Type': contentType || 'audio/mpeg'
       },
-      body: fileData
+      body: binaryData
     });
 
     if (!uploadResponse.ok) {
@@ -96,14 +53,22 @@ serve(async (req) => {
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`);
     }
 
-    console.log('Successfully uploaded to Bunny CDN');
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Save song metadata to Supabase
     const songData = {
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      file_url: uniqueFileName, // Store just the filename
+      title: fileName.replace(/\.[^/.]+$/, ""),
+      file_url: uniqueFileName,
       bunny_id: uniqueFileName,
-      created_by: user.id,
+      created_by: 'system'
     };
 
     console.log('Saving song metadata to Supabase:', songData);
@@ -127,10 +92,7 @@ serve(async (req) => {
         song 
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
     );
@@ -142,10 +104,7 @@ serve(async (req) => {
         error: error.message 
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
       }
     );
