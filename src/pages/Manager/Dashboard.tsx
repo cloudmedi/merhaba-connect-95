@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { HeroLoader } from "@/components/loaders/HeroLoader";
 import { extractDominantColor } from "@/utils/colorExtraction";
+import { useNavigate } from "react-router-dom";
 
 interface Category {
   id: string;
@@ -25,6 +26,7 @@ interface Category {
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dominantColor, setDominantColor] = useState("rgb(0, 0, 0)");
+  const navigate = useNavigate();
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
@@ -119,7 +121,7 @@ export default function ManagerDashboard() {
               <p className="text-lg opacity-90">{heroPlaylist.name}</p>
               <Button 
                 className="mt-4 bg-white text-black hover:bg-gray-100"
-                onClick={() => window.location.href = `/manager/playlists/${heroPlaylist.id}`}
+                onClick={() => navigate(`/manager/playlists/${heroPlaylist.id}`)}
               >
                 Go to Playlist
               </Button>
