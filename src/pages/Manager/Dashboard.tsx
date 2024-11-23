@@ -14,8 +14,8 @@ interface Category {
     id: string;
     name: string;
     artwork_url: string;
-    genres: { name: string } | null;
-    moods: { name: string } | null;
+    genre_id: { name: string } | null;
+    mood_id: { name: string } | null;
   }[];
 }
 
@@ -31,8 +31,8 @@ export default function ManagerDashboard() {
           id,
           name,
           artwork_url,
-          genres:genre_id(name),
-          moods:mood_id(name)
+          genre_id(name),
+          mood_id(name)
         `)
         .order('play_count', { ascending: false })
         .limit(1);
@@ -61,8 +61,8 @@ export default function ManagerDashboard() {
                 id,
                 name,
                 artwork_url,
-                genres:genre_id(name),
-                moods:mood_id(name)
+                genre_id(name),
+                mood_id(name)
               )
             `)
             .eq('category_id', category.id)
@@ -160,8 +160,8 @@ export default function ManagerDashboard() {
                 id: playlist.id,
                 title: playlist.name,
                 artwork_url: playlist.artwork_url,
-                genre: playlist.genres?.name || "Various",
-                mood: playlist.moods?.name || "Various"
+                genre: playlist.genre_id?.name || "Various",
+                mood: playlist.mood_id?.name || "Various"
               }))}
             />
           ))
