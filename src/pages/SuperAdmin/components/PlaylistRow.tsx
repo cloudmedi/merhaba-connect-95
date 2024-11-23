@@ -15,6 +15,7 @@ interface PlaylistRowProps {
     is_public: boolean;
     company?: { name: string };
     profiles?: { first_name: string; last_name: string }[];
+    selected_users?: { id: string }[];
   };
   onPlay: (playlist: any) => void;
   onEdit: (playlist: any) => void;
@@ -53,37 +54,51 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
       console.log('Publish response:', data);
 
-      // If we're publishing (not unpublishing), send notifications to all managers
+      // If we're publishing (not unpublishing), send notifications
       if (!playlist.is_public) {
-        const { data: managers, error: managersError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'manager');
+        // Önce seçili kullanıcılara bildirim gönder
+        if (playlist.selected_users && playlist.selected_users.length > 0) {
+          for (const user of playlist.selected_users) {
+            await createPlaylistAssignmentNotification(
+              user.id,
+              playlist.name,
+              playlist.id,
+              playlist.artwork_url
+            );
+          }
+          console.log('Notifications sent to selected users:', playlist.selected_users);
+        } else {
+          // Eğer seçili kullanıcı yoksa, tüm yöneticilere bildirim gönder
+          const { data: managers, error: managersError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('role', 'manager');
 
-        if (managersError) throw managersError;
+          if (managersError) throw managersError;
 
-        // Send notification to each manager
-        for (const manager of managers) {
-          await createPlaylistAssignmentNotification(
-            manager.id,
-            playlist.name,
-            playlist.id,
-            playlist.artwork_url
-          );
+          for (const manager of managers) {
+            await createPlaylistAssignmentNotification(
+              manager.id,
+              playlist.name,
+              playlist.id,
+              playlist.artwork_url
+            );
+          }
+          console.log('Notifications sent to all managers');
         }
       }
 
       toast({
-        title: "Success",
-        description: `Playlist ${playlist.is_public ? 'unpublished' : 'published'} successfully`,
+        title: "Başarılı",
+        description: `Playlist ${playlist.is_public ? 'private yapıldı' : 'public yapıldı ve bildirimler gönderildi'}`,
       });
 
       onStatusChange();
     } catch (error: any) {
       console.error('Error toggling playlist publish state:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to update playlist",
+        title: "Hata",
+        description: error.message || "Playlist durumu güncellenirken bir hata oluştu",
         variant: "destructive",
       });
     }
