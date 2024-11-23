@@ -16,29 +16,30 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Convert file to ArrayBuffer
-        const arrayBuffer = await file.arrayBuffer();
-        const fileBytes = new Uint8Array(arrayBuffer);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No active session');
+        }
 
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: {
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            fileData: Array.from(fileBytes) // Convert Uint8Array to regular array for transmission
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
           }
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
         
         toast({
           title: "Upload successful",
           description: `${file.name} has been uploaded successfully`,
         });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Upload error:', error);
         toast({
           title: "Upload failed",
