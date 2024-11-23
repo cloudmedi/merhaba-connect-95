@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Set up initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser({
@@ -35,19 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          firstName: session.user.user_metadata.firstName || '',
-          lastName: session.user.user_metadata.lastName || '',
-          role: session.user.user_metadata.role || 'manager',
-          isActive: true,
-          createdAt: session.user.created_at,
-          updatedAt: session.user.updated_at || session.user.created_at
-        });
-      } else {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Refresh the session when signed in
+        const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+        if (refreshedUser) {
+          setUser({
+            id: refreshedUser.id,
+            email: refreshedUser.email!,
+            firstName: refreshedUser.user_metadata.firstName || '',
+            lastName: refreshedUser.user_metadata.lastName || '',
+            role: refreshedUser.user_metadata.role || 'manager',
+            isActive: true,
+            createdAt: refreshedUser.created_at,
+            updatedAt: refreshedUser.updated_at || refreshedUser.created_at
+          });
+        }
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
       setIsLoading(false);
