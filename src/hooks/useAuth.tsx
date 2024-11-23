@@ -16,35 +16,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUserProfile = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        companies:company_id (
+          id,
+          name,
+          subscription_status,
+          subscription_ends_at
+        )
+      `)
+      .eq('id', userId)
+      .single();
+
+    if (profile) {
+      const company = profile.companies as {
+        id: string;
+        name: string;
+        subscription_status: string;
+        subscription_ends_at: string | null;
+      } | null;
+
+      return {
+        id: profile.id,
+        email: profile.email,
+        firstName: profile.first_name || '',
+        lastName: profile.last_name || '',
+        role: profile.role as 'super_admin' | 'manager' | 'admin',
+        isActive: profile.is_active,
+        createdAt: profile.created_at,
+        updatedAt: profile.updated_at,
+        company: company ? {
+          id: company.id,
+          name: company.name,
+          subscriptionStatus: company.subscription_status,
+          subscriptionEndsAt: company.subscription_ends_at
+        } : undefined
+      };
+    }
+    return null;
+  };
+
   useEffect(() => {
-    // Initial session check
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*, companies:company_id(*)')
-            .eq('id', session.user.id)
-            .single();
-
+          const profile = await fetchUserProfile(session.user.id);
           if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role || 'manager',
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              company: profile.companies ? {
-                id: profile.companies.id,
-                name: profile.companies.name,
-                subscriptionStatus: profile.companies.subscription_status,
-                subscriptionEndsAt: profile.companies.subscription_ends_at
-              } : undefined
-            });
+            setUser(profile);
           }
         }
       } catch (error) {
@@ -56,32 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*, companies:company_id(*)')
-          .eq('id', session.user.id)
-          .single();
-
+        const profile = await fetchUserProfile(session.user.id);
         if (profile) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: profile.first_name || '',
-            lastName: profile.last_name || '',
-            role: profile.role || 'manager',
-            isActive: profile.is_active,
-            createdAt: session.user.created_at,
-            updatedAt: profile.updated_at || session.user.created_at,
-            company: profile.companies ? {
-              id: profile.companies.id,
-              name: profile.companies.name,
-              subscriptionStatus: profile.companies.subscription_status,
-              subscriptionEndsAt: profile.companies.subscription_ends_at
-            } : undefined
-          });
+          setUser(profile);
         }
       } else {
         setUser(null);
@@ -104,37 +105,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*, companies:company_id(*)')
-          .eq('id', data.user.id)
-          .single();
-
+        const profile = await fetchUserProfile(data.user.id);
         if (profile) {
-          setUser({
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: profile.first_name || '',
-            lastName: profile.last_name || '',
-            role: profile.role || 'manager',
-            isActive: profile.is_active,
-            createdAt: data.user.created_at,
-            updatedAt: profile.updated_at || data.user.created_at,
-            company: profile.companies ? {
-              id: profile.companies.id,
-              name: profile.companies.name,
-              subscriptionStatus: profile.companies.subscription_status,
-              subscriptionEndsAt: profile.companies.subscription_ends_at
-            } : undefined
-          });
-        }
-        
-        toast.success('Login successful');
-        
-        if (profile?.role === 'super_admin') {
-          window.location.href = '/super-admin';
-        } else {
-          window.location.href = '/manager';
+          setUser(profile);
+          toast.success('Login successful');
+          
+          if (profile.role === 'super_admin') {
+            window.location.href = '/super-admin';
+          } else {
+            window.location.href = '/manager';
+          }
         }
       }
     } catch (error: any) {
