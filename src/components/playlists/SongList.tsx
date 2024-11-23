@@ -13,9 +13,17 @@ interface SongListProps {
   songs: Song[];
   onSongSelect?: (song: Song) => void;
   currentSongId?: string | number;
+  currentSongIndex?: number;
+  onCurrentSongIndexChange?: (index: number) => void;
 }
 
-export function SongList({ songs, onSongSelect, currentSongId }: SongListProps) {
+export function SongList({ 
+  songs, 
+  onSongSelect, 
+  currentSongId,
+  currentSongIndex,
+  onCurrentSongIndexChange 
+}: SongListProps) {
   const formatDuration = (duration: string | number) => {
     if (typeof duration === 'number') {
       const minutes = Math.floor(duration / 60);
@@ -23,6 +31,11 @@ export function SongList({ songs, onSongSelect, currentSongId }: SongListProps) 
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
     return duration;
+  };
+
+  const handleSongClick = (song: Song, index: number) => {
+    onSongSelect?.(song);
+    onCurrentSongIndexChange?.(index);
   };
 
   return (
@@ -38,9 +51,9 @@ export function SongList({ songs, onSongSelect, currentSongId }: SongListProps) 
         {songs.map((song, index) => (
           <div 
             key={song.id}
-            onClick={() => onSongSelect?.(song)}
+            onClick={() => handleSongClick(song, index)}
             className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100 cursor-pointer ${
-              currentSongId === song.id ? 'bg-purple-50' : ''
+              (currentSongId === song.id || currentSongIndex === index) ? 'bg-purple-50' : ''
             }`}
           >
             <div className="col-span-1 text-gray-400">{index + 1}</div>

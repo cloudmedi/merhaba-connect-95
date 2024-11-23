@@ -45,13 +45,10 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
-      // Transform the songs data structure and handle Bunny CDN URLs properly
       const transformedSongs = playlistData.songs
         .sort((a: any, b: any) => a.position - b.position)
         .map((item: any) => {
           const song = item.songs;
-          
-          // Construct the full Bunny CDN URL
           let fileUrl = song.file_url;
           if (song.bunny_id) {
             fileUrl = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
@@ -117,6 +114,10 @@ export function PlaylistDetail() {
     }
   };
 
+  const handleCurrentSongIndexChange = (index: number) => {
+    setCurrentSongIndex(index);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-lg shadow-sm">
       <div className="p-6 space-y-8">
@@ -129,7 +130,8 @@ export function PlaylistDetail() {
         <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
-          currentSongId={isPlaying ? playlist.songs[currentSongIndex]?.id : undefined}
+          currentSongIndex={isPlaying ? currentSongIndex : undefined}
+          onCurrentSongIndexChange={handleCurrentSongIndexChange}
         />
       </div>
 
@@ -148,6 +150,7 @@ export function PlaylistDetail() {
           }}
           onClose={() => setIsPlaying(false)}
           initialSongIndex={currentSongIndex}
+          autoPlay={true}
         />
       )}
     </div>
