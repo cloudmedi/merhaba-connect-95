@@ -20,7 +20,7 @@ export async function createPlaylistAssignmentNotification(
     const { error } = await supabase.from("notifications").insert({
       recipient_id: recipientId,
       title: "Yeni Playlist Atandı",
-      message: `Size "${playlistName}" isimli yeni bir playlist atandı.`,
+      message: `"${playlistName}" isimli yeni bir çalma listesi hesabınıza tanımlandı. İşletmenizin atmosferine uygun müzik deneyiminin keyfini çıkarın.`,
       type: "playlist_assignment",
       status: "unread",
       priority: "normal",
