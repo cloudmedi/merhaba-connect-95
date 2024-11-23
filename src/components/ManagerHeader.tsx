@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "./ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
 const navItems = [
   {
@@ -82,8 +83,8 @@ export function ManagerHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Sheet>
+            <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
@@ -96,53 +97,55 @@ export function ManagerHeader() {
                   </span>
                 )}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="right" className="w-[400px] p-0">
-              <ScrollArea className="h-[600px]">
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:w-[400px] p-0">
+              <div className="flex flex-col h-full">
                 <div className="p-4 border-b border-gray-100">
                   <h3 className="font-semibold text-lg">Notifications</h3>
                 </div>
-                <div className="p-2">
-                  {notifications.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No notifications
-                    </p>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                          notification.status === "unread"
-                            ? "bg-gray-50"
-                            : "bg-white"
-                        }`}
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        <div className="flex gap-3">
-                          {notification.metadata?.artwork_url && (
-                            <img 
-                              src={notification.metadata.artwork_url} 
-                              alt=""
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{notification.title}</p>
-                            <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">
-                              {formatDistanceToNow(new Date(notification.created_at), {
-                                addSuffix: true,
-                              })}
-                            </p>
+                <ScrollArea className="flex-1">
+                  <div className="p-2">
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No notifications
+                      </p>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                            notification.status === "unread"
+                              ? "bg-gray-50"
+                              : "bg-white"
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex gap-3">
+                            {notification.metadata?.artwork_url && (
+                              <img 
+                                src={notification.metadata.artwork_url} 
+                                alt=""
+                                className="w-12 h-12 rounded object-cover"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">{notification.title}</p>
+                              <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
+                              <p className="text-xs text-gray-400 mt-2">
+                                {formatDistanceToNow(new Date(notification.created_at), {
+                                  addSuffix: true,
+                                })}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
