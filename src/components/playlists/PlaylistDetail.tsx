@@ -35,7 +35,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8">
         <div className="flex items-center gap-2 text-gray-500">
           <button 
-            onClick={() => navigate("/manager/playlists")}
+            onClick={() => navigate("/manager")}
             className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
