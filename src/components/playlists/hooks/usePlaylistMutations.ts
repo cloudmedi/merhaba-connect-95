@@ -59,23 +59,14 @@ export function usePlaylistMutations() {
         created_by: user.id,
         genre_id: playlistData.selectedGenres[0]?.id || null,
         mood_id: playlistData.selectedMoods[0]?.id || null,
+        is_public: playlistData.isPublic || false
       };
 
       let playlist;
       if (isEditMode && existingPlaylist) {
-        // Keep the existing is_public value when updating
-        const { data: currentPlaylist } = await supabase
-          .from('playlists')
-          .select('is_public')
-          .eq('id', existingPlaylist.id)
-          .single();
-
         const { data, error } = await supabase
           .from('playlists')
-          .update({
-            ...playlistPayload,
-            is_public: currentPlaylist?.is_public ?? false
-          })
+          .update(playlistPayload)
           .eq('id', existingPlaylist.id)
           .select()
           .single();
@@ -83,13 +74,12 @@ export function usePlaylistMutations() {
         if (error) throw error;
         playlist = data;
 
-        // Delete existing playlist songs and categories
         await supabase.from('playlist_songs').delete().eq('playlist_id', existingPlaylist.id);
         await supabase.from('playlist_categories').delete().eq('playlist_id', existingPlaylist.id);
       } else {
         const { data, error } = await supabase
           .from('playlists')
-          .insert([{ ...playlistPayload, is_public: false }])
+          .insert([playlistPayload])
           .select()
           .single();
 
@@ -97,7 +87,6 @@ export function usePlaylistMutations() {
         playlist = data;
       }
 
-      // Insert playlist songs
       if (playlistData.selectedSongs.length > 0) {
         const playlistSongs = playlistData.selectedSongs.map((song: any, index: number) => ({
           playlist_id: playlist.id,
@@ -112,7 +101,6 @@ export function usePlaylistMutations() {
         if (songsError) throw songsError;
       }
 
-      // Insert playlist categories
       if (playlistData.selectedCategories.length > 0) {
         const playlistCategories = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
@@ -126,10 +114,15 @@ export function usePlaylistMutations() {
         if (categoriesError) throw categoriesError;
       }
 
-      // Send notifications to selected users
-      if (playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
+      // Only send notifications if the playlist is public
+      if (playlistData.isPublic && playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
         for (const user of playlistData.selectedUsers) {
-          await createPlaylistAssignmentNotification(user.id, playlistData.title);
+          await createPlaylistAssignmentNotification(
+            user.id, 
+            playlistData.title,
+            playlist.id,
+            artwork_url
+          );
         }
       }
 

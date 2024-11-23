@@ -27,7 +27,6 @@ export function useNotifications() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch existing notifications
     const fetchNotifications = async () => {
       const { data, error } = await supabase
         .from('notifications')
@@ -47,7 +46,7 @@ export function useNotifications() {
         status: n.status as 'read' | 'unread',
         created_at: n.created_at || '',
         type: n.type,
-        metadata: n.metadata || {}
+        metadata: n.metadata as { playlist_id?: string; artwork_url?: string; } || {}
       }));
 
       setNotifications(formattedNotifications);
@@ -56,7 +55,6 @@ export function useNotifications() {
 
     fetchNotifications();
 
-    // Subscribe to new notifications
     const channel = supabase
       .channel('notifications')
       .on(
@@ -76,13 +74,12 @@ export function useNotifications() {
             status: newNotification.status as 'read' | 'unread',
             created_at: newNotification.created_at || '',
             type: newNotification.type,
-            metadata: newNotification.metadata || {}
+            metadata: newNotification.metadata as { playlist_id?: string; artwork_url?: string; } || {}
           };
           
           setNotifications(prev => [formattedNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           
-          // Show toast notification
           toast(formattedNotification.title, {
             description: formattedNotification.message,
           });
