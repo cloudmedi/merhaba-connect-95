@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -75,6 +76,17 @@ export function PlaylistDetail() {
     }
   };
 
+  const handlePlayClick = () => {
+    if (isPlaying) {
+      // If already playing, restart from the beginning
+      setCurrentSongIndex(0);
+    } else {
+      // If not playing, start from the beginning
+      setCurrentSongIndex(0);
+      setIsPlaying(true);
+    }
+  };
+
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
@@ -113,7 +125,7 @@ export function PlaylistDetail() {
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
               <button
-                onClick={() => setIsPlaying(true)}
+                onClick={handlePlayClick}
                 className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
               >
                 <Play className="w-6 h-6" />
