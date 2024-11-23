@@ -42,12 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Profil getirme hatası:', error);
-        return null;
+        throw error;
       }
 
       if (!profile) {
         console.error('Kullanıcı profili bulunamadı:', userId);
-        return null;
+        throw new Error('Kullanıcı profili bulunamadı');
       }
 
       return {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     } catch (error) {
       console.error('fetchUserProfile hatası:', error);
-      return null;
+      throw error;
     }
   };
 
@@ -79,9 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchUserProfile(session.user.id);
-          if (profile) {
-            setUser(profile);
-          }
+          setUser(profile);
         }
       } catch (error) {
         console.error('Auth başlatma hatası:', error);
@@ -94,9 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
+        try {
+          const profile = await fetchUserProfile(session.user.id);
           setUser(profile);
+        } catch (error) {
+          console.error('Profil güncelleme hatası:', error);
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -120,10 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
-        if (!profile) {
-          throw new Error('Profil bulunamadı');
-        }
-
+        
         if (!profile.isActive) {
           throw new Error('Hesabınız şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.');
         }

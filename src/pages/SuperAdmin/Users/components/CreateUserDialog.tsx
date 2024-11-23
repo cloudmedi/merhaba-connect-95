@@ -45,14 +45,15 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           .insert({
             name: values.companyName,
             subscription_status: values.license.type,
-            subscription_ends_at: values.license.end_date
+            subscription_ends_at: values.license.end_date,
+            trial_ends_at: values.license.type === 'trial' ? values.license.end_date : null
           })
           .select()
           .single();
 
         if (companyError) throw companyError;
 
-        // 2. Auth kullanıcısını oluştur - admin API yerine signUp kullan
+        // 2. Auth kullanıcısını oluştur
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
@@ -67,13 +68,23 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         });
 
         if (authError) throw authError;
-        if (!authData.user) throw new Error('User creation failed');
+        if (!authData.user) throw new Error('Kullanıcı oluşturulamadı');
 
         // 3. Trigger otomatik olarak profiles tablosuna kayıt ekleyecek
-        // Biraz bekleyelim
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // 4. Lisans oluştur
+        // 4. Profili güncelle
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            company_id: company.id,
+            is_active: true
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) throw profileError;
+
+        // 5. Lisans oluştur
         const { error: licenseError } = await supabase
           .from('licenses')
           .insert({
@@ -88,7 +99,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         return { success: true };
       } catch (error: any) {
-        console.error('Error creating user:', error);
+        console.error('Kullanıcı oluşturma hatası:', error);
         throw error;
       }
     },
