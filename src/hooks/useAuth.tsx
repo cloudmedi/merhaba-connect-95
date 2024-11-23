@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           created_at,
           updated_at,
           company_id,
+          avatar_url,
           companies (
             id,
             name,
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isActive: profile.is_active,
         createdAt: profile.created_at,
         updatedAt: profile.updated_at,
+        avatar_url: profile.avatar_url,
         companyId: profile.company_id,
         company: profile.companies ? {
           id: profile.companies.id,
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Auth başlatma hatası:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
