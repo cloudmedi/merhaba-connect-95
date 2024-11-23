@@ -152,8 +152,8 @@ export function ManagerHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8">
-                <div className="h-8 w-8 rounded-full bg-[#9b87f5] flex items-center justify-center">
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden">
+                <div className="h-full w-full rounded-full bg-[#9b87f5] flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
                     {firstName.charAt(0)}
                   </span>
