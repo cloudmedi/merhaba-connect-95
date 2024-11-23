@@ -16,7 +16,7 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Get the current session
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           throw new Error('No active session');
@@ -33,7 +33,9 @@ export function MusicHeader() {
         reader.readAsDataURL(file);
         const base64Data = await base64Promise;
 
-        // Call the upload-music edge function with authorization
+        console.log('Uploading file:', file.name);
+
+        // Call the upload-music edge function
         const { data, error } = await supabase.functions.invoke('upload-music', {
           body: {
             fileData: base64Data,

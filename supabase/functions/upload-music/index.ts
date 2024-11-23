@@ -45,7 +45,7 @@ serve(async (req) => {
       throw new Error('Missing required file information');
     }
 
-    console.log('Received file:', { fileName, contentType });
+    console.log('Processing file:', fileName);
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
