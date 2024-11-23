@@ -54,9 +54,9 @@ export const usePlaylistMutations = () => {
 
         // Add categories if any
         if (playlistData.selectedCategories?.length) {
-          const categoryAssignments = playlistData.selectedCategories.map(categoryId => ({
+          const categoryAssignments = playlistData.selectedCategories.map(category => ({
             playlist_id: playlist.id,
-            category_id: categoryId
+            category_id: typeof category === 'string' ? category : category.id
           }));
 
           const { error: categoriesError } = await supabase
@@ -79,7 +79,7 @@ export const usePlaylistMutations = () => {
         }
 
         await queryClient.invalidateQueries({ queryKey: ['playlists'] });
-        toast.success('Playlist başarıyla oluşturuldu');
+        toast.success('Playlist created successfully');
         return playlist;
       } catch (error: any) {
         console.error('Error saving playlist:', error);
