@@ -1,6 +1,8 @@
 import { ArrowLeft, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ColorThief from "colorthief";
 
 interface PlaylistDetailHeaderProps {
   playlist: {
@@ -18,7 +20,28 @@ interface PlaylistDetailHeaderProps {
 
 export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
   const navigate = useNavigate();
+  const [gradientColors, setGradientColors] = useState<string[]>([]);
   
+  useEffect(() => {
+    if (playlist.artwork_url) {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = playlist.artwork_url;
+      
+      img.onload = () => {
+        const colorThief = new ColorThief();
+        const palette = colorThief.getPalette(img, 2);
+        
+        if (palette) {
+          const colors = palette.map(color => 
+            `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+          );
+          setGradientColors(colors);
+        }
+      };
+    }
+  }, [playlist.artwork_url]);
+
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
@@ -47,8 +70,12 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
     }
   };
 
+  const gradientStyle = gradientColors.length >= 2 ? {
+    background: `linear-gradient(135deg, ${gradientColors[0]}20 0%, ${gradientColors[1]}40 100%)`,
+  } : {};
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 rounded-lg p-8" style={gradientStyle}>
       <div className="flex items-center gap-2 text-gray-500">
         <button 
           onClick={() => navigate("/manager")}
@@ -64,7 +91,7 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
           <img 
             src={playlist.artwork_url || "/placeholder.svg"}
             alt={playlist.name}
-            className="w-32 h-32 rounded-lg object-cover"
+            className="w-32 h-32 rounded-lg object-cover shadow-lg"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
             <button
