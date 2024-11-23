@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import { ManagerHeader } from "@/components/ManagerHeader";
-import { ManagerNav } from "@/components/ManagerNav";
 import ManagerDashboard from "./Dashboard";
 import { PlaylistDetail } from "./Playlists/PlaylistDetail";
 import { CategoryPlaylists } from "./Playlists/CategoryPlaylists";
@@ -15,7 +14,6 @@ export default function Manager() {
   return (
     <div className="min-h-screen bg-white">
       <div className="flex flex-col h-screen">
-        <ManagerNav />
         <ManagerHeader />
         <main className="flex-1 overflow-auto px-4 md:px-8 py-6 max-w-[1400px] mx-auto w-full">
           <Routes>
