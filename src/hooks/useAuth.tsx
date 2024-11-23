@@ -41,12 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Profil getirme hatası:', error);
         return null;
       }
 
       if (!profile) {
-        console.error('No profile found for user:', userId);
+        console.error('Kullanıcı profili bulunamadı:', userId);
         return null;
       }
 
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } : undefined
       };
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('fetchUserProfile hatası:', error);
       return null;
     }
   };
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('Auth başlatma hatası:', error);
       } finally {
         setIsLoading(false);
       }
@@ -131,7 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(profile);
         toast.success('Giriş başarılı');
         
-        // Kullanıcı rolüne göre yönlendirme
         if (profile.role === 'super_admin') {
           window.location.href = '/super-admin/users';
         } else if (profile.role === 'manager' || profile.role === 'admin') {
@@ -139,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Giriş hatası:', error);
       toast.error(error.message || 'Giriş yapılamadı');
       throw error;
     }
@@ -159,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast.success('Başarıyla çıkış yapıldı');
     } catch (error: any) {
-      console.error('Logout failed:', error);
+      console.error('Çıkış hatası:', error);
       toast.error('Çıkış yapılamadı');
     }
   };
