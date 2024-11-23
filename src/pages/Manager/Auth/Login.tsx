@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +9,10 @@ import { toast } from "sonner";
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     try {
       await login(email, password);
@@ -23,11 +20,11 @@ export default function ManagerLogin() {
       console.error('Login error:', error);
       if (error.message.includes('aktif değil')) {
         toast.error('Hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.');
+      } else if (error.message.includes('Invalid login credentials')) {
+        toast.error('Geçersiz e-posta veya şifre.');
       } else {
         toast.error('Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

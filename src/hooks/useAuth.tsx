@@ -93,19 +93,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        try {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setIsLoading(true);
+      try {
+        if (session?.user) {
           const profile = await fetchUserProfile(session.user.id);
           setUser(profile);
-        } catch (error) {
-          console.error('Profil güncelleme hatası:', error);
+        } else {
           setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error('Auth state change hatası:', error);
         setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -142,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Giriş hatası:', error);
       toast.error(error.message || 'Giriş yapılamadı');
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
