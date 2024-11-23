@@ -38,9 +38,10 @@ export function AssignManagersDialog({
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
+      console.log("Current authenticated user:", user); // Debug log
 
       if (!user?.id) {
-        toast.error("No authenticated user found");
+        toast.error("No authenticated user found. Please log in again.");
         return;
       }
 
@@ -51,17 +52,26 @@ export function AssignManagersDialog({
         .eq("id", user.id)
         .single();
 
-      if (profileError || !adminProfile?.company_id) {
+      console.log("Admin profile:", adminProfile); // Debug log
+
+      if (profileError) {
+        console.error("Profile error:", profileError);
         toast.error("Failed to get company information");
+        return;
+      }
+
+      if (!adminProfile?.company_id) {
+        toast.error("No company associated with your account");
         return;
       }
 
       // Fetch all managers from the same company
       let query = supabase
         .from("profiles")
-        .select("id, email, first_name, last_name, role")
+        .select("id, email, first_name, last_name, role, avatar_url")
         .eq("company_id", adminProfile.company_id)
-        .eq("role", "manager");
+        .eq("role", "manager")
+        .eq("is_active", true);
 
       // Add search filter if there's a query
       if (searchQuery) {
@@ -70,7 +80,10 @@ export function AssignManagersDialog({
 
       const { data: managersData, error: managersError } = await query;
 
+      console.log("Managers data:", managersData); // Debug log
+
       if (managersError) {
+        console.error("Managers fetch error:", managersError);
         throw managersError;
       }
 
@@ -107,6 +120,7 @@ export function AssignManagersDialog({
     setSelectedManagers([]);
     setScheduledAt(undefined);
     setExpiresAt(undefined);
+    onOpenChange(false);
   };
 
   return (
