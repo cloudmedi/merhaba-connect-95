@@ -4,7 +4,6 @@ import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect } from "react";
-import { toast } from "sonner";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -35,23 +34,14 @@ export function AudioPlayer({
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
-    if (error) {
-      console.error('Audio player error:', error);
-      toast.error("Failed to play audio", {
-        description: error,
-      });
-    }
-  }, [error]);
-
-  useEffect(() => {
     setVolume(volume);
   }, [volume, setVolume]);
 
   useEffect(() => {
-    if (autoPlay && !isPlaying) {
+    if (autoPlay) {
       play();
     }
-  }, [autoPlay, play]);
+  }, [autoPlay, audioUrl, play]);
 
   useEffect(() => {
     onPlayStateChange?.(isPlaying);

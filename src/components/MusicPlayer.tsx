@@ -134,6 +134,7 @@ export function MusicPlayer({
 
         <div className="flex-1">
           <AudioPlayer
+            key={currentSong?.id} // Add key to force re-render on song change
             audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}

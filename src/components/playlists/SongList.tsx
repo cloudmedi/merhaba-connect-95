@@ -15,6 +15,7 @@ interface SongListProps {
   currentSongId?: string | number;
   currentSongIndex?: number;
   onCurrentSongIndexChange?: (index: number) => void;
+  isPlaying?: boolean;
 }
 
 export function SongList({ 
@@ -22,7 +23,8 @@ export function SongList({
   onSongSelect, 
   currentSongId,
   currentSongIndex,
-  onCurrentSongIndexChange 
+  onCurrentSongIndexChange,
+  isPlaying = false
 }: SongListProps) {
   const formatDuration = (duration: string | number) => {
     if (typeof duration === 'number') {
@@ -59,7 +61,9 @@ export function SongList({
             <div className="col-span-1 text-gray-400">{index + 1}</div>
             <div className="col-span-5 font-medium text-gray-900 flex items-center gap-2">
               <Music2 className="w-4 h-4 text-gray-400" />
-              {song.title}
+              <span className={currentSongId === song.id ? 'text-purple-600' : ''}>
+                {song.title}
+              </span>
             </div>
             <div className="col-span-4 text-gray-500">{song.artist}</div>
             <div className="col-span-2 text-right text-gray-500">

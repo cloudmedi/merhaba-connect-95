@@ -14,7 +14,6 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       return;
     }
 
-    console.log('Loading audio from URL:', audioUrl);
     setIsLoading(true);
     setError(null);
 
@@ -22,13 +21,14 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audioRef.current = audio;
 
     const handleCanPlay = () => {
-      console.log('Audio can play now');
       setIsLoading(false);
       setDuration(audio.duration);
+      if (isPlaying) {
+        audio.play().catch(console.error);
+      }
     };
 
     const handleLoadStart = () => {
-      console.log('Audio loading started');
       setIsLoading(true);
       setError(null);
     };
@@ -92,25 +92,25 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     }
   }, [isPlaying]);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
 
   const play = useCallback(() => {
     setIsPlaying(true);
   }, []);
 
-  const seek = (value: number) => {
+  const seek = useCallback((value: number) => {
     if (!audioRef.current || !duration) return;
     const time = (value / 100) * duration;
     audioRef.current.currentTime = time;
     setProgress(value);
-  };
+  }, [duration]);
 
-  const setVolume = (value: number) => {
+  const setVolume = useCallback((value: number) => {
     if (!audioRef.current) return;
     audioRef.current.volume = Math.max(0, Math.min(1, value));
-  };
+  }, []);
 
   return {
     isPlaying,
