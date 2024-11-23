@@ -24,13 +24,11 @@ export const useMusicLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // First get total count
+  // Get total count first
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', filterGenre, filterPlaylist],
     queryFn: async () => {
-      let query = supabase
-        .from('songs')
-        .select('*', { count: 'exact', head: true });
+      let query = supabase.from('songs').select('*', { count: 'exact', head: true });
 
       if (filterGenre !== "all-genres") {
         query = query.contains('genre', [filterGenre]);
@@ -38,21 +36,18 @@ export const useMusicLibrary = () => {
 
       const { count, error } = await query;
 
-      if (error) {
-        console.error('Error fetching songs count:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return count || 0;
     }
   });
 
-  // Then get paginated songs
+  // Then get paginated data
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
-      const from = (currentPage - 1) * itemsPerPage;
-      
+      const startRow = (currentPage - 1) * itemsPerPage;
+      const endRow = startRow + itemsPerPage - 1;
+
       let query = supabase
         .from('songs')
         .select('*');
@@ -65,17 +60,11 @@ export const useMusicLibrary = () => {
         query = query.order('created_at', { ascending: false });
       }
 
-      // Apply pagination using range instead of limit/offset
-      query = query.range(from, from + itemsPerPage - 1);
+      query = query.range(startRow, endRow);
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error('Error fetching songs:', error);
-        throw error;
-      }
-
-      console.log('Fetched songs count:', data?.length);
+      if (error) throw error;
       return data as Song[];
     }
   });
