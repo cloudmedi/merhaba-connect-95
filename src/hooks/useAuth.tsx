@@ -17,11 +17,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUserProfile = async (userId: string) => {
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
-        *,
-        companies (
+        id,
+        email,
+        first_name,
+        last_name,
+        role,
+        is_active,
+        created_at,
+        updated_at,
+        company_id,
+        companies!inner (
           id,
           name,
           subscription_status,
@@ -31,14 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', userId)
       .single();
 
-    if (profile) {
-      const company = profile.companies as {
-        id: string;
-        name: string;
-        subscription_status: string;
-        subscription_ends_at: string | null;
-      } | null;
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
 
+    if (profile) {
       return {
         id: profile.id,
         email: profile.email,
@@ -48,11 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isActive: profile.is_active,
         createdAt: profile.created_at,
         updatedAt: profile.updated_at,
-        company: company ? {
-          id: company.id,
-          name: company.name,
-          subscriptionStatus: company.subscription_status,
-          subscriptionEndsAt: company.subscription_ends_at
+        companyId: profile.company_id,
+        company: profile.companies ? {
+          id: profile.companies.id,
+          name: profile.companies.name,
+          subscriptionStatus: profile.companies.subscription_status,
+          subscriptionEndsAt: profile.companies.subscription_ends_at
         } : undefined
       };
     }
