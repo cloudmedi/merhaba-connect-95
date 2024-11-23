@@ -47,7 +47,6 @@ export function ManagerHeader() {
   const handleNotificationClick = async (notification: any) => {
     await markAsRead(notification.id);
     
-    // If notification has playlist metadata, navigate to that playlist
     if (notification.metadata?.playlist_id) {
       navigate(`/manager/playlists/${notification.metadata.playlist_id}`);
     }
@@ -92,7 +91,7 @@ export function ManagerHeader() {
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#9b87f5] text-[10px] font-medium text-white flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[11px] font-medium text-white flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
@@ -113,10 +112,10 @@ export function ManagerHeader() {
                       notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                          className={`p-4 transition-colors cursor-pointer ${
                             notification.status === "unread"
-                              ? "bg-gray-50"
-                              : "bg-white"
+                              ? "bg-purple-50 hover:bg-purple-100"
+                              : "bg-white hover:bg-gray-50"
                           }`}
                           onClick={() => handleNotificationClick(notification)}
                         >
@@ -129,7 +128,11 @@ export function ManagerHeader() {
                               />
                             )}
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{notification.title}</p>
+                              <p className={`font-medium text-gray-900 ${
+                                notification.status === "unread" ? "font-semibold" : ""
+                              }`}>
+                                {notification.title}
+                              </p>
                               <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
                               <p className="text-xs text-gray-400 mt-2">
                                 {formatDistanceToNow(new Date(notification.created_at), {
@@ -157,23 +160,23 @@ export function ManagerHeader() {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem asChild>
                 <NavLink to="/manager/settings/profile" className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  <span className="font-medium">Profile</span>
                 </NavLink>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <NavLink to="/manager/settings" className="flex items-center">
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  <span className="font-medium">Settings</span>
                 </NavLink>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                <span className="font-medium">Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
