@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: session.user.email!,
               firstName: profile.first_name || '',
               lastName: profile.last_name || '',
-              role: profile.role || 'manager',
+              role: (profile.role as User['role']) || 'manager',
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: session.user.email!,
               firstName: profile.first_name || '',
               lastName: profile.last_name || '',
-              role: profile.role || 'manager',
+              role: (profile.role as User['role']) || 'manager',
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error('Error fetching user profile:', error);
         }
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
       setIsLoading(false);
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: data.user.email!,
             firstName: profile.first_name || '',
             lastName: profile.last_name || '',
-            role: profile.role || 'manager',
+            role: (profile.role as User['role']) || 'manager',
             isActive: profile.is_active,
             createdAt: data.user.created_at,
             updatedAt: profile.updated_at || data.user.created_at,
