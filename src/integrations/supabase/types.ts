@@ -684,6 +684,13 @@ export type Database = {
             foreignKeyName: "playlist_assignments_playlist_id_fkey"
             columns: ["playlist_id"]
             isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_assignments_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
@@ -724,6 +731,13 @@ export type Database = {
             foreignKeyName: "playlist_categories_playlist_id_fkey"
             columns: ["playlist_id"]
             isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_categories_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
@@ -749,6 +763,13 @@ export type Database = {
           song_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "playlist_songs_playlist_id_fkey"
             columns: ["playlist_id"]
@@ -784,8 +805,10 @@ export type Database = {
           id: string
           is_catalog: boolean | null
           is_public: boolean | null
+          last_played: string | null
           mood_id: string | null
           name: string
+          play_count: number | null
           updated_at: string | null
         }
         Insert: {
@@ -799,8 +822,10 @@ export type Database = {
           id?: string
           is_catalog?: boolean | null
           is_public?: boolean | null
+          last_played?: string | null
           mood_id?: string | null
           name: string
+          play_count?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -814,8 +839,10 @@ export type Database = {
           id?: string
           is_catalog?: boolean | null
           is_public?: boolean | null
+          last_played?: string | null
           mood_id?: string | null
           name?: string
+          play_count?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -991,6 +1018,13 @@ export type Database = {
             foreignKeyName: "schedule_events_playlist_id_fkey"
             columns: ["playlist_id"]
             isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_events_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
@@ -1149,6 +1183,63 @@ export type Database = {
       }
     }
     Views: {
+      most_played_bar_playlists: {
+        Row: {
+          artwork_url: string | null
+          assigned_to: string[] | null
+          category_id: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          genre_id: string | null
+          id: string | null
+          is_catalog: boolean | null
+          is_public: boolean | null
+          last_played: string | null
+          mood_id: string | null
+          name: string | null
+          play_count: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_genre_id_fkey"
+            columns: ["genre_id"]
+            isOneToOne: false
+            referencedRelation: "genres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlists_mood_id_fkey"
+            columns: ["mood_id"]
+            isOneToOne: false
+            referencedRelation: "moods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       song_play_statistics: {
         Row: {
           artist: string | null
