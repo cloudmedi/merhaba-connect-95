@@ -28,7 +28,8 @@ export function PlaylistGrid({
   const navigate = useNavigate();
 
   if (isLoading) {
-    return <CatalogLoader count={playlists.length} />;
+    // Her kategori için 6 loader göster
+    return <CatalogLoader count={6} />;
   }
 
   const handleViewAll = () => {
