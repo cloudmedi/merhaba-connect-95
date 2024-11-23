@@ -52,8 +52,10 @@ export const userService = {
       // 1. Create company first
       const company = await companyService.createCompany({
         name: userData.companyName,
-        subscriptionStatus: userData.license.type,
+        subscriptionStatus: 'trial',  // Changed from 'premium' to 'trial'
         subscriptionEndsAt: userData.license.end_date,
+        maxBranches: 10,
+        maxDevices: 50
       });
 
       // 2. Create Supabase auth user with password
@@ -170,7 +172,7 @@ export const userService = {
     const { data, error } = await supabase
       .from('licenses')
       .update({ 
-        type: 'premium',
+        type: 'active',
         end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       })
       .eq('user_id', userId)
