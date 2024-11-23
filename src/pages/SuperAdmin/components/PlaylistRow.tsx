@@ -34,17 +34,27 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handlePublishToggle = async () => {
     try {
-      // First update the playlist status
-      const { error } = await supabase
+      console.log('Publishing playlist:', playlist.id, 'Current status:', playlist.is_public);
+      
+      const { data, error } = await supabase
         .from('playlists')
-        .update({ is_public: !playlist.is_public })
-        .eq('id', playlist.id);
+        .update({ 
+          is_public: !playlist.is_public,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', playlist.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Publish error:', error);
+        throw error;
+      }
+
+      console.log('Publish response:', data);
 
       // If we're publishing (not unpublishing), send notifications to all managers
       if (!playlist.is_public) {
-        // Get all managers
         const { data: managers, error: managersError } = await supabase
           .from('profiles')
           .select('id')
