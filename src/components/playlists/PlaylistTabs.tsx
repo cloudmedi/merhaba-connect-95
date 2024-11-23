@@ -1,115 +1,84 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music2, Users, Tag, Grid2X2, Heart } from "lucide-react";
 import { SongsTab } from "./SongsTab";
-import { UsersTab } from "./UsersTab";
 import { GenresTab } from "./GenresTab";
-import { CategoriesTab } from "./CategoriesTab";
 import { MoodsTab } from "./MoodsTab";
+import { CategoriesTab } from "./CategoriesTab";
 
 interface PlaylistTabsProps {
-  playlistData: any;
+  playlistData: {
+    selectedSongs: any[];
+    selectedGenres: any[];
+    selectedMoods: any[];
+    selectedCategories: any[];
+  };
   setPlaylistData: (data: any) => void;
 }
 
 export function PlaylistTabs({ playlistData, setPlaylistData }: PlaylistTabsProps) {
   return (
-    <div className="bg-white rounded-lg border">
-      <Tabs defaultValue="songs" className="w-full">
-        <TabsList className="w-full justify-start bg-gray-50 border-b">
-          <TabsTrigger value="songs" className="data-[state=active]:bg-white">
-            <Music2 className="w-4 h-4 mr-2" />
-            Songs
-          </TabsTrigger>
-          <TabsTrigger value="users" className="data-[state=active]:bg-white">
-            <Users className="w-4 h-4 mr-2" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="genres" className="data-[state=active]:bg-white">
-            <Tag className="w-4 h-4 mr-2" />
-            Genres
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="data-[state=active]:bg-white">
-            <Grid2X2 className="w-4 h-4 mr-2" />
-            Categories
-          </TabsTrigger>
-          <TabsTrigger value="moods" className="data-[state=active]:bg-white">
-            <Heart className="w-4 h-4 mr-2" />
-            Moods
-          </TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue="songs" className="w-full">
+      <TabsList className="w-full">
+        <TabsTrigger value="songs" className="flex-1">Songs</TabsTrigger>
+        <TabsTrigger value="genres" className="flex-1">Genres</TabsTrigger>
+        <TabsTrigger value="moods" className="flex-1">Moods</TabsTrigger>
+        <TabsTrigger value="categories" className="flex-1">Categories</TabsTrigger>
+      </TabsList>
 
-        <div className="p-6">
-          <TabsContent value="songs">
-            <SongsTab
-              selectedSongs={playlistData.selectedSongs}
-              onAddSong={(song) => setPlaylistData(prev => ({
-                ...prev,
-                selectedSongs: [...prev.selectedSongs, song],
-              }))}
-              onRemoveSong={(songId) => setPlaylistData(prev => ({
-                ...prev,
-                selectedSongs: prev.selectedSongs.filter(s => s.id !== songId),
-              }))}
-            />
-          </TabsContent>
+      <TabsContent value="songs">
+        <SongsTab
+          selectedSongs={playlistData.selectedSongs}
+          onSelectSong={(song) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedSongs: [...prev.selectedSongs, song]
+          }))}
+          onUnselectSong={(songId) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedSongs: prev.selectedSongs.filter((s: any) => s.id !== songId)
+          }))}
+        />
+      </TabsContent>
 
-          <TabsContent value="users">
-            <UsersTab
-              selectedUsers={playlistData.selectedUsers}
-              onSelectUser={(user) => setPlaylistData(prev => ({
-                ...prev,
-                selectedUsers: [...prev.selectedUsers, user],
-              }))}
-              onUnselectUser={(userId) => setPlaylistData(prev => ({
-                ...prev,
-                selectedUsers: prev.selectedUsers.filter(u => u.id !== userId),
-              }))}
-            />
-          </TabsContent>
+      <TabsContent value="genres">
+        <GenresTab
+          selectedGenres={playlistData.selectedGenres}
+          onSelectGenre={(genre) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedGenres: [genre]
+          }))}
+          onUnselectGenre={(genreId) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedGenres: prev.selectedGenres.filter((g: any) => g.id !== genreId)
+          }))}
+        />
+      </TabsContent>
 
-          <TabsContent value="genres">
-            <GenresTab
-              selectedGenres={playlistData.selectedGenres}
-              onSelectGenre={(genre) => setPlaylistData(prev => ({
-                ...prev,
-                selectedGenres: [...prev.selectedGenres, genre],
-              }))}
-              onUnselectGenre={(genreId) => setPlaylistData(prev => ({
-                ...prev,
-                selectedGenres: prev.selectedGenres.filter(g => g.id !== genreId),
-              }))}
-            />
-          </TabsContent>
+      <TabsContent value="moods">
+        <MoodsTab
+          selectedMoods={playlistData.selectedMoods}
+          onSelectMood={(mood) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedMoods: [mood]
+          }))}
+          onUnselectMood={(moodId) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedMoods: prev.selectedMoods.filter((m: any) => m.id !== moodId)
+          }))}
+        />
+      </TabsContent>
 
-          <TabsContent value="categories">
-            <CategoriesTab
-              selectedCategories={playlistData.selectedCategories}
-              onSelectCategory={(category) => setPlaylistData(prev => ({
-                ...prev,
-                selectedCategories: [...prev.selectedCategories, category],
-              }))}
-              onUnselectCategory={(categoryId) => setPlaylistData(prev => ({
-                ...prev,
-                selectedCategories: prev.selectedCategories.filter(c => c.id !== categoryId),
-              }))}
-            />
-          </TabsContent>
-
-          <TabsContent value="moods">
-            <MoodsTab
-              selectedMoods={playlistData.selectedMoods}
-              onSelectMood={(mood) => setPlaylistData(prev => ({
-                ...prev,
-                selectedMoods: [...prev.selectedMoods, mood],
-              }))}
-              onUnselectMood={(moodId) => setPlaylistData(prev => ({
-                ...prev,
-                selectedMoods: prev.selectedMoods.filter(m => m.id !== moodId),
-              }))}
-            />
-          </TabsContent>
-        </div>
-      </Tabs>
-    </div>
+      <TabsContent value="categories">
+        <CategoriesTab
+          selectedCategories={playlistData.selectedCategories}
+          onSelectCategory={(category) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedCategories: [...prev.selectedCategories, category]
+          }))}
+          onUnselectCategory={(categoryId) => setPlaylistData((prev: any) => ({
+            ...prev,
+            selectedCategories: prev.selectedCategories.filter((c: any) => c.id !== categoryId)
+          }))}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }

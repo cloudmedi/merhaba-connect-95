@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -61,7 +60,7 @@ export function usePlaylistMutations() {
         mood_id: playlistData.selectedMoods[0]?.id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
-        assigned_to: playlistData.selectedUsers.map((user: any) => user.id)
+        is_hero: playlistData.isHero || false
       };
 
       let playlist;
@@ -75,12 +74,6 @@ export function usePlaylistMutations() {
 
         if (error) throw error;
         playlist = data;
-
-        // Remove existing assignments
-        await supabase
-          .from('playlist_assignments')
-          .delete()
-          .eq('playlist_id', existingPlaylist.id);
       } else {
         const { data, error } = await supabase
           .from('playlists')
@@ -92,29 +85,47 @@ export function usePlaylistMutations() {
         playlist = data;
       }
 
-      // Create new assignments and send notifications for non-catalog playlists
-      if (!playlistData.isCatalog && playlistData.selectedUsers.length > 0) {
-        const assignments = playlistData.selectedUsers.map((user: any) => ({
+      // Handle playlist categories
+      if (playlistData.selectedCategories.length > 0) {
+        if (isEditMode) {
+          await supabase
+            .from('playlist_categories')
+            .delete()
+            .eq('playlist_id', playlist.id);
+        }
+
+        const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
-          user_id: user.id,
-          notification_sent: false
+          category_id: category.id
         }));
 
-        const { error: assignmentError } = await supabase
-          .from('playlist_assignments')
-          .insert(assignments);
+        const { error: categoryError } = await supabase
+          .from('playlist_categories')
+          .insert(categoryAssignments);
 
-        if (assignmentError) throw assignmentError;
+        if (categoryError) throw categoryError;
+      }
 
-        // Send notifications for new assignments
-        for (const user of playlistData.selectedUsers) {
-          await createPlaylistAssignmentNotification(
-            user.id, 
-            playlistData.title,
-            playlist.id,
-            artwork_url
-          );
+      // Handle playlist songs
+      if (playlistData.selectedSongs.length > 0) {
+        if (isEditMode) {
+          await supabase
+            .from('playlist_songs')
+            .delete()
+            .eq('playlist_id', playlist.id);
         }
+
+        const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
+          playlist_id: playlist.id,
+          song_id: song.id,
+          position: index
+        }));
+
+        const { error: songError } = await supabase
+          .from('playlist_songs')
+          .insert(songAssignments);
+
+        if (songError) throw songError;
       }
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
