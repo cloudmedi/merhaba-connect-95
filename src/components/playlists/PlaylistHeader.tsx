@@ -58,11 +58,7 @@ export function PlaylistHeader({
         : "Playlist set as hero"
       );
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast(error.message);
     } finally {
       setIsUpdating(false);
     }
