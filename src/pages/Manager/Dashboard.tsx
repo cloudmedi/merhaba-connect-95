@@ -14,8 +14,8 @@ interface Category {
     id: string;
     name: string;
     artwork_url: string;
-    genre: { name: string } | null;
-    mood: { name: string } | null;
+    genre_id: { name: string } | null;
+    mood_id: { name: string } | null;
   }[];
 }
 
@@ -26,13 +26,13 @@ export default function ManagerDashboard() {
     queryKey: ['latest-bar-playlist'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('most_played_bar_playlists')
+        .from('playlists')
         .select(`
           id,
           name,
           artwork_url,
-          genre_name,
-          mood_name
+          genres:genre_id(name),
+          moods:mood_id(name)
         `)
         .order('play_count', { ascending: false })
         .limit(1);
@@ -61,8 +61,8 @@ export default function ManagerDashboard() {
                 id,
                 name,
                 artwork_url,
-                genre_id (name),
-                mood_id (name)
+                genres:genre_id(name),
+                moods:mood_id(name)
               )
             `)
             .eq('category_id', category.id)
@@ -160,8 +160,8 @@ export default function ManagerDashboard() {
                 id: playlist.id,
                 title: playlist.name,
                 artwork_url: playlist.artwork_url,
-                genre: playlist.genre_id?.name || "Various",
-                mood: playlist.mood_id?.name || "Various"
+                genre: playlist.genres?.name || "Various",
+                mood: playlist.moods?.name || "Various"
               }))}
             />
           ))
