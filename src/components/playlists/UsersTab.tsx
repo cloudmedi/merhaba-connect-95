@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -34,9 +35,10 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
           return;
         }
 
+        // First get the current user's profile to get their company_id
         const { data: userProfile } = await supabase
           .from('profiles')
-          .select('company_id')
+          .select('company_id, role')
           .eq('id', user.id)
           .single();
 
@@ -46,16 +48,30 @@ export function UsersTab({ selectedUsers, onSelectUser, onUnselectUser }: UsersT
           return;
         }
 
-        const { data, error } = await supabase
+        // Fetch all users from the same company
+        let query = supabase
           .from('profiles')
-          .select('id, email, first_name, last_name')
-          .eq('company_id', userProfile.company_id)
-          .ilike('email', `%${searchQuery}%`);
+          .select('id, email, first_name, last_name, role')
+          .eq('company_id', userProfile.company_id);
 
-        if (error) throw error;
-        setUsers(data || []);
-      } catch (error) {
+        // Add search filter if there's a query
+        if (searchQuery) {
+          query = query.or(`email.ilike.%${searchQuery}%,first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          setUsers(data);
+        }
+
+      } catch (error: any) {
         console.error('Error fetching users:', error);
+        toast.error('Failed to load users');
       } finally {
         setIsLoading(false);
       }
