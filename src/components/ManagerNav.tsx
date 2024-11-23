@@ -1,45 +1,43 @@
 import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Monitor,
-  Calendar,
-  Settings,
-  Volume2,
-  Music2
-} from "lucide-react";
+import { Music2, ListMusic, Monitor, Calendar, Bell, Settings } from "lucide-react";
 
 const navItems = [
   {
     title: "Dashboard",
-    icon: LayoutDashboard,
     href: "/manager",
-    exact: true
+    icon: Music2,
+    exact: true,
+  },
+  {
+    title: "Playlists",
+    href: "/manager/playlists",
+    icon: ListMusic,
   },
   {
     title: "Devices",
-    icon: Monitor,
     href: "/manager/devices",
+    icon: Monitor,
   },
   {
     title: "Schedule",
-    icon: Calendar,
     href: "/manager/schedule",
+    icon: Calendar,
   },
   {
     title: "Announcements",
-    icon: Volume2,
     href: "/manager/announcements",
+    icon: Bell,
   },
   {
     title: "Settings",
-    icon: Settings,
     href: "/manager/settings",
+    icon: Settings,
   },
 ];
 
 export function ManagerNav() {
   return (
-    <nav className="w-full bg-[#1A1F2C] py-3 px-4 flex items-center justify-between border-b border-gray-800">
+    <nav className="w-full bg-[#121212] py-3 px-4 flex items-center justify-between border-b border-[#282828]">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-3">
           <Music2 className="h-8 w-8 text-[#9b87f5]" />
@@ -48,7 +46,7 @@ export function ManagerNav() {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {navItems.map((item) => (
             <NavLink
               key={item.href}
@@ -57,8 +55,8 @@ export function ManagerNav() {
               className={({ isActive }) =>
                 `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-[#9b87f5]/20 text-[#9b87f5]"
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#282828] text-[#9b87f5]"
+                    : "text-gray-400 hover:text-white hover:bg-[#282828]"
                 }`
               }
             >

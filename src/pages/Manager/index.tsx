@@ -13,11 +13,11 @@ import ProfileSettings from "./Settings/Profile";
 
 export default function Manager() {
   return (
-    <div className="min-h-screen bg-gray-100/40">
+    <div className="min-h-screen bg-[#121212]">
       <div className="flex flex-col h-screen">
         <ManagerNav />
         <ManagerHeader />
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto px-4 md:px-8 py-6 max-w-[1400px] mx-auto w-full">
           <Routes>
             <Route path="/" element={<ManagerDashboard />} />
             <Route path="/playlists" element={<Playlists />} />
