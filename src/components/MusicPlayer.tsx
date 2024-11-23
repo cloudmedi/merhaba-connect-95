@@ -162,7 +162,7 @@ export function MusicPlayer({
               onValueChange={handleVolumeChange}
               max={100}
               step={1}
-              className="w-32"
+              className="w-24"
             />
           </div>
           
