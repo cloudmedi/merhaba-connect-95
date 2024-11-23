@@ -67,9 +67,12 @@ export function PlaylistDetail() {
     return <div>Playlist not found</div>;
   }
 
-  const handleSongSelect = (song: any, index: number) => {
-    setCurrentSongIndex(index);
-    setIsPlaying(true);
+  const handleSongSelect = (song: any) => {
+    const index = playlist.songs.findIndex((s: any) => s.id === song.id);
+    if (index !== -1) {
+      setCurrentSongIndex(index);
+      setIsPlaying(true);
+    }
   };
 
   const calculateTotalDuration = () => {
@@ -93,7 +96,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8">
         <div className="flex items-center gap-2 text-gray-500">
           <button 
-            onClick={() => navigate("/manager/playlists")}
+            onClick={() => navigate("/manager")}
             className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
