@@ -8,6 +8,7 @@ import { ManagerList } from "./manager-selection/ManagerList";
 import { SchedulingSection } from "./manager-selection/SchedulingSection";
 import { Manager } from "./types";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AssignManagersDialogProps {
   open: boolean;
@@ -26,18 +27,19 @@ export function AssignManagersDialog({
   const [scheduledAt, setScheduledAt] = useState<Date>();
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (open) {
       fetchManagers();
     }
-  }, [open, searchQuery]);
+  }, [open, searchQuery, user?.id]);
 
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+
+      if (!user?.id) {
         toast.error("No authenticated user found");
         return;
       }
