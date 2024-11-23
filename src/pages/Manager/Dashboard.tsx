@@ -43,7 +43,7 @@ export default function ManagerDashboard() {
   });
 
   const { data: categories, isLoading } = useQuery({
-    queryKey: ['manager-categories'],
+    queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -66,7 +66,8 @@ export default function ManagerDashboard() {
               )
             `)
             .eq('category_id', category.id)
-            .eq('playlists.is_public', true);
+            .eq('playlists.is_public', true)
+            .ilike('playlists.name', `%${searchQuery}%`);
 
           if (playlistsError) throw playlistsError;
 
@@ -86,7 +87,6 @@ export default function ManagerDashboard() {
   });
 
   const filteredCategories = categories?.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
     category.playlists.length > 0
   ) || [];
 
@@ -127,8 +127,8 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div className="relative w-full sm:w-64">
+      <div className="flex justify-end mb-8">
+        <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             type="search"
