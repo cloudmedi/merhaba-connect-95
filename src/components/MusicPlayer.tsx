@@ -148,7 +148,7 @@ export function MusicPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
               onClick={toggleMute}
             >
               {isMuted || volume === 0 ? (
@@ -169,7 +169,7 @@ export function MusicPlayer({
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
             onClick={onClose}
           >
             <X className="h-5 w-5" />
