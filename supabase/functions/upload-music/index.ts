@@ -63,12 +63,23 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Try to get the user ID from the authorization header
+    let userId = null;
+    const authHeader = req.headers.get('authorization');
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (!authError && user) {
+        userId = user.id;
+      }
+    }
+
     // Save song metadata to Supabase
     const songData = {
       title: fileName.replace(/\.[^/.]+$/, ""),
       file_url: uniqueFileName,
       bunny_id: uniqueFileName,
-      created_by: 'system'
+      created_by: userId // This will be null if no user is authenticated
     };
 
     console.log('Saving song metadata to Supabase:', songData);
