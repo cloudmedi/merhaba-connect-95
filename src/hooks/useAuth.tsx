@@ -17,34 +17,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUserProfile = async (userId: string) => {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        email,
-        first_name,
-        last_name,
-        role,
-        is_active,
-        created_at,
-        updated_at,
-        company_id,
-        companies!inner (
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
           id,
-          name,
-          subscription_status,
-          subscription_ends_at
-        )
-      `)
-      .eq('id', userId)
-      .single();
+          email,
+          first_name,
+          last_name,
+          role,
+          is_active,
+          created_at,
+          updated_at,
+          company_id,
+          companies!inner (
+            id,
+            name,
+            subscription_status,
+            subscription_ends_at
+          )
+        `)
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
 
-    if (profile) {
+      if (!profile) {
+        console.error('No profile found for user:', userId);
+        return null;
+      }
+
       return {
         id: profile.id,
         email: profile.email,
@@ -62,8 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           subscriptionEndsAt: profile.companies.subscription_ends_at
         } : undefined
       };
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      return null;
     }
-    return null;
   };
 
   useEffect(() => {
@@ -113,19 +120,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
-        if (profile) {
-          setUser(profile);
-          toast.success('Login successful');
-          
-          if (profile.role === 'super_admin') {
-            window.location.href = '/super-admin';
-          } else {
-            window.location.href = '/manager';
-          }
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
+
+        if (!profile.isActive) {
+          throw new Error('Account is inactive');
+        }
+
+        setUser(profile);
+        toast.success('Giriş başarılı');
+        
+        // Kullanıcı rolüne göre yönlendirme
+        if (profile.role === 'super_admin') {
+          window.location.href = '/super-admin';
+        } else if (profile.role === 'manager' || profile.role === 'admin') {
+          window.location.href = '/manager';
         }
       }
     } catch (error: any) {
-      toast.error('Login failed: ' + error.message);
+      console.error('Login error:', error);
+      toast.error('Giriş başarısız: ' + error.message);
       throw error;
     }
   };
@@ -142,10 +157,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/super-admin/login';
       }
       
-      toast.success('Logged out successfully');
+      toast.success('Başarıyla çıkış yapıldı');
     } catch (error: any) {
       console.error('Logout failed:', error);
-      toast.error('Failed to log out');
+      toast.error('Çıkış yapılamadı');
     }
   };
 

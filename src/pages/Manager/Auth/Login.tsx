@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ export default function ManagerLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,13 +20,10 @@ export default function ManagerLogin() {
 
     try {
       await login(email, password);
-      navigate("/manager");
+      // Login fonksiyonu içinde yönlendirme yapılıyor
     } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Login error:', error);
+      toast.error(error.message || "Giriş yapılamadı");
     } finally {
       setIsLoading(false);
     }
@@ -71,15 +67,7 @@ export default function ManagerLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate("/manager/register")}
-            >
-              Register as Manager
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>
         </CardContent>
