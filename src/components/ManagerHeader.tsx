@@ -90,11 +90,6 @@ export function ManagerHeader() {
                   <div className="flex items-center gap-2">
                     <Bell className="h-5 w-5 text-[#9b87f5]" />
                     <span>Bildirimler</span>
-                    {unreadCount > 0 && (
-                      <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
-                        {unreadCount} yeni
-                      </span>
-                    )}
                   </div>
                   {unreadCount > 0 && (
                     <Button 
