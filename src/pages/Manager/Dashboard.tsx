@@ -31,8 +31,8 @@ export default function ManagerDashboard() {
           id,
           name,
           artwork_url,
-          genre_id(name),
-          mood_id(name)
+          genre_id:genres!inner(name),
+          mood_id:moods!inner(name)
         `)
         .order('play_count', { ascending: false })
         .limit(1);
@@ -61,8 +61,8 @@ export default function ManagerDashboard() {
                 id,
                 name,
                 artwork_url,
-                genre_id(name),
-                mood_id(name)
+                genre_id:genres!inner(name),
+                mood_id:moods!inner(name)
               )
             `)
             .eq('category_id', category.id)
