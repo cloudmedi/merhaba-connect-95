@@ -12,6 +12,7 @@ import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
 import { PlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
+import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
       {
         path: "playlists/:id",
         element: <PlaylistDetail />,
+      },
+      {
+        path: "playlists/category/:categoryId",
+        element: <CategoryPlaylists />,
       },
       {
         path: "settings/*",
