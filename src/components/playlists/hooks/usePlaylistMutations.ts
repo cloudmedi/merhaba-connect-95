@@ -59,7 +59,9 @@ export function usePlaylistMutations() {
         created_by: user.id,
         genre_id: playlistData.selectedGenres[0]?.id || null,
         mood_id: playlistData.selectedMoods[0]?.id || null,
-        is_public: playlistData.isPublic || false
+        is_public: playlistData.isPublic || false,
+        is_catalog: playlistData.isCatalog || false,
+        assigned_to: playlistData.selectedUsers.map((user: any) => user.id)
       };
 
       let playlist;
@@ -114,15 +116,8 @@ export function usePlaylistMutations() {
         if (categoriesError) throw categoriesError;
       }
 
-      // Send notifications if the playlist is public and there are selected users
-      if (playlistData.isPublic && playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
-        console.log("Sending notifications for public playlist:", {
-          playlistId: playlist.id,
-          title: playlistData.title,
-          artworkUrl: artwork_url,
-          selectedUsers: playlistData.selectedUsers
-        });
-
+      // Send notifications to assigned users
+      if (playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
         for (const user of playlistData.selectedUsers) {
           await createPlaylistAssignmentNotification(
             user.id, 

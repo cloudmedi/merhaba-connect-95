@@ -6,6 +6,8 @@ import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export function CreatePlaylist() {
   const navigate = useNavigate();
@@ -23,6 +25,8 @@ export function CreatePlaylist() {
     selectedGenres: [],
     selectedCategories: [],
     selectedMoods: [],
+    isCatalog: false,
+    isPublic: false
   });
 
   const isEditMode = location.state?.editMode;
@@ -53,6 +57,8 @@ export function CreatePlaylist() {
             selectedGenres: existingPlaylist.genre_id ? [{ id: existingPlaylist.genre_id }] : [],
             selectedCategories: playlistCategories?.map(pc => pc.categories) || [],
             selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
+            isCatalog: existingPlaylist.is_catalog || false,
+            isPublic: existingPlaylist.is_public || false
           });
         } catch (error) {
           console.error('Error fetching playlist details:', error);
@@ -116,6 +122,30 @@ export function CreatePlaylist() {
           onCreate={onSave}
           isEditMode={isEditMode}
         />
+
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="catalog-mode"
+              checked={playlistData.isCatalog}
+              onCheckedChange={(checked) => 
+                setPlaylistData(prev => ({ ...prev, isCatalog: checked }))
+              }
+            />
+            <Label htmlFor="catalog-mode">Add to Catalog (visible to all managers)</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="public-mode"
+              checked={playlistData.isPublic}
+              onCheckedChange={(checked) => 
+                setPlaylistData(prev => ({ ...prev, isPublic: checked }))
+              }
+            />
+            <Label htmlFor="public-mode">Make Public</Label>
+          </div>
+        </div>
 
         <PlaylistTabs
           playlistData={playlistData}

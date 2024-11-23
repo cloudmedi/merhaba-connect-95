@@ -736,12 +736,14 @@ export type Database = {
       playlists: {
         Row: {
           artwork_url: string | null
+          assigned_to: string[] | null
           company_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           genre_id: string | null
           id: string
+          is_catalog: boolean | null
           is_public: boolean | null
           mood_id: string | null
           name: string
@@ -749,12 +751,14 @@ export type Database = {
         }
         Insert: {
           artwork_url?: string | null
+          assigned_to?: string[] | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           genre_id?: string | null
           id?: string
+          is_catalog?: boolean | null
           is_public?: boolean | null
           mood_id?: string | null
           name: string
@@ -762,12 +766,14 @@ export type Database = {
         }
         Update: {
           artwork_url?: string | null
+          assigned_to?: string[] | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           genre_id?: string | null
           id?: string
+          is_catalog?: boolean | null
           is_public?: boolean | null
           mood_id?: string | null
           name?: string
