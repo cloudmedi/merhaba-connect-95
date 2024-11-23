@@ -21,7 +21,7 @@ interface MoodsTableProps {
 
 export function MoodsTable({ moods, isLoading, onEdit, onDelete }: MoodsTableProps) {
   if (isLoading) {
-    return <CatalogLoader />;
+    return <CatalogLoader count={moods.length || 6} />;
   }
 
   return (
