@@ -24,10 +24,10 @@ export function MusicHeader() {
 
         // Convert file to base64
         const reader = new FileReader();
-        const base64Promise = new Promise((resolve) => {
+        const base64Promise = new Promise<string>((resolve) => {
           reader.onload = () => {
             const base64 = reader.result?.toString().split(',')[1];
-            resolve(base64);
+            if (base64) resolve(base64);
           };
         });
         reader.readAsDataURL(file);

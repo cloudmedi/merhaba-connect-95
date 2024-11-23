@@ -84,7 +84,7 @@ serve(async (req) => {
     console.log('Successfully uploaded to Bunny CDN');
 
     // Construct the CDN URL
-    const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
+    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`;
 
     // Save song metadata to Supabase
     const songData = {
