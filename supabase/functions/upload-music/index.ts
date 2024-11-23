@@ -39,13 +39,15 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { fileData, fileName, contentType } = await req.json();
-
-    if (!fileData || !fileName || !contentType) {
-      throw new Error('Missing required file information');
+    // Get form data from request
+    const formData = await req.formData();
+    const file = formData.get('file');
+    
+    if (!file || !(file instanceof File)) {
+      throw new Error('No file provided or invalid file');
     }
 
-    console.log('Processing file:', fileName);
+    console.log('Processing file:', file.name);
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
@@ -57,22 +59,22 @@ serve(async (req) => {
     }
 
     // Generate unique filename for Bunny CDN
-    const fileExt = fileName.split('.').pop();
+    const fileExt = file.name.split('.').pop();
     const uniqueFileName = `music/${crypto.randomUUID()}.${fileExt}`;
     
     console.log('Uploading to Bunny CDN...');
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
 
-    // Convert base64 to Uint8Array for upload
-    const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0));
+    // Convert file to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
 
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': contentType
+        'Content-Type': file.type
       },
-      body: binaryData
+      body: arrayBuffer
     });
 
     if (!uploadResponse.ok) {
@@ -83,12 +85,9 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN');
 
-    // Construct the CDN URL - use the correct format for public access
-    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`;
-
     // Save song metadata to Supabase
     const songData = {
-      title: fileName.replace(/\.[^/.]+$/, ""),
+      title: file.name.replace(/\.[^/.]+$/, ""),
       file_url: uniqueFileName, // Store just the path
       bunny_id: uniqueFileName,
       created_by: user.id,
