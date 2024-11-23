@@ -25,7 +25,7 @@ export const useMusicLibrary = () => {
   const itemsPerPage = 10;
 
   // First, get total count of songs
-  const { data: totalCount = 0 } = useQuery({
+  const { data: totalCount = 0, error: countError } = useQuery({
     queryKey: ['songs-count', filterGenre, filterPlaylist],
     queryFn: async () => {
       let query = supabase
@@ -39,16 +39,16 @@ export const useMusicLibrary = () => {
       const { count, error } = await query;
 
       if (error) {
-        console.error('Error fetching songs count:', error);
         throw error;
       }
 
       return count || 0;
-    }
+    },
+    retry: 3
   });
 
   // Then fetch paginated songs
-  const { data: songs = [], isLoading, refetch } = useQuery({
+  const { data: songs = [], isLoading, error: songsError, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
@@ -70,19 +70,21 @@ export const useMusicLibrary = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching songs:', error);
         throw error;
       }
 
       return data as Song[];
-    }
+    },
+    retry: 3
   });
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+  const error = countError || songsError;
 
   return {
     songs,
     isLoading,
+    error,
     filterGenre,
     setFilterGenre,
     filterPlaylist,
