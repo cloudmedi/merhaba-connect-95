@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Tables } from '@/integrations/supabase/types/tables';
 
 export interface Notification {
   id: string;
@@ -10,6 +11,8 @@ export interface Notification {
   status: 'read' | 'unread';
   created_at: string;
 }
+
+type SupabaseNotification = Tables<'notifications'>;
 
 export function useNotifications() {
   const { user } = useAuth();
@@ -32,8 +35,16 @@ export function useNotifications() {
         return;
       }
 
-      setNotifications(data);
-      setUnreadCount(data.filter(n => n.status === 'unread').length);
+      const formattedNotifications: Notification[] = (data as SupabaseNotification[]).map(n => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        status: n.status as 'read' | 'unread',
+        created_at: n.created_at || '',
+      }));
+
+      setNotifications(formattedNotifications);
+      setUnreadCount(formattedNotifications.filter(n => n.status === 'unread').length);
     };
 
     fetchNotifications();
@@ -50,13 +61,21 @@ export function useNotifications() {
           filter: `recipient_id=eq.${user.id}`,
         },
         (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
+          const newNotification = payload.new as SupabaseNotification;
+          const formattedNotification: Notification = {
+            id: newNotification.id,
+            title: newNotification.title,
+            message: newNotification.message,
+            status: newNotification.status as 'read' | 'unread',
+            created_at: newNotification.created_at || '',
+          };
+          
+          setNotifications(prev => [formattedNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           
           // Show toast notification
-          toast(newNotification.title, {
-            description: newNotification.message,
+          toast(formattedNotification.title, {
+            description: formattedNotification.message,
           });
         }
       )
