@@ -2,7 +2,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { createPlaylistAssignmentNotification } from "@/utils/notifications";
-import { PlaylistFormData } from "../PlaylistForm";
+
+interface PlaylistFormData {
+  title: string;
+  description: string;
+  artwork: File | null;
+  artwork_url?: string;
+  isPublic?: boolean;
+  selectedSongs?: any[];
+  selectedUsers?: any[];
+  selectedGenres?: any[];
+  selectedCategories?: any[];
+  selectedMoods?: any[];
+  moodId?: string;
+  genreId?: string;
+}
 
 interface SavePlaylistParams {
   playlistData: PlaylistFormData;
@@ -19,10 +33,11 @@ export const usePlaylistMutations = () => {
     mutationFn: async (playlistData: PlaylistFormData) => {
       try {
         // Upload artwork if provided
-        let artwork_url = null;
+        let artwork_url = playlistData.artwork_url;
         if (playlistData.artwork) {
           const fileExt = playlistData.artwork.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
+          
           const { error: uploadError, data } = await supabase.storage
             .from('playlists')
             .upload(fileName, playlistData.artwork);
