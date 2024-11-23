@@ -108,12 +108,25 @@ export function usePlaylistMutations() {
 
         // Send notifications for new assignments
         for (const user of playlistData.selectedUsers) {
-          await createPlaylistAssignmentNotification(
-            user.id, 
-            playlistData.title,
-            playlist.id,
-            artwork_url
-          );
+          try {
+            const { data: existingAssignment } = await supabase
+              .from('playlist_assignments')
+              .select('*')
+              .eq('playlist_id', playlist.id)
+              .eq('user_id', user.id)
+              .maybeSingle(); // Use maybeSingle() instead of single()
+
+            if (existingAssignment) {
+              await createPlaylistAssignmentNotification(
+                user.id, 
+                playlistData.title,
+                playlist.id,
+                artwork_url
+              );
+            }
+          } catch (error) {
+            console.error('Error checking assignment:', error);
+          }
         }
       }
 
