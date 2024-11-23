@@ -52,10 +52,9 @@ serve(async (req) => {
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST');
-    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME');
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
 
-    if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageName || !bunnyStorageZoneName) {
+    if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageZoneName) {
       throw new Error('Missing Bunny CDN configuration');
     }
 
@@ -74,47 +73,31 @@ serve(async (req) => {
     // Get file data as array buffer
     const fileData = await file.arrayBuffer();
 
-    // Test Bunny CDN connectivity
-    try {
-      const testResponse = await fetch(`https://${bunnyStorageHost}`, {
-        method: 'HEAD',
-        headers: {
-          'AccessKey': bunnyApiKey
-        }
-      });
-      console.log('Bunny CDN connectivity test:', testResponse.status);
-    } catch (error) {
-      console.error('Bunny CDN connectivity test failed:', error);
-      throw new Error('Failed to connect to Bunny CDN');
-    }
-
-    // Correct Bunny CDN upload URL with storage zone name
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`;
+    // Upload directly to Bunny Storage
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
     console.log('Uploading to:', bunnyUrl);
 
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': 'audio/mpeg',
-        'Accept': '*/*'
+        'Content-Type': file.type || 'audio/mpeg',
       },
       body: fileData
     });
 
-    const responseText = await uploadResponse.text();
-    console.log('Bunny CDN response:', uploadResponse.status, responseText);
-
     if (!uploadResponse.ok) {
+      const responseText = await uploadResponse.text();
+      console.error('Bunny CDN upload failed:', responseText);
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`);
     }
 
     console.log('Successfully uploaded to Bunny CDN');
 
-    // Save song metadata to Supabase with correct CDN URL
+    // Save song metadata to Supabase
     const songData = {
       title: file.name.replace(/\.[^/.]+$/, ""),
-      file_url: `https://${bunnyStorageZoneName}/${uniqueFileName}`,
+      file_url: uniqueFileName, // Store just the filename
       bunny_id: uniqueFileName,
       created_by: user.id,
     };
