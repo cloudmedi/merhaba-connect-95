@@ -100,32 +100,24 @@ export function usePlaylistMutations() {
           notification_sent: false
         }));
 
+        // First create all assignments
         const { error: assignmentError } = await supabase
           .from('playlist_assignments')
           .insert(assignments);
 
         if (assignmentError) throw assignmentError;
 
-        // Send notifications for new assignments
+        // Then send notifications for the created assignments
         for (const user of playlistData.selectedUsers) {
           try {
-            const { data: existingAssignment } = await supabase
-              .from('playlist_assignments')
-              .select('*')
-              .eq('playlist_id', playlist.id)
-              .eq('user_id', user.id)
-              .maybeSingle(); // Use maybeSingle() instead of single()
-
-            if (existingAssignment) {
-              await createPlaylistAssignmentNotification(
-                user.id, 
-                playlistData.title,
-                playlist.id,
-                artwork_url
-              );
-            }
+            await createPlaylistAssignmentNotification(
+              user.id, 
+              playlistData.title,
+              playlist.id,
+              artwork_url
+            );
           } catch (error) {
-            console.error('Error checking assignment:', error);
+            console.error('Error sending notification:', error);
           }
         }
       }
