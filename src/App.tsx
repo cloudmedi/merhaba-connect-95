@@ -11,6 +11,7 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
+import { PlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "announcements",
         element: <Announcements />,
+      },
+      {
+        path: "playlists/:id",
+        element: <PlaylistDetail />,
       },
       {
         path: "settings/*",
