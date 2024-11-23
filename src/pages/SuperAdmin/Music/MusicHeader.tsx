@@ -16,19 +16,22 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('No active session');
-        }
+        // Convert file to base64
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+          reader.onload = () => {
+            const base64 = reader.result?.toString().split(',')[1];
+            resolve(base64);
+          };
+        });
+        reader.readAsDataURL(file);
+        const base64Data = await base64Promise;
 
         const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+          body: {
+            fileData: base64Data,
+            fileName: file.name,
+            contentType: file.type
           }
         });
 

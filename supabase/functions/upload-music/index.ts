@@ -12,25 +12,13 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting file upload process...')
-    const formData = await req.formData()
-    const file = formData.get('file')
+    const { fileData, fileName, contentType } = await req.json()
 
-    if (!file) {
-      throw new Error('No file uploaded')
+    if (!fileData || !fileName || !contentType) {
+      throw new Error('Missing required file information')
     }
 
-    console.log('File received:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    })
-
-    // Validate file type
-    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg']
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error(`Invalid file type. Allowed types are: ${allowedTypes.join(', ')}`)
-    }
+    console.log('Received file:', { fileName, contentType })
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY')
@@ -42,19 +30,22 @@ serve(async (req) => {
     }
 
     // Generate unique filename
-    const fileExt = file.name.split('.').pop()
+    const fileExt = fileName.split('.').pop()
     const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`
     
     console.log('Uploading to Bunny CDN...')
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`
 
+    // Convert base64 to Uint8Array
+    const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0))
+
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': file.type
+        'Content-Type': contentType
       },
-      body: file
+      body: binaryData
     })
 
     if (!uploadResponse.ok) {
@@ -64,10 +55,6 @@ serve(async (req) => {
     }
 
     console.log('Successfully uploaded to Bunny CDN')
-
-    // Get file metadata
-    const arrayBuffer = await file.arrayBuffer()
-    const fileData = new Uint8Array(arrayBuffer)
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -96,11 +83,10 @@ serve(async (req) => {
 
     // Save song metadata to Supabase
     const songData = {
-      title: file.name.replace(/\.[^/.]+$/, ""),
+      title: fileName.replace(/\.[^/.]+$/, ""),
       file_url: cdnUrl,
       bunny_id: uniqueFileName,
       created_by: user.id,
-      duration: 0, // Duration will be updated when the file is played
     }
 
     console.log('Saving song metadata to Supabase:', songData)
