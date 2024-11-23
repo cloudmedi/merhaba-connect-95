@@ -6,6 +6,7 @@ import Genres from "./Genres";
 import Categories from "./Categories";
 import Moods from "./Moods";
 import Playlists from "./Playlists";
+import { PlaylistDetail } from "./Playlists/PlaylistDetail";
 import Notifications from "./Notifications";
 import Reports from "./Reports";
 import Settings from "./Settings";
@@ -26,7 +27,8 @@ export default function SuperAdmin() {
               <Route path="genres/*" element={<Genres />} />
               <Route path="categories/*" element={<Categories />} />
               <Route path="moods/*" element={<Moods />} />
-              <Route path="playlists/*" element={<Playlists />} />
+              <Route path="playlists" element={<Playlists />} />
+              <Route path="playlists/:id" element={<PlaylistDetail />} />
               <Route path="notifications/*" element={<Notifications />} />
               <Route path="performance/*" element={<Performance />} />
               <Route path="reports/*" element={<Reports />} />
