@@ -65,8 +65,8 @@ export const useMusicLibrary = () => {
         query = query.order('created_at', { ascending: false });
       }
 
-      // Apply pagination using limit and offset instead of range
-      query = query.limit(itemsPerPage).offset(from);
+      // Apply pagination using range instead of limit/offset
+      query = query.range(from, from + itemsPerPage - 1);
 
       const { data, error } = await query;
 
