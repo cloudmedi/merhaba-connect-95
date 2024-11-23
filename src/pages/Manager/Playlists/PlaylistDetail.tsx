@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Music2, Play } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowLeft, Play } from "lucide-react";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongList } from "@/components/playlists/SongList";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -13,35 +15,77 @@ export function PlaylistDetail() {
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const { toast } = useToast();
 
-  // Mock data - replace with actual data fetching
-  const playlist = {
-    id,
-    title: "Summer Vibes 2024",
-    genre: "Pop",
-    mood: "Energetic",
-    songCount: "45 songs",
-    duration: "2h 45m",
-    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
-    songs: Array.from({ length: 45 }, (_, i) => ({
-      id: i + 1,
-      title: `Song Title ${i + 1}`,
-      artist: `Artist ${Math.floor(i / 8) + 1}`,
-      duration: "3:30",
-      file_url: `/mock-songs/song-${i + 1}.mp3`
-    }))
-  };
+  const { data: playlist, isLoading } = useQuery({
+    queryKey: ['playlist', id],
+    queryFn: async () => {
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          genres (name),
+          moods (name)
+        `)
+        .eq('id', id)
+        .single();
 
-  const handleSongSelect = (song: any) => {
-    const songIndex = playlist.songs.findIndex((s: any) => s.id === song.id);
-    if (songIndex !== -1) {
-      setCurrentSongIndex(songIndex);
-      setIsPlaying(true);
+      if (playlistError) throw playlistError;
+
+      const { data: playlistSongs, error: songsError } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            album,
+            duration,
+            artwork_url,
+            file_url,
+            genre
+          )
+        `)
+        .eq('playlist_id', id)
+        .order('position');
+
+      if (songsError) throw songsError;
+
+      return {
+        ...playlist,
+        songs: playlistSongs.map(ps => ps.songs)
+      };
     }
+  });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!playlist) {
+    return <div>Playlist not found</div>;
+  }
+
+  const handleSongSelect = (song: any, index: number) => {
+    setCurrentSongIndex(index);
+    setIsPlaying(true);
   };
 
-  const handleCurrentSongIndexChange = (index: number) => {
-    setCurrentSongIndex(index);
+  const calculateTotalDuration = () => {
+    if (!playlist.songs || playlist.songs.length === 0) return "0 min";
+    
+    const totalSeconds = playlist.songs.reduce((acc, song) => {
+      return acc + (song.duration || 0);
+    }, 0);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes} min`;
   };
 
   return (
@@ -60,8 +104,8 @@ export function PlaylistDetail() {
         <div className="flex items-start gap-8">
           <div className="relative group">
             <img 
-              src={playlist.artwork} 
-              alt={playlist.title}
+              src={playlist.artwork_url || "/placeholder.svg"} 
+              alt={playlist.name}
               className="w-32 h-32 rounded-lg object-cover"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
@@ -74,15 +118,15 @@ export function PlaylistDetail() {
             </div>
           </div>
           <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">{playlist.title}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>{playlist.genre}</span>
+              <span>{playlist.genres?.name || "Various"}</span>
               <span>•</span>
-              <span>{playlist.mood}</span>
+              <span>{playlist.moods?.name || "Various"}</span>
               <span>•</span>
-              <span>{playlist.songCount}</span>
+              <span>{playlist.songs?.length || 0} songs</span>
               <span>•</span>
-              <span>{playlist.duration}</span>
+              <span>{calculateTotalDuration()}</span>
             </div>
             <Button 
               onClick={() => setIsPushDialogOpen(true)}
@@ -97,26 +141,33 @@ export function PlaylistDetail() {
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
           currentSongIndex={isPlaying ? currentSongIndex : undefined}
-          onCurrentSongIndexChange={handleCurrentSongIndexChange}
+          onCurrentSongIndexChange={setCurrentSongIndex}
+          isPlaying={isPlaying}
         />
       </div>
 
       <PushPlaylistDialog
         isOpen={isPushDialogOpen}
         onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.title}
+        playlistTitle={playlist.name}
       />
 
-      {isPlaying && (
+      {isPlaying && playlist.songs && (
         <MusicPlayer
           playlist={{
-            title: playlist.title,
-            artwork: playlist.artwork,
-            songs: playlist.songs
+            title: playlist.name,
+            artwork: playlist.artwork_url || "/placeholder.svg",
+            songs: playlist.songs.map(song => ({
+              id: song.id,
+              title: song.title,
+              artist: song.artist || "Unknown Artist",
+              duration: song.duration?.toString() || "0:00",
+              file_url: song.file_url
+            }))
           }}
           onClose={() => setIsPlaying(false)}
           initialSongIndex={currentSongIndex}
-          onSongChange={handleCurrentSongIndexChange}
+          onSongChange={setCurrentSongIndex}
           autoPlay={true}
         />
       )}
