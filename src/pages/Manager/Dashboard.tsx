@@ -14,8 +14,8 @@ interface Category {
     id: string;
     name: string;
     artwork_url: string;
-    genre_id: { name: string } | null;
-    mood_id: { name: string } | null;
+    genres: { name: string } | null;
+    moods: { name: string } | null;
   }[];
 }
 
