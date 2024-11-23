@@ -137,20 +137,20 @@ export function PlaylistEditor() {
           setPlaylistData={setPlaylistData}
         />
 
-        <PlaylistTabs
-          playlistData={playlistData}
-          setPlaylistData={setPlaylistData}
-        />
-
         {isEditMode && (
           <Button
             onClick={() => setIsAssignDialogOpen(true)}
-            className="w-full mt-4 bg-purple-100 text-purple-600 hover:bg-purple-200"
+            className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200 mb-4"
           >
             <Users className="w-4 h-4 mr-2" />
             Assign to Managers
           </Button>
         )}
+
+        <PlaylistTabs
+          playlistData={playlistData}
+          setPlaylistData={setPlaylistData}
+        />
 
         <AssignManagersDialog
           open={isAssignDialogOpen}
