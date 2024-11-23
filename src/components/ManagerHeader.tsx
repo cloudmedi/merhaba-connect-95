@@ -78,34 +78,50 @@ export function ManagerHeader() {
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5 text-gray-600" />
                 {unreadCount > 0 && (
-                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-medium flex items-center justify-center text-white">
+                    {unreadCount}
+                  </span>
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
+            <SheetContent className="w-[400px] sm:w-[540px]">
+              <SheetHeader className="space-y-4 pb-4 border-b">
                 <SheetTitle className="flex justify-between items-center">
-                  <span>Bildirimler</span>
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-[#9b87f5]" />
+                    <span>Bildirimler</span>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+                        {unreadCount} yeni
+                      </span>
+                    )}
+                  </div>
                   {unreadCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={markAllAsRead}
+                      className="text-[#9b87f5] hover:text-[#9b87f5] hover:bg-[#9b87f5]/5"
+                    >
                       Tümünü Okundu İşaretle
                     </Button>
                   )}
                 </SheetTitle>
               </SheetHeader>
-              <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+              <ScrollArea className="h-[calc(100vh-8rem)] mt-4 pr-4">
                 {notifications.length === 0 ? (
-                  <div className="text-center text-gray-500 mt-8">
-                    Henüz bildirim bulunmuyor
+                  <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+                    <Bell className="h-8 w-8 mb-2 text-gray-400" />
+                    <p>Henüz bildirim bulunmuyor</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-4 rounded-lg border cursor-pointer ${
+                        className={`p-4 rounded-lg border transition-colors cursor-pointer hover:bg-gray-50 ${
                           notification.status === 'unread'
-                            ? 'bg-gray-50'
+                            ? 'bg-[#9b87f5]/5 border-[#9b87f5]/20'
                             : 'bg-white'
                         }`}
                         onClick={() => {
@@ -125,9 +141,16 @@ export function ManagerHeader() {
                               />
                             </div>
                           )}
-                          <div className="flex-1">
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className={`font-medium ${notification.status === 'unread' ? 'text-[#9b87f5]' : ''}`}>
+                                {notification.title}
+                              </h4>
+                              {notification.status === 'unread' && (
+                                <span className="flex-shrink-0 h-2 w-2 rounded-full bg-[#9b87f5]" />
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                               {notification.message}
                             </p>
                             <span className="text-xs text-gray-400 mt-2 block">
