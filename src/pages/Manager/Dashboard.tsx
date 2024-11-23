@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
+import CatalogLoader from "@/components/loaders/CatalogLoader";
 
 interface Category {
   id: string;
@@ -22,7 +23,7 @@ interface Category {
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: latestBarPlaylist } = useQuery({
+  const { data: latestBarPlaylist, isLoading: isLatestLoading } = useQuery({
     queryKey: ['latest-bar-playlist'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,7 +40,8 @@ export default function ManagerDashboard() {
 
       if (error) throw error;
       return data?.[0] || null;
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { data: categories, isLoading } = useQuery({
@@ -83,8 +85,13 @@ export default function ManagerDashboard() {
       );
 
       return categoriesWithPlaylists;
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  if (isLoading || isLatestLoading) {
+    return <CatalogLoader />;
+  }
 
   const filteredCategories = categories?.filter(category =>
     category.playlists.length > 0
@@ -141,31 +148,21 @@ export default function ManagerDashboard() {
       </div>
 
       <div className="space-y-12">
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading categories...</p>
-          </div>
-        ) : filteredCategories.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No playlists available</p>
-          </div>
-        ) : (
-          filteredCategories.map((category) => (
-            <PlaylistGrid
-              key={category.id}
-              title={category.name}
-              description={category.description}
-              categoryId={category.id}
-              playlists={category.playlists.map(playlist => ({
-                id: playlist.id,
-                title: playlist.name,
-                artwork_url: playlist.artwork_url,
-                genre: playlist.genre_id?.name || "Various",
-                mood: playlist.mood_id?.name || "Various"
-              }))}
-            />
-          ))
-        )}
+        {filteredCategories.map((category) => (
+          <PlaylistGrid
+            key={category.id}
+            title={category.name}
+            description={category.description}
+            categoryId={category.id}
+            playlists={category.playlists.map(playlist => ({
+              id: playlist.id,
+              title: playlist.name,
+              artwork_url: playlist.artwork_url,
+              genre: playlist.genre_id?.name || "Various",
+              mood: playlist.mood_id?.name || "Various"
+            }))}
+          />
+        ))}
       </div>
     </div>
   );
