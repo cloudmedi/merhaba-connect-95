@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
 interface PlaylistRowProps {
   playlist: {
@@ -33,12 +34,34 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handlePublishToggle = async () => {
     try {
+      // First update the playlist status
       const { error } = await supabase
         .from('playlists')
         .update({ is_public: !playlist.is_public })
         .eq('id', playlist.id);
 
       if (error) throw error;
+
+      // If we're publishing (not unpublishing), send notifications to all managers
+      if (!playlist.is_public) {
+        // Get all managers
+        const { data: managers, error: managersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'manager');
+
+        if (managersError) throw managersError;
+
+        // Send notification to each manager
+        for (const manager of managers) {
+          await createPlaylistAssignmentNotification(
+            manager.id,
+            playlist.name,
+            playlist.id,
+            playlist.artwork_url
+          );
+        }
+      }
 
       toast({
         title: "Success",
