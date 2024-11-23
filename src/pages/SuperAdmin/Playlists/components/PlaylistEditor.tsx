@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMutations";
+import { toast } from "sonner";
 
 export function PlaylistEditor() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { handleSavePlaylist } = usePlaylistMutations();
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
@@ -78,11 +78,36 @@ export function PlaylistEditor() {
       });
     } catch (error) {
       console.error('Error fetching playlist details:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load playlist details",
-        variant: "destructive",
-      });
+      toast.error("Failed to load playlist details");
+    }
+  };
+
+  const handleAssignManagers = async (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => {
+    try {
+      if (!existingPlaylist?.id) {
+        toast.error("Please save the playlist first before assigning to managers");
+        return;
+      }
+
+      const assignments = managerIds.map(userId => ({
+        user_id: userId,
+        playlist_id: existingPlaylist.id,
+        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
+        expires_at: expiresAt?.toISOString() || null,
+        notification_sent: false
+      }));
+
+      const { error } = await supabase
+        .from('playlist_assignments')
+        .insert(assignments);
+
+      if (error) throw error;
+
+      toast.success(`Playlist assigned to ${managerIds.length} managers`);
+      setIsAssignDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error assigning playlist:', error);
+      toast.error(error.message || "Failed to assign playlist");
     }
   };
 
@@ -98,18 +123,11 @@ export function PlaylistEditor() {
             isEditMode,
             existingPlaylist,
             onSuccess: () => {
-              toast({
-                title: "Success",
-                description: `Playlist ${isEditMode ? 'updated' : 'created'} successfully`,
-              });
+              toast.success(`Playlist ${isEditMode ? 'updated' : 'created'} successfully`);
               navigate("/super-admin/playlists", { replace: true });
             },
             onError: (error) => {
-              toast({
-                title: "Error",
-                description: error.message || `Failed to ${isEditMode ? 'update' : 'create'} playlist`,
-                variant: "destructive",
-              });
+              toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} playlist`);
             }
           })}
           isEditMode={isEditMode}
@@ -125,57 +143,20 @@ export function PlaylistEditor() {
           setPlaylistData={setPlaylistData}
         />
 
-        <Button
-          onClick={() => setIsAssignDialogOpen(true)}
-          className="w-full mt-6 bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          <Users className="w-4 h-4 mr-2" />
-          Assign to Managers
-        </Button>
+        {isEditMode && (
+          <Button
+            onClick={() => setIsAssignDialogOpen(true)}
+            className="w-full mt-6 bg-purple-100 text-purple-600 hover:bg-purple-200"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Assign to Managers
+          </Button>
+        )}
 
         <AssignManagersDialog
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
-          onAssign={async (managerIds, scheduledAt, expiresAt) => {
-            try {
-              if (!existingPlaylist?.id) {
-                toast({
-                  title: "Error",
-                  description: "Please save the playlist first before assigning to managers",
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              const assignments = managerIds.map(userId => ({
-                user_id: userId,
-                playlist_id: existingPlaylist.id,
-                scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-                expires_at: expiresAt?.toISOString() || null,
-                notification_sent: false
-              }));
-
-              const { error } = await supabase
-                .from('playlist_assignments')
-                .insert(assignments);
-
-              if (error) throw error;
-
-              toast({
-                title: "Success",
-                description: `Playlist assigned to ${managerIds.length} managers`,
-              });
-
-              setIsAssignDialogOpen(false);
-            } catch (error: any) {
-              console.error('Error assigning playlist:', error);
-              toast({
-                title: "Error",
-                description: error.message || "Failed to assign playlist",
-                variant: "destructive",
-              });
-            }
-          }}
+          onAssign={handleAssignManagers}
         />
       </div>
     </div>
