@@ -4,6 +4,9 @@ export async function createPlaylistAssignmentNotification(
   recipientId: string,
   playlistName: string
 ) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No authenticated user');
+
   try {
     const { error } = await supabase.from("notifications").insert({
       recipient_id: recipientId,
