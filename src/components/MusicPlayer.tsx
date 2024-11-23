@@ -22,6 +22,8 @@ interface MusicPlayerProps {
   initialSongIndex?: number;
   autoPlay?: boolean;
   onSongChange?: (index: number) => void;
+  onPlayStateChange?: (isPlaying: boolean) => void;
+  currentSongId?: string | number;
 }
 
 export function MusicPlayer({ 
@@ -29,15 +31,31 @@ export function MusicPlayer({
   onClose, 
   initialSongIndex = 0,
   autoPlay = true,
-  onSongChange
+  onSongChange,
+  onPlayStateChange,
+  currentSongId
 }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
   
+  useEffect(() => {
+    if (currentSongId && playlist.songs) {
+      const index = playlist.songs.findIndex(song => song.id === currentSongId);
+      if (index !== -1) {
+        setCurrentSongIndex(index);
+      }
+    }
+  }, [currentSongId, playlist.songs]);
+
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
   }, [initialSongIndex]);
+
+  useEffect(() => {
+    onPlayStateChange?.(isPlaying);
+  }, [isPlaying, onPlayStateChange]);
 
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
@@ -61,6 +79,10 @@ export function MusicPlayer({
       setCurrentSongIndex(prevIndex);
       onSongChange?.(prevIndex);
     }
+  };
+
+  const handlePlayPause = (playing: boolean) => {
+    setIsPlaying(playing);
   };
 
   const handleVolumeChange = (values: number[]) => {
@@ -117,6 +139,7 @@ export function MusicPlayer({
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}
             autoPlay={autoPlay}
+            onPlayStateChange={handlePlayPause}
           />
         </div>
 

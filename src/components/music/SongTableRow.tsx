@@ -1,6 +1,6 @@
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Play } from "lucide-react";
+import { MoreVertical, Play, Pause } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -28,6 +28,8 @@ interface SongTableRowProps {
   formatDuration: (duration?: number) => string;
   defaultArtwork: string;
   onDelete: (id: string) => void;
+  isPlaying?: boolean;
+  currentlyPlayingId?: string;
 }
 
 export function SongTableRow({
@@ -38,14 +40,18 @@ export function SongTableRow({
   formatDuration,
   defaultArtwork,
   onDelete,
+  isPlaying,
+  currentlyPlayingId,
 }: SongTableRowProps) {
   const getOptimizedImageUrl = (url: string) => {
     if (!url || !url.includes('b-cdn.net')) return url;
     return `${url}?width=150&quality=85&format=webp`;
   };
 
+  const isCurrentSong = song.id === currentlyPlayingId;
+
   return (
-    <TableRow className="hover:bg-gray-50/50 group">
+    <TableRow className={`hover:bg-gray-50/50 group ${isCurrentSong ? 'bg-purple-50' : ''}`}>
       <TableCell className="w-[30px]">
         <Checkbox
           checked={isSelected}
@@ -71,11 +77,17 @@ export function SongTableRow({
                 className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70"
                 onClick={onPlay}
               >
-                <Play className="w-4 h-4 text-white" />
+                {isCurrentSong && isPlaying ? (
+                  <Pause className="w-4 h-4 text-white" />
+                ) : (
+                  <Play className="w-4 h-4 text-white" />
+                )}
               </Button>
             </div>
           </div>
-          <span className="font-medium text-gray-900">{song.title}</span>
+          <span className={`font-medium ${isCurrentSong ? 'text-purple-600' : 'text-gray-900'}`}>
+            {song.title}
+          </span>
         </div>
       </TableCell>
       <TableCell className="text-gray-600">{song.artist || '-'}</TableCell>

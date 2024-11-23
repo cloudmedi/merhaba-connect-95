@@ -57,6 +57,7 @@ export function MusicTable({
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
   const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -93,6 +94,12 @@ export function MusicTable({
     const songIndex = songs.findIndex(s => s.id === song.id);
     setCurrentSongIndex(songIndex);
     setCurrentlyPlaying(song);
+    setIsPlaying(true);
+  };
+
+  const handleSongChange = (index: number) => {
+    setCurrentSongIndex(index);
+    setCurrentlyPlaying(songs[index]);
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -137,6 +144,8 @@ export function MusicTable({
                 formatDuration={formatDuration}
                 defaultArtwork={defaultArtwork}
                 onDelete={() => onDelete(song.id)}
+                isPlaying={isPlaying}
+                currentlyPlayingId={currentlyPlaying?.id}
               />
             ))}
           </TableBody>
@@ -160,7 +169,13 @@ export function MusicTable({
             songs: transformedSongs
           }}
           initialSongIndex={currentSongIndex}
-          onClose={() => setCurrentlyPlaying(null)}
+          onClose={() => {
+            setCurrentlyPlaying(null);
+            setIsPlaying(false);
+          }}
+          onSongChange={handleSongChange}
+          onPlayStateChange={setIsPlaying}
+          currentSongId={currentlyPlaying.id}
         />
       )}
     </div>
