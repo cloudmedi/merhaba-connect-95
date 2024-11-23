@@ -26,18 +26,33 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
     if (playlist.artwork_url) {
       const img = new Image();
       img.crossOrigin = "Anonymous";
-      img.src = playlist.artwork_url;
+      
+      // Eğer URL zaten CDN'den geliyorsa, optimize edilmiş versiyonunu kullan
+      const optimizedUrl = playlist.artwork_url.includes('b-cdn.net') 
+        ? `${playlist.artwork_url}?width=400&quality=100&format=webp` 
+        : playlist.artwork_url;
+      
+      img.src = optimizedUrl;
       
       img.onload = () => {
-        const colorThief = new ColorThief();
-        const palette = colorThief.getPalette(img, 2);
-        
-        if (palette) {
-          const colors = palette.map(color => 
-            `rgb(${color[0]}, ${color[1]}, ${color[2]})`
-          );
-          setGradientColors(colors);
+        try {
+          const colorThief = new ColorThief();
+          const palette = colorThief.getPalette(img, 3);
+          
+          if (palette) {
+            const colors = palette.map(color => 
+              `rgba(${color[0]}, ${color[1]}, ${color[2]})`
+            );
+            setGradientColors(colors);
+            console.log("Extracted colors:", colors); // Debug için
+          }
+        } catch (error) {
+          console.error("Color extraction error:", error);
         }
+      };
+
+      img.onerror = (e) => {
+        console.error("Image loading error:", e);
       };
     }
   }, [playlist.artwork_url]);
@@ -72,6 +87,7 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
 
   const gradientStyle = gradientColors.length >= 2 ? {
     background: `linear-gradient(135deg, ${gradientColors[0]}20 0%, ${gradientColors[1]}40 100%)`,
+    transition: 'background 0.3s ease-in-out'
   } : {};
 
   return (
@@ -92,6 +108,7 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
             src={playlist.artwork_url || "/placeholder.svg"}
             alt={playlist.name}
             className="w-32 h-32 rounded-lg object-cover shadow-lg"
+            crossOrigin="anonymous"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
             <button
