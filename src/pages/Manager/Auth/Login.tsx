@@ -11,7 +11,6 @@ export default function ManagerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,10 +19,13 @@ export default function ManagerLogin() {
 
     try {
       await login(email, password);
-      // Login fonksiyonu içinde yönlendirme yapılıyor
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || "Giriş yapılamadı");
+      if (error.message.includes('aktif değil')) {
+        toast.error('Hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.');
+      } else {
+        toast.error('Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -37,9 +39,9 @@ export default function ManagerLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Manager Login</CardTitle>
+          <CardTitle className="text-2xl">Yönetici Girişi</CardTitle>
           <CardDescription>
-            Enter your credentials to access the manager dashboard
+            Yönetici paneline erişmek için giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,19 +49,21 @@ export default function ManagerLogin() {
             <div className="space-y-2">
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder="E-posta"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Şifre"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <Button 

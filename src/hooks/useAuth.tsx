@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           created_at,
           updated_at,
           company_id,
-          companies!inner (
+          companies (
             id,
             name,
             subscription_status,
@@ -121,11 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
         if (!profile) {
-          throw new Error('Profile not found');
+          throw new Error('Profil bulunamadı');
         }
 
         if (!profile.isActive) {
-          throw new Error('Account is inactive');
+          throw new Error('Hesabınız şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.');
         }
 
         setUser(profile);
@@ -133,14 +133,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Kullanıcı rolüne göre yönlendirme
         if (profile.role === 'super_admin') {
-          window.location.href = '/super-admin';
+          window.location.href = '/super-admin/users';
         } else if (profile.role === 'manager' || profile.role === 'admin') {
           window.location.href = '/manager';
         }
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Giriş başarısız: ' + error.message);
+      toast.error(error.message || 'Giriş yapılamadı');
       throw error;
     }
   };
