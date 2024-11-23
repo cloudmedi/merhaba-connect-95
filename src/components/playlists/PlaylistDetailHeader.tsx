@@ -2,9 +2,9 @@ import { ArrowLeft, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
-export interface PlaylistHeaderProps {
+interface PlaylistHeaderProps {
   onBack?: () => void;
   artworkUrl?: string;
   name?: string;
@@ -39,7 +39,6 @@ export function PlaylistHeader({
 }: PlaylistHeaderProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isHeroLocal, setIsHeroLocal] = useState(isHero);
-  const { toast } = useToast();
 
   const handleHeroToggle = async () => {
     if (!playlistId) return;
@@ -54,18 +53,12 @@ export function PlaylistHeader({
       if (error) throw error;
 
       setIsHeroLocal(!isHeroLocal);
-      toast({
-        title: "Success",
-        description: isHeroLocal 
-          ? "Playlist removed from hero section" 
-          : "Playlist set as hero",
-      });
+      toast(isHeroLocal 
+        ? "Playlist removed from hero section"
+        : "Playlist set as hero"
+      );
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast(error.message);
     } finally {
       setIsUpdating(false);
     }
@@ -137,23 +130,23 @@ export function PlaylistHeader({
             )}
           </div>
           <div className="flex gap-2">
+            {playlistId && (
+              <Button
+                onClick={handleHeroToggle}
+                variant={isHeroLocal ? "default" : "outline"}
+                className="rounded-full px-8 flex items-center gap-2"
+                disabled={isUpdating}
+              >
+                <Star className={`w-4 h-4 ${isHeroLocal ? 'fill-white' : ''}`} />
+                {isHeroLocal ? "Featured Playlist" : "Set as Featured"}
+              </Button>
+            )}
             {onPush && (
               <Button 
                 onClick={onPush}
                 className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
               >
                 Push
-              </Button>
-            )}
-            {playlistId && (
-              <Button
-                onClick={handleHeroToggle}
-                variant="outline"
-                className="rounded-full px-8 flex items-center gap-2"
-                disabled={isUpdating}
-              >
-                <Star className={`w-4 h-4 ${isHeroLocal ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-                {isHeroLocal ? "Remove from Hero" : "Set as Hero"}
               </Button>
             )}
           </div>
