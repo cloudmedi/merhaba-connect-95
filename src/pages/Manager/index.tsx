@@ -13,7 +13,7 @@ import ProfileSettings from "./Settings/Profile";
 
 export default function Manager() {
   return (
-    <div className="min-h-screen bg-[#121212]">
+    <div className="min-h-screen bg-white">
       <div className="flex flex-col h-screen">
         <ManagerNav />
         <ManagerHeader />
