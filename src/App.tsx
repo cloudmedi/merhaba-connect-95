@@ -16,9 +16,18 @@ import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
 
-const queryClient = new QueryClient();
+// Create a single instance of QueryClient
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
-const router = createBrowserRouter([
+// Create router configuration
+const createAppRouter = () => createBrowserRouter([
   {
     path: "/",
     element: <Index />,
@@ -90,6 +99,9 @@ const router = createBrowserRouter([
     ),
   },
 ]);
+
+// Create router instance
+const router = createAppRouter();
 
 function App() {
   return (
