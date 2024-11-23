@@ -5,7 +5,6 @@ import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { PlaylistTabs } from "@/components/playlists/PlaylistTabs";
 import { PlaylistSettings } from "@/components/playlists/PlaylistSettings";
 import { AssignManagersDialog } from "@/components/playlists/AssignManagersDialog";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
