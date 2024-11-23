@@ -1,110 +1,36 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Music2, Play } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { MusicPlayer } from "@/components/MusicPlayer";
-import { PlaylistDetailHeader } from "@/components/playlists/PlaylistDetailHeader";
-import { SongList } from "@/components/playlists/SongList";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
+import { MusicPlayer } from "@/components/MusicPlayer";
+import { SongList } from "@/components/playlists/SongList";
 
 export function PlaylistDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
-  const { data: playlist, isLoading } = useQuery({
-    queryKey: ['playlist', id],
-    queryFn: async () => {
-      const { data: playlistData, error: playlistError } = await supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          genre:genres(id, name),
-          mood:moods(id, name),
-          artwork_url,
-          songs:playlist_songs(
-            position,
-            songs(
-              id,
-              title,
-              artist,
-              duration,
-              file_url,
-              bunny_id
-            )
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (playlistError) {
-        console.error('Error fetching playlist:', playlistError);
-        throw playlistError;
-      }
-
-      const transformedSongs = playlistData.songs
-        .sort((a: any, b: any) => a.position - b.position)
-        .map((item: any) => {
-          const song = item.songs;
-          let fileUrl = song.file_url;
-          if (song.bunny_id) {
-            fileUrl = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-          } else if (fileUrl && !fileUrl.startsWith('http')) {
-            fileUrl = `https://cloud-media.b-cdn.net/${fileUrl}`;
-          }
-
-          return {
-            id: song.id,
-            title: song.title,
-            artist: song.artist || "Unknown Artist",
-            duration: song.duration,
-            file_url: fileUrl,
-            bunny_id: song.bunny_id
-          };
-        });
-
-      return {
-        ...playlistData,
-        songs: transformedSongs
-      };
-    },
-    meta: {
-      onError: (error: Error) => {
-        console.error('Error loading playlist:', error);
-        toast.error("Failed to load playlist");
-      }
-    }
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 w-1/4 rounded"></div>
-          <div className="h-32 bg-gray-200 w-32 rounded-lg"></div>
-          <div className="h-8 bg-gray-200 w-1/2 rounded"></div>
-          <div className="space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!playlist) {
-    return (
-      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
-        <div className="text-center text-gray-500">
-          Playlist not found
-        </div>
-      </div>
-    );
-  }
+  // Mock data - replace with actual data fetching
+  const playlist = {
+    id,
+    title: "Summer Vibes 2024",
+    genre: "Pop",
+    mood: "Energetic",
+    songCount: "45 songs",
+    duration: "2h 45m",
+    artwork: "/lovable-uploads/c90b24e7-421c-4165-a1ff-44a7a80de37b.png",
+    songs: Array.from({ length: 45 }, (_, i) => ({
+      id: i + 1,
+      title: `Song Title ${i + 1}`,
+      artist: `Artist ${Math.floor(i / 8) + 1}`,
+      duration: "3:30",
+      file_url: `/mock-songs/song-${i + 1}.mp3`
+    }))
+  };
 
   const handleSongSelect = (song: any) => {
     const songIndex = playlist.songs.findIndex((s: any) => s.id === song.id);
@@ -121,11 +47,51 @@ export function PlaylistDetail() {
   return (
     <div className="min-h-screen bg-white rounded-lg shadow-sm">
       <div className="p-6 space-y-8">
-        <PlaylistDetailHeader 
-          playlist={playlist}
-          onPlay={() => setIsPlaying(true)}
-          onPush={() => setIsPushDialogOpen(true)}
-        />
+        <div className="flex items-center gap-2 text-gray-500">
+          <button 
+            onClick={() => navigate("/manager/playlists")}
+            className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Media Library
+          </button>
+        </div>
+
+        <div className="flex items-start gap-8">
+          <div className="relative group">
+            <img 
+              src={playlist.artwork} 
+              alt={playlist.title}
+              className="w-32 h-32 rounded-lg object-cover"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
+              <button
+                onClick={() => setIsPlaying(true)}
+                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+              >
+                <Play className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-2xl font-semibold text-gray-900">{playlist.title}</h1>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>{playlist.genre}</span>
+              <span>•</span>
+              <span>{playlist.mood}</span>
+              <span>•</span>
+              <span>{playlist.songCount}</span>
+              <span>•</span>
+              <span>{playlist.duration}</span>
+            </div>
+            <Button 
+              onClick={() => setIsPushDialogOpen(true)}
+              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
+            >
+              Push
+            </Button>
+          </div>
+        </div>
 
         <SongList 
           songs={playlist.songs}
@@ -138,18 +104,19 @@ export function PlaylistDetail() {
       <PushPlaylistDialog
         isOpen={isPushDialogOpen}
         onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.name}
+        playlistTitle={playlist.title}
       />
 
-      {isPlaying && playlist.songs && playlist.songs.length > 0 && (
+      {isPlaying && (
         <MusicPlayer
           playlist={{
-            title: playlist.name,
-            artwork: playlist.artwork_url || "/placeholder.svg",
+            title: playlist.title,
+            artwork: playlist.artwork,
             songs: playlist.songs
           }}
           onClose={() => setIsPlaying(false)}
           initialSongIndex={currentSongIndex}
+          onSongChange={handleCurrentSongIndexChange}
           autoPlay={true}
         />
       )}

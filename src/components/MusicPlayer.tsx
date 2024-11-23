@@ -21,13 +21,15 @@ interface MusicPlayerProps {
   onClose: () => void;
   initialSongIndex?: number;
   autoPlay?: boolean;
+  onSongChange?: (index: number) => void;
 }
 
 export function MusicPlayer({ 
   playlist, 
   onClose, 
   initialSongIndex = 0,
-  autoPlay = true 
+  autoPlay = true,
+  onSongChange
 }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [volume, setVolume] = useState(75);
@@ -47,17 +49,17 @@ export function MusicPlayer({
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      setCurrentSongIndex((prev) => 
-        prev === playlist.songs!.length - 1 ? 0 : prev + 1
-      );
+      const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
+      setCurrentSongIndex(nextIndex);
+      onSongChange?.(nextIndex);
     }
   };
 
   const handlePrevious = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      setCurrentSongIndex((prev) => 
-        prev === 0 ? playlist.songs!.length - 1 : prev - 1
-      );
+      const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
+      setCurrentSongIndex(prevIndex);
+      onSongChange?.(prevIndex);
     }
   };
 
@@ -82,28 +84,16 @@ export function MusicPlayer({
       return '';
     }
     
-    console.log('Processing audio URL for song:', song);
-    
     if (song.file_url.startsWith('http')) {
-      console.log('Using direct URL:', song.file_url);
       return song.file_url;
     }
     
     if (song.bunny_id) {
-      const url = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-      console.log('Using Bunny CDN URL with bunny_id:', url);
-      return url;
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
     }
     
-    const url = `https://cloud-media.b-cdn.net/${song.file_url}`;
-    console.log('Using constructed Bunny CDN URL:', url);
-    return url;
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
-
-  console.log('Current song:', {
-    song: currentSong,
-    audioUrl: getAudioUrl(currentSong)
-  });
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
