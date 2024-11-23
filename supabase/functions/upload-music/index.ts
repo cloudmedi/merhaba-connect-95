@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import * as mm from 'https://esm.sh/music-metadata-browser@2.5.10'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +30,16 @@ serve(async (req) => {
 
     // Convert base64 to Uint8Array
     const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0));
+
+    // Extract metadata from the audio file
+    let metadata;
+    try {
+      metadata = await mm.parseBlob(new Blob([binaryData], { type: contentType }));
+      console.log('Extracted metadata:', metadata);
+    } catch (error) {
+      console.error('Error extracting metadata:', error);
+      metadata = null;
+    }
 
     // Generate unique filename
     const fileExt = fileName.split('.').pop();
@@ -74,12 +85,19 @@ serve(async (req) => {
       }
     }
 
-    // Save song metadata to Supabase
+    // Prepare song metadata
     const songData = {
-      title: fileName.replace(/\.[^/.]+$/, ""),
+      title: metadata?.common?.title || fileName.replace(/\.[^/.]+$/, ""),
+      artist: metadata?.common?.artist || null,
+      album: metadata?.common?.album || null,
+      genre: metadata?.common?.genre || null,
+      duration: metadata?.format?.duration ? Math.round(metadata.format.duration) : null,
+      artwork_url: metadata?.common?.picture?.[0] ? 
+        `data:${metadata.common.picture[0].format};base64,${metadata.common.picture[0].data.toString('base64')}` : 
+        null,
       file_url: uniqueFileName,
       bunny_id: uniqueFileName,
-      created_by: userId // This will be null if no user is authenticated
+      created_by: userId
     };
 
     console.log('Saving song metadata to Supabase:', songData);
