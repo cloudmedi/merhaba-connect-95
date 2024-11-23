@@ -90,8 +90,9 @@ export function CreatePlaylist() {
       const assignments = managerIds.map(userId => ({
         user_id: userId,
         playlist_id: existingPlaylist?.id,
-        scheduled_at: scheduledAt || new Date(),
-        expires_at: expiresAt || null
+        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
+        expires_at: expiresAt?.toISOString() || null,
+        notification_sent: false
       }));
 
       const { error } = await supabase
