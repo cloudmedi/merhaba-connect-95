@@ -1,64 +1,120 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface User extends SupabaseUser {
-  firstName?: string | null;
-  lastName?: string | null;
-  role?: string | null;
-  avatar_url?: string | null;
-}
+import { toast } from 'sonner';
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
+      }
+      setIsLoading(false);
     });
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (error) throw error;
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          firstName: data.user.user_metadata.firstName || '',
+          lastName: data.user.user_metadata.lastName || '',
+          role: data.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at || data.user.created_at
+        });
+        
+        toast.success('Login successful');
+        
+        if (data.user.user_metadata.role === 'super_admin') {
+          window.location.href = '/super-admin';
+        } else {
+          window.location.href = '/manager';
+        }
+      }
+    } catch (error: any) {
+      toast.error('Login failed: ' + error.message);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    navigate('/');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      
+      // Redirect based on current path
+      const isManagerPath = window.location.pathname.startsWith('/manager');
+      if (isManagerPath) {
+        window.location.href = '/manager/login';
+      } else {
+        window.location.href = '/super-admin/login';
+      }
+      
+      toast.success('Logged out successfully');
+    } catch (error: any) {
+      console.error('Logout failed:', error);
+      toast.error('Failed to log out');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
