@@ -34,10 +34,23 @@ export function AssignManagersDialog({
 
   const fetchManagers = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // First get the super admin's company ID
+      const { data: adminProfile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!adminProfile?.company_id) return;
+
+      // Then fetch all users from the same company
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, first_name, last_name")
-        .eq("role", "manager")
+        .select("id, email, first_name, last_name, role")
+        .eq("company_id", adminProfile.company_id)
         .ilike("email", `%${searchQuery}%`);
 
       if (error) throw error;
@@ -74,14 +87,14 @@ export function AssignManagersDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Assign to Managers</DialogTitle>
+          <DialogTitle>Assign to Users</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search managers..."
+              placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
