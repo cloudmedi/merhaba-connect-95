@@ -18,20 +18,13 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     setIsLoading(true);
     setError(null);
 
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
     audioRef.current = audio;
 
     const handleCanPlay = () => {
       console.log('Audio can play now');
       setIsLoading(false);
       setDuration(audio.duration);
-      if (isPlaying) {
-        audio.play().catch(e => {
-          console.error('Error playing audio:', e);
-          setError("Failed to play audio");
-          setIsPlaying(false);
-        });
-      }
     };
 
     const handleLoadStart = () => {
@@ -65,7 +58,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
-    audio.preload = 'auto';
+    audio.src = audioUrl;
     audio.load();
 
     return () => {
@@ -80,19 +73,26 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       setProgress(0);
       setError(null);
     };
-  }, [audioUrl, isPlaying]);
+  }, [audioUrl]);
 
-  const togglePlay = () => {
+  useEffect(() => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      const playPromise = audioRef.current.play();
+      if (playPromise) {
+        playPromise.catch(error => {
+          console.error('Error playing audio:', error);
+          setError("Failed to play audio");
+          setIsPlaying(false);
+        });
+      }
     } else {
-      audioRef.current.play().catch(e => {
-        console.error('Error playing audio:', e);
-        setError("Failed to play audio");
-      });
+      audioRef.current.pause();
     }
+  }, [isPlaying]);
+
+  const togglePlay = () => {
     setIsPlaying(!isPlaying);
   };
 

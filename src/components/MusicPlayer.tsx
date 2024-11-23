@@ -70,21 +70,38 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     return `${url}?width=400&quality=85&format=webp`;
   };
 
-  // Updated getAudioUrl function to handle both Bunny CDN and direct URLs
   const getAudioUrl = (song: any) => {
-    if (!song.file_url) return '';
+    if (!song.file_url) {
+      console.error('No file_url provided for song:', song);
+      return '';
+    }
+    
+    console.log('Processing audio URL for song:', song);
     
     // If it's already a full URL, return it
-    if (song.file_url.startsWith('http')) return song.file_url;
+    if (song.file_url.startsWith('http')) {
+      console.log('Using direct URL:', song.file_url);
+      return song.file_url;
+    }
     
     // If it has a bunny_id, use that
     if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+      const url = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+      console.log('Using Bunny CDN URL with bunny_id:', url);
+      return url;
     }
     
     // Otherwise, construct the URL from file_url
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+    const url = `https://cloud-media.b-cdn.net/${song.file_url}`;
+    console.log('Using constructed Bunny CDN URL:', url);
+    return url;
   };
+
+  // Log current song details for debugging
+  console.log('Current song:', {
+    song: currentSong,
+    audioUrl: getAudioUrl(currentSong)
+  });
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
