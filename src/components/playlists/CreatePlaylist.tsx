@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 import { PlaylistForm } from "./PlaylistForm";
 import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
@@ -88,9 +90,9 @@ export function CreatePlaylist() {
     <div className="flex gap-6 p-6 bg-white rounded-lg">
       <PlaylistForm playlistData={playlistData} setPlaylistData={setPlaylistData} />
       
-      <div className="flex-1">
+      <div className="flex-1 space-y-6">
         <PlaylistHeader
-          onCancel={() => navigate("/super-admin/playlists", { replace: true })}
+          onCancel={() => navigate("/super-admin/playlists")}
           onCreate={() => handleSavePlaylist({
             playlistData,
             isEditMode,
@@ -117,6 +119,17 @@ export function CreatePlaylist() {
           playlistData={playlistData}
           setPlaylistData={setPlaylistData}
         />
+
+        {isEditMode && existingPlaylist && (
+          <Button
+            onClick={() => setIsAssignDialogOpen(true)}
+            className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200"
+            size="lg"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Assign to Managers
+          </Button>
+        )}
 
         <PlaylistTabs
           playlistData={playlistData}
