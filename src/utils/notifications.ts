@@ -1,12 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
-export const createPlaylistAssignmentNotification = async (
+export async function createPlaylistAssignmentNotification(
   recipientId: string,
   playlistName: string,
   playlistId: string,
   artworkUrl?: string
-) => {
+) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No authenticated user');
+
   console.log("Creating playlist assignment notification:", {
     recipientId,
     playlistName,
@@ -18,23 +20,22 @@ export const createPlaylistAssignmentNotification = async (
     const { error } = await supabase.from("notifications").insert({
       recipient_id: recipientId,
       title: "Yeni Playlist Atandı",
-      message: `Size "${playlistName}" isimli playlist atandı.`,
+      message: `Size "${playlistName}" isimli yeni bir playlist atandı.`,
       type: "playlist_assignment",
+      status: "unread",
+      priority: "normal",
       metadata: {
         playlist_id: playlistId,
-        artwork_url: artworkUrl
+        artwork_url: artworkUrl || "/placeholder.svg"
       }
     });
 
     if (error) {
       console.error("Error creating notification:", error);
-      toast.error("Bildirim oluşturulurken bir hata oluştu");
       throw error;
     }
-
-    console.log("Notification created successfully");
   } catch (error) {
     console.error("Error in createPlaylistAssignmentNotification:", error);
     throw error;
   }
-};
+}
