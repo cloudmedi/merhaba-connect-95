@@ -104,7 +104,7 @@ export function MusicTable({
 
   // Calculate correct start and end indices for display
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + songs.length, totalCount);
+  const endIndex = startIndex + songs.length;
 
   const transformedSongs = songs.map(song => ({
     id: song.id,
