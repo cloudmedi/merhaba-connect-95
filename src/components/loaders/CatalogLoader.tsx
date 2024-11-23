@@ -2,13 +2,13 @@ import React from 'react';
 import ContentLoader from 'react-content-loader';
 
 interface CatalogLoaderProps {
-  count?: number;
+  count: number;
   backgroundColor?: string;
   foregroundColor?: string;
 }
 
-const CatalogLoader = ({ count = 6, backgroundColor = "#f3f4f6", foregroundColor = "#e5e7eb" }: CatalogLoaderProps) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+const CatalogLoader = ({ count, backgroundColor = "#f3f4f6", foregroundColor = "#e5e7eb" }: CatalogLoaderProps) => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
     {[...Array(count)].map((_, index) => (
       <ContentLoader
         key={index}

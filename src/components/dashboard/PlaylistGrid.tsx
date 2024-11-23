@@ -28,7 +28,7 @@ export function PlaylistGrid({
   const navigate = useNavigate();
 
   if (isLoading) {
-    return <CatalogLoader count={playlists.length || 6} />;
+    return <CatalogLoader count={playlists.length} />;
   }
 
   const handleViewAll = () => {
