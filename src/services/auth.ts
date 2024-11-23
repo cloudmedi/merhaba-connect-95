@@ -1,5 +1,5 @@
 import { AuthResponse, LoginCredentials } from "@/types/auth";
-import { supabase } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 

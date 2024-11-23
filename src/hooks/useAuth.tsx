@@ -1,13 +1,20 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+
+export interface User extends SupabaseUser {
+  firstName?: string | null;
+  lastName?: string | null;
+  role?: string | null;
+  avatar_url?: string | null;
+}
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -44,14 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signOut = async () => {
+  const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

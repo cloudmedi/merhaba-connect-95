@@ -1,38 +1,55 @@
-import { supabase } from './supabase';
-
-interface LicenseData {
-  userId: string;
-  type: 'trial' | 'premium';
-  start_date: string;
-  end_date: string;
-  quantity: number;
-}
+import { supabase } from '@/integrations/supabase/client';
+import type { License } from '@/types/api';
 
 export const licenseService = {
-  async createLicense(data: LicenseData) {
-    const { data: license, error } = await supabase
-      .from('licenses')
-      .insert({
-        user_id: data.userId,
-        type: data.type,
-        start_date: data.start_date,
-        end_date: data.end_date,
-        quantity: data.quantity
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return license;
-  },
-
-  async getUserLicenses(userId: string) {
+  async getLicenses(companyId: string) {
     const { data, error } = await supabase
       .from('licenses')
       .select('*')
-      .eq('user_id', userId);
+      .eq('company_id', companyId);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as License[];
+  },
+
+  async createLicense(license: Omit<License, 'id'>) {
+    const { data, error } = await supabase
+      .from('licenses')
+      .insert(license)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as License;
+  },
+
+  async updateLicense(id: string, updates: Partial<License>) {
+    const { data, error } = await supabase
+      .from('licenses')
+      .update(updates)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as License;
+  },
+
+  async deleteLicense(id: string) {
+    const { error } = await supabase
+      .from('licenses')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 };
