@@ -17,69 +17,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session and set up session listener
-    const initializeAuth = async () => {
-      try {
-        // Check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: (profile.role as User['role']) || 'manager',
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              companyId: profile.company_id
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        setIsLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
       }
-    };
+      setIsLoading(false);
+    });
 
-    initializeAuth();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: (profile.role as User['role']) || 'manager',
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              companyId: profile.company_id
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      } else if (event === 'SIGNED_OUT') {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
+      } else {
         setUser(null);
       }
       setIsLoading(false);
@@ -100,29 +68,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          setUser({
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: profile.first_name || '',
-            lastName: profile.last_name || '',
-            role: (profile.role as User['role']) || 'manager',
-            isActive: profile.is_active,
-            createdAt: data.user.created_at,
-            updatedAt: profile.updated_at || data.user.created_at,
-            companyId: profile.company_id
-          });
-        }
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          firstName: data.user.user_metadata.firstName || '',
+          lastName: data.user.user_metadata.lastName || '',
+          role: data.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at || data.user.created_at
+        });
         
         toast.success('Login successful');
         
-        if (profile?.role === 'super_admin') {
+        if (data.user.user_metadata.role === 'super_admin') {
           window.location.href = '/super-admin';
         } else {
           window.location.href = '/manager';

@@ -100,25 +100,20 @@ export function usePlaylistMutations() {
           notification_sent: false
         }));
 
-        // First create all assignments
         const { error: assignmentError } = await supabase
           .from('playlist_assignments')
           .insert(assignments);
 
         if (assignmentError) throw assignmentError;
 
-        // Then send notifications for the created assignments
+        // Send notifications for new assignments
         for (const user of playlistData.selectedUsers) {
-          try {
-            await createPlaylistAssignmentNotification(
-              user.id, 
-              playlistData.title,
-              playlist.id,
-              artwork_url
-            );
-          } catch (error) {
-            console.error('Error sending notification:', error);
-          }
+          await createPlaylistAssignmentNotification(
+            user.id, 
+            playlistData.title,
+            playlist.id,
+            artwork_url
+          );
         }
       }
 

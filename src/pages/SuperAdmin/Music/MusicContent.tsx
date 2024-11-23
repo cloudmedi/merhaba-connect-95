@@ -27,18 +27,8 @@ export function MusicContent() {
     totalPages,
     itemsPerPage,
     totalCount,
-    refetch,
-    error
+    refetch
   } = useMusicLibrary();
-
-  // If there's an error, show it to the user
-  if (error) {
-    toast({
-      title: "Error loading music library",
-      description: "Please try refreshing the page",
-      variant: "destructive",
-    });
-  }
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedSongs(checked ? songs : []);
@@ -66,6 +56,7 @@ export function MusicContent() {
         description: "Song deleted successfully",
       });
 
+      // Refresh the songs list
       refetch();
     } catch (error: any) {
       toast({
@@ -92,7 +83,7 @@ export function MusicContent() {
   };
 
   // Get unique genres from songs
-  const uniqueGenres = Array.from(new Set(songs?.flatMap(song => song.genre || []) || []));
+  const uniqueGenres = Array.from(new Set(songs.flatMap(song => song.genre || [])));
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -131,7 +122,7 @@ export function MusicContent() {
       />
       
       <MusicTable
-        songs={songs || []}
+        songs={songs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
