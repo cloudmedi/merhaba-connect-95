@@ -27,11 +27,11 @@ export function PlaylistTabs({ playlistData, setPlaylistData }: PlaylistTabsProp
       <TabsContent value="songs">
         <SongsTab
           selectedSongs={playlistData.selectedSongs}
-          onSelectSong={(song) => setPlaylistData((prev: any) => ({
+          onAddSong={(song) => setPlaylistData((prev: any) => ({
             ...prev,
             selectedSongs: [...prev.selectedSongs, song]
           }))}
-          onUnselectSong={(songId) => setPlaylistData((prev: any) => ({
+          onRemoveSong={(songId) => setPlaylistData((prev: any) => ({
             ...prev,
             selectedSongs: prev.selectedSongs.filter((s: any) => s.id !== songId)
           }))}
