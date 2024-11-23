@@ -47,7 +47,7 @@ serve(async (req) => {
       throw new Error('No file provided');
     }
 
-    console.log('Processing file:', file.name);
+    console.log('Processing file:', file.name, 'Size:', file.size);
 
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
@@ -58,6 +58,12 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration');
     }
 
+    // Check file size (Bunny CDN limit is 5GB)
+    const maxFileSize = 5 * 1024 * 1024 * 1024; // 5GB in bytes
+    if (file.size > maxFileSize) {
+      throw new Error('File size exceeds the 5GB limit');
+    }
+
     // Generate unique filename for Bunny CDN
     const fileExt = file.name.split('.').pop();
     const uniqueFileName = `music/${crypto.randomUUID()}.${fileExt}`;
@@ -66,20 +72,38 @@ serve(async (req) => {
 
     // Get file data as array buffer
     const fileData = await file.arrayBuffer();
+
+    // Test Bunny CDN connectivity
+    try {
+      const testResponse = await fetch(`https://${bunnyStorageHost}`, {
+        method: 'HEAD',
+        headers: {
+          'AccessKey': bunnyApiKey
+        }
+      });
+      console.log('Bunny CDN connectivity test:', testResponse.status);
+    } catch (error) {
+      console.error('Bunny CDN connectivity test failed:', error);
+      throw new Error('Failed to connect to Bunny CDN');
+    }
+
     const bunnyUrl = `https://${bunnyStorageHost}/${uniqueFileName}`;
+    console.log('Uploading to:', bunnyUrl);
 
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': 'audio/mpeg'
+        'Content-Type': 'audio/mpeg',
+        'Accept': '*/*'
       },
       body: fileData
     });
 
+    const responseText = await uploadResponse.text();
+    console.log('Bunny CDN response:', uploadResponse.status, responseText);
+
     if (!uploadResponse.ok) {
-      const responseText = await uploadResponse.text();
-      console.error('Bunny CDN upload failed:', responseText);
       throw new Error(`Failed to upload to Bunny CDN: ${responseText}`);
     }
 
