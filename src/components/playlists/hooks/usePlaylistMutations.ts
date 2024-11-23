@@ -35,20 +35,37 @@ export const usePlaylistMutations = () => {
         // Upload artwork if provided
         let artwork_url = playlistData.artwork_url;
         if (playlistData.artwork) {
+          // Convert file to base64
+          const fileData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(playlistData.artwork);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+          });
+
+          const base64Data = (fileData as string).split(',')[1];
           const fileExt = playlistData.artwork.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
-          
-          const { error: uploadError, data } = await supabase.storage
-            .from('playlists')
-            .upload(fileName, playlistData.artwork);
 
-          if (uploadError) throw uploadError;
+          // Upload to Bunny CDN via Edge Function
+          const response = await fetch('/functions/v1/upload-artwork', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fileData: base64Data,
+              fileName,
+              contentType: playlistData.artwork.type
+            })
+          });
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('playlists')
-            .getPublicUrl(fileName);
+          if (!response.ok) {
+            throw new Error('Failed to upload artwork');
+          }
 
-          artwork_url = publicUrl;
+          const { url } = await response.json();
+          artwork_url = url;
         }
 
         // Create playlist
@@ -59,8 +76,8 @@ export const usePlaylistMutations = () => {
             description: playlistData.description,
             artwork_url,
             is_public: playlistData.isPublic,
-            mood_id: playlistData.moodId,
-            genre_id: playlistData.genreId
+            mood_id: playlistData.selectedMoods?.[0]?.id,
+            genre_id: playlistData.selectedGenres?.[0]?.id
           })
           .select()
           .single();
