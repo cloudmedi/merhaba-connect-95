@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -125,7 +126,13 @@ export function usePlaylistMutations() {
         if (categoriesError) throw categoriesError;
       }
 
-      // Invalidate queries to refresh the UI
+      // Send notifications to selected users
+      if (playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
+        for (const user of playlistData.selectedUsers) {
+          await createPlaylistAssignmentNotification(user.id, playlistData.title);
+        }
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
 
       onSuccess?.();
