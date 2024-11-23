@@ -85,12 +85,38 @@ serve(async (req) => {
       }
     }
 
+    // Extract and process genres
+    const genres = metadata?.common?.genre || [];
+    
+    // Create any missing genres
+    if (genres.length > 0) {
+      for (const genreName of genres) {
+        // Check if genre exists
+        const { data: existingGenre } = await supabase
+          .from('genres')
+          .select('id')
+          .eq('name', genreName)
+          .single();
+
+        // If genre doesn't exist, create it
+        if (!existingGenre) {
+          await supabase
+            .from('genres')
+            .insert([{
+              name: genreName,
+              description: `Automatically created from uploaded song: ${metadata?.common?.title || fileName}`,
+              created_by: userId
+            }]);
+        }
+      }
+    }
+
     // Prepare song metadata
     const songData = {
       title: metadata?.common?.title || fileName.replace(/\.[^/.]+$/, ""),
       artist: metadata?.common?.artist || null,
       album: metadata?.common?.album || null,
-      genre: metadata?.common?.genre || null,
+      genre: genres,
       duration: metadata?.format?.duration ? Math.round(metadata.format.duration) : null,
       artwork_url: metadata?.common?.picture?.[0] ? 
         `data:${metadata.common.picture[0].format};base64,${metadata.common.picture[0].data.toString('base64')}` : 
