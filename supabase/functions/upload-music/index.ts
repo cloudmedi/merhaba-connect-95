@@ -88,7 +88,7 @@ serve(async (req) => {
     // Save song metadata to Supabase
     const songData = {
       title: file.name.replace(/\.[^/.]+$/, ""),
-      file_url: uniqueFileName,
+      file_url: `https://${bunnyStorageZoneName}/${uniqueFileName}`,
       bunny_id: uniqueFileName,
       created_by: user.id,
     };

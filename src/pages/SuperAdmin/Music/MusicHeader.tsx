@@ -39,14 +39,13 @@ export function MusicHeader() {
           }
         );
 
+        const data = await response.json();
+
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Upload failed');
+          throw new Error(data.error || 'Upload failed');
         }
 
-        const data = await response.json();
         console.log('Upload response:', data);
-        
         toast.success(`${file.name} has been uploaded successfully`);
 
       } catch (error: any) {
