@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export function useAudioPlayer(audioUrl: string | undefined) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -96,6 +96,10 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     setIsPlaying(!isPlaying);
   };
 
+  const play = useCallback(() => {
+    setIsPlaying(true);
+  }, []);
+
   const seek = (value: number) => {
     if (!audioRef.current || !duration) return;
     const time = (value / 100) * duration;
@@ -115,6 +119,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     isLoading,
     error,
     togglePlay,
+    play,
     seek,
     setVolume
   };

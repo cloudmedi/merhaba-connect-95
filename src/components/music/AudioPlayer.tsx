@@ -11,9 +11,16 @@ interface AudioPlayerProps {
   onNext?: () => void;
   onPrevious?: () => void;
   volume?: number;
+  autoPlay?: boolean;
 }
 
-export function AudioPlayer({ audioUrl, onNext, onPrevious, volume = 1 }: AudioPlayerProps) {
+export function AudioPlayer({ 
+  audioUrl, 
+  onNext, 
+  onPrevious, 
+  volume = 1,
+  autoPlay = false 
+}: AudioPlayerProps) {
   const {
     isPlaying,
     progress,
@@ -21,7 +28,8 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious, volume = 1 }: AudioP
     error,
     togglePlay,
     seek,
-    setVolume
+    setVolume,
+    play
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
@@ -36,6 +44,13 @@ export function AudioPlayer({ audioUrl, onNext, onPrevious, volume = 1 }: AudioP
   useEffect(() => {
     setVolume(volume);
   }, [volume, setVolume]);
+
+  // Auto-play when component mounts if autoPlay is true
+  useEffect(() => {
+    if (autoPlay && !isPlaying) {
+      play();
+    }
+  }, [autoPlay, play]);
 
   if (error) {
     return (

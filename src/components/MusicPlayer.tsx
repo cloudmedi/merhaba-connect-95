@@ -20,9 +20,15 @@ interface MusicPlayerProps {
   };
   onClose: () => void;
   initialSongIndex?: number;
+  autoPlay?: boolean;
 }
 
-export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPlayerProps) {
+export function MusicPlayer({ 
+  playlist, 
+  onClose, 
+  initialSongIndex = 0,
+  autoPlay = true 
+}: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
@@ -78,26 +84,22 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     
     console.log('Processing audio URL for song:', song);
     
-    // If it's already a full URL, return it
     if (song.file_url.startsWith('http')) {
       console.log('Using direct URL:', song.file_url);
       return song.file_url;
     }
     
-    // If it has a bunny_id, use that
     if (song.bunny_id) {
       const url = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
       console.log('Using Bunny CDN URL with bunny_id:', url);
       return url;
     }
     
-    // Otherwise, construct the URL from file_url
     const url = `https://cloud-media.b-cdn.net/${song.file_url}`;
     console.log('Using constructed Bunny CDN URL:', url);
     return url;
   };
 
-  // Log current song details for debugging
   console.log('Current song:', {
     song: currentSong,
     audioUrl: getAudioUrl(currentSong)
@@ -124,6 +126,7 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}
+            autoPlay={autoPlay}
           />
         </div>
 
