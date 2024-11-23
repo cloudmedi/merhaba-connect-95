@@ -97,9 +97,12 @@ export function ManagerHeader() {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <ScrollArea className="h-[300px]">
-                <div className="p-2 space-y-2">
+            <DropdownMenuContent align="end" side="right" className="w-[400px] p-0">
+              <ScrollArea className="h-[600px]">
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="font-semibold text-lg">Notifications</h3>
+                </div>
+                <div className="p-2">
                   {notifications.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-4">
                       No notifications
@@ -108,7 +111,7 @@ export function ManagerHeader() {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-3 rounded-lg text-sm cursor-pointer ${
+                        className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                           notification.status === "unread"
                             ? "bg-gray-50"
                             : "bg-white"
@@ -124,9 +127,9 @@ export function ManagerHeader() {
                             />
                           )}
                           <div className="flex-1">
-                            <p className="font-medium">{notification.title}</p>
-                            <p className="text-gray-600">{notification.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="font-medium text-gray-900">{notification.title}</p>
+                            <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
+                            <p className="text-xs text-gray-400 mt-2">
                               {formatDistanceToNow(new Date(notification.created_at), {
                                 addSuffix: true,
                               })}
