@@ -83,13 +83,13 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN');
 
-    // Construct the CDN URL
-    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`;
+    // Construct the CDN URL - use the correct format for public access
+    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`;
 
     // Save song metadata to Supabase
     const songData = {
       title: fileName.replace(/\.[^/.]+$/, ""),
-      file_url: cdnUrl,
+      file_url: uniqueFileName, // Store just the path
       bunny_id: uniqueFileName,
       created_by: user.id,
     };
