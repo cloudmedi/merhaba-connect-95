@@ -22,7 +22,7 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // Changed from 10 to 20
+  const itemsPerPage = 20;
 
   // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
