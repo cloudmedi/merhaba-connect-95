@@ -12,7 +12,7 @@ export async function createPlaylistAssignmentNotification(
       recipient_id: recipientId,
       title: "Yeni Playlist Atandı",
       message: `Size "${playlistName}" isimli yeni bir playlist atandı.`,
-      type: "playlist_assignment",
+      type: "playlist", // Changed from playlist_assignment to playlist
       status: "unread",
       priority: "normal",
     });
