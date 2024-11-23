@@ -45,7 +45,7 @@ export function PlaylistDetail() {
         throw playlistError;
       }
 
-      // Transform the songs data structure
+      // Transform the songs data structure and handle Bunny CDN URLs properly
       const transformedSongs = playlistData.songs
         .sort((a: any, b: any) => a.position - b.position)
         .map((item: any) => {
@@ -55,7 +55,7 @@ export function PlaylistDetail() {
           let fileUrl = song.file_url;
           if (song.bunny_id) {
             fileUrl = `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-          } else if (!fileUrl.startsWith('http')) {
+          } else if (fileUrl && !fileUrl.startsWith('http')) {
             fileUrl = `https://cloud-media.b-cdn.net/${fileUrl}`;
           }
 
@@ -111,8 +111,10 @@ export function PlaylistDetail() {
 
   const handleSongSelect = (song: any) => {
     const songIndex = playlist.songs.findIndex((s: any) => s.id === song.id);
-    setCurrentSongIndex(songIndex);
-    setIsPlaying(true);
+    if (songIndex !== -1) {
+      setCurrentSongIndex(songIndex);
+      setIsPlaying(true);
+    }
   };
 
   return (
@@ -137,7 +139,7 @@ export function PlaylistDetail() {
         playlistTitle={playlist.name}
       />
 
-      {isPlaying && (
+      {isPlaying && playlist.songs && playlist.songs.length > 0 && (
         <MusicPlayer
           playlist={{
             title: playlist.name,

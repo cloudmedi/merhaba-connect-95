@@ -70,6 +70,13 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     return `${url}?width=400&quality=85&format=webp`;
   };
 
+  // Ensure the file_url is properly formatted for Bunny CDN
+  const getAudioUrl = (song: any) => {
+    if (!song.file_url) return '';
+    if (song.file_url.startsWith('http')) return song.file_url;
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
       <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -87,7 +94,7 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
 
         <div className="flex-1">
           <AudioPlayer
-            audioUrl={currentSong?.file_url}
+            audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}
