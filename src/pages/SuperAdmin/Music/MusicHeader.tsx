@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export function MusicHeader() {
-  const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,30 +28,30 @@ export function MusicHeader() {
         formData.append('file', file);
 
         // Call the upload-music edge function
-        const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-music`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: formData,
           }
-        });
+        );
 
-        console.log('Upload response:', { data, error });
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Upload failed');
+        }
 
-        if (error) throw error;
+        const data = await response.json();
+        console.log('Upload response:', data);
         
-        toast({
-          title: "Upload successful",
-          description: `${file.name} has been uploaded successfully`,
-        });
+        toast.success(`${file.name} has been uploaded successfully`);
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        toast({
-          title: "Upload failed",
-          description: error.message || 'Failed to upload file',
-          variant: "destructive",
-        });
+        toast.error(error.message || 'Failed to upload file');
       }
     }
 

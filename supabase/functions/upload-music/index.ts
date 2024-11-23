@@ -43,8 +43,8 @@ serve(async (req) => {
     const formData = await req.formData();
     const file = formData.get('file');
     
-    if (!file || !(file instanceof File)) {
-      throw new Error('No file provided or invalid file');
+    if (!file) {
+      throw new Error('No file provided');
     }
 
     console.log('Processing file:', file.name);
@@ -64,17 +64,17 @@ serve(async (req) => {
     
     console.log('Uploading to Bunny CDN...');
 
-    // Convert file to ArrayBuffer for upload
-    const arrayBuffer = await file.arrayBuffer();
-    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
+    // Get file data as array buffer
+    const fileData = await file.arrayBuffer();
+    const bunnyUrl = `https://${bunnyStorageHost}/${uniqueFileName}`;
 
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
       headers: {
         'AccessKey': bunnyApiKey,
-        'Content-Type': file.type
+        'Content-Type': 'audio/mpeg'
       },
-      body: arrayBuffer
+      body: fileData
     });
 
     if (!uploadResponse.ok) {
@@ -88,7 +88,7 @@ serve(async (req) => {
     // Save song metadata to Supabase
     const songData = {
       title: file.name.replace(/\.[^/.]+$/, ""),
-      file_url: uniqueFileName, // Store just the path
+      file_url: uniqueFileName,
       bunny_id: uniqueFileName,
       created_by: user.id,
     };
@@ -114,7 +114,10 @@ serve(async (req) => {
         song 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
         status: 200 
       }
     );
@@ -126,7 +129,10 @@ serve(async (req) => {
         error: error.message 
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
         status: 500 
       }
     );
