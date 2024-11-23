@@ -3,6 +3,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload } from "lucide-react";
 
+export interface PlaylistFormData {
+  title: string;
+  description: string;
+  artwork: File | null;
+  artwork_url?: string;
+  isPublic?: boolean;
+  selectedSongs?: any[];
+  selectedUsers?: any[];
+  selectedGenres?: any[];
+  selectedCategories?: any[];
+  selectedMoods?: any[];
+  moodId?: string;
+  genreId?: string;
+}
+
 interface PlaylistFormProps {
   playlistData: {
     title: string;

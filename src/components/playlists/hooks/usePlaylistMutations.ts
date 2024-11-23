@@ -4,6 +4,14 @@ import { toast } from "sonner";
 import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 import { PlaylistFormData } from "../PlaylistForm";
 
+interface SavePlaylistParams {
+  playlistData: PlaylistFormData;
+  isEditMode?: boolean;
+  existingPlaylist?: any;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}
+
 export const usePlaylistMutations = () => {
   const queryClient = useQueryClient();
 
@@ -45,8 +53,8 @@ export const usePlaylistMutations = () => {
         if (playlistError) throw playlistError;
 
         // Add categories if any
-        if (playlistData.categories?.length) {
-          const categoryAssignments = playlistData.categories.map(categoryId => ({
+        if (playlistData.selectedCategories?.length) {
+          const categoryAssignments = playlistData.selectedCategories.map(categoryId => ({
             playlist_id: playlist.id,
             category_id: categoryId
           }));
@@ -60,13 +68,6 @@ export const usePlaylistMutations = () => {
 
         // Send notifications if the playlist is public and there are selected users
         if (playlistData.isPublic && playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
-          console.log("Sending notifications for public playlist:", {
-            playlistId: playlist.id,
-            title: playlistData.title,
-            artworkUrl: artwork_url,
-            selectedUsers: playlistData.selectedUsers
-          });
-
           for (const user of playlistData.selectedUsers) {
             await createPlaylistAssignmentNotification(
               user.id, 
@@ -88,7 +89,23 @@ export const usePlaylistMutations = () => {
     }
   });
 
+  const handleSavePlaylist = async ({
+    playlistData,
+    isEditMode,
+    existingPlaylist,
+    onSuccess,
+    onError
+  }: SavePlaylistParams) => {
+    try {
+      await createPlaylist.mutateAsync(playlistData);
+      onSuccess?.();
+    } catch (error: any) {
+      onError?.(error);
+    }
+  };
+
   return {
-    createPlaylist
+    createPlaylist,
+    handleSavePlaylist
   };
 };
