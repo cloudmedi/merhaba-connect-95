@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { User } from "@/types/auth";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import { TablePagination } from "./TablePagination";
+import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
 import { useState } from "react";
 
 const ITEMS_PER_PAGE = 20;
@@ -22,7 +22,7 @@ export function UsersTable() {
     expiry: searchParams.get('expiry') || undefined,
   };
 
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users, isLoading, error } = useQuery({
     queryKey: ['users', filters],
     queryFn: async () => {
       let query = supabase
@@ -64,11 +64,7 @@ export function UsersTable() {
       }
 
       const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       return data?.map((profile): User => ({
         id: profile.id,
@@ -93,7 +89,8 @@ export function UsersTable() {
           quantity: profile.licenses[0].quantity
         } : undefined
       })) || [];
-    }
+    },
+    retry: 1
   });
 
   if (error) {

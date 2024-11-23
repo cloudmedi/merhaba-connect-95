@@ -1,30 +1,35 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
       await login(email, password);
+      navigate("/manager");
     } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.message.includes('aktif değil')) {
-        toast.error('Hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.');
-      } else if (error.message.includes('Invalid login credentials')) {
-        toast.error('Geçersiz e-posta veya şifre.');
-      } else {
-        toast.error('Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
-      }
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,9 +41,9 @@ export default function ManagerLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Yönetici Girişi</CardTitle>
+          <CardTitle className="text-2xl">Manager Login</CardTitle>
           <CardDescription>
-            Yönetici paneline erişmek için giriş yapın
+            Enter your credentials to access the manager dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -46,21 +51,19 @@ export default function ManagerLogin() {
             <div className="space-y-2">
               <Input
                 type="email"
-                placeholder="E-posta"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Şifre"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
               />
             </div>
             <Button 
@@ -68,7 +71,15 @@ export default function ManagerLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/manager/register")}
+            >
+              Register as Manager
             </Button>
           </form>
         </CardContent>

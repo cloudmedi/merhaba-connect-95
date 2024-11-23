@@ -15,7 +15,6 @@ interface PlaylistRowProps {
     is_public: boolean;
     company?: { name: string };
     profiles?: { first_name: string; last_name: string }[];
-    selected_users?: { id: string }[];
   };
   onPlay: (playlist: any) => void;
   onEdit: (playlist: any) => void;
@@ -35,70 +34,46 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handlePublishToggle = async () => {
     try {
-      console.log('Publishing playlist:', playlist.id, 'Current status:', playlist.is_public);
-      
-      const { data, error } = await supabase
+      // First update the playlist status
+      const { error } = await supabase
         .from('playlists')
-        .update({ 
-          is_public: !playlist.is_public,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', playlist.id)
-        .select()
-        .single();
+        .update({ is_public: !playlist.is_public })
+        .eq('id', playlist.id);
 
-      if (error) {
-        console.error('Publish error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Publish response:', data);
-
-      // If we're publishing (not unpublishing), send notifications
+      // If we're publishing (not unpublishing), send notifications to all managers
       if (!playlist.is_public) {
-        // Önce seçili kullanıcılara bildirim gönder
-        if (playlist.selected_users && playlist.selected_users.length > 0) {
-          for (const user of playlist.selected_users) {
-            await createPlaylistAssignmentNotification(
-              user.id,
-              playlist.name,
-              playlist.id,
-              playlist.artwork_url
-            );
-          }
-          console.log('Notifications sent to selected users:', playlist.selected_users);
-        } else {
-          // Eğer seçili kullanıcı yoksa, tüm yöneticilere bildirim gönder
-          const { data: managers, error: managersError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('role', 'manager');
+        // Get all managers
+        const { data: managers, error: managersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'manager');
 
-          if (managersError) throw managersError;
+        if (managersError) throw managersError;
 
-          for (const manager of managers) {
-            await createPlaylistAssignmentNotification(
-              manager.id,
-              playlist.name,
-              playlist.id,
-              playlist.artwork_url
-            );
-          }
-          console.log('Notifications sent to all managers');
+        // Send notification to each manager
+        for (const manager of managers) {
+          await createPlaylistAssignmentNotification(
+            manager.id,
+            playlist.name,
+            playlist.id,
+            playlist.artwork_url
+          );
         }
       }
 
       toast({
-        title: "Başarılı",
-        description: `Playlist ${playlist.is_public ? 'private yapıldı' : 'public yapıldı ve bildirimler gönderildi'}`,
+        title: "Success",
+        description: `Playlist ${playlist.is_public ? 'unpublished' : 'published'} successfully`,
       });
 
       onStatusChange();
     } catch (error: any) {
       console.error('Error toggling playlist publish state:', error);
       toast({
-        title: "Hata",
-        description: error.message || "Playlist durumu güncellenirken bir hata oluştu",
+        title: "Error",
+        description: error.message || "Failed to update playlist",
         variant: "destructive",
       });
     }

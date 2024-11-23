@@ -16,98 +16,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          role,
-          is_active,
-          created_at,
-          updated_at,
-          company_id,
-          avatar_url,
-          companies (
-            id,
-            name,
-            subscription_status,
-            subscription_ends_at
-          )
-        `)
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Profil getirme hatası:', error);
-        throw error;
-      }
-
-      if (!profile) {
-        console.error('Kullanıcı profili bulunamadı:', userId);
-        throw new Error('Kullanıcı profili bulunamadı');
-      }
-
-      return {
-        id: profile.id,
-        email: profile.email,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        role: profile.role as 'super_admin' | 'manager' | 'admin',
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
-        avatar_url: profile.avatar_url,
-        companyId: profile.company_id,
-        company: profile.companies ? {
-          id: profile.companies.id,
-          name: profile.companies.name,
-          subscriptionStatus: profile.companies.subscription_status,
-          subscriptionEndsAt: profile.companies.subscription_ends_at
-        } : undefined
-      };
-    } catch (error) {
-      console.error('fetchUserProfile hatası:', error);
-      throw error;
-    }
-  };
-
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setUser(profile);
-        }
-      } catch (error) {
-        console.error('Auth başlatma hatası:', error);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
       }
-    };
+      setIsLoading(false);
+    });
 
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setIsLoading(true);
-      try {
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setUser(profile);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Auth state change hatası:', error);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at
+        });
+      } else {
         setUser(null);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     });
 
     return () => {
@@ -116,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -126,28 +68,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const profile = await fetchUserProfile(data.user.id);
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          firstName: data.user.user_metadata.firstName || '',
+          lastName: data.user.user_metadata.lastName || '',
+          role: data.user.user_metadata.role || 'manager',
+          isActive: true,
+          createdAt: data.user.created_at,
+          updatedAt: data.user.updated_at || data.user.created_at
+        });
         
-        if (!profile.isActive) {
-          throw new Error('Hesabınız şu anda aktif değil. Lütfen yöneticinizle iletişime geçin.');
-        }
-
-        setUser(profile);
-        toast.success('Giriş başarılı');
+        toast.success('Login successful');
         
-        // Kullanıcı rolüne göre yönlendirme
-        if (profile.role === 'super_admin') {
-          window.location.href = '/super-admin/users';
-        } else if (profile.role === 'manager' || profile.role === 'admin') {
+        if (data.user.user_metadata.role === 'super_admin') {
+          window.location.href = '/super-admin';
+        } else {
           window.location.href = '/manager';
         }
       }
     } catch (error: any) {
-      console.error('Giriş hatası:', error);
-      toast.error(error.message || 'Giriş yapılamadı');
+      toast.error('Login failed: ' + error.message);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -156,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       setUser(null);
       
+      // Redirect based on current path
       const isManagerPath = window.location.pathname.startsWith('/manager');
       if (isManagerPath) {
         window.location.href = '/manager/login';
@@ -163,10 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/super-admin/login';
       }
       
-      toast.success('Başarıyla çıkış yapıldı');
+      toast.success('Logged out successfully');
     } catch (error: any) {
-      console.error('Çıkış hatası:', error);
-      toast.error('Çıkış yapılamadı');
+      console.error('Logout failed:', error);
+      toast.error('Failed to log out');
     }
   };
 

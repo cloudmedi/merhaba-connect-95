@@ -22,13 +22,15 @@ export const useMusicLibrary = () => {
   const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
 
-  // Get total count first
+  // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', filterGenre, filterPlaylist],
     queryFn: async () => {
-      let query = supabase.from('songs').select('*', { count: 'exact', head: true });
+      let query = supabase
+        .from('songs')
+        .select('*', { count: 'exact', head: true });
 
       if (filterGenre !== "all-genres") {
         query = query.contains('genre', [filterGenre]);
@@ -36,21 +38,26 @@ export const useMusicLibrary = () => {
 
       const { count, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching songs count:', error);
+        throw error;
+      }
+
       return count || 0;
     }
   });
 
-  // Then get paginated data
+  // Then fetch paginated songs
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
-      const startRow = (currentPage - 1) * itemsPerPage;
-      const endRow = startRow + itemsPerPage - 1;
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
 
       let query = supabase
         .from('songs')
-        .select('*');
+        .select('*')
+        .range(from, to);
 
       if (filterGenre !== "all-genres") {
         query = query.contains('genre', [filterGenre]);
@@ -60,21 +67,18 @@ export const useMusicLibrary = () => {
         query = query.order('created_at', { ascending: false });
       }
 
-      query = query.range(startRow, endRow);
-
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching songs:', error);
+        throw error;
+      }
+
       return data as Song[];
     }
   });
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
-
-  // Ensure current page is valid
-  if (currentPage > totalPages) {
-    setCurrentPage(totalPages);
-  }
 
   return {
     songs,

@@ -63,7 +63,7 @@ export function MusicTable({
     return <DataTableLoader />;
   }
 
-  if (!songs || songs.length === 0) {
+  if (songs.length === 0) {
     return <EmptyState />;
   }
 
@@ -102,9 +102,7 @@ export function MusicTable({
     setCurrentlyPlaying(songs[index]);
   };
 
-  // Calculate start and end indices for the current page
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + songs.length, totalCount);
 
   const transformedSongs = songs.map(song => ({
     id: song.id,
@@ -159,7 +157,7 @@ export function MusicTable({
         totalPages={totalPages}
         onPageChange={onPageChange}
         startIndex={startIndex}
-        endIndex={endIndex}
+        endIndex={Math.min(startIndex + songs.length, totalCount)}
         totalItems={totalCount}
       />
 
