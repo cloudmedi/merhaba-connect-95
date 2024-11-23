@@ -4,16 +4,20 @@ import { useToast } from "@/hooks/use-toast";
 import { PlaylistForm } from "./PlaylistForm";
 import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
+import { AssignManagersDialog } from "./AssignManagersDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 export function CreatePlaylist() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { handleSavePlaylist } = usePlaylistMutations();
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
   const [playlistData, setPlaylistData] = useState({
     title: "",
@@ -81,6 +85,37 @@ export function CreatePlaylist() {
     }
   }, [isEditMode, existingPlaylist, location.state]);
 
+  const handleAssignManagers = async (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => {
+    try {
+      const assignments = managerIds.map(userId => ({
+        user_id: userId,
+        playlist_id: existingPlaylist?.id,
+        scheduled_at: scheduledAt || new Date(),
+        expires_at: expiresAt || null
+      }));
+
+      const { error } = await supabase
+        .from('playlist_assignments')
+        .insert(assignments);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Playlist assigned to ${managerIds.length} managers`,
+      });
+
+      setIsAssignDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error assigning playlist:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign playlist",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSave = async () => {
     try {
       await handleSavePlaylist({
@@ -145,11 +180,28 @@ export function CreatePlaylist() {
             />
             <Label htmlFor="public-mode">Make Public</Label>
           </div>
+
+          {isEditMode && (
+            <Button
+              onClick={() => setIsAssignDialogOpen(true)}
+              variant="outline"
+              className="w-full"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Assign to Managers
+            </Button>
+          )}
         </div>
 
         <PlaylistTabs
           playlistData={playlistData}
           setPlaylistData={setPlaylistData}
+        />
+
+        <AssignManagersDialog
+          open={isAssignDialogOpen}
+          onOpenChange={setIsAssignDialogOpen}
+          onAssign={handleAssignManagers}
         />
       </div>
     </div>

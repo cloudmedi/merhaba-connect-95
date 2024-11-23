@@ -660,23 +660,29 @@ export type Database = {
       playlist_assignments: {
         Row: {
           assigned_at: string | null
+          expires_at: string | null
           id: string
           notification_sent: boolean | null
           playlist_id: string | null
+          scheduled_at: string | null
           user_id: string | null
         }
         Insert: {
           assigned_at?: string | null
+          expires_at?: string | null
           id?: string
           notification_sent?: boolean | null
           playlist_id?: string | null
+          scheduled_at?: string | null
           user_id?: string | null
         }
         Update: {
           assigned_at?: string | null
+          expires_at?: string | null
           id?: string
           notification_sent?: boolean | null
           playlist_id?: string | null
+          scheduled_at?: string | null
           user_id?: string | null
         }
         Relationships: [
