@@ -73,8 +73,8 @@ export default function ManagerDashboard() {
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Browse available playlists</p>
+          <h1 className="text-2xl font-bold text-gray-900">Music For Your Business</h1>
+          <p className="text-gray-500 mt-1">Explore popular venue soundtracks</p>
         </div>
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
