@@ -657,6 +657,45 @@ export type Database = {
           },
         ]
       }
+      playlist_assignments: {
+        Row: {
+          assigned_at: string | null
+          id: string
+          notification_sent: boolean | null
+          playlist_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          playlist_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          playlist_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_assignments_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlist_categories: {
         Row: {
           category_id: string

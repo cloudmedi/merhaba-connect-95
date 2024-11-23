@@ -76,8 +76,11 @@ export function usePlaylistMutations() {
         if (error) throw error;
         playlist = data;
 
-        await supabase.from('playlist_songs').delete().eq('playlist_id', existingPlaylist.id);
-        await supabase.from('playlist_categories').delete().eq('playlist_id', existingPlaylist.id);
+        // Remove existing assignments
+        await supabase
+          .from('playlist_assignments')
+          .delete()
+          .eq('playlist_id', existingPlaylist.id);
       } else {
         const { data, error } = await supabase
           .from('playlists')
@@ -89,35 +92,21 @@ export function usePlaylistMutations() {
         playlist = data;
       }
 
-      if (playlistData.selectedSongs.length > 0) {
-        const playlistSongs = playlistData.selectedSongs.map((song: any, index: number) => ({
+      // Create new assignments and send notifications for non-catalog playlists
+      if (!playlistData.isCatalog && playlistData.selectedUsers.length > 0) {
+        const assignments = playlistData.selectedUsers.map((user: any) => ({
           playlist_id: playlist.id,
-          song_id: song.id,
-          position: index
+          user_id: user.id,
+          notification_sent: false
         }));
 
-        const { error: songsError } = await supabase
-          .from('playlist_songs')
-          .insert(playlistSongs);
+        const { error: assignmentError } = await supabase
+          .from('playlist_assignments')
+          .insert(assignments);
 
-        if (songsError) throw songsError;
-      }
+        if (assignmentError) throw assignmentError;
 
-      if (playlistData.selectedCategories.length > 0) {
-        const playlistCategories = playlistData.selectedCategories.map((category: any) => ({
-          playlist_id: playlist.id,
-          category_id: category.id
-        }));
-
-        const { error: categoriesError } = await supabase
-          .from('playlist_categories')
-          .insert(playlistCategories);
-
-        if (categoriesError) throw categoriesError;
-      }
-
-      // Send notifications to assigned users
-      if (playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
+        // Send notifications for new assignments
         for (const user of playlistData.selectedUsers) {
           await createPlaylistAssignmentNotification(
             user.id, 
