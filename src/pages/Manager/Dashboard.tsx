@@ -61,8 +61,8 @@ export default function ManagerDashboard() {
                 id,
                 name,
                 artwork_url,
-                genre:genres(name),
-                mood:moods(name)
+                genre_id (name),
+                mood_id (name)
               )
             `)
             .eq('category_id', category.id)
@@ -160,8 +160,8 @@ export default function ManagerDashboard() {
                 id: playlist.id,
                 title: playlist.name,
                 artwork_url: playlist.artwork_url,
-                genre: playlist.genre?.name || "Various",
-                mood: playlist.mood?.name || "Various"
+                genre: playlist.genre_id?.name || "Various",
+                mood: playlist.mood_id?.name || "Various"
               }))}
             />
           ))

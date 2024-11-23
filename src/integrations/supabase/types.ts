@@ -1193,11 +1193,13 @@ export type Database = {
           created_by: string | null
           description: string | null
           genre_id: string | null
+          genre_name: string | null
           id: string | null
           is_catalog: boolean | null
           is_public: boolean | null
           last_played: string | null
           mood_id: string | null
+          mood_name: string | null
           name: string | null
           play_count: number | null
           updated_at: string | null
