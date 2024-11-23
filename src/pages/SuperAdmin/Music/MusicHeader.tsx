@@ -15,34 +15,17 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('No active session');
-        }
-
-        console.log('Uploading file:', file.name);
-
         // Create FormData
         const formData = new FormData();
         formData.append('file', file);
 
         // Call the upload-music edge function
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-music`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: formData,
-          }
-        );
+        const { data, error } = await supabase.functions.invoke('upload-music', {
+          body: formData,
+        });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Upload failed');
+        if (error) {
+          throw error;
         }
 
         console.log('Upload response:', data);
