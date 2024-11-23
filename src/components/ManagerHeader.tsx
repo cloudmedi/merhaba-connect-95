@@ -10,10 +10,6 @@ const navItems = [
     exact: true,
   },
   {
-    title: "Playlists",
-    href: "/manager/playlists",
-  },
-  {
     title: "Devices",
     href: "/manager/devices",
   },
