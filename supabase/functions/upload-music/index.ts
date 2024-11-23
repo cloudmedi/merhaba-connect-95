@@ -52,9 +52,10 @@ serve(async (req) => {
     // Get Bunny CDN configuration
     const bunnyApiKey = Deno.env.get('BUNNY_API_KEY');
     const bunnyStorageHost = Deno.env.get('BUNNY_STORAGE_HOST');
+    const bunnyStorageName = Deno.env.get('BUNNY_STORAGE_NAME');
     const bunnyStorageZoneName = Deno.env.get('BUNNY_STORAGE_ZONE_NAME');
 
-    if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageZoneName) {
+    if (!bunnyApiKey || !bunnyStorageHost || !bunnyStorageName || !bunnyStorageZoneName) {
       throw new Error('Missing Bunny CDN configuration');
     }
 
@@ -87,7 +88,8 @@ serve(async (req) => {
       throw new Error('Failed to connect to Bunny CDN');
     }
 
-    const bunnyUrl = `https://${bunnyStorageHost}/${uniqueFileName}`;
+    // Correct Bunny CDN upload URL with storage zone name
+    const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageName}/${uniqueFileName}`;
     console.log('Uploading to:', bunnyUrl);
 
     const uploadResponse = await fetch(bunnyUrl, {
@@ -109,7 +111,7 @@ serve(async (req) => {
 
     console.log('Successfully uploaded to Bunny CDN');
 
-    // Save song metadata to Supabase
+    // Save song metadata to Supabase with correct CDN URL
     const songData = {
       title: file.name.replace(/\.[^/.]+$/, ""),
       file_url: `https://${bunnyStorageZoneName}/${uniqueFileName}`,
