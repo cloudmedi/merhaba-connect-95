@@ -22,7 +22,7 @@ export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: categories, isLoading } = useQuery({
-    queryKey: ['manager-categories'],
+    queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
@@ -45,7 +45,8 @@ export default function ManagerDashboard() {
               )
             `)
             .eq('category_id', category.id)
-            .eq('playlists.is_public', true);
+            .eq('playlists.is_public', true)
+            .ilike('playlists.name', `%${searchQuery}%`);
 
           if (playlistsError) throw playlistsError;
 
@@ -65,7 +66,6 @@ export default function ManagerDashboard() {
   });
 
   const filteredCategories = categories?.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
     category.playlists.length > 0
   ) || [];
 
