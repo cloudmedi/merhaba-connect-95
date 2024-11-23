@@ -1,8 +1,6 @@
 import { ArrowLeft, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import ColorThief from "colorthief";
 
 interface PlaylistDetailHeaderProps {
   playlist: {
@@ -20,43 +18,7 @@ interface PlaylistDetailHeaderProps {
 
 export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
   const navigate = useNavigate();
-  const [gradientColors, setGradientColors] = useState<string[]>([]);
   
-  useEffect(() => {
-    if (playlist.artwork_url) {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      
-      // Eğer URL zaten CDN'den geliyorsa, optimize edilmiş versiyonunu kullan
-      const optimizedUrl = playlist.artwork_url.includes('b-cdn.net') 
-        ? `${playlist.artwork_url}?width=400&quality=100&format=webp` 
-        : playlist.artwork_url;
-      
-      img.src = optimizedUrl;
-      
-      img.onload = () => {
-        try {
-          const colorThief = new ColorThief();
-          const palette = colorThief.getPalette(img, 3);
-          
-          if (palette) {
-            const colors = palette.map(color => 
-              `rgba(${color[0]}, ${color[1]}, ${color[2]})`
-            );
-            setGradientColors(colors);
-            console.log("Extracted colors:", colors); // Debug için
-          }
-        } catch (error) {
-          console.error("Color extraction error:", error);
-        }
-      };
-
-      img.onerror = (e) => {
-        console.error("Image loading error:", e);
-      };
-    }
-  }, [playlist.artwork_url]);
-
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
@@ -85,13 +47,8 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
     }
   };
 
-  const gradientStyle = gradientColors.length >= 2 ? {
-    background: `linear-gradient(135deg, ${gradientColors[0]}20 0%, ${gradientColors[1]}40 100%)`,
-    transition: 'background 0.3s ease-in-out'
-  } : {};
-
   return (
-    <div className="space-y-8 rounded-lg p-8" style={gradientStyle}>
+    <div className="space-y-8">
       <div className="flex items-center gap-2 text-gray-500">
         <button 
           onClick={() => navigate("/manager")}
@@ -107,8 +64,7 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
           <img 
             src={playlist.artwork_url || "/placeholder.svg"}
             alt={playlist.name}
-            className="w-32 h-32 rounded-lg object-cover shadow-lg"
-            crossOrigin="anonymous"
+            className="w-32 h-32 rounded-lg object-cover"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
             <button
