@@ -117,8 +117,8 @@ export function PlaylistDetail() {
           duration={calculateTotalDuration()}
           onPlay={handlePlayClick}
           onPush={() => setIsPushDialogOpen(true)}
-          playlistId={playlist.id}
           isHero={playlist.is_hero}
+          id={playlist.id}
         />
 
         <SongList 

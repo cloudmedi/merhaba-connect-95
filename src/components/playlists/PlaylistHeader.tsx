@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Play, Star } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface PlaylistHeaderProps {
   onBack?: () => void;
@@ -14,6 +17,8 @@ export interface PlaylistHeaderProps {
   onCancel?: () => void;
   onCreate?: () => void;
   isEditMode?: boolean;
+  isHero?: boolean;
+  id?: string;
 }
 
 export function PlaylistHeader({
@@ -28,8 +33,41 @@ export function PlaylistHeader({
   onPush,
   onCancel,
   onCreate,
-  isEditMode
+  isEditMode,
+  isHero = false,
+  id
 }: PlaylistHeaderProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isHeroLocal, setIsHeroLocal] = useState(isHero);
+
+  const handleHeroToggle = async () => {
+    if (!id) return;
+    
+    try {
+      setIsUpdating(true);
+      const { error } = await supabase
+        .from('playlists')
+        .update({ is_hero: !isHeroLocal })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setIsHeroLocal(!isHeroLocal);
+      toast(isHeroLocal 
+        ? "Playlist removed from hero section"
+        : "Playlist set as hero"
+      );
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // If we're in create/edit mode
   if (onCancel && onCreate) {
     return (
@@ -95,14 +133,27 @@ export function PlaylistHeader({
               </>
             )}
           </div>
-          {onPush && (
-            <Button 
-              onClick={onPush}
-              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-            >
-              Push
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {id && (
+              <Button
+                onClick={handleHeroToggle}
+                variant={isHeroLocal ? "default" : "outline"}
+                className="rounded-full px-8 flex items-center gap-2"
+                disabled={isUpdating}
+              >
+                <Star className={`w-4 h-4 ${isHeroLocal ? 'fill-white' : ''}`} />
+                {isHeroLocal ? "Featured Playlist" : "Set as Featured"}
+              </Button>
+            )}
+            {onPush && (
+              <Button 
+                onClick={onPush}
+                className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
+              >
+                Push
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
