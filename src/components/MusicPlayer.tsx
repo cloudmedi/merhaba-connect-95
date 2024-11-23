@@ -70,10 +70,19 @@ export function MusicPlayer({ playlist, onClose, initialSongIndex = 0 }: MusicPl
     return `${url}?width=400&quality=85&format=webp`;
   };
 
-  // Ensure the file_url is properly formatted for Bunny CDN
+  // Updated getAudioUrl function to handle both Bunny CDN and direct URLs
   const getAudioUrl = (song: any) => {
     if (!song.file_url) return '';
+    
+    // If it's already a full URL, return it
     if (song.file_url.startsWith('http')) return song.file_url;
+    
+    // If it has a bunny_id, use that
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    // Otherwise, construct the URL from file_url
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
