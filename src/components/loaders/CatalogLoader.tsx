@@ -1,17 +1,23 @@
 import React from 'react';
 import ContentLoader from 'react-content-loader';
 
-const CatalogLoader = (props: any) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 min-h-[calc(100vh-64px)]">
-    {[...Array(12)].map((_, index) => (
+interface CatalogLoaderProps {
+  count?: number;
+  backgroundColor?: string;
+  foregroundColor?: string;
+}
+
+const CatalogLoader = ({ count = 6, backgroundColor = "#f3f4f6", foregroundColor = "#e5e7eb" }: CatalogLoaderProps) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    {[...Array(count)].map((_, index) => (
       <ContentLoader
         key={index}
         speed={2}
         width={200}
         height={300}
         viewBox="0 0 200 300"
-        backgroundColor={props.backgroundColor || "#f3f4f6"}
-        foregroundColor={props.foregroundColor || "#e5e7eb"}
+        backgroundColor={backgroundColor}
+        foregroundColor={foregroundColor}
         className="w-full"
       >
         {/* Image placeholder */}
