@@ -31,14 +31,14 @@ export default function ManagerDashboard() {
           id,
           name,
           artwork_url,
-          genres (name),
-          moods (name)
+          genre_name,
+          mood_name
         `)
-        .limit(1)
-        .single();
+        .order('play_count', { ascending: false })
+        .limit(1);
 
       if (error) throw error;
-      return data;
+      return data?.[0] || null;
     }
   });
 
