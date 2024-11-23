@@ -26,9 +26,9 @@ interface MusicPlayerProps {
   currentSongId?: string | number;
 }
 
-export function MusicPlayer({
-  playlist,
-  onClose,
+export function MusicPlayer({ 
+  playlist, 
+  onClose, 
   initialSongIndex = 0,
   autoPlay = true,
   onSongChange,
@@ -39,8 +39,7 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
-
-  // Sync with external song ID changes
+  
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -50,12 +49,10 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
-  // Sync with external index changes
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
   }, [initialSongIndex]);
 
-  // Notify parent of play state changes
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
@@ -73,7 +70,6 @@ export function MusicPlayer({
       const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
       setCurrentSongIndex(nextIndex);
       onSongChange?.(nextIndex);
-      setIsPlaying(true); // Auto-play next song
     }
   };
 
@@ -82,7 +78,6 @@ export function MusicPlayer({
       const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
       setCurrentSongIndex(prevIndex);
       onSongChange?.(prevIndex);
-      setIsPlaying(true); // Auto-play previous song
     }
   };
 
@@ -139,12 +134,11 @@ export function MusicPlayer({
 
         <div className="flex-1">
           <AudioPlayer
-            key={currentSong?.id} // Force re-render on song change
             audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}
-            autoPlay={isPlaying}
+            autoPlay={autoPlay}
             onPlayStateChange={handlePlayPause}
           />
         </div>
