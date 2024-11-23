@@ -152,9 +152,11 @@ export function ManagerHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <div className="h-8 w-8 rounded-full bg-[#9b87f5]/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-[#9b87f5]" />
+              <Button variant="ghost" className="relative h-8 w-8">
+                <div className="h-8 w-8 rounded-full bg-[#9b87f5] flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {firstName.charAt(0)}
+                  </span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
