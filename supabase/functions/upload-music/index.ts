@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -50,14 +51,14 @@ serve(async (req) => {
       throw new Error('Missing Bunny CDN configuration');
     }
 
-    // Generate unique filename
+    // Generate unique filename for Bunny CDN
     const fileExt = fileName.split('.').pop();
-    const uniqueFileName = `${crypto.randomUUID()}.${fileExt}`;
+    const uniqueFileName = `music/${crypto.randomUUID()}.${fileExt}`;
     
     console.log('Uploading to Bunny CDN...');
     const bunnyUrl = `https://${bunnyStorageHost}/${bunnyStorageZoneName}/${uniqueFileName}`;
 
-    // Convert base64 to Uint8Array
+    // Convert base64 to Uint8Array for upload
     const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0));
 
     const uploadResponse = await fetch(bunnyUrl, {
@@ -78,7 +79,7 @@ serve(async (req) => {
     console.log('Successfully uploaded to Bunny CDN');
 
     // Construct the CDN URL
-    const cdnUrl = `https://${bunnyStorageZoneName}.b-cdn.net/${uniqueFileName}`;
+    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`;
 
     // Save song metadata to Supabase
     const songData = {
