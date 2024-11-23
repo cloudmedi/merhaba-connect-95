@@ -50,6 +50,10 @@ export function ManagerHeader() {
 
   const greeting = `${getGreeting()}, ${getUserDisplayName(user)}`;
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-6">

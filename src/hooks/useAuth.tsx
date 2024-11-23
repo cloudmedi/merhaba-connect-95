@@ -54,8 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         id: profile.id,
         email: profile.email,
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
+        firstName: profile.first_name,
+        lastName: profile.last_name,
         role: profile.role as 'super_admin' | 'manager' | 'admin',
         isActive: profile.is_active,
         createdAt: profile.created_at,
@@ -135,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(profile);
         toast.success('Giriş başarılı');
         
+        // Kullanıcı rolüne göre yönlendirme
         if (profile.role === 'super_admin') {
           window.location.href = '/super-admin/users';
         } else if (profile.role === 'manager' || profile.role === 'admin') {
