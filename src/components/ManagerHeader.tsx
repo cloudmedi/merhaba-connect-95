@@ -103,20 +103,38 @@ export function ManagerHeader() {
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`p-4 rounded-lg border ${
+                        className={`p-4 rounded-lg border cursor-pointer ${
                           notification.status === 'unread'
                             ? 'bg-gray-50'
                             : 'bg-white'
                         }`}
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => {
+                          markAsRead(notification.id);
+                          if (notification.type === 'playlist_assignment' && notification.metadata?.playlist_id) {
+                            navigate(`/manager/playlists/${notification.metadata.playlist_id}`);
+                          }
+                        }}
                       >
-                        <h4 className="font-medium">{notification.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                        <span className="text-xs text-gray-400 mt-2 block">
-                          {format(new Date(notification.created_at), 'dd MMM yyyy HH:mm')}
-                        </span>
+                        <div className="flex gap-3">
+                          {notification.type === 'playlist_assignment' && (
+                            <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden">
+                              <img
+                                src={notification.metadata?.artwork_url || "/placeholder.svg"}
+                                alt="Playlist artwork"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h4 className="font-medium">{notification.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {notification.message}
+                            </p>
+                            <span className="text-xs text-gray-400 mt-2 block">
+                              {format(new Date(notification.created_at), 'dd MMM yyyy HH:mm')}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

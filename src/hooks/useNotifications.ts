@@ -10,6 +10,11 @@ export interface Notification {
   message: string;
   status: 'read' | 'unread';
   created_at: string;
+  type: string;
+  metadata?: {
+    playlist_id?: string;
+    artwork_url?: string;
+  };
 }
 
 type SupabaseNotification = Tables<'notifications'>;
@@ -41,6 +46,8 @@ export function useNotifications() {
         message: n.message,
         status: n.status as 'read' | 'unread',
         created_at: n.created_at || '',
+        type: n.type,
+        metadata: n.metadata || {}
       }));
 
       setNotifications(formattedNotifications);
@@ -68,6 +75,8 @@ export function useNotifications() {
             message: newNotification.message,
             status: newNotification.status as 'read' | 'unread',
             created_at: newNotification.created_at || '',
+            type: newNotification.type,
+            metadata: newNotification.metadata || {}
           };
           
           setNotifications(prev => [formattedNotification, ...prev]);

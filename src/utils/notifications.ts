@@ -2,7 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export async function createPlaylistAssignmentNotification(
   recipientId: string,
-  playlistName: string
+  playlistName: string,
+  playlistId: string,
+  artworkUrl?: string
 ) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No authenticated user');
@@ -15,6 +17,10 @@ export async function createPlaylistAssignmentNotification(
       type: "playlist_assignment",
       status: "unread",
       priority: "normal",
+      metadata: {
+        playlist_id: playlistId,
+        artwork_url: artworkUrl || "/placeholder.svg"
+      }
     });
 
     if (error) {
