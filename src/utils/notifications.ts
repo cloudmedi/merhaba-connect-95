@@ -9,6 +9,13 @@ export async function createPlaylistAssignmentNotification(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No authenticated user');
 
+  console.log("Creating playlist assignment notification:", {
+    recipientId,
+    playlistName,
+    playlistId,
+    artworkUrl
+  });
+
   try {
     const { error } = await supabase.from("notifications").insert({
       recipient_id: recipientId,

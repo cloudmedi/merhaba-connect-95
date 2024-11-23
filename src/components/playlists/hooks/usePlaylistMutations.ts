@@ -114,8 +114,15 @@ export function usePlaylistMutations() {
         if (categoriesError) throw categoriesError;
       }
 
-      // Only send notifications if the playlist is public
+      // Send notifications if the playlist is public and there are selected users
       if (playlistData.isPublic && playlistData.selectedUsers && playlistData.selectedUsers.length > 0) {
+        console.log("Sending notifications for public playlist:", {
+          playlistId: playlist.id,
+          title: playlistData.title,
+          artworkUrl: artwork_url,
+          selectedUsers: playlistData.selectedUsers
+        });
+
         for (const user of playlistData.selectedUsers) {
           await createPlaylistAssignmentNotification(
             user.id, 
@@ -127,7 +134,6 @@ export function usePlaylistMutations() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
-
       onSuccess?.();
     } catch (error: any) {
       console.error('Error saving playlist:', error);
