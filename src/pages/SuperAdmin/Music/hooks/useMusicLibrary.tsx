@@ -51,8 +51,9 @@ export const useMusicLibrary = () => {
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
+      // Calculate the range. Since Supabase range is inclusive, we subtract 1 from itemsPerPage
       const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
+      const to = from + (itemsPerPage - 1); // Subtract 1 because range is inclusive
 
       console.log('Fetching songs from:', from, 'to:', to);
 

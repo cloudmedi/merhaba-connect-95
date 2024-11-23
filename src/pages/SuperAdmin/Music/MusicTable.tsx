@@ -102,6 +102,7 @@ export function MusicTable({
     setCurrentlyPlaying(songs[index]);
   };
 
+  // Calculate correct start and end indices for display
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + songs.length, totalCount);
 
