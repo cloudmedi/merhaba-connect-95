@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { HeroLoader } from "@/components/loaders/HeroLoader";
+import { extractDominantColor } from "@/utils/colorExtraction";
 
 interface Category {
   id: string;
@@ -23,9 +24,10 @@ interface Category {
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [dominantColor, setDominantColor] = useState("rgb(0, 0, 0)");
 
-  const { data: latestBarPlaylist, isLoading: isLatestLoading } = useQuery({
-    queryKey: ['latest-bar-playlist'],
+  const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
+    queryKey: ['hero-playlist'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('playlists')
@@ -36,14 +38,20 @@ export default function ManagerDashboard() {
           genre_id:genres!inner(name),
           mood_id:moods!inner(name)
         `)
-        .order('play_count', { ascending: false })
-        .limit(1);
+        .eq('is_hero', true)
+        .single();
 
       if (error) throw error;
-      return data?.[0] || null;
+      return data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  useEffect(() => {
+    if (heroPlaylist?.artwork_url) {
+      extractDominantColor(heroPlaylist.artwork_url).then(setDominantColor);
+    }
+  }, [heroPlaylist?.artwork_url]);
 
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
@@ -94,37 +102,32 @@ export default function ManagerDashboard() {
     category.playlists.length > 0
   ) || [];
 
-  const defaultArtwork = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819";
-  const artworkUrl = latestBarPlaylist?.artwork_url || defaultArtwork;
-
   return (
     <div className="min-h-[calc(100vh-64px)]">
-      {isLatestLoading ? (
+      {isHeroLoading ? (
         <HeroLoader />
-      ) : latestBarPlaylist && (
+      ) : heroPlaylist && (
         <div 
           className="relative mb-12 rounded-lg overflow-hidden h-[300px]"
           style={{
-            background: `linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.3)), url(${artworkUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            background: `linear-gradient(to right, ${dominantColor}ee, ${dominantColor}99)`,
           }}
         >
           <div className="absolute inset-0 flex items-center justify-between p-8">
             <div className="text-white space-y-4">
-              <h2 className="text-3xl font-bold">Music For Your Business</h2>
-              <p className="text-lg opacity-90">Explore popular venue soundtracks</p>
+              <h2 className="text-3xl font-bold">Featured Playlist</h2>
+              <p className="text-lg opacity-90">{heroPlaylist.name}</p>
               <Button 
                 className="mt-4 bg-white text-black hover:bg-gray-100"
-                onClick={() => window.location.href = `/manager/playlists/${latestBarPlaylist.id}`}
+                onClick={() => window.location.href = `/manager/playlists/${heroPlaylist.id}`}
               >
                 Go to Playlist
               </Button>
             </div>
             <div className="w-64 h-64 relative">
               <img
-                src={artworkUrl}
-                alt="Latest Bar Playlist"
+                src={heroPlaylist.artwork_url}
+                alt="Hero Playlist"
                 className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-300"
               />
             </div>

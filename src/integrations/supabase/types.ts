@@ -810,6 +810,7 @@ export type Database = {
           genre_id: string | null
           id: string
           is_catalog: boolean | null
+          is_hero: boolean | null
           is_public: boolean | null
           last_played: string | null
           mood_id: string | null
@@ -827,6 +828,7 @@ export type Database = {
           genre_id?: string | null
           id?: string
           is_catalog?: boolean | null
+          is_hero?: boolean | null
           is_public?: boolean | null
           last_played?: string | null
           mood_id?: string | null
@@ -844,6 +846,7 @@ export type Database = {
           genre_id?: string | null
           id?: string
           is_catalog?: boolean | null
+          is_hero?: boolean | null
           is_public?: boolean | null
           last_played?: string | null
           mood_id?: string | null

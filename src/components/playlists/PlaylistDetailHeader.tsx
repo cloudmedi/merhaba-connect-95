@@ -1,9 +1,13 @@
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlaylistDetailHeaderProps {
   playlist: {
+    id: string;
     name: string;
     artwork_url?: string;
     genre?: { name: string; id?: string };
@@ -11,6 +15,7 @@ interface PlaylistDetailHeaderProps {
     songs?: {
       duration: number;
     }[];
+    is_hero?: boolean;
   };
   onPlay: () => void;
   onPush: () => void;
@@ -18,6 +23,8 @@ interface PlaylistDetailHeaderProps {
 
 export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetailHeaderProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
@@ -44,6 +51,33 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
   const handleMoodClick = () => {
     if (playlist.mood?.id) {
       navigate(`/manager/playlists/mood/${playlist.mood.id}`);
+    }
+  };
+
+  const handleHeroToggle = async () => {
+    try {
+      setIsUpdating(true);
+      const { error } = await supabase
+        .from('playlists')
+        .update({ is_hero: !playlist.is_hero })
+        .eq('id', playlist.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: playlist.is_hero 
+          ? "Playlist removed from hero section" 
+          : "Playlist set as hero",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -96,12 +130,23 @@ export function PlaylistDetailHeader({ playlist, onPlay, onPush }: PlaylistDetai
             <span>•</span>
             <span>{calculateTotalDuration()}</span>
           </div>
-          <Button 
-            onClick={onPush}
-            className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-          >
-            Push
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={onPush}
+              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
+            >
+              Push
+            </Button>
+            <Button
+              onClick={handleHeroToggle}
+              variant="outline"
+              className="rounded-full px-8 flex items-center gap-2"
+              disabled={isUpdating}
+            >
+              <Star className={`w-4 h-4 ${playlist.is_hero ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+              {playlist.is_hero ? "Remove from Hero" : "Set as Hero"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
