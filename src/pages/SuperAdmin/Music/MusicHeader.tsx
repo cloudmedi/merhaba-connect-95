@@ -16,6 +16,12 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
+        // Get the session for authentication
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('No active session');
+        }
+
         // Convert file to base64
         const reader = new FileReader();
         const base64Promise = new Promise((resolve) => {
@@ -32,6 +38,9 @@ export function MusicHeader() {
             fileData: base64Data,
             fileName: file.name,
             contentType: file.type
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
           }
         });
 
