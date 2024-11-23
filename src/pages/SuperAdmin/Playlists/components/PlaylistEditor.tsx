@@ -114,7 +114,7 @@ export function PlaylistEditor() {
     <div className="flex gap-6 p-6 bg-white rounded-lg">
       <PlaylistForm playlistData={playlistData} setPlaylistData={setPlaylistData} />
       
-      <div className="flex-1">
+      <div className="flex-1 space-y-6">
         <PlaylistHeader
           onCancel={() => navigate("/super-admin/playlists")}
           onCreate={() => handleSavePlaylist({
@@ -145,7 +145,7 @@ export function PlaylistEditor() {
         {isEditMode && (
           <Button
             onClick={() => setIsAssignDialogOpen(true)}
-            className="w-full mt-6 bg-purple-100 text-purple-600 hover:bg-purple-200"
+            className="w-full mt-4 bg-purple-100 text-purple-600 hover:bg-purple-200"
           >
             <Users className="w-4 h-4 mr-2" />
             Assign to Managers
