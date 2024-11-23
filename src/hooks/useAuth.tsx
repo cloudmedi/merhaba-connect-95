@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select(`
         *,
-        companies:company_id (
+        companies (
           id,
           name,
           subscription_status,
