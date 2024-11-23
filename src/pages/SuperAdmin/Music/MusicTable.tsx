@@ -59,11 +59,6 @@ export function MusicTable({
   const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  console.log('MusicTable rendered with songs:', songs?.length);
-  console.log('Current page:', currentPage);
-  console.log('Total pages:', totalPages);
-  console.log('Items per page:', itemsPerPage);
-
   if (isLoading) {
     return <DataTableLoader />;
   }
@@ -109,9 +104,6 @@ export function MusicTable({
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + songs.length, totalCount);
-
-  console.log('Start index:', startIndex);
-  console.log('End index:', endIndex);
 
   const transformedSongs = songs.map(song => ({
     id: song.id,

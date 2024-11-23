@@ -24,7 +24,7 @@ export const useMusicLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // İlk olarak toplam şarkı sayısını al
+  // First get total count
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', filterGenre, filterPlaylist],
     queryFn: async () => {
@@ -47,17 +47,14 @@ export const useMusicLibrary = () => {
     }
   });
 
-  // Sonra sayfalanmış şarkıları getir
+  // Then get paginated songs
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
     queryFn: async () => {
-      console.log('Fetching songs for page:', currentPage);
-      console.log('Items per page:', itemsPerPage);
-      
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
-      
-      console.log('Range:', from, 'to', to);
+
+      console.log('Fetching songs from:', from, 'to:', to);
 
       let query = supabase
         .from('songs')
@@ -71,7 +68,7 @@ export const useMusicLibrary = () => {
         query = query.order('created_at', { ascending: false });
       }
 
-      // Range'i en son uygulayalım
+      // Apply pagination
       query = query.range(from, to);
 
       const { data, error } = await query;
@@ -87,6 +84,11 @@ export const useMusicLibrary = () => {
   });
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+
+  // Ensure current page is valid
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
 
   return {
     songs,
