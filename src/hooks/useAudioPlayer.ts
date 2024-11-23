@@ -7,6 +7,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const onEndedCallbackRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!audioUrl) {
@@ -49,7 +50,9 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleEnded = () => {
       setIsPlaying(false);
       setProgress(0);
-      audio.currentTime = 0;
+      if (onEndedCallbackRef.current) {
+        onEndedCallbackRef.current();
+      }
     };
 
     audio.addEventListener('canplay', handleCanPlay);
@@ -112,6 +115,10 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     audioRef.current.volume = Math.max(0, Math.min(1, value));
   }, []);
 
+  const onEnded = useCallback((callback: () => void) => {
+    onEndedCallbackRef.current = callback;
+  }, []);
+
   return {
     isPlaying,
     progress,
@@ -121,6 +128,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     togglePlay,
     play,
     seek,
-    setVolume
+    setVolume,
+    onEnded
   };
 }

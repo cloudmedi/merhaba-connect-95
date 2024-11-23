@@ -30,7 +30,8 @@ function AudioPlayerComponent({
     togglePlay,
     seek,
     setVolume,
-    play
+    play,
+    onEnded
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
@@ -46,6 +47,13 @@ function AudioPlayerComponent({
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
+
+  // Handle song ending
+  useEffect(() => {
+    if (onNext) {
+      onEnded(onNext);
+    }
+  }, [onNext, onEnded]);
 
   if (error) {
     return (
