@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ManagerList } from "./manager-selection/ManagerList";
 import { SchedulingSection } from "./manager-selection/SchedulingSection";
 import { Manager } from "./types";
+import { toast } from "sonner";
 
 interface AssignManagersDialogProps {
   open: boolean;
@@ -34,29 +35,47 @@ export function AssignManagersDialog({
 
   const fetchManagers = async () => {
     try {
+      setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast.error("No authenticated user found");
+        return;
+      }
 
-      // First get the super admin's company ID
-      const { data: adminProfile } = await supabase
+      // Get the current user's company ID
+      const { data: adminProfile, error: profileError } = await supabase
         .from("profiles")
         .select("company_id")
         .eq("id", user.id)
         .single();
 
-      if (!adminProfile?.company_id) return;
+      if (profileError || !adminProfile?.company_id) {
+        toast.error("Failed to get company information");
+        return;
+      }
 
-      // Then fetch all users from the same company
-      const { data, error } = await supabase
+      // Fetch all managers from the same company
+      let query = supabase
         .from("profiles")
         .select("id, email, first_name, last_name, role")
         .eq("company_id", adminProfile.company_id)
-        .ilike("email", `%${searchQuery}%`);
+        .eq("role", "manager");
 
-      if (error) throw error;
-      setManagers(data || []);
-    } catch (error) {
+      // Add search filter if there's a query
+      if (searchQuery) {
+        query = query.or(`email.ilike.%${searchQuery}%,first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
+      }
+
+      const { data: managersData, error: managersError } = await query;
+
+      if (managersError) {
+        throw managersError;
+      }
+
+      setManagers(managersData || []);
+    } catch (error: any) {
       console.error("Error fetching managers:", error);
+      toast.error(error.message || "Failed to load managers");
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +92,11 @@ export function AssignManagersDialog({
   };
 
   const handleAssign = () => {
+    if (selectedManagers.length === 0) {
+      toast.error("Please select at least one manager");
+      return;
+    }
+
     onAssign(
       selectedManagers.map(m => m.id),
       scheduledAt,
@@ -87,14 +111,14 @@ export function AssignManagersDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Assign to Users</DialogTitle>
+          <DialogTitle>Assign to Managers</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search users..."
+              placeholder="Search managers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

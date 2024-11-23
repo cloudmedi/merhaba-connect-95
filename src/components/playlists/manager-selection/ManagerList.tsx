@@ -1,6 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Manager } from "../types";
+import { Avatar } from "@/components/ui/avatar";
 
 interface ManagerListProps {
   managers: Manager[];
@@ -26,13 +27,18 @@ export function ManagerList({
           managers.map((manager) => (
             <div
               key={manager.id}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+              className="flex items-center space-x-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer"
               onClick={() => onSelectManager(manager)}
             >
               <Checkbox
                 checked={selectedManagers.some(m => m.id === manager.id)}
                 onCheckedChange={() => onSelectManager(manager)}
               />
+              <Avatar className="h-8 w-8">
+                <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
+                  {(manager.first_name?.[0] || manager.email[0]).toUpperCase()}
+                </div>
+              </Avatar>
               <div>
                 <div className="font-medium">
                   {manager.first_name && manager.last_name
