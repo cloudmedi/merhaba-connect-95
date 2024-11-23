@@ -9,7 +9,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -19,12 +19,17 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase configuration');
+    }
 
-    // Get user information from the authorization header
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user information from the token
     const { data: { user }, error: userError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
@@ -79,7 +84,7 @@ serve(async (req) => {
     console.log('Successfully uploaded to Bunny CDN');
 
     // Construct the CDN URL
-    const cdnUrl = `https://${bunnyStorageZoneName}/${uniqueFileName}`;
+    const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
 
     // Save song metadata to Supabase
     const songData = {
