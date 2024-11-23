@@ -60,17 +60,17 @@ export function SongTableRow({
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-4">
-          <div className="relative group w-10 h-10">
+          <div className="relative group/artwork w-10 h-10">
             <img
               src={getOptimizedImageUrl(song.artwork_url || defaultArtwork)}
               alt={song.title}
-              className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
+              className="w-full h-full object-cover rounded group-hover/artwork:opacity-75 transition-opacity"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
                 img.src = defaultArtwork;
               }}
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/artwork:opacity-100 transition-opacity">
               <Button
                 size="icon"
                 variant="ghost"
