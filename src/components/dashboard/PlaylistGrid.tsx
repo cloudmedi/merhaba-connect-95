@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import { GridPlaylist } from "./types";
-import CatalogLoader from "@/components/loaders/CatalogLoader";
+import { SpotifyLoader } from "@/components/loaders/SpotifyLoader";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -58,7 +58,7 @@ export function PlaylistGrid({
   });
 
   if (isLoading) {
-    return <CatalogLoader count={6} />;
+    return <SpotifyLoader />;
   }
 
   const handleViewAll = () => {

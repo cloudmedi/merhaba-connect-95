@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { HeroLoader } from "@/components/loaders/HeroLoader";
+import { SpotifyLoader } from "@/components/loaders/SpotifyLoader";
 import { extractDominantColor } from "@/utils/colorExtraction";
 
 interface HeroPlaylistProps {
@@ -34,7 +34,7 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
   }, [playlist?.artwork_url]);
 
   if (isLoading || isColorLoading) {
-    return <HeroLoader />;
+    return <SpotifyLoader />;
   }
 
   if (!playlist) {
