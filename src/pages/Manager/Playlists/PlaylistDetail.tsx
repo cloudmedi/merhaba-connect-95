@@ -61,7 +61,9 @@ export function PlaylistDetail() {
 
   useEffect(() => {
     if (playlist?.artwork_url) {
-      extractDominantColor(playlist.artwork_url).then(setDominantColor);
+      extractDominantColor(playlist.artwork_url).then(color => {
+        setDominantColor(color);
+      });
     }
   }, [playlist?.artwork_url]);
 
@@ -115,9 +117,9 @@ export function PlaylistDetail() {
   return (
     <DashboardLayout>
       <div 
-        className="relative rounded-lg overflow-hidden"
+        className="relative rounded-lg overflow-hidden transition-colors duration-300"
         style={{
-          background: `linear-gradient(to right, ${dominantColor}ee, ${dominantColor}99)`,
+          background: `linear-gradient(to bottom, ${dominantColor}ee, ${dominantColor}99)`,
           padding: "2rem",
           marginBottom: "2rem"
         }}
@@ -137,7 +139,7 @@ export function PlaylistDetail() {
         />
       </div>
 
-      <div className="bg-white rounded-lg p-6">
+      <div className="bg-white rounded-lg p-6 shadow-sm">
         <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
