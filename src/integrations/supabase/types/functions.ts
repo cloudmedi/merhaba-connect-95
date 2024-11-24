@@ -1,3 +1,5 @@
+import { Json } from './json';
+
 export type DatabaseFunctions = {
   cleanup_song_history: {
     Args: Record<PropertyKey, never>
