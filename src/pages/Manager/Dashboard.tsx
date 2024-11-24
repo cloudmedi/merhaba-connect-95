@@ -25,7 +25,8 @@ interface Category {
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [dominantColor, setDominantColor] = useState("rgb(0, 0, 0)");
+  const [dominantColor, setDominantColor] = useState<string>("rgb(110, 89, 165)");
+  const [isColorLoading, setIsColorLoading] = useState(false);
   const navigate = useNavigate();
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
@@ -50,9 +51,21 @@ export default function ManagerDashboard() {
   });
 
   useEffect(() => {
-    if (heroPlaylist?.artwork_url) {
-      extractDominantColor(heroPlaylist.artwork_url).then(setDominantColor);
-    }
+    const loadDominantColor = async () => {
+      if (heroPlaylist?.artwork_url) {
+        setIsColorLoading(true);
+        try {
+          const color = await extractDominantColor(heroPlaylist.artwork_url);
+          setDominantColor(color);
+        } catch (error) {
+          console.error('Error loading dominant color:', error);
+        } finally {
+          setIsColorLoading(false);
+        }
+      }
+    };
+
+    loadDominantColor();
   }, [heroPlaylist?.artwork_url]);
 
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
@@ -106,27 +119,27 @@ export default function ManagerDashboard() {
 
   return (
     <div className="min-h-[calc(100vh-64px)]">
-      {isHeroLoading ? (
+      {isHeroLoading || isColorLoading ? (
         <HeroLoader />
       ) : heroPlaylist && (
         <div 
-          className="relative mb-12 rounded-lg overflow-hidden h-[300px]"
+          className="relative mb-12 rounded-lg overflow-hidden h-[300px] transition-all duration-500"
           style={{
-            background: `linear-gradient(to right, ${dominantColor}ee, ${dominantColor}99)`,
+            background: `linear-gradient(135deg, ${dominantColor} 0%, rgba(255,255,255,0.1) 100%)`,
           }}
         >
           <div className="absolute inset-0 flex items-center justify-between p-8">
-            <div className="text-white space-y-4">
+            <div className="text-white space-y-4 z-10">
               <h2 className="text-3xl font-bold">Featured Playlist</h2>
               <p className="text-lg opacity-90">{heroPlaylist.name}</p>
               <Button 
-                className="mt-4 bg-white text-black hover:bg-gray-100"
+                className="mt-4 bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30 transition-all"
                 onClick={() => navigate(`/manager/playlists/${heroPlaylist.id}`)}
               >
                 Go to Playlist
               </Button>
             </div>
-            <div className="w-64 h-64 relative">
+            <div className="w-64 h-64 relative z-10">
               <img
                 src={heroPlaylist.artwork_url}
                 alt="Hero Playlist"
