@@ -7,6 +7,18 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { Outlet, useOutletContext } from "react-router-dom";
+
+type MusicContextType = {
+  currentPlaylist: any;
+  setCurrentPlaylist: (playlist: any) => void;
+  isPlaying: boolean;
+  setIsPlaying: (isPlaying: boolean) => void;
+};
+
+export function useMusic() {
+  return useOutletContext<MusicContextType>();
+}
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,6 +162,8 @@ export default function ManagerDashboard() {
           />
         ))}
       </div>
+
+      <Outlet context={{ currentPlaylist, setCurrentPlaylist, isPlaying, setIsPlaying }} />
 
       {currentPlaylist && (
         <MusicPlayer
