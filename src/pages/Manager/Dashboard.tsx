@@ -11,6 +11,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Set up realtime subscription
   usePlaylistSubscription();
@@ -90,7 +91,18 @@ export default function ManagerDashboard() {
   });
 
   const handlePlayPlaylist = (playlist: any) => {
-    setCurrentPlaylist(playlist);
+    if (currentPlaylist?.id === playlist.id) {
+      // If clicking the same playlist, toggle play state
+      setIsPlaying(!isPlaying);
+    } else {
+      // If clicking a different playlist, start playing it
+      setCurrentPlaylist(playlist);
+      setIsPlaying(true);
+    }
+  };
+
+  const handlePlayStateChange = (playing: boolean) => {
+    setIsPlaying(playing);
   };
 
   const filteredCategories = categories?.filter(category =>
@@ -133,6 +145,8 @@ export default function ManagerDashboard() {
             }))}
             isLoading={isCategoriesLoading}
             onPlay={handlePlayPlaylist}
+            currentPlayingId={currentPlaylist?.id}
+            isPlaying={isPlaying}
           />
         ))}
       </div>
@@ -144,7 +158,11 @@ export default function ManagerDashboard() {
             artwork: currentPlaylist.artwork_url,
             songs: currentPlaylist.songs
           }}
-          onClose={() => setCurrentPlaylist(null)}
+          onClose={() => {
+            setCurrentPlaylist(null);
+            setIsPlaying(false);
+          }}
+          onPlayStateChange={handlePlayStateChange}
           autoPlay={true}
         />
       )}

@@ -4,7 +4,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +17,8 @@ interface PlaylistGridProps {
   isLoading?: boolean;
   onPlay?: (playlist: GridPlaylist & { songs?: any[] }) => void;
   categoryId?: string;
+  currentPlayingId?: string;
+  isPlaying?: boolean;
 }
 
 export function PlaylistGrid({
@@ -26,6 +28,8 @@ export function PlaylistGrid({
   isLoading,
   onPlay,
   categoryId,
+  currentPlayingId,
+  isPlaying = false,
 }: PlaylistGridProps) {
   const navigate = useNavigate();
 
@@ -81,8 +85,7 @@ export function PlaylistGrid({
             duration: ps.songs.duration?.toString() || "0:00",
             file_url: ps.songs.file_url,
             bunny_id: ps.songs.bunny_id
-          }))
-          ?.sort((a, b) => a.position - b.position) || []
+          })) || []
       };
 
       onPlay?.(playlistWithSongs);
@@ -136,10 +139,23 @@ export function PlaylistGrid({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30 transition-all duration-300"
+                    className={`w-12 h-12 rounded-full ${
+                      currentPlayingId === playlist.id && isPlaying
+                        ? 'bg-[#1DB954] text-white hover:bg-[#1DB954]/90 hover:scale-105'
+                        : 'bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30'
+                    } transition-all duration-300`}
                   >
-                    <Play className="w-6 h-6" />
+                    {currentPlayingId === playlist.id && isPlaying ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6" />
+                    )}
                   </Button>
+                </div>
+              )}
+              {currentPlayingId === playlist.id && isPlaying && (
+                <div className="absolute bottom-2 right-2 animate-pulse">
+                  <div className="w-3 h-3 rounded-full bg-[#1DB954]" />
                 </div>
               )}
             </div>
