@@ -67,31 +67,28 @@ export function PlaylistGrid({
     }
   };
 
-  const handleCardClick = async (e: React.MouseEvent, playlist: GridPlaylist) => {
-    const target = e.target as HTMLElement;
-    // If clicking the play button, play the playlist instead of navigating
-    if (target.closest('.play-button-overlay')) {
-      e.stopPropagation();
-      
-      // Get songs for this playlist
-      const playlistWithSongs = {
-        ...playlist,
-        songs: playlistSongs
-          ?.filter(ps => ps.playlist_id === playlist.id)
-          ?.map(ps => ({
-            id: ps.songs.id,
-            title: ps.songs.title,
-            artist: ps.songs.artist || "Unknown Artist",
-            duration: ps.songs.duration?.toString() || "0:00",
-            file_url: ps.songs.file_url,
-            bunny_id: ps.songs.bunny_id
-          })) || []
-      };
-
-      onPlay?.(playlistWithSongs);
-      return;
-    }
+  const handlePlayClick = async (e: React.MouseEvent, playlist: GridPlaylist) => {
+    e.stopPropagation(); // Prevent navigation when clicking play button
     
+    // Get songs for this playlist
+    const playlistWithSongs = {
+      ...playlist,
+      songs: playlistSongs
+        ?.filter(ps => ps.playlist_id === playlist.id)
+        ?.map(ps => ({
+          id: ps.songs.id,
+          title: ps.songs.title,
+          artist: ps.songs.artist || "Unknown Artist",
+          duration: ps.songs.duration?.toString() || "0:00",
+          file_url: ps.songs.file_url,
+          bunny_id: ps.songs.bunny_id
+        })) || []
+    };
+
+    onPlay?.(playlistWithSongs);
+  };
+
+  const handleCardClick = (playlist: GridPlaylist) => {
     navigate(`/manager/playlists/${playlist.id}`);
   };
 
@@ -120,7 +117,7 @@ export function PlaylistGrid({
           <Card
             key={playlist.id}
             className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
-            onClick={(e) => handleCardClick(e, playlist)}
+            onClick={() => handleCardClick(playlist)}
           >
             <div className="aspect-square relative overflow-hidden">
               {playlist.artwork_url ? (
@@ -135,15 +132,12 @@ export function PlaylistGrid({
                 </div>
               )}
               {onPlay && (
-                <div className="play-button-overlay absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className={`w-12 h-12 rounded-full ${
-                      currentPlayingId === playlist.id && isPlaying
-                        ? 'bg-[#1DB954] text-white hover:bg-[#1DB954]/90 hover:scale-105'
-                        : 'bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30'
-                    } transition-all duration-300`}
+                    className="w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-black/30 transition-all duration-300"
+                    onClick={(e) => handlePlayClick(e, playlist)}
                   >
                     {currentPlayingId === playlist.id && isPlaying ? (
                       <Pause className="w-6 h-6" />
@@ -154,8 +148,8 @@ export function PlaylistGrid({
                 </div>
               )}
               {currentPlayingId === playlist.id && isPlaying && (
-                <div className="absolute bottom-2 right-2 animate-pulse">
-                  <div className="w-3 h-3 rounded-full bg-[#1DB954]" />
+                <div className="absolute bottom-2 right-2">
+                  <div className="w-3 h-3 rounded-full bg-white/90 animate-pulse" />
                 </div>
               )}
             </div>
