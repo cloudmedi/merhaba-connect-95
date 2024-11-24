@@ -5,6 +5,8 @@ import { CategoriesDialog } from "./CategoriesDialog";
 import { Category } from "./types";
 import { toast } from "sonner";
 import { categoryService } from "@/services/categories";
+import { supabase } from "@/integrations/supabase/client";
+import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export function CategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,16 +26,43 @@ export function CategoriesContent() {
 
   useEffect(() => {
     fetchCategories();
+
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('categories_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories' },
+        (payload: RealtimePostgresChangesPayload<Category>) => {
+          // Handle different types of changes
+          if (payload.eventType === 'UPDATE') {
+            setCategories(prev => 
+              prev.map(cat => 
+                cat.id === payload.new.id ? { ...cat, ...payload.new } : cat
+              ).sort((a, b) => a.position - b.position)
+            );
+          } else if (payload.eventType === 'INSERT') {
+            setCategories(prev => [...prev, payload.new].sort((a, b) => a.position - b.position));
+          } else if (payload.eventType === 'DELETE') {
+            setCategories(prev => prev.filter(cat => cat.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleCreate = async (newCategory: Pick<Category, "name" | "description">) => {
     try {
       await categoryService.createCategory(newCategory);
       setIsDialogOpen(false);
-      fetchCategories();
       toast.success("Category created successfully");
     } catch (error) {
       console.error('Error creating category:', error);
+      toast.error("Failed to create category");
     }
   };
 
@@ -43,20 +72,20 @@ export function CategoriesContent() {
       await categoryService.updateCategory(id, { name, description });
       setIsDialogOpen(false);
       setEditingCategory(null);
-      fetchCategories();
       toast.success("Category updated successfully");
     } catch (error) {
       console.error('Error updating category:', error);
+      toast.error("Failed to update category");
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await categoryService.deleteCategory(id);
-      fetchCategories();
       toast.success("Category deleted successfully");
     } catch (error) {
       console.error('Error deleting category:', error);
+      toast.error("Failed to delete category");
     }
   };
 
