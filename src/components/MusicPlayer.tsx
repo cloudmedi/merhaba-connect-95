@@ -118,7 +118,7 @@ export function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
       {/* Blurred background with artwork */}
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
@@ -126,28 +126,32 @@ export function MusicPlayer({
           backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
           filter: 'blur(80px)',
           transform: 'scale(1.2)',
-          opacity: '0.5'
+          opacity: '0.15'
         }}
       />
       
       {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
 
       {/* Content */}
-      <div className="relative px-4 py-3 flex items-center justify-between max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-4 flex-1">
+      <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
+        <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
           <img 
             src={getOptimizedImageUrl(playlist.artwork)} 
             alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg ring-1 ring-white/10"
+            className="w-14 h-14 rounded-md object-cover shadow-lg"
           />
-          <div>
-            <h3 className="text-white font-medium text-sm">{currentSong?.title}</h3>
-            <p className="text-white/60 text-xs">{currentSong?.artist}</p>
+          <div className="min-w-0">
+            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
+              {currentSong?.title}
+            </h3>
+            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
+              {currentSong?.artist}
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 relative">
+        <div className="flex-1 max-w-2xl px-4">
           <AudioPlayer
             audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
@@ -158,7 +162,7 @@ export function MusicPlayer({
           />
         </div>
 
-        <div className="flex items-center gap-4 flex-1 justify-end">
+        <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
