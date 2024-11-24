@@ -64,21 +64,23 @@ export function CategoriesContent() {
       const [movedCategory] = newCategories.splice(oldIndex, 1);
       newCategories.splice(newIndex, 0, movedCategory);
       
-      // Update positions in the database
+      // Update positions for all affected categories
       const updates = newCategories.map((category, index) => ({
         id: category.id,
         position: index + 1
       }));
       
-      await categoryService.updatePositions(updates);
+      // Optimistically update the UI
       setCategories(newCategories);
       
+      // Update in the database
+      await categoryService.updatePositions(updates);
       toast.success("Categories reordered successfully");
     } catch (error) {
       console.error('Error reordering categories:', error);
-      toast.error("Failed to reorder categories");
-      // Refresh the list to ensure UI is in sync with database
+      // Revert the optimistic update on error
       fetchCategories();
+      toast.error("Failed to reorder categories");
     }
   };
 
