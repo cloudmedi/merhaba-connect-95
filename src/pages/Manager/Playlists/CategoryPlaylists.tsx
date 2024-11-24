@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { CatalogLoader } from "@/components/loaders/CatalogLoader";
-import ContentLoader from 'react-content-loader';
 
 export function CategoryPlaylists() {
   const { categoryId } = useParams();
@@ -14,6 +12,7 @@ export function CategoryPlaylists() {
   const { data, isLoading } = useQuery({
     queryKey: ['category-playlists', categoryId],
     queryFn: async () => {
+      // First get category details
       const { data: category, error: categoryError } = await supabase
         .from('categories')
         .select('*')
@@ -22,6 +21,7 @@ export function CategoryPlaylists() {
 
       if (categoryError) throw categoryError;
 
+      // Then get playlists for this category
       const { data: playlistsData, error: playlistsError } = await supabase
         .from('playlist_categories')
         .select(`
@@ -50,25 +50,7 @@ export function CategoryPlaylists() {
   });
 
   if (isLoading) {
-    return (
-      <div className="p-8 space-y-8">
-        <div className="mb-8">
-          <ContentLoader
-            speed={2}
-            width={300}
-            height={80}
-            viewBox="0 0 300 80"
-            backgroundColor="#f5f5f5"
-            foregroundColor="#eeeeee"
-            className="skeleton-loading"
-          >
-            <rect x="0" y="0" rx="4" ry="4" width="200" height="32" />
-            <rect x="0" y="48" rx="4" ry="4" width="280" height="20" />
-          </ContentLoader>
-        </div>
-        <CatalogLoader count={12} />
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   if (!data) {

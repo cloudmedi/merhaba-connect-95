@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Music2, Play } from "lucide-react";
+import { ArrowLeft, Play } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
@@ -8,7 +8,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongList } from "@/components/playlists/SongList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
+import { useToast } from "@/hooks/use-toast";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -16,6 +16,7 @@ export function PlaylistDetail() {
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const { toast } = useToast();
 
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
@@ -60,11 +61,7 @@ export function PlaylistDetail() {
   });
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white rounded-lg shadow-sm p-6">
-        <PlaylistDetailLoader />
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   if (!playlist) {
