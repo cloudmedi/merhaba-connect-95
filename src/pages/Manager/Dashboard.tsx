@@ -126,27 +126,42 @@ export default function ManagerDashboard() {
         <HeroLoader />
       ) : heroPlaylist && (
         <div 
-          className="relative mb-12 rounded-lg overflow-hidden h-[300px] transition-all duration-500"
+          className="relative mb-12 rounded-lg overflow-hidden h-[300px] group transition-all duration-500"
           style={{
             background: `linear-gradient(135deg, ${dominantColors.primary} 0%, ${dominantColors.secondary} 100%)`,
           }}
         >
+          {/* Blurred background with artwork */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ 
+              backgroundImage: `url(${heroPlaylist.artwork_url})`,
+              filter: 'blur(80px)',
+              transform: 'scale(1.2)',
+              opacity: '0.6',
+              transition: 'opacity 0.3s ease'
+            }}
+          />
+          
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+
           <div className="absolute inset-0 flex items-center justify-between p-8">
-            <div className="text-white space-y-4 z-10">
-              <h2 className="text-3xl font-bold">Featured Playlist</h2>
-              <p className="text-lg opacity-90">{heroPlaylist.name}</p>
+            <div className="text-white space-y-4 z-10 max-w-lg">
+              <h2 className="text-4xl font-bold">Featured Playlist</h2>
+              <p className="text-2xl opacity-90">{heroPlaylist.name}</p>
               <Button 
-                className="mt-4 bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30 transition-all"
                 onClick={() => navigate(`/manager/playlists/${heroPlaylist.id}`)}
+                className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30"
               >
                 Go to Playlist
               </Button>
             </div>
-            <div className="w-64 h-64 relative z-10">
+            <div className="w-64 h-64 relative z-10 transition-transform duration-300 group-hover:scale-105">
               <img
                 src={heroPlaylist.artwork_url}
                 alt="Hero Playlist"
-                className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-300"
+                className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl"
               />
             </div>
           </div>
