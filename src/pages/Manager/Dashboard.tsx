@@ -1,39 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-import { Button } from "@/components/ui/button";
-import CatalogLoader from "@/components/loaders/CatalogLoader";
-import { HeroLoader } from "@/components/loaders/HeroLoader";
-import { extractDominantColor } from "@/utils/colorExtraction";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  playlists: {
-    id: string;
-    name: string;
-    artwork_url: string;
-    genre_id: { name: string } | null;
-    mood_id: { name: string } | null;
-  }[];
-}
+import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
+import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [dominantColor, setDominantColor] = useState('rgba(110, 89, 165, 1)');
-  const [isColorLoading, setIsColorLoading] = useState(false);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+
+  // Set up realtime subscription
+  usePlaylistSubscription();
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
+      console.log('Fetching hero playlist');
       const { data, error } = await supabase
         .from('playlists')
         .select(`
@@ -46,62 +29,21 @@ export default function ManagerDashboard() {
         .eq('is_hero', true)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hero playlist:', error);
+        throw error;
+      }
+      
+      console.log('Hero playlist data:', data);
       return data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Subscribe to ALL playlist changes
-  useEffect(() => {
-    const channel = supabase
-      .channel('playlist-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'playlists'
-        },
-        async (payload) => {
-          // Invalidate both hero playlist and categories queries
-          queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
-          queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
-          
-          if (payload.eventType === 'UPDATE' && payload.new.is_hero === true) {
-            toast.success("Hero playlist has been updated");
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  useEffect(() => {
-    const loadDominantColor = async () => {
-      if (heroPlaylist?.artwork_url) {
-        setIsColorLoading(true);
-        try {
-          const { primary } = await extractDominantColor(heroPlaylist.artwork_url);
-          const solidColor = primary.replace(/[\d.]+\)$/g, '1)');
-          setDominantColor(solidColor);
-        } catch (error) {
-          console.error('Error loading dominant color:', error);
-        } finally {
-          setIsColorLoading(false);
-        }
-      }
-    };
-
-    loadDominantColor();
-  }, [heroPlaylist?.artwork_url]);
-
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
+      console.log('Fetching categories');
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
@@ -139,6 +81,7 @@ export default function ManagerDashboard() {
         })
       );
 
+      console.log('Categories with playlists:', categoriesWithPlaylists);
       return categoriesWithPlaylists;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -150,38 +93,10 @@ export default function ManagerDashboard() {
 
   return (
     <div className="min-h-[calc(100vh-64px)]">
-      {isHeroLoading || isColorLoading ? (
-        <HeroLoader />
-      ) : heroPlaylist && (
-        <div 
-          className="relative mb-12 rounded-lg overflow-hidden h-[300px] group transition-all duration-500"
-          style={{
-            backgroundColor: dominantColor,
-          }}
-        >
-          <div className="absolute inset-0 bg-black/40" />
-          
-          <div className="absolute inset-0 flex items-center justify-between p-8">
-            <div className="text-white space-y-4 z-10 max-w-lg">
-              <h2 className="text-4xl font-bold">Featured Playlist</h2>
-              <p className="text-2xl opacity-90">{heroPlaylist.name}</p>
-              <Button 
-                onClick={() => navigate(`/manager/playlists/${heroPlaylist.id}`)}
-                className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30"
-              >
-                Go to Playlist
-              </Button>
-            </div>
-            <div className="w-64 h-64 relative z-10 transition-transform duration-300 group-hover:scale-105">
-              <img
-                src={heroPlaylist.artwork_url}
-                alt="Hero Playlist"
-                className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <HeroPlaylist 
+        playlist={heroPlaylist} 
+        isLoading={isHeroLoading} 
+      />
 
       <div className="flex justify-end mb-8">
         <div className="relative w-64">
