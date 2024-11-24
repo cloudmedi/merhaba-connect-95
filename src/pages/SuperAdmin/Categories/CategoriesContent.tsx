@@ -68,6 +68,35 @@ export function CategoriesContent() {
     }
   };
 
+  const handleReorder = async (oldIndex: number, newIndex: number) => {
+    try {
+      const newCategories = [...categories];
+      const [movedCategory] = newCategories.splice(oldIndex, 1);
+      newCategories.splice(newIndex, 0, movedCategory);
+      
+      // Update positions in the database
+      await categoryService.updatePositions(
+        newCategories.map((category, index) => ({
+          id: category.id,
+          position: index + 1
+        }))
+      );
+      
+      setCategories(newCategories);
+      toast({
+        title: "Success",
+        description: "Categories reordered successfully",
+      });
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reorder categories",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -87,6 +116,7 @@ export function CategoriesContent() {
           setIsDialogOpen(true);
         }}
         onDelete={handleDelete}
+        onReorder={handleReorder}
       />
       <CategoriesDialog 
         open={isDialogOpen}

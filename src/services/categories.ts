@@ -6,7 +6,7 @@ export const categoryService = {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .order('name');
+      .order('position');
     
     if (error) {
       toast({
@@ -21,9 +21,20 @@ export const categoryService = {
   },
 
   async createCategory(category: { name: string; description: string }) {
+    // Get the maximum position
+    const { data: maxPositionData } = await supabase
+      .from('categories')
+      .select('position')
+      .order('position', { ascending: false })
+      .limit(1);
+
+    const nextPosition = maxPositionData && maxPositionData.length > 0 
+      ? (maxPositionData[0].position + 1) 
+      : 1;
+
     const { data, error } = await supabase
       .from('categories')
-      .insert(category)
+      .insert({ ...category, position: nextPosition })
       .select()
       .single();
     
@@ -57,6 +68,22 @@ export const categoryService = {
     }
     
     return data;
+  },
+
+  async updatePositions(updates: { id: string; position: number }[]) {
+    const { error } = await supabase
+      .rpc('update_category_positions', {
+        category_positions: updates
+      });
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update category positions",
+        variant: "destructive",
+      });
+      throw error;
+    }
   },
 
   async deleteCategory(id: string) {
