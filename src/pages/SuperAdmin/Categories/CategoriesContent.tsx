@@ -3,14 +3,13 @@ import { CategoriesHeader } from "./CategoriesHeader";
 import { CategoriesTable } from "./CategoriesTable";
 import { CategoriesDialog } from "./CategoriesDialog";
 import { Category } from "./types";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { categoryService } from "@/services/categories";
 
 export function CategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const { toast } = useToast();
 
   const fetchCategories = async () => {
     try {
@@ -30,10 +29,7 @@ export function CategoriesContent() {
       await categoryService.createCategory(newCategory);
       setIsDialogOpen(false);
       fetchCategories();
-      toast({
-        title: "Success",
-        description: "Category created successfully",
-      });
+      toast.success("Category created successfully");
     } catch (error) {
       console.error('Error creating category:', error);
     }
@@ -46,10 +42,7 @@ export function CategoriesContent() {
       setIsDialogOpen(false);
       setEditingCategory(null);
       fetchCategories();
-      toast({
-        title: "Success",
-        description: "Category updated successfully",
-      });
+      toast.success("Category updated successfully");
     } catch (error) {
       console.error('Error updating category:', error);
     }
@@ -59,10 +52,7 @@ export function CategoriesContent() {
     try {
       await categoryService.deleteCategory(id);
       fetchCategories();
-      toast({
-        title: "Success",
-        description: "Category deleted successfully",
-      });
+      toast.success("Category deleted successfully");
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -83,17 +73,10 @@ export function CategoriesContent() {
       await categoryService.updatePositions(updates);
       setCategories(newCategories);
       
-      toast({
-        title: "Success",
-        description: "Categories reordered successfully",
-      });
+      toast.success("Categories reordered successfully");
     } catch (error) {
       console.error('Error reordering categories:', error);
-      toast({
-        title: "Error",
-        description: "Failed to reorder categories",
-        variant: "destructive",
-      });
+      toast.error("Failed to reorder categories");
       // Refresh the list to ensure UI is in sync with database
       fetchCategories();
     }

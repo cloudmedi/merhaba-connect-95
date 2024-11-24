@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export const categoryService = {
   async getCategories() {
@@ -9,11 +9,7 @@ export const categoryService = {
       .order('position');
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch categories",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch categories");
       throw error;
     }
     
@@ -39,11 +35,7 @@ export const categoryService = {
       .single();
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create category",
-        variant: "destructive",
-      });
+      toast.error("Failed to create category");
       throw error;
     }
     
@@ -59,11 +51,7 @@ export const categoryService = {
       .single();
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update category",
-        variant: "destructive",
-      });
+      toast.error("Failed to update category");
       throw error;
     }
     
@@ -76,13 +64,12 @@ export const categoryService = {
         category_positions: updates
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating positions:', error);
+        throw error;
+      }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update category positions",
-        variant: "destructive",
-      });
+      toast.error("Failed to update category positions");
       throw error;
     }
   },
@@ -94,11 +81,7 @@ export const categoryService = {
       .eq('id', id);
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete category",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete category");
       throw error;
     }
   }
