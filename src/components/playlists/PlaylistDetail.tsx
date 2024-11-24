@@ -1,10 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
-import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongList } from "@/components/playlists/SongList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,8 +13,15 @@ export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
+  const { 
+    currentPlaylist, 
+    setCurrentPlaylist, 
+    isPlaying, 
+    setIsPlaying,
+    currentSongIndex,
+    setCurrentSongIndex 
+  } = useMusic();
   const { toast } = useToast();
-  const { currentPlaylist, setCurrentPlaylist, isPlaying, setIsPlaying } = useMusic();
 
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
@@ -71,23 +76,28 @@ export function PlaylistDetail() {
   const handleSongSelect = (song: any) => {
     const index = playlist.songs.findIndex((s: any) => s.id === song.id);
     if (index !== -1) {
-      setCurrentPlaylist({
-        ...playlist,
-        songs: playlist.songs.map((song: any) => ({
-          id: song.id,
-          title: song.title,
-          artist: song.artist || "Unknown Artist",
-          duration: song.duration?.toString() || "0:00",
-          file_url: song.file_url
+      const formattedPlaylist = {
+        id: playlist.id,
+        title: playlist.name,
+        artwork: playlist.artwork_url || "/placeholder.svg",
+        songs: playlist.songs.map((s: any) => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist || "Unknown Artist",
+          duration: s.duration?.toString() || "0:00",
+          file_url: s.file_url
         }))
-      });
+      };
+      setCurrentPlaylist(formattedPlaylist);
+      setCurrentSongIndex(index);
       setIsPlaying(true);
     }
   };
 
   const handlePlayClick = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      setCurrentPlaylist({
+      const formattedPlaylist = {
+        id: playlist.id,
         title: playlist.name,
         artwork: playlist.artwork_url || "/placeholder.svg",
         songs: playlist.songs.map((song: any) => ({
@@ -97,7 +107,9 @@ export function PlaylistDetail() {
           duration: song.duration?.toString() || "0:00",
           file_url: song.file_url
         }))
-      });
+      };
+      setCurrentPlaylist(formattedPlaylist);
+      setCurrentSongIndex(0);
       setIsPlaying(true);
     }
   };
@@ -116,6 +128,11 @@ export function PlaylistDetail() {
       return `${hours}h ${minutes}m`;
     }
     return `${minutes} min`;
+  };
+
+  const getCurrentSongId = () => {
+    if (!currentPlaylist || !currentPlaylist.songs) return null;
+    return currentPlaylist.songs[currentSongIndex]?.id;
   };
 
   return (
@@ -170,8 +187,8 @@ export function PlaylistDetail() {
         <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
-          currentSongId={currentPlaylist?.songs?.[0]?.id}
-          isPlaying={isPlaying}
+          currentSongId={getCurrentSongId()}
+          isPlaying={isPlaying && currentPlaylist?.id === playlist.id}
         />
       </div>
 

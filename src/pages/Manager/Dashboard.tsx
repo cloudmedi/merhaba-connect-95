@@ -14,6 +14,8 @@ type MusicContextType = {
   setCurrentPlaylist: (playlist: any) => void;
   isPlaying: boolean;
   setIsPlaying: (isPlaying: boolean) => void;
+  currentSongIndex: number;
+  setCurrentSongIndex: (index: number) => void;
 };
 
 export function useMusic() {
@@ -24,9 +26,7 @@ export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
-  // Set up realtime subscription
-  usePlaylistSubscription();
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
@@ -163,21 +163,29 @@ export default function ManagerDashboard() {
         ))}
       </div>
 
-      <Outlet context={{ currentPlaylist, setCurrentPlaylist, isPlaying, setIsPlaying }} />
+      <Outlet 
+        context={{ 
+          currentPlaylist, 
+          setCurrentPlaylist, 
+          isPlaying, 
+          setIsPlaying,
+          currentSongIndex,
+          setCurrentSongIndex
+        }} 
+      />
 
       {currentPlaylist && (
         <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: currentPlaylist.songs
-          }}
+          playlist={currentPlaylist}
           onClose={() => {
             setCurrentPlaylist(null);
             setIsPlaying(false);
+            setCurrentSongIndex(0);
           }}
-          onPlayStateChange={handlePlayStateChange}
-          autoPlay={true}
+          onPlayStateChange={setIsPlaying}
+          initialSongIndex={currentSongIndex}
+          onSongChange={setCurrentSongIndex}
+          autoPlay={isPlaying}
         />
       )}
     </div>
