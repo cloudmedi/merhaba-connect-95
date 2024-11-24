@@ -71,15 +71,13 @@ export const categoryService = {
   },
 
   async updatePositions(updates: { id: string; position: number }[]) {
-    const { error } = await supabase
-      .rpc('update_category_positions', {
-        category_positions: updates.map(update => ({
-          id: update.id,
-          position: update.position
-        }))
+    try {
+      const { error } = await supabase.rpc('update_category_positions', {
+        category_positions: updates
       });
-    
-    if (error) {
+      
+      if (error) throw error;
+    } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to update category positions",
