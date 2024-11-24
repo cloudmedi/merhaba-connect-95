@@ -13,25 +13,41 @@ export const extractDominantColor = async (imageUrl: string): Promise<{ primary:
       img.src = imageUrl;
     });
 
-    // Set canvas size to match image
     canvas.width = img.width;
     canvas.height = img.height;
     ctx.drawImage(img, 0, 0);
 
-    // Get image data
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
-
-    // Calculate colors from different regions
-    const topColors = getRegionColors(data, canvas.width, 0, canvas.height / 3);
-    const middleColors = getRegionColors(data, canvas.width, canvas.height / 3, 2 * canvas.height / 3);
-    const bottomColors = getRegionColors(data, canvas.width, 2 * canvas.height / 3, canvas.height);
-
-    // Select primary and secondary colors based on contrast and brightness
-    const primary = adjustColorBrightness(selectDominantColor([...topColors, ...middleColors]));
-    const secondary = adjustColorBrightness(selectDominantColor(bottomColors), 0.7);
-
-    return { primary, secondary };
+    
+    // Find the most vibrant color
+    const colors: Array<{ r: number; g: number; b: number; saturation: number }> = [];
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Calculate color saturation
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const saturation = max === 0 ? 0 : (max - min) / max;
+      
+      // Only consider colors with decent brightness
+      const brightness = (r + g + b) / 3;
+      if (brightness > 30 && brightness < 225) {
+        colors.push({ r, g, b, saturation });
+      }
+    }
+    
+    // Sort by saturation and get the most saturated color
+    colors.sort((a, b) => b.saturation - a.saturation);
+    const dominantColor = colors[0] || { r: 110, g: 89, b: 165, saturation: 0.5 }; // Fallback color
+    
+    return {
+      primary: `rgba(${dominantColor.r}, ${dominantColor.g}, ${dominantColor.b}, 0.8)`,
+      secondary: `rgba(${dominantColor.r}, ${dominantColor.g}, ${dominantColor.b}, 0.4)`
+    };
   } catch (error) {
     console.error('Error extracting dominant color:', error);
     return {
@@ -40,55 +56,3 @@ export const extractDominantColor = async (imageUrl: string): Promise<{ primary:
     };
   }
 };
-
-function getRegionColors(data: Uint8ClampedArray, width: number, startY: number, endY: number) {
-  const colors: Array<{ r: number; g: number; b: number; count: number }> = [];
-  
-  for (let y = startY; y < endY; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      
-      // Skip very light or very dark colors
-      if ((r + g + b) / 3 < 20 || (r + g + b) / 3 > 235) continue;
-      
-      const color = colors.find(c => 
-        Math.abs(c.r - r) < 20 && 
-        Math.abs(c.g - g) < 20 && 
-        Math.abs(c.b - b) < 20
-      );
-      
-      if (color) {
-        color.count++;
-      } else {
-        colors.push({ r, g, b, count: 1 });
-      }
-    }
-  }
-  
-  return colors;
-}
-
-function selectDominantColor(colors: Array<{ r: number; g: number; b: number; count: number }>) {
-  const sorted = colors.sort((a, b) => b.count - a.count);
-  const dominant = sorted[0];
-  return dominant ? `rgba(${dominant.r}, ${dominant.g}, ${dominant.b}, 0.8)` : 'rgba(110, 89, 165, 0.8)';
-}
-
-function adjustColorBrightness(color: string, factor = 1) {
-  const matches = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-  if (!matches) return color;
-  
-  const [, r, g, b, a] = matches;
-  const brightness = (parseInt(r) + parseInt(g) + parseInt(b)) / 3;
-  
-  if (brightness < 128) {
-    // Lighten dark colors
-    return `rgba(${Math.min(255, parseInt(r) * 1.2)}, ${Math.min(255, parseInt(g) * 1.2)}, ${Math.min(255, parseInt(b) * 1.2)}, ${a || factor})`;
-  } else {
-    // Darken light colors
-    return `rgba(${parseInt(r) * 0.8}, ${parseInt(g) * 0.8}, ${parseInt(b) * 0.8}, ${a || factor})`;
-  }
-}

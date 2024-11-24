@@ -25,10 +25,7 @@ interface Category {
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [dominantColors, setDominantColors] = useState<{ primary: string; secondary: string }>({
-    primary: 'rgba(110, 89, 165, 0.8)',
-    secondary: 'rgba(90, 69, 145, 0.4)'
-  });
+  const [dominantColor, setDominantColor] = useState('rgba(110, 89, 165, 1)');
   const [isColorLoading, setIsColorLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -58,8 +55,10 @@ export default function ManagerDashboard() {
       if (heroPlaylist?.artwork_url) {
         setIsColorLoading(true);
         try {
-          const colors = await extractDominantColor(heroPlaylist.artwork_url);
-          setDominantColors(colors);
+          const { primary } = await extractDominantColor(heroPlaylist.artwork_url);
+          // Convert rgba to solid color by setting opacity to 1
+          const solidColor = primary.replace(/[\d.]+\)$/g, '1)');
+          setDominantColor(solidColor);
         } catch (error) {
           console.error('Error loading dominant color:', error);
         } finally {
@@ -128,24 +127,11 @@ export default function ManagerDashboard() {
         <div 
           className="relative mb-12 rounded-lg overflow-hidden h-[300px] group transition-all duration-500"
           style={{
-            background: `linear-gradient(135deg, ${dominantColors.primary} 0%, ${dominantColors.secondary} 100%)`,
+            backgroundColor: dominantColor,
           }}
         >
-          {/* Blurred background with artwork */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: `url(${heroPlaylist.artwork_url})`,
-              filter: 'blur(80px)',
-              transform: 'scale(1.2)',
-              opacity: '0.6',
-              transition: 'opacity 0.3s ease'
-            }}
-          />
+          <div className="absolute inset-0 bg-black/40" />
           
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-
           <div className="absolute inset-0 flex items-center justify-between p-8">
             <div className="text-white space-y-4 z-10 max-w-lg">
               <h2 className="text-4xl font-bold">Featured Playlist</h2>
