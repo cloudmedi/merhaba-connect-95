@@ -15,10 +15,8 @@ export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const { toast } = useToast();
-  const { currentPlaylist, setCurrentPlaylist } = useMusic();
+  const { currentPlaylist, setCurrentPlaylist, isPlaying, setIsPlaying } = useMusic();
 
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
@@ -73,14 +71,33 @@ export function PlaylistDetail() {
   const handleSongSelect = (song: any) => {
     const index = playlist.songs.findIndex((s: any) => s.id === song.id);
     if (index !== -1) {
-      setCurrentSongIndex(index);
+      setCurrentPlaylist({
+        ...playlist,
+        songs: playlist.songs.map((song: any) => ({
+          id: song.id,
+          title: song.title,
+          artist: song.artist || "Unknown Artist",
+          duration: song.duration?.toString() || "0:00",
+          file_url: song.file_url
+        }))
+      });
       setIsPlaying(true);
     }
   };
 
   const handlePlayClick = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      setCurrentSongIndex(0);
+      setCurrentPlaylist({
+        title: playlist.name,
+        artwork: playlist.artwork_url || "/placeholder.svg",
+        songs: playlist.songs.map((song: any) => ({
+          id: song.id,
+          title: song.title,
+          artist: song.artist || "Unknown Artist",
+          duration: song.duration?.toString() || "0:00",
+          file_url: song.file_url
+        }))
+      });
       setIsPlaying(true);
     }
   };
@@ -153,8 +170,7 @@ export function PlaylistDetail() {
         <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
-          currentSongIndex={isPlaying ? currentSongIndex : undefined}
-          onCurrentSongIndexChange={setCurrentSongIndex}
+          currentSongId={currentPlaylist?.songs?.[0]?.id}
           isPlaying={isPlaying}
         />
       </div>
@@ -164,26 +180,6 @@ export function PlaylistDetail() {
         onClose={() => setIsPushDialogOpen(false)}
         playlistTitle={playlist.name}
       />
-
-      {isPlaying && playlist.songs && (
-        <MusicPlayer
-          playlist={{
-            title: playlist.name,
-            artwork: playlist.artwork_url || "/placeholder.svg",
-            songs: playlist.songs.map(song => ({
-              id: song.id,
-              title: song.title,
-              artist: song.artist || "Unknown Artist",
-              duration: song.duration?.toString() || "0:00",
-              file_url: song.file_url
-            }))
-          }}
-          onClose={() => setIsPlaying(false)}
-          initialSongIndex={currentSongIndex}
-          onSongChange={setCurrentSongIndex}
-          autoPlay={true}
-        />
-      )}
     </div>
   );
 }
