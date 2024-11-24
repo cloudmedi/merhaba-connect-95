@@ -75,14 +75,14 @@ export function CategoriesContent() {
       newCategories.splice(newIndex, 0, movedCategory);
       
       // Update positions in the database
-      await categoryService.updatePositions(
-        newCategories.map((category, index) => ({
-          id: category.id,
-          position: index + 1
-        }))
-      );
+      const updates = newCategories.map((category, index) => ({
+        id: category.id,
+        position: index + 1
+      }));
       
+      await categoryService.updatePositions(updates);
       setCategories(newCategories);
+      
       toast({
         title: "Success",
         description: "Categories reordered successfully",
@@ -94,6 +94,8 @@ export function CategoriesContent() {
         description: "Failed to reorder categories",
         variant: "destructive",
       });
+      // Refresh the list to ensure UI is in sync with database
+      fetchCategories();
     }
   };
 
