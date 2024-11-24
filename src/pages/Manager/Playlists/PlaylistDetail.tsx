@@ -1,14 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
-import { PushPlaylistDialog } from "./PushPlaylistDialog";
-import { MusicPlayer } from "@/components/MusicPlayer";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { SongList } from "@/components/playlists/SongList";
+import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { MusicPlayer } from "@/components/MusicPlayer";
+import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
+import { extractDominantColor } from "@/utils/colorExtraction";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -16,7 +15,7 @@ export function PlaylistDetail() {
   const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const { toast } = useToast();
+  const [dominantColor, setDominantColor] = useState("rgb(0, 0, 0)");
 
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
@@ -60,12 +59,26 @@ export function PlaylistDetail() {
     }
   });
 
+  useEffect(() => {
+    if (playlist?.artwork_url) {
+      extractDominantColor(playlist.artwork_url).then(setDominantColor);
+    }
+  }, [playlist?.artwork_url]);
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <DashboardLayout>
+        <div>Loading...</div>
+      </DashboardLayout>
+    );
   }
 
   if (!playlist) {
-    return <div>Playlist not found</div>;
+    return (
+      <DashboardLayout>
+        <div>Playlist not found</div>
+      </DashboardLayout>
+    );
   }
 
   const handleSongSelect = (song: any) => {
@@ -77,11 +90,7 @@ export function PlaylistDetail() {
   };
 
   const handlePlayClick = () => {
-    if (isPlaying) {
-      // If already playing, restart from the beginning
-      setCurrentSongIndex(0);
-    } else {
-      // If not playing, start from the beginning
+    if (playlist.songs && playlist.songs.length > 0) {
       setCurrentSongIndex(0);
       setIsPlaying(true);
     }
@@ -90,7 +99,7 @@ export function PlaylistDetail() {
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
-    const totalSeconds = playlist.songs.reduce((acc, song) => {
+    const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
       return acc + (song.duration || 0);
     }, 0);
     
@@ -104,54 +113,31 @@ export function PlaylistDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-lg shadow-sm">
-      <div className="p-6 space-y-8">
-        <div className="flex items-center gap-2 text-gray-500">
-          <button 
-            onClick={() => navigate("/manager")}
-            className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Media Library
-          </button>
-        </div>
+    <DashboardLayout>
+      <div 
+        className="relative rounded-lg overflow-hidden"
+        style={{
+          background: `linear-gradient(to right, ${dominantColor}ee, ${dominantColor}99)`,
+          padding: "2rem",
+          marginBottom: "2rem"
+        }}
+      >
+        <PlaylistHeader
+          onBack={() => navigate("/manager/playlists")}
+          artworkUrl={playlist.artwork_url}
+          name={playlist.name}
+          genreName={playlist.genres?.name}
+          moodName={playlist.moods?.name}
+          songCount={playlist.songs?.length}
+          duration={calculateTotalDuration()}
+          onPlay={handlePlayClick}
+          onPush={() => setIsPushDialogOpen(true)}
+          isHero={playlist.is_hero}
+          id={playlist.id}
+        />
+      </div>
 
-        <div className="flex items-start gap-8">
-          <div className="relative group">
-            <img 
-              src={playlist.artwork_url || "/placeholder.svg"} 
-              alt={playlist.name}
-              className="w-32 h-32 rounded-lg object-cover"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-              <button
-                onClick={handlePlayClick}
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
-              >
-                <Play className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>{playlist.genres?.name || "Various"}</span>
-              <span>•</span>
-              <span>{playlist.moods?.name || "Various"}</span>
-              <span>•</span>
-              <span>{playlist.songs?.length || 0} songs</span>
-              <span>•</span>
-              <span>{calculateTotalDuration()}</span>
-            </div>
-            <Button 
-              onClick={() => setIsPushDialogOpen(true)}
-              className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-            >
-              Push
-            </Button>
-          </div>
-        </div>
-
+      <div className="bg-white rounded-lg p-6">
         <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
@@ -161,18 +147,12 @@ export function PlaylistDetail() {
         />
       </div>
 
-      <PushPlaylistDialog
-        isOpen={isPushDialogOpen}
-        onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.name}
-      />
-
       {isPlaying && playlist.songs && (
         <MusicPlayer
           playlist={{
             title: playlist.name,
             artwork: playlist.artwork_url || "/placeholder.svg",
-            songs: playlist.songs.map(song => ({
+            songs: playlist.songs.map((song: any) => ({
               id: song.id,
               title: song.title,
               artist: song.artist || "Unknown Artist",
@@ -186,6 +166,12 @@ export function PlaylistDetail() {
           autoPlay={true}
         />
       )}
-    </div>
+
+      <PushPlaylistDialog
+        isOpen={isPushDialogOpen}
+        onClose={() => setIsPushDialogOpen(false)}
+        playlistTitle={playlist.name}
+      />
+    </DashboardLayout>
   );
 }
