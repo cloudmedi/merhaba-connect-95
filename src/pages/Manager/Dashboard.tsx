@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
+import { MusicPlayer } from "@/components/MusicPlayer";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
 
   // Set up realtime subscription
   usePlaylistSubscription();
@@ -87,6 +89,10 @@ export default function ManagerDashboard() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const handlePlayPlaylist = (playlist: any) => {
+    setCurrentPlaylist(playlist);
+  };
+
   const filteredCategories = categories?.filter(category =>
     category.playlists.length > 0
   ) || [];
@@ -126,9 +132,22 @@ export default function ManagerDashboard() {
               mood: playlist.mood_id?.name || "Various"
             }))}
             isLoading={isCategoriesLoading}
+            onPlay={handlePlayPlaylist}
           />
         ))}
       </div>
+
+      {currentPlaylist && (
+        <MusicPlayer
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork_url,
+            songs: currentPlaylist.songs
+          }}
+          onClose={() => setCurrentPlaylist(null)}
+          autoPlay={true}
+        />
+      )}
     </div>
   );
 }

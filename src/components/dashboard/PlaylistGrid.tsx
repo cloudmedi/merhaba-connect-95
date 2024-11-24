@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlaylistGridProps {
   title: string;
   description?: string;
   playlists: GridPlaylist[];
   isLoading?: boolean;
-  onPlay?: (playlist: GridPlaylist) => void;
+  onPlay?: (playlist: GridPlaylist & { songs?: any[] }) => void;
   categoryId?: string;
 }
 
@@ -27,6 +29,30 @@ export function PlaylistGrid({
 }: PlaylistGridProps) {
   const navigate = useNavigate();
 
+  const { data: playlistSongs } = useQuery({
+    queryKey: ['playlist-songs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          playlist_id,
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url,
+            bunny_id
+          )
+        `)
+        .order('position');
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   if (isLoading) {
     return <CatalogLoader count={6} />;
   }
@@ -37,12 +63,29 @@ export function PlaylistGrid({
     }
   };
 
-  const handleCardClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
+  const handleCardClick = async (e: React.MouseEvent, playlist: GridPlaylist) => {
     const target = e.target as HTMLElement;
     // If clicking the play button, play the playlist instead of navigating
     if (target.closest('.play-button-overlay')) {
       e.stopPropagation();
-      onPlay?.(playlist);
+      
+      // Get songs for this playlist
+      const playlistWithSongs = {
+        ...playlist,
+        songs: playlistSongs
+          ?.filter(ps => ps.playlist_id === playlist.id)
+          ?.map(ps => ({
+            id: ps.songs.id,
+            title: ps.songs.title,
+            artist: ps.songs.artist || "Unknown Artist",
+            duration: ps.songs.duration?.toString() || "0:00",
+            file_url: ps.songs.file_url,
+            bunny_id: ps.songs.bunny_id
+          }))
+          ?.sort((a, b) => a.position - b.position) || []
+      };
+
+      onPlay?.(playlistWithSongs);
       return;
     }
     
