@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import ContentLoader from 'react-content-loader';
 
 interface Category {
   id: string;
@@ -16,12 +17,27 @@ interface CategoriesTabProps {
   onUnselectCategory: (categoryId: string) => void;
 }
 
+const CategoryCardLoader = () => (
+  <ContentLoader
+    speed={2}
+    width={400}
+    height={88}
+    viewBox="0 0 400 88"
+    backgroundColor="#f5f5f5"
+    foregroundColor="#eeeeee"
+  >
+    <rect x="0" y="0" rx="8" ry="8" width="400" height="88" />
+  </ContentLoader>
+);
+
 export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselectCategory }: CategoriesTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -33,6 +49,7 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
       }
       
       setCategories(data || []);
+      setIsLoading(false);
     };
 
     fetchCategories();
@@ -51,39 +68,49 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((category) => {
-          const isSelected = selectedCategories.some((c) => c.id === category.id);
-          return (
-            <div
-              key={category.id}
-              className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
-              onClick={() => {
-                if (isSelected) {
-                  onUnselectCategory(category.id);
-                } else {
-                  onSelectCategory(category);
-                }
-              }}
-            >
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={() => {
+        {isLoading ? (
+          <>
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <CategoryCardLoader />
+              </div>
+            ))}
+          </>
+        ) : (
+          categories.map((category) => {
+            const isSelected = selectedCategories.some((c) => c.id === category.id);
+            return (
+              <div
+                key={category.id}
+                className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
+                onClick={() => {
                   if (isSelected) {
                     onUnselectCategory(category.id);
                   } else {
                     onSelectCategory(category);
                   }
                 }}
-              />
-              <div>
-                <h4 className="text-sm font-medium">{category.name}</h4>
-                {category.description && (
-                  <p className="text-sm text-gray-500">{category.description}</p>
-                )}
+              >
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => {
+                    if (isSelected) {
+                      onUnselectCategory(category.id);
+                    } else {
+                      onSelectCategory(category);
+                    }
+                  }}
+                />
+                <div>
+                  <h4 className="text-sm font-medium">{category.name}</h4>
+                  {category.description && (
+                    <p className="text-sm text-gray-500">{category.description}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {selectedCategories.length > 0 && (

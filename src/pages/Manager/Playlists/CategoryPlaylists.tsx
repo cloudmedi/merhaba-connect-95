@@ -4,6 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import CatalogLoader from "@/components/loaders/CatalogLoader";
+import ContentLoader from 'react-content-loader';
+
+// Title loader component
+const TitleLoader = () => (
+  <ContentLoader
+    speed={2}
+    width={300}
+    height={80}
+    viewBox="0 0 300 80"
+    backgroundColor="#f5f5f5"
+    foregroundColor="#eeeeee"
+  >
+    <rect x="0" y="0" rx="4" ry="4" width="200" height="24" />
+    <rect x="0" y="35" rx="3" ry="3" width="150" height="16" />
+  </ContentLoader>
+);
 
 export function CategoryPlaylists() {
   const { categoryId } = useParams();
@@ -50,7 +67,22 @@ export function CategoryPlaylists() {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="p-8 space-y-8 animate-fade-in">
+        <div className="mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate("/manager")}
+            className="mb-4 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Media Library
+          </Button>
+          <TitleLoader />
+        </div>
+        <CatalogLoader count={6} />
+      </div>
+    );
   }
 
   if (!data) {
