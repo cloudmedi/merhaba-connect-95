@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,9 @@ export default function ManagerDashboard() {
   const [dominantColor, setDominantColor] = useState('rgba(110, 89, 165, 1)');
   const [isColorLoading, setIsColorLoading] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const { data: heroPlaylist, isLoading: isHeroLoading, refetch: refetchHero } = useQuery({
+  const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,21 +52,23 @@ export default function ManagerDashboard() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Subscribe to playlist changes
+  // Subscribe to ALL playlist changes
   useEffect(() => {
     const channel = supabase
-      .channel('hero-playlist-changes')
+      .channel('playlist-changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'playlists',
-          filter: 'is_hero=eq.true'
+          table: 'playlists'
         },
         async (payload) => {
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            await refetchHero();
+          // Invalidate both hero playlist and categories queries
+          queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
+          queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
+          
+          if (payload.eventType === 'UPDATE' && payload.new.is_hero === true) {
             toast.success("Hero playlist has been updated");
           }
         }
@@ -75,7 +78,7 @@ export default function ManagerDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetchHero]);
+  }, [queryClient]);
 
   useEffect(() => {
     const loadDominantColor = async () => {
