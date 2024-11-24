@@ -25,7 +25,10 @@ interface Category {
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [dominantColor, setDominantColor] = useState<string>("rgb(110, 89, 165)");
+  const [dominantColors, setDominantColors] = useState<{ primary: string; secondary: string }>({
+    primary: 'rgba(110, 89, 165, 0.8)',
+    secondary: 'rgba(90, 69, 145, 0.4)'
+  });
   const [isColorLoading, setIsColorLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -55,8 +58,8 @@ export default function ManagerDashboard() {
       if (heroPlaylist?.artwork_url) {
         setIsColorLoading(true);
         try {
-          const color = await extractDominantColor(heroPlaylist.artwork_url);
-          setDominantColor(color);
+          const colors = await extractDominantColor(heroPlaylist.artwork_url);
+          setDominantColors(colors);
         } catch (error) {
           console.error('Error loading dominant color:', error);
         } finally {
@@ -125,7 +128,7 @@ export default function ManagerDashboard() {
         <div 
           className="relative mb-12 rounded-lg overflow-hidden h-[300px] transition-all duration-500"
           style={{
-            background: `linear-gradient(135deg, ${dominantColor} 0%, rgba(255,255,255,0.1) 100%)`,
+            background: `linear-gradient(135deg, ${dominantColors.primary} 0%, ${dominantColors.secondary} 100%)`,
           }}
         >
           <div className="absolute inset-0 flex items-center justify-between p-8">
