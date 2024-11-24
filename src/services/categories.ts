@@ -59,17 +59,33 @@ export const categoryService = {
   },
 
   async updatePositions(updates: { id: string; position: number }[]) {
-    const { error } = await supabase.rpc(
-      'update_category_positions',
-      { 
-        category_positions: updates.map(update => ({
-          id: update.id,
-          position: update.position
-        }))
+    // Sort updates by new position to ensure consistent ordering
+    const sortedUpdates = [...updates].sort((a, b) => a.position - b.position);
+    
+    // Use a temporary position offset to avoid conflicts
+    const OFFSET = 10000;
+    
+    try {
+      // First, move all positions to temporary positions
+      for (const update of sortedUpdates) {
+        const { error } = await supabase
+          .from('categories')
+          .update({ position: update.position + OFFSET })
+          .eq('id', update.id);
+          
+        if (error) throw error;
       }
-    );
-
-    if (error) {
+      
+      // Then, set the final positions
+      for (const update of sortedUpdates) {
+        const { error } = await supabase
+          .from('categories')
+          .update({ position: update.position })
+          .eq('id', update.id);
+          
+        if (error) throw error;
+      }
+    } catch (error: any) {
       console.error('Error updating positions:', error);
       toast.error("Failed to update category positions");
       throw error;
