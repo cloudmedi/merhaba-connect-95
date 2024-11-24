@@ -4,7 +4,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlayIcon } from "lucide-react";
+import { Play } from "lucide-react";
 import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 
@@ -28,7 +28,6 @@ export function PlaylistGrid({
   const navigate = useNavigate();
 
   if (isLoading) {
-    // Her kategori için 6 loader göster
     return <CatalogLoader count={6} />;
   }
 
@@ -40,6 +39,7 @@ export function PlaylistGrid({
 
   const handleCardClick = (e: React.MouseEvent, playlist: GridPlaylist) => {
     const target = e.target as HTMLElement;
+    // If clicking the play button, play the playlist instead of navigating
     if (target.closest('.play-button-overlay')) {
       e.stopPropagation();
       onPlay?.(playlist);
@@ -95,7 +95,7 @@ export function PlaylistGrid({
                     variant="ghost"
                     className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30 transition-all duration-300"
                   >
-                    <PlayIcon className="w-6 h-6" />
+                    <Play className="w-6 h-6" />
                   </Button>
                 </div>
               )}
