@@ -1293,6 +1293,12 @@ export type Database = {
           peak_day: string
         }[]
       }
+      update_category_positions: {
+        Args: {
+          category_positions: Json[]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
