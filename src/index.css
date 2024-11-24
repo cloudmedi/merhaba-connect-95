@@ -50,8 +50,8 @@
 
 /* Hide scrollbars but keep scroll functionality */
 * {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -120,4 +120,10 @@ body {
 
 .fc .fc-highlight {
   @apply bg-[#6E59A5]/10;
+}
+
+/* Music Player Styles */
+.music-player-backdrop {
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(80px);
 }

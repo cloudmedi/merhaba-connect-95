@@ -118,17 +118,32 @@ export function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-lg border-t border-gray-800 p-4 z-50">
-      <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      {/* Blurred background with artwork */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
+          filter: 'blur(80px)',
+          transform: 'scale(1.2)',
+          opacity: '0.4'
+        }}
+      />
+      
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/60" />
+
+      {/* Content */}
+      <div className="relative px-4 py-3 flex items-center justify-between max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-4 flex-1">
           <img 
             src={getOptimizedImageUrl(playlist.artwork)} 
             alt={currentSong?.title}
-            className="w-12 h-12 rounded-lg object-cover"
+            className="w-14 h-14 rounded-md object-cover shadow-lg"
           />
           <div>
-            <h3 className="text-white font-medium">{currentSong?.title}</h3>
-            <p className="text-gray-400 text-sm">{currentSong?.artist}</p>
+            <h3 className="text-white font-medium text-sm">{currentSong?.title}</h3>
+            <p className="text-white/60 text-xs">{currentSong?.artist}</p>
           </div>
         </div>
 
@@ -148,7 +163,7 @@ export function MusicPlayer({
             <Button
               variant="ghost"
               size="icon"
-              className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
+              className="text-white/70 hover:text-white hover:bg-white/10"
               onClick={toggleMute}
             >
               {isMuted || volume === 0 ? (
@@ -169,7 +184,7 @@ export function MusicPlayer({
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
+            className="text-white/70 hover:text-white hover:bg-white/10"
             onClick={onClose}
           >
             <X className="h-5 w-5" />
