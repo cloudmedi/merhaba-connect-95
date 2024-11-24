@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ContentLoader from 'react-content-loader';
@@ -82,7 +81,9 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
             return (
               <div
                 key={category.id}
-                className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
+                className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+                  isSelected ? "bg-primary/10 border-primary" : "hover:bg-accent"
+                }`}
                 onClick={() => {
                   if (isSelected) {
                     onUnselectCategory(category.id);
@@ -91,22 +92,10 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
                   }
                 }}
               >
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => {
-                    if (isSelected) {
-                      onUnselectCategory(category.id);
-                    } else {
-                      onSelectCategory(category);
-                    }
-                  }}
-                />
-                <div>
-                  <h4 className="text-sm font-medium">{category.name}</h4>
-                  {category.description && (
-                    <p className="text-sm text-gray-500">{category.description}</p>
-                  )}
-                </div>
+                <h4 className="font-medium text-gray-900">{category.name}</h4>
+                {category.description && (
+                  <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+                )}
               </div>
             );
           })
@@ -124,7 +113,10 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
               >
                 <span>{category.name}</span>
                 <button
-                  onClick={() => onUnselectCategory(category.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnselectCategory(category.id);
+                  }}
                   className="hover:text-primary/80"
                 >
                   ×
