@@ -1,12 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import { GridPlaylist } from "./types";
-import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ContentLoader from 'react-content-loader';
@@ -35,6 +31,24 @@ const TitleLoader = () => (
     <rect x="0" y="0" rx="4" ry="4" width="200" height="24" />
     <rect x="0" y="35" rx="3" ry="3" width="150" height="16" />
   </ContentLoader>
+);
+
+// Playlist card loader component
+const PlaylistCardLoader = () => (
+  <Card className="overflow-hidden bg-gray-50 border-none">
+    <ContentLoader
+      speed={2}
+      width="100%"
+      height={300}
+      backgroundColor="#f3f4f6"
+      foregroundColor="#e5e7eb"
+    >
+      <rect x="0" y="0" width="100%" height="200" />
+      <rect x="16" y="216" width="70%" height="20" />
+      <rect x="16" y="252" width="40%" height="16" />
+      <rect x="70%" y="252" width="20%" height="16" />
+    </ContentLoader>
+  </Card>
 );
 
 export function PlaylistGrid({
@@ -107,7 +121,11 @@ export function PlaylistGrid({
     return (
       <div className="space-y-6 animate-fade-in">
         <TitleLoader />
-        <CatalogLoader count={6} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, index) => (
+            <PlaylistCardLoader key={index} />
+          ))}
+        </div>
       </div>
     );
   }
