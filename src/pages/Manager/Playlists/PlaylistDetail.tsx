@@ -10,8 +10,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 
-// ... keep existing code (component interface and other imports)
-
 export function PlaylistDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -193,3 +191,4 @@ export function PlaylistDetail() {
       )}
     </div>
   );
+}
