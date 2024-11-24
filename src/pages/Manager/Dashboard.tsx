@@ -9,6 +9,7 @@ import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { HeroLoader } from "@/components/loaders/HeroLoader";
 import { extractDominantColor } from "@/utils/colorExtraction";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Category {
   id: string;
@@ -29,7 +30,7 @@ export default function ManagerDashboard() {
   const [isColorLoading, setIsColorLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
+  const { data: heroPlaylist, isLoading: isHeroLoading, refetch: refetchHero } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,13 +51,38 @@ export default function ManagerDashboard() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // Subscribe to playlist changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('hero-playlist-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'playlists',
+          filter: 'is_hero=eq.true'
+        },
+        async (payload) => {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            await refetchHero();
+            toast.success("Hero playlist has been updated");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchHero]);
+
   useEffect(() => {
     const loadDominantColor = async () => {
       if (heroPlaylist?.artwork_url) {
         setIsColorLoading(true);
         try {
           const { primary } = await extractDominantColor(heroPlaylist.artwork_url);
-          // Convert rgba to solid color by setting opacity to 1
           const solidColor = primary.replace(/[\d.]+\)$/g, '1)');
           setDominantColor(solidColor);
         } catch (error) {

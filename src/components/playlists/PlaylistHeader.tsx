@@ -52,13 +52,36 @@ export function PlaylistHeader({
 
       if (error) throw error;
 
+      // Create notification for all managers
+      const { data: managers, error: managersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'manager');
+
+      if (!managersError && managers) {
+        for (const manager of managers) {
+          await supabase.from('notifications').insert({
+            recipient_id: manager.id,
+            title: 'New Hero Playlist',
+            message: `${name} has been ${!isHeroLocal ? 'set as' : 'removed from'} the hero playlist`,
+            type: 'playlist_hero',
+            status: 'unread',
+            priority: 'normal',
+            metadata: {
+              playlist_id: id,
+              artwork_url: artworkUrl
+            }
+          });
+        }
+      }
+
       setIsHeroLocal(!isHeroLocal);
-      toast(isHeroLocal 
-        ? "Playlist removed from hero section"
-        : "Playlist set as hero"
+      toast(!isHeroLocal 
+        ? "Playlist set as hero"
+        : "Playlist removed from hero section"
       );
     } catch (error: any) {
-      toast(error.message);
+      toast.error(error.message);
     } finally {
       setIsUpdating(false);
     }
