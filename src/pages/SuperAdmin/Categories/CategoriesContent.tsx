@@ -10,6 +10,7 @@ export function CategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -17,6 +18,7 @@ export function CategoriesContent() {
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      toast.error("Failed to fetch categories");
     }
   };
 
@@ -59,7 +61,10 @@ export function CategoriesContent() {
   };
 
   const handleReorder = async (oldIndex: number, newIndex: number) => {
+    if (isReordering) return;
+    
     try {
+      setIsReordering(true);
       const newCategories = [...categories];
       const [movedCategory] = newCategories.splice(oldIndex, 1);
       newCategories.splice(newIndex, 0, movedCategory);
@@ -81,6 +86,8 @@ export function CategoriesContent() {
       // Revert the optimistic update on error
       fetchCategories();
       toast.error("Failed to reorder categories");
+    } finally {
+      setIsReordering(false);
     }
   };
 
