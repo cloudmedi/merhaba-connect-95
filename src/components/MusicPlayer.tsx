@@ -121,17 +121,17 @@ export function MusicPlayer({
     <div className="fixed bottom-0 left-0 right-0 z-50">
       {/* Blurred background with artwork */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
           backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
           filter: 'blur(80px)',
           transform: 'scale(1.2)',
-          opacity: '0.4'
+          opacity: '0.5'
         }}
       />
       
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
 
       {/* Content */}
       <div className="relative px-4 py-3 flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -139,7 +139,7 @@ export function MusicPlayer({
           <img 
             src={getOptimizedImageUrl(playlist.artwork)} 
             alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg"
+            className="w-14 h-14 rounded-md object-cover shadow-lg ring-1 ring-white/10"
           />
           <div>
             <h3 className="text-white font-medium text-sm">{currentSong?.title}</h3>
