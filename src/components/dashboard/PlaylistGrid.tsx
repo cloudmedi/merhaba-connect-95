@@ -9,6 +9,7 @@ import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import ContentLoader from 'react-content-loader';
 
 interface PlaylistGridProps {
   title: string;
@@ -20,6 +21,21 @@ interface PlaylistGridProps {
   currentPlayingId?: string;
   isPlaying?: boolean;
 }
+
+// Title loader component
+const TitleLoader = () => (
+  <ContentLoader
+    speed={2}
+    width={300}
+    height={80}
+    viewBox="0 0 300 80"
+    backgroundColor="#f3f4f6"
+    foregroundColor="#e5e7eb"
+  >
+    <rect x="0" y="0" rx="4" ry="4" width="200" height="24" />
+    <rect x="0" y="35" rx="3" ry="3" width="150" height="16" />
+  </ContentLoader>
+);
 
 export function PlaylistGrid({
   title,
@@ -57,10 +73,6 @@ export function PlaylistGrid({
     }
   });
 
-  if (isLoading) {
-    return <CatalogLoader count={6} />;
-  }
-
   const handleViewAll = () => {
     if (categoryId) {
       navigate(`/manager/playlists/category/${categoryId}`);
@@ -68,9 +80,8 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (e: React.MouseEvent, playlist: GridPlaylist) => {
-    e.stopPropagation(); // Prevent navigation when clicking play button
+    e.stopPropagation();
     
-    // Get songs for this playlist
     const playlistWithSongs = {
       ...playlist,
       songs: playlistSongs
@@ -91,6 +102,15 @@ export function PlaylistGrid({
   const handleCardClick = (playlist: GridPlaylist) => {
     navigate(`/manager/playlists/${playlist.id}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <TitleLoader />
+        <CatalogLoader count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
