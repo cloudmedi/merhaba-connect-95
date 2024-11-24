@@ -37,7 +37,7 @@ export function RecentActivities() {
           <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
           <span className="text-sm text-gray-500">Last 24 hours</span>
         </div>
-        <ScrollArea className="h-[300px] pr-4 scrollbar-hide">
+        <ScrollArea className="h-[300px] pr-4">
           <div className="space-y-4">
             {recentActivities.map((activity) => (
               <div

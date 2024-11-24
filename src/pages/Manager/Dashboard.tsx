@@ -7,26 +7,14 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { Outlet, useOutletContext } from "react-router-dom";
-
-type MusicContextType = {
-  currentPlaylist: any;
-  setCurrentPlaylist: (playlist: any) => void;
-  isPlaying: boolean;
-  setIsPlaying: (isPlaying: boolean) => void;
-  currentSongIndex: number;
-  setCurrentSongIndex: (index: number) => void;
-};
-
-export function useMusic() {
-  return useOutletContext<MusicContextType>();
-}
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+
+  // Set up realtime subscription
+  usePlaylistSubscription();
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
@@ -163,29 +151,19 @@ export default function ManagerDashboard() {
         ))}
       </div>
 
-      <Outlet 
-        context={{ 
-          currentPlaylist, 
-          setCurrentPlaylist, 
-          isPlaying, 
-          setIsPlaying,
-          currentSongIndex,
-          setCurrentSongIndex
-        }} 
-      />
-
       {currentPlaylist && (
         <MusicPlayer
-          playlist={currentPlaylist}
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork_url,
+            songs: currentPlaylist.songs
+          }}
           onClose={() => {
             setCurrentPlaylist(null);
             setIsPlaying(false);
-            setCurrentSongIndex(0);
           }}
-          onPlayStateChange={setIsPlaying}
-          initialSongIndex={currentSongIndex}
-          onSongChange={setCurrentSongIndex}
-          autoPlay={isPlaying}
+          onPlayStateChange={handlePlayStateChange}
+          autoPlay={true}
         />
       )}
     </div>
