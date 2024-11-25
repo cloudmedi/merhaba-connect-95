@@ -33,7 +33,8 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src/renderer')
+        '@renderer': path.resolve(__dirname, 'src/renderer'),
+        '@': path.resolve(__dirname, 'src')
       },
       extensions: ['.js', '.jsx', '.ts', '.tsx']
     },
