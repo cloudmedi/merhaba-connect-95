@@ -99,10 +99,10 @@ export function ManagerHeader() {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:w-[400px] p-0 bg-[#1A1F2C] border-l border-gray-800">
+                <SheetContent side="right" className="w-full sm:w-[400px] p-0 bg-white border-l border-gray-200">
                   <div className="flex flex-col h-full">
-                    <div className="p-4 border-b border-gray-800">
-                      <h3 className="font-semibold text-lg text-white">Notifications</h3>
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
                     </div>
                     <ScrollArea className="flex-1">
                       <div className="p-2">
@@ -116,8 +116,8 @@ export function ManagerHeader() {
                               key={notification.id}
                               className={`p-4 cursor-pointer ${
                                 notification.status === "unread"
-                                  ? "bg-[#2C3444]"
-                                  : "bg-[#1A1F2C]"
+                                  ? "bg-gray-50"
+                                  : "bg-white"
                               }`}
                               onClick={() => handleNotificationClick(notification)}
                             >
@@ -130,12 +130,12 @@ export function ManagerHeader() {
                                   />
                                 )}
                                 <div className="flex-1">
-                                  <p className={`text-white ${
+                                  <p className={`text-gray-900 ${
                                     notification.status === "unread" ? "font-semibold" : ""
                                   }`}>
                                     {notification.title}
                                   </p>
-                                  <p className="text-gray-400 text-sm mt-1">{notification.message}</p>
+                                  <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
                                   <p className="text-xs text-gray-500 mt-2">
                                     {formatDistanceToNow(new Date(notification.created_at), {
                                       addSuffix: true,
@@ -162,21 +162,21 @@ export function ManagerHeader() {
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-[#2C3444] border-gray-800">
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200">
                   <DropdownMenuItem asChild>
-                    <NavLink to="/manager/settings/profile" className="flex items-center text-gray-200">
+                    <NavLink to="/manager/settings/profile" className="flex items-center text-gray-700">
                       <User className="mr-2 h-4 w-4" />
                       <span className="font-medium">Profile</span>
                     </NavLink>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <NavLink to="/manager/settings" className="flex items-center text-gray-200">
+                    <NavLink to="/manager/settings" className="flex items-center text-gray-700">
                       <Settings className="mr-2 h-4 w-4" />
                       <span className="font-medium">Settings</span>
                     </NavLink>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-gray-800" />
-                  <DropdownMenuItem onClick={logout} className="text-red-400">
+                  <DropdownMenuSeparator className="bg-gray-200" />
+                  <DropdownMenuItem onClick={logout} className="text-red-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span className="font-medium">Logout</span>
                   </DropdownMenuItem>
