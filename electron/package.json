@@ -7,7 +7,8 @@
     "start": "electron .",
     "build": "tsc && node scripts/build.js",
     "watch": "tsc -w",
-    "dev": "cross-env NODE_ENV=development electron ."
+    "dev": "tsc && cross-env NODE_ENV=development electron .",
+    "prebuild": "npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

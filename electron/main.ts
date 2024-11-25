@@ -10,10 +10,6 @@ let audioPlayer: Howl | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const generateToken = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -168,3 +164,7 @@ ipcMain.handle('set-current-time', (event, time) => {
     audioPlayer.seek(time);
   }
 });
+
+const generateToken = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
