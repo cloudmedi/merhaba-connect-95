@@ -8,6 +8,8 @@ const store = new Store();
 let mainWindow: BrowserWindow | null = null;
 let audioPlayer: Howl | null = null;
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const generateToken = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -27,14 +29,21 @@ const createWindow = () => {
     backgroundColor: '#00ffffff'
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
+    console.log('Running in development mode - loading from localhost:5173');
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
     const indexPath = path.join(__dirname, 'index.html');
-    console.log('Loading index.html from:', indexPath);
-    mainWindow.loadFile(indexPath);
+    console.log('Running in production mode - loading from:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      console.error('Failed to load index.html:', err);
+    });
   }
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
 };
 
 // App lifecycle handlers
