@@ -22,15 +22,11 @@ export default defineConfig({
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src')
-      },
-      extensions: ['.js', '.ts', '.jsx', '.tsx', '.json']
-    },
-    optimizeDeps: {
-      include: ['react', 'react-dom']
+      }
     },
     server: {
       headers: {
-        'Content-Type': 'application/javascript'
+        'Content-Type': 'application/javascript',
       }
     }
   }
