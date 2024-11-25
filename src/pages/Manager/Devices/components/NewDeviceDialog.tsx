@@ -23,6 +23,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
+  const [ipAddress, setIpAddress] = useState("");
   const { createDevice } = useDevices();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,10 +35,11 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         category,
         location,
         token,
+        ip_address: ipAddress,
         status: 'offline',
         schedule: {},
         system_info: {},
-        branches: null
+        branch_id: null
       });
 
       toast.success('Device added successfully');
@@ -53,6 +55,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setCategory("player");
     setLocation("");
     setToken("");
+    setIpAddress("");
   };
 
   return (
@@ -92,6 +95,15 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Enter device location"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ipAddress">IP Address</Label>
+            <Input
+              id="ipAddress"
+              value={ipAddress}
+              onChange={(e) => setIpAddress(e.target.value)}
+              placeholder="Enter IP address"
             />
           </div>
           <div className="space-y-2">

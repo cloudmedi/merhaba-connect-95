@@ -2,10 +2,23 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MaintenanceTab } from "./maintenance/MaintenanceTab";
+import { Button } from "@/components/ui/button";
+import { useOfflinePlayers } from "@/hooks/useOfflinePlayers";
+import { toast } from "sonner";
 import type { Device } from "../hooks/types";
 
 export function DeviceListItem({ device }: { device: Device }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { registerPlayer } = useOfflinePlayers();
+
+  const handleRegisterOfflinePlayer = async () => {
+    try {
+      await registerPlayer.mutateAsync(device.id);
+      toast.success('Device registered as offline player');
+    } catch (error) {
+      toast.error('Failed to register device as offline player');
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -17,6 +30,19 @@ export function DeviceListItem({ device }: { device: Device }) {
         <p className="text-sm text-gray-500">{device.ip_address}</p>
         <p className="text-sm text-gray-500">Status: {device.status}</p>
         <p className="text-sm text-gray-500">Last Seen: {device.last_seen}</p>
+        
+        <div className="mt-4 flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRegisterOfflinePlayer();
+            }}
+          >
+            Register as Offline Player
+          </Button>
+        </div>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
