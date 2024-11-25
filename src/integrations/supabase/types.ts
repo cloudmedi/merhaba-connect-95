@@ -704,6 +704,116 @@ export type Database = {
           },
         ]
       }
+      offline_playlists: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          id: string
+          last_synced_at: string | null
+          local_path: string | null
+          playlist_id: string | null
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          local_path?: string | null
+          playlist_id?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          local_path?: string | null
+          playlist_id?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_playlists_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "offline_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_playlists_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_playlists_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offline_songs: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          id: string
+          last_synced_at: string | null
+          local_path: string | null
+          song_id: string | null
+          sync_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          local_path?: string | null
+          song_id?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          local_path?: string | null
+          song_id?: string | null
+          sync_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_songs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "offline_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "song_play_statistics"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "offline_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offline_sync_history: {
         Row: {
           completed_at: string | null

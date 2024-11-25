@@ -5,6 +5,7 @@ import Store from 'electron-store';
 
 const store = new Store();
 let mainWindow: BrowserWindow | null = null;
+let audioPlayer: any = null;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -70,4 +71,43 @@ ipcMain.handle('register-device', async (event, deviceInfo) => {
     console.error('Error registering device:', error);
     throw error;
   }
+});
+
+ipcMain.handle('get-device-id', () => {
+  return store.get('deviceId');
+});
+
+// Audio playback handlers
+ipcMain.handle('play-audio', async (event, url) => {
+  try {
+    // Implement audio playback logic here
+    // This is where you'd use a native audio player library
+    mainWindow?.webContents.send('playback-status', { status: 'playing', currentTime: 0 });
+  } catch (error) {
+    console.error('Error playing audio:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('pause-audio', () => {
+  // Implement pause logic
+  mainWindow?.webContents.send('playback-status', { status: 'paused' });
+});
+
+ipcMain.handle('stop-audio', () => {
+  // Implement stop logic
+  mainWindow?.webContents.send('playback-status', { status: 'stopped' });
+});
+
+ipcMain.handle('set-volume', (event, volume) => {
+  // Implement volume control
+});
+
+ipcMain.handle('get-current-time', () => {
+  // Return current playback position
+  return 0;
+});
+
+ipcMain.handle('set-current-time', (event, time) => {
+  // Implement seek logic
 });
