@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Device, Download, Music } from "lucide-react";
+import { Computer, Download, Music } from "lucide-react";
 import { toast } from "sonner";
 
 declare global {
@@ -61,7 +61,7 @@ export function OfflinePlayerApp() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Device className="w-6 h-6" />
+            <Computer className="w-6 h-6" />
             Offline Player
           </CardTitle>
         </CardHeader>
