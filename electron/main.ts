@@ -24,7 +24,6 @@ const createWindow = () => {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    // Add window styling
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
     visualEffectState: 'active',

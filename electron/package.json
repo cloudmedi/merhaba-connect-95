@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "tsc && cp index.html dist/ && cp -r renderer dist/",
+    "build": "tsc && mkdir -p dist && cp index.html dist/ && cp -r renderer dist/",
     "watch": "tsc -w",
     "dev": "tsc && electron ."
   },
