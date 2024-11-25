@@ -11,17 +11,15 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
-      webSecurity: true,
-      preload: path.join(__dirname, '../preload/index.js'),
-    },
+      webSecurity: false, // Development için geçici olarak devre dışı
+      preload: path.join(__dirname, '../preload/index.js')
+    }
   })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // Production modunda index.html'i yükle
-    const indexHtml = path.join(__dirname, '../renderer/index.html')
-    win.loadFile(indexHtml)
+    win.loadFile(path.join(process.resourcesPath, 'dist/renderer/index.html'))
   }
 }
 
@@ -35,8 +33,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
-  if (allWindows.length === 0) {
+  if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
 })
