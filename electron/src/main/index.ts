@@ -9,29 +9,21 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      contextIsolation: true,
       nodeIntegration: true,
-      webSecurity: false,
+      contextIsolation: true,
+      webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js')
     }
   })
 
-  console.log('Development URL:', VITE_DEV_SERVER_URL)
-
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
-    win.webContents.openDevTools() // Geliştirici araçlarını otomatik aç
   } else {
-    const indexHtml = path.join(__dirname, '../renderer/index.html')
-    console.log('Production path:', indexHtml)
-    win.loadFile(indexHtml)
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
 
-app.whenReady().then(() => {
-  createWindow()
-  console.log('App is ready and window created')
-})
+app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
