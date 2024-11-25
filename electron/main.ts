@@ -9,7 +9,6 @@ let mainWindow: BrowserWindow | null = null;
 let audioPlayer: Howl | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
-const isPackaged = app.isPackaged;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -31,7 +30,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     try {
-      const indexPath = path.join(__dirname, '../index.html');
+      const indexPath = path.join(__dirname, '..', 'index.html');
       console.log('Loading index.html from:', indexPath);
       mainWindow.loadFile(indexPath).catch(err => {
         console.error('Failed to load index.html:', err);
