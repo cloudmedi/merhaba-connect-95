@@ -137,15 +137,15 @@ export function PlaylistEditor() {
           setPlaylistData={setPlaylistData}
         />
 
-        {isEditMode && (
-          <Button
-            onClick={() => setIsAssignDialogOpen(true)}
-            className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200 mb-4"
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Assign to Managers
-          </Button>
-        )}
+        <Button
+          onClick={() => setIsAssignDialogOpen(true)}
+          className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200"
+          size="lg"
+          disabled={!isEditMode || !existingPlaylist?.id}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          Assign to Managers
+        </Button>
 
         <PlaylistTabs
           playlistData={playlistData}
@@ -155,7 +155,30 @@ export function PlaylistEditor() {
         <AssignManagersDialog
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
-          onAssign={handleAssignManagers}
+          playlistId={existingPlaylist?.id || ''}
+          onAssign={async (managerIds, scheduledAt, expiresAt) => {
+            try {
+              const assignments = managerIds.map(userId => ({
+                user_id: userId,
+                playlist_id: existingPlaylist?.id,
+                scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
+                expires_at: expiresAt?.toISOString() || null,
+                notification_sent: false
+              }));
+
+              const { error } = await supabase
+                .from('playlist_assignments')
+                .insert(assignments);
+
+              if (error) throw error;
+
+              toast.success(`Playlist assigned to ${managerIds.length} managers`);
+              setIsAssignDialogOpen(false);
+            } catch (error: any) {
+              console.error('Error assigning playlist:', error);
+              toast.error(error.message || "Failed to assign playlist");
+            }
+          }}
         />
       </div>
     </div>
