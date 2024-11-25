@@ -12,7 +12,7 @@
     "watch": "concurrently \"tsc -w\" \"npm run watch:css\"",
     "watch:css": "tailwindcss -i ./renderer/index.css -o ./dist/renderer/index.css --watch",
     "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
-    "clean": "rimraf dist && mkdir dist && mkdir dist/renderer",
+    "clean": "rimraf dist && mkdir dist\\renderer",
     "dist": "npm run build && electron-builder",
     "pack": "npm run build && electron-builder --dir",
     "make": "npm run build && electron-builder"
