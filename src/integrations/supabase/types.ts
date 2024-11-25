@@ -660,6 +660,91 @@ export type Database = {
           },
         ]
       }
+      offline_players: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          id: string
+          last_sync_at: string | null
+          local_storage_path: string | null
+          settings: Json | null
+          sync_status: string | null
+          updated_at: string | null
+          version: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          local_storage_path?: string | null
+          settings?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          local_storage_path?: string | null
+          settings?: Json | null
+          sync_status?: string | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_players_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offline_sync_history: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          player_id: string | null
+          started_at: string | null
+          status: string | null
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          player_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          player_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_sync_history_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "offline_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       playlist_assignments: {
         Row: {
           assigned_at: string | null
