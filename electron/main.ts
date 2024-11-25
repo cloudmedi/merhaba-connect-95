@@ -30,9 +30,12 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     try {
+      // In production, load from the dist directory
       const indexPath = path.join(__dirname, 'index.html');
       console.log('Loading index.html from:', indexPath);
-      mainWindow.loadFile(indexPath);
+      mainWindow.loadFile(indexPath).catch(err => {
+        console.error('Failed to load index.html:', err);
+      });
     } catch (err) {
       console.error('Failed to load index.html:', err);
     }
