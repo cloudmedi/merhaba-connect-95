@@ -38,7 +38,6 @@ export function AssignManagersDialog({
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
-      console.log("Current authenticated user:", user); // Debug log
 
       if (!user?.id) {
         toast.error("No authenticated user found. Please log in again.");
@@ -48,11 +47,9 @@ export function AssignManagersDialog({
       // Get the current user's company ID
       const { data: adminProfile, error: profileError } = await supabase
         .from("profiles")
-        .select("company_id")
+        .select("company_id, role")
         .eq("id", user.id)
         .single();
-
-      console.log("Admin profile:", adminProfile); // Debug log
 
       if (profileError) {
         console.error("Profile error:", profileError);
@@ -80,10 +77,7 @@ export function AssignManagersDialog({
 
       const { data: managersData, error: managersError } = await query;
 
-      console.log("Managers data:", managersData); // Debug log
-
       if (managersError) {
-        console.error("Managers fetch error:", managersError);
         throw managersError;
       }
 
@@ -106,21 +100,37 @@ export function AssignManagersDialog({
     });
   };
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (selectedManagers.length === 0) {
       toast.error("Please select at least one manager");
       return;
     }
 
-    onAssign(
-      selectedManagers.map(m => m.id),
-      scheduledAt,
-      expiresAt
-    );
-    setSelectedManagers([]);
-    setScheduledAt(undefined);
-    setExpiresAt(undefined);
-    onOpenChange(false);
+    try {
+      const assignments = selectedManagers.map(manager => ({
+        user_id: manager.id,
+        playlist_id: existingPlaylist?.id,
+        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
+        expires_at: expiresAt?.toISOString() || null,
+        notification_sent: false
+      }));
+
+      const { error } = await supabase
+        .from('playlist_assignments')
+        .insert(assignments);
+
+      if (error) throw error;
+
+      toast.success(`Playlist assigned to ${selectedManagers.length} managers`);
+      onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
+      setSelectedManagers([]);
+      setScheduledAt(undefined);
+      setExpiresAt(undefined);
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error assigning playlist:', error);
+      toast.error(error.message || "Failed to assign playlist");
+    }
   };
 
   return (
