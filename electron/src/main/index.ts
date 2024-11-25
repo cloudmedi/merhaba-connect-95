@@ -18,12 +18,17 @@ function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
+    win.webContents.openDevTools()
   } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    // Fix for file:// protocol loading
+    win.loadFile(path.join(process.cwd(), 'out/renderer/index.html'))
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+  console.log('Window created with path:', path.join(process.cwd(), 'out/renderer/index.html'))
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
