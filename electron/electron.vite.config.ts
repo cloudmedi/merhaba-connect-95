@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       rollupOptions: {
-        external: ['electron', 'electron-store']
+        external: ['electron', 'electron-store', 'path', 'crypto']
       }
     }
   },

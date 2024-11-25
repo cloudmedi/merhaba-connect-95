@@ -14,7 +14,6 @@ const schema = {
 }
 
 // Store'u başlatalım
-Store.initRenderer()
 const store = new Store({ schema })
 
 let win: BrowserWindow | null
@@ -43,7 +42,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
       webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js'),
@@ -74,6 +73,7 @@ ipcMain.handle('registerDevice', async (event, deviceInfo) => {
 })
 
 app.whenReady().then(() => {
+  Store.initRenderer()
   initializeDevice()
   createWindow()
 })
