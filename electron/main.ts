@@ -28,9 +28,11 @@ const createWindow = () => {
 
   // Load the app
   if (process.env.NODE_ENV === 'development') {
+    // In development, load from localhost:5173 (Vite's default dev server)
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
+    // In production, load the built files
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 };
