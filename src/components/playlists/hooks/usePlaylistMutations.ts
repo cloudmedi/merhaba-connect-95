@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -11,6 +12,7 @@ interface SavePlaylistParams {
 
 export function usePlaylistMutations() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const handleSavePlaylist = async ({
     playlistData,
@@ -20,12 +22,13 @@ export function usePlaylistMutations() {
     onError
   }: SavePlaylistParams) => {
     try {
+      if (!user) {
+        throw new Error("Please log in to save playlists");
+      }
+
       if (!playlistData.title) {
         throw new Error("Please enter a playlist title");
       }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
 
       let artwork_url = playlistData.artwork_url;
       if (playlistData.artwork) {
