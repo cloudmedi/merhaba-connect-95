@@ -17,7 +17,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, '../preload/index.js')
     },
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
@@ -25,19 +25,11 @@ function createWindow() {
     backgroundColor: '#ffffff'
   });
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     mainWindow.webContents.openDevTools();
   } else {
-    try {
-      const indexPath = path.join(__dirname, '..', 'index.html');
-      console.log('Loading index.html from:', indexPath);
-      mainWindow.loadFile(indexPath).catch(err => {
-        console.error('Failed to load index.html:', err);
-      });
-    } catch (err) {
-      console.error('Failed to load index.html:', err);
-    }
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -170,3 +162,4 @@ ipcMain.handle('set-current-time', (event, time) => {
 const generateToken = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+
