@@ -58,7 +58,7 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
             onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
             className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30"
           >
-            Go to Playlist
+            Listen
           </Button>
         </div>
         <div className="w-64 h-64 relative z-10 transition-transform duration-300 group-hover:scale-105">
