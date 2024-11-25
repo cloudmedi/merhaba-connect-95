@@ -35,19 +35,13 @@ export default defineConfig({
       alias: {
         '@renderer': path.resolve(__dirname, 'src/renderer'),
         '@': path.resolve(__dirname, 'src')
-      },
-      extensions: ['.js', '.jsx', '.ts', '.tsx']
+      }
     },
     server: {
       headers: {
-        'Content-Type': 'application/javascript; charset=utf-8',
-      },
-      watch: {
-        usePolling: true
+        'Content-Security-Policy': "script-src 'self' 'unsafe-inline'",
+        'Content-Type': 'application/javascript; charset=utf-8'
       }
-    },
-    optimizeDeps: {
-      exclude: ['electron']
     }
   }
 })
