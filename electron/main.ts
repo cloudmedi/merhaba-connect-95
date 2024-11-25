@@ -4,17 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 import Store from 'electron-store';
 import { Howl } from 'howler';
 
-// Initialize store and window
 const store = new Store();
 let mainWindow: BrowserWindow | null = null;
 let audioPlayer: Howl | null = null;
 
-// Generate 6-digit token
 const generateToken = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Create the main window
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -30,12 +27,13 @@ const createWindow = () => {
     backgroundColor: '#00ffffff'
   });
 
-  // Load the app
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Loading index.html from:', indexPath);
+    mainWindow.loadFile(indexPath);
   }
 };
 
