@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "strict": true,
     "jsx": "react-jsx",
-    "outDir": "../dist",
+    "outDir": "dist",
     "rootDir": ".",
     "paths": {
       "*": ["node_modules/*"]
