@@ -5,7 +5,10 @@ import path from 'path'
 export default defineConfig({
   main: {
     build: {
-      outDir: 'out/main'
+      outDir: 'out/main',
+      rollupOptions: {
+        external: ['electron-store']
+      }
     }
   },
   preload: {
