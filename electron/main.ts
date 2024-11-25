@@ -10,7 +10,7 @@ let audioPlayer: Howl | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const createWindow = () => {
+function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -22,21 +22,30 @@ const createWindow = () => {
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
     visualEffectState: 'active',
-    backgroundColor: '#00ffffff'
+    backgroundColor: '#ffffff'
   });
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'index.html')).catch(err => {
+    try {
+      const indexPath = path.join(__dirname, 'index.html');
+      console.log('Loading index.html from:', indexPath);
+      mainWindow.loadFile(indexPath);
+    } catch (err) {
       console.error('Failed to load index.html:', err);
-    });
+    }
   }
-};
 
-// App lifecycle handlers
-app.whenReady().then(createWindow);
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
+}
+
+app.whenReady().then(() => {
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

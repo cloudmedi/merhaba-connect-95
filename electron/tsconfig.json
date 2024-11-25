@@ -9,12 +9,21 @@
     "outDir": "dist",
     "rootDir": ".",
     "paths": {
-      "*": ["node_modules/*"]
-    }
+      "*": ["node_modules/*"],
+      "@/*": ["./*"]
+    },
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": [
     "*.ts",
     "renderer/**/*.ts",
     "renderer/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }
