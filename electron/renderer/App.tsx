@@ -8,7 +8,6 @@ export function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if device is already registered
     window.electronAPI.getDeviceId()
       .then((id) => {
         if (id) {
