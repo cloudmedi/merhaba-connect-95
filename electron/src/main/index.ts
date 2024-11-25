@@ -3,7 +3,19 @@ import path from 'node:path'
 import crypto from 'crypto'
 import Store from 'electron-store'
 
-const store = new Store()
+// Store şemasını tanımlayalım
+const schema = {
+  deviceId: {
+    type: 'string'
+  },
+  deviceToken: {
+    type: 'string'
+  }
+}
+
+// Store'u başlatalım
+const store = new Store({ schema })
+
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
