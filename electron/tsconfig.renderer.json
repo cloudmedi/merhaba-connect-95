@@ -4,18 +4,18 @@
     "outDir": "dist/renderer",
     "module": "ESNext",
     "jsx": "react-jsx",
-    "rootDir": "renderer",
+    "rootDir": "src/renderer",
     "paths": {
-      "@/*": ["./renderer/*"]
+      "@/*": ["./src/renderer/*"]
     }
   },
   "include": [
-    "renderer/**/*"
+    "src/renderer/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "main.ts",
-    "preload.ts"
+    "src/main",
+    "src/preload"
   ]
 }

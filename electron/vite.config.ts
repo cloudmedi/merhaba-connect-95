@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: {
-          index: path.join(__dirname, 'main.ts')
+          index: path.join(__dirname, 'src/main/main.ts')
         },
         external: ['@supabase/supabase-js', 'electron-store', 'howler']
       }
@@ -17,25 +17,26 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: {
-          index: path.join(__dirname, 'preload.ts')
+          index: path.join(__dirname, 'src/preload/preload.ts')
         },
         external: ['electron']
       }
     }
   },
   renderer: {
-    resolve: {
-      alias: {
-        '@': path.resolve('src')
-      }
-    },
-    plugins: [react()],
+    root: path.join(__dirname, 'src/renderer'),
     build: {
       rollupOptions: {
         input: {
-          index: path.join(__dirname, 'renderer/index.html')
+          index: path.join(__dirname, 'src/renderer/index.html')
         }
       }
-    }
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src/renderer')
+      }
+    },
+    plugins: [react()]
   }
 });
