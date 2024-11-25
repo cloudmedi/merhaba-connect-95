@@ -11,11 +11,6 @@ import path from 'node:path'
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 
-process.env.DIST = path.join(__dirname, '../renderer')
-process.env.PUBLIC = app.isPackaged 
-  ? process.env.DIST 
-  : path.join(process.env.DIST, '../public')
-
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
@@ -35,7 +30,8 @@ function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
     // Load the index.html when not in development
-    win.loadFile(path.join(process.env.DIST, 'index.html'))
+    const indexHtml = path.join(__dirname, '../renderer/index.html')
+    win.loadFile(indexHtml)
   }
 }
 
