@@ -10,7 +10,7 @@ function createWindow() {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: true,
+      contextIsolation: false, // Geçici olarak false yapıyoruz
       webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js')
     }
@@ -18,16 +18,18 @@ function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
-    win.webContents.openDevTools()
   } else {
-    // Fix for file:// protocol loading
-    win.loadFile(path.join(process.cwd(), 'out/renderer/index.html'))
+    const indexPath = path.join(__dirname, '../../renderer/index.html')
+    console.log('Loading index from:', indexPath)
+    win.loadFile(indexPath)
   }
+
+  // Debug için DevTools'u açalım
+  win.webContents.openDevTools()
 }
 
 app.whenReady().then(() => {
   createWindow()
-  console.log('Window created with path:', path.join(process.cwd(), 'out/renderer/index.html'))
 })
 
 app.on('window-all-closed', () => {

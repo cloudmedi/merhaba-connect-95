@@ -16,7 +16,12 @@ export default defineConfig({
   renderer: {
     root: '.',
     build: {
-      outDir: 'out/renderer'
+      outDir: 'out/renderer',
+      rollupOptions: {
+        input: {
+          index: path.join(__dirname, 'src/renderer/index.html')
+        }
+      }
     },
     plugins: [react()],
     resolve: {
@@ -25,9 +30,7 @@ export default defineConfig({
         '@renderer': path.resolve('src/renderer')
       }
     },
-    base: './',
-    server: {
-      port: 3000
-    }
+    base: '',
+    publicDir: 'public'
   }
 })
