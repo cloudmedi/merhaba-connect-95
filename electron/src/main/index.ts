@@ -10,9 +10,17 @@ import path from 'node:path'
 // │ │ └── index.js
 // │ └─┬ renderer
 // │   └── index.html
-// │
-process.env.DIST = path.join(__dirname, '../renderer')
-process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public')
+
+const DIST_PATH = app.isPackaged 
+  ? path.join(__dirname, '../renderer') // Production build path
+  : path.join(__dirname, '../../src/renderer') // Development path
+
+const PUBLIC_PATH = app.isPackaged
+  ? DIST_PATH
+  : path.join(DIST_PATH, '../public')
+
+process.env.DIST = DIST_PATH
+process.env.VITE_PUBLIC = PUBLIC_PATH
 
 let win: BrowserWindow | null
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
@@ -32,7 +40,8 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    win.loadFile(path.join(process.env.DIST, 'index.html'))
+    // Load the local file
+    win.loadFile(path.join(DIST_PATH, 'index.html'))
   }
 }
 
