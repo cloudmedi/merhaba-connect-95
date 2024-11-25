@@ -5,8 +5,6 @@ import { CategoriesDialog } from "./CategoriesDialog";
 import { Category } from "./types";
 import { toast } from "sonner";
 import { categoryService } from "@/services/categories";
-import { supabase } from "@/integrations/supabase/client";
-import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 export function CategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -17,7 +15,6 @@ export function CategoriesContent() {
   const fetchCategories = async () => {
     try {
       const data = await categoryService.getCategories();
-      console.log('Fetched categories:', data);
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -27,53 +24,16 @@ export function CategoriesContent() {
 
   useEffect(() => {
     fetchCategories();
-
-    // Set up realtime subscription
-    const channel = supabase
-      .channel('categories_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'categories' },
-        async (payload: RealtimePostgresChangesPayload<Category>) => {
-          console.log('Realtime payload received:', payload);
-          
-          // Always fetch fresh data after any change
-          await fetchCategories();
-
-          // Show appropriate toast messages
-          if (payload.eventType === 'UPDATE') {
-            toast.success("Category updated successfully");
-          } else if (payload.eventType === 'INSERT') {
-            toast.success("New category added");
-          } else if (payload.eventType === 'DELETE') {
-            toast.success("Category deleted");
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to category changes');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to category changes');
-          toast.error("Error subscribing to category updates");
-        }
-      });
-
-    return () => {
-      console.log('Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const handleCreate = async (newCategory: Pick<Category, "name" | "description">) => {
     try {
       await categoryService.createCategory(newCategory);
       setIsDialogOpen(false);
+      fetchCategories();
       toast.success("Category created successfully");
     } catch (error) {
       console.error('Error creating category:', error);
-      toast.error("Failed to create category");
     }
   };
 
@@ -83,20 +43,20 @@ export function CategoriesContent() {
       await categoryService.updateCategory(id, { name, description });
       setIsDialogOpen(false);
       setEditingCategory(null);
+      fetchCategories();
       toast.success("Category updated successfully");
     } catch (error) {
       console.error('Error updating category:', error);
-      toast.error("Failed to update category");
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await categoryService.deleteCategory(id);
+      fetchCategories();
       toast.success("Category deleted successfully");
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error("Failed to delete category");
     }
   };
 
