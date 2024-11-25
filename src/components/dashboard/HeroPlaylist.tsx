@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeroLoader } from "@/components/loaders/HeroLoader";
 import { extractDominantColor } from "@/utils/colorExtraction";
+import { Play } from "lucide-react";
 
 interface HeroPlaylistProps {
   playlist: any;
@@ -56,8 +57,9 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
           <p className="text-2xl opacity-90">{playlist.name}</p>
           <Button 
             onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
-            className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30"
+            className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30 flex items-center gap-2"
           >
+            <Play className="w-4 h-4" />
             Listen
           </Button>
         </div>
