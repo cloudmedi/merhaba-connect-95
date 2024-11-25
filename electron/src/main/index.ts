@@ -3,7 +3,7 @@ import path from 'node:path'
 import crypto from 'crypto'
 import Store from 'electron-store'
 
-// Define store schema
+// Store şemasını tanımlayalım
 const schema = {
   deviceId: {
     type: 'string'
@@ -13,19 +13,17 @@ const schema = {
   }
 }
 
-// Initialize store with schema
-Store.initRenderer();
-const store = new Store({ schema });
+// Store'u başlatalım
+Store.initRenderer()
+const store = new Store({ schema })
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
-// Generate 6-digit token
 function generateDeviceToken(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-// Device ID and token management
 function initializeDevice() {
   let deviceId = store.get('deviceId') as string
   let deviceToken = store.get('deviceToken') as string
@@ -45,10 +43,11 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
-      preload: path.join(__dirname, '../preload/index.js')
+      preload: path.join(__dirname, '../preload/index.js'),
+      sandbox: false
     }
   })
 
@@ -56,9 +55,7 @@ function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
     const indexHtml = path.join(__dirname, '../renderer/index.html')
-    win.loadFile(indexHtml).catch(e => {
-      console.error('Failed to load app:', e)
-    })
+    win.loadFile(indexHtml)
   }
 }
 
