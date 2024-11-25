@@ -1,80 +1,57 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'path';
-import { createClient } from '@supabase/supabase-js';
-import Store from 'electron-store';
-import { Howl } from 'howler';
+import { app, BrowserWindow, ipcMain } from 'electron'
+import path from 'node:path'
 
-const store = new Store();
-let mainWindow: BrowserWindow | null = null;
-let audioPlayer: Howl | null = null;
+// The built directory structure
+//
+// ├─┬─┬ dist
+// │ │ └── index.html
+// │ │
+// │ ├─┬ dist-electron
+// │ │ ├── main.js
+// │ │ └── preload.js
+// │
+process.env.DIST = path.join(__dirname, '../dist')
+process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public')
+
+let win: BrowserWindow | null
+// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
+const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload/index.js')
+      nodeIntegration: true,
+      preload: path.join(__dirname, '../preload/index.js'),
     },
-    titleBarStyle: 'hiddenInset',
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
-    backgroundColor: '#ffffff'
-  });
+  })
 
-  if (process.env.VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-    mainWindow.webContents.openDevTools();
+  // Test active push message to Renderer-process.
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    win.loadFile(path.join(process.env.DIST, 'index.html'))
   }
 }
 
-app.whenReady().then(() => {
-  createWindow();
-});
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    app.quit()
+    win = null
   }
-});
+})
+
+app.whenReady().then(createWindow)
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+  const allWindows = BrowserWindow.getAllWindows()
+  if (allWindows.length === 0) {
+    createWindow()
   }
-});
-
-// IPC handlers
-ipcMain.handle('get-device-id', () => {
-  return store.get('deviceId');
-});
-
-ipcMain.handle('play-audio', async (event, url) => {
-  if (audioPlayer) {
-    audioPlayer.unload();
-  }
-
-  audioPlayer = new Howl({
-    src: [url],
-    html5: true
-  });
-
-  audioPlayer.play();
-});
-
-ipcMain.handle('pause-audio', () => {
-  audioPlayer?.pause();
-});
-
-ipcMain.handle('stop-audio', () => {
-  audioPlayer?.stop();
-});
-
-ipcMain.handle('set-volume', (event, volume) => {
-  if (audioPlayer) {
-    audioPlayer.volume(volume);
-  }
-});
+})
