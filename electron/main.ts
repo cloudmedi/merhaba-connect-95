@@ -2,10 +2,11 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import Store from 'electron-store';
+import { Howl } from 'howler';
 
 const store = new Store();
 let mainWindow: BrowserWindow | null = null;
-let audioPlayer: any = null;
+let audioPlayer: Howl | null = null;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -80,9 +81,41 @@ ipcMain.handle('get-device-id', () => {
 // Audio playback handlers
 ipcMain.handle('play-audio', async (event, url) => {
   try {
-    // Implement audio playback logic here
-    // This is where you'd use a native audio player library
-    mainWindow?.webContents.send('playback-status', { status: 'playing', currentTime: 0 });
+    if (audioPlayer) {
+      audioPlayer.unload();
+    }
+
+    audioPlayer = new Howl({
+      src: [url],
+      html5: true,
+      onplay: () => {
+        mainWindow?.webContents.send('playback-status', { 
+          status: 'playing', 
+          currentTime: audioPlayer?.seek() || 0 
+        });
+      },
+      onpause: () => {
+        mainWindow?.webContents.send('playback-status', { 
+          status: 'paused',
+          currentTime: audioPlayer?.seek() || 0 
+        });
+      },
+      onend: () => {
+        mainWindow?.webContents.send('playback-status', { 
+          status: 'ended',
+          currentTime: 0 
+        });
+      },
+      onloaderror: (id, error) => {
+        console.error('Audio loading error:', error);
+        mainWindow?.webContents.send('playback-status', { 
+          status: 'error',
+          error: 'Failed to load audio file' 
+        });
+      }
+    });
+
+    audioPlayer.play();
   } catch (error) {
     console.error('Error playing audio:', error);
     throw error;
@@ -90,24 +123,25 @@ ipcMain.handle('play-audio', async (event, url) => {
 });
 
 ipcMain.handle('pause-audio', () => {
-  // Implement pause logic
-  mainWindow?.webContents.send('playback-status', { status: 'paused' });
+  audioPlayer?.pause();
 });
 
 ipcMain.handle('stop-audio', () => {
-  // Implement stop logic
-  mainWindow?.webContents.send('playback-status', { status: 'stopped' });
+  audioPlayer?.stop();
 });
 
 ipcMain.handle('set-volume', (event, volume) => {
-  // Implement volume control
+  if (audioPlayer) {
+    audioPlayer.volume(volume);
+  }
 });
 
 ipcMain.handle('get-current-time', () => {
-  // Return current playback position
-  return 0;
+  return audioPlayer ? audioPlayer.seek() : 0;
 });
 
 ipcMain.handle('set-current-time', (event, time) => {
-  // Implement seek logic
+  if (audioPlayer) {
+    audioPlayer.seek(time);
+  }
 });
