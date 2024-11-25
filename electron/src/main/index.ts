@@ -20,7 +20,7 @@ function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
     // Düzeltilmiş dosya yolu - resources dizini kaldırıldı
-    win.loadFile(path.join(__dirname, '../../out/renderer/index.html'))
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
 
