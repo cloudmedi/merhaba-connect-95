@@ -5,18 +5,18 @@ import path from 'path'
 export default defineConfig({
   main: {
     build: {
-      outDir: 'dist/main'
+      outDir: 'out/main'
     }
   },
   preload: {
     build: {
-      outDir: 'dist/preload'
+      outDir: 'out/preload'
     }
   },
   renderer: {
     root: '.',
     build: {
-      outDir: 'dist/renderer'
+      outDir: 'out/renderer'
     },
     plugins: [react()],
     resolve: {
