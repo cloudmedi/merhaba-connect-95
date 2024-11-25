@@ -9,6 +9,11 @@ const store = new Store();
 let mainWindow: BrowserWindow | null = null;
 let audioPlayer: Howl | null = null;
 
+// Generate 6-digit token
+const generateToken = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 // Create the main window
 const createWindow = () => {
   mainWindow = new BrowserWindow({
@@ -55,6 +60,7 @@ ipcMain.handle('register-device', async (event, deviceInfo) => {
   );
 
   try {
+    const token = generateToken();
     const { data, error } = await supabase
       .from('offline_players')
       .insert([{
@@ -64,14 +70,16 @@ ipcMain.handle('register-device', async (event, deviceInfo) => {
           autoSync: true,
           syncInterval: 30,
           maxStorageSize: 1024 * 1024 * 1024 // 1GB default
-        }
+        },
+        token: token
       }])
       .select()
       .single();
 
     if (error) throw error;
     store.set('deviceId', data.id);
-    return data;
+    store.set('token', token);
+    return { ...data, token };
   } catch (error) {
     console.error('Error registering device:', error);
     throw error;

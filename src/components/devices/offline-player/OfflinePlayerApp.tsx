@@ -7,10 +7,12 @@ import { SyncStatus } from './components/SyncStatus';
 import { PlaylistGrid } from './components/PlaylistGrid';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function OfflinePlayerApp() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   
@@ -69,9 +71,11 @@ export function OfflinePlayerApp() {
       type: 'desktop'
     };
 
-    await window.electronAPI.registerDevice(deviceInfo);
+    const result = await window.electronAPI.registerDevice(deviceInfo);
     setIsRegistered(true);
     setDeviceId(deviceInfo.id);
+    setToken(result.token);
+    toast.success(`Device registered successfully. Your token is: ${result.token}`);
     await syncPlaylists();
   };
 
@@ -104,6 +108,14 @@ export function OfflinePlayerApp() {
             <DeviceRegistration onRegister={handleRegister} />
           ) : (
             <div className="space-y-8">
+              {token && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="font-mono text-xl text-center">{token}</p>
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    This is your device token. Keep it safe!
+                  </p>
+                </div>
+              )}
               <SyncStatus 
                 syncStatus={isSyncing ? 'syncing' : 'idle'} 
                 playlistCount={playlists.length} 
