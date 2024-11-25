@@ -14,12 +14,14 @@ interface AssignManagersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAssign: (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => void;
+  playlistId: string; // Add this prop
 }
 
 export function AssignManagersDialog({ 
   open, 
   onOpenChange, 
-  onAssign 
+  onAssign,
+  playlistId 
 }: AssignManagersDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedManagers, setSelectedManagers] = useState<Manager[]>([]);
@@ -109,7 +111,7 @@ export function AssignManagersDialog({
     try {
       const assignments = selectedManagers.map(manager => ({
         user_id: manager.id,
-        playlist_id: existingPlaylist?.id,
+        playlist_id: playlistId,
         scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
         expires_at: expiresAt?.toISOString() || null,
         notification_sent: false
