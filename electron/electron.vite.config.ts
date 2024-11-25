@@ -6,33 +6,23 @@ export default defineConfig({
   main: {
     build: {
       outDir: 'out/main',
-      rollupOptions: {
-        input: {
-          index: path.join(__dirname, 'src/main/index.ts'),
-        },
-      },
     }
   },
   preload: {
     build: {
       outDir: 'out/preload',
-      rollupOptions: {
-        input: {
-          index: path.join(__dirname, 'src/preload/index.ts'),
-        },
-      },
     }
   },
   renderer: {
-    root: path.join(__dirname, 'src/renderer'),
+    root: '.',
     build: {
       outDir: 'out/renderer',
     },
     plugins: [react()],
     resolve: {
       alias: {
-        '@renderer': path.resolve(__dirname, 'src/renderer'),
-        '@': path.resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src'),
+        '@renderer': path.resolve(__dirname, 'src/renderer')
       }
     }
   }
