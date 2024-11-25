@@ -5,10 +5,9 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "tsc && node scripts/build.js",
+    "build": "rimraf dist && tsc && node scripts/build.js",
     "watch": "tsc -w",
     "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
-    "prebuild": "rimraf dist && npm run build",
     "clean": "rimraf dist"
   },
   "dependencies": {
