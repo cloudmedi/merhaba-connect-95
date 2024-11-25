@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist/renderer",
     "module": "ESNext",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDir": "renderer"
   },
   "include": [
     "renderer/**/*"
