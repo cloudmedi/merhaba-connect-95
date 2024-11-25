@@ -11,7 +11,10 @@
     "build:css": "tailwindcss -i ./renderer/index.css -o ./dist/renderer/index.css",
     "watch": "concurrently \"tsc -w\" \"tailwindcss -i ./renderer/index.css -o ./dist/renderer/index.css --watch\"",
     "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "dist": "electron-builder",
+    "pack": "npm run build && electron-builder --dir",
+    "make": "npm run build && electron-builder"
   },
   "build": {
     "appId": "com.lovable.offlineplayer",
