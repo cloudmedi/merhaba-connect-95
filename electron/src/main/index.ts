@@ -1,9 +1,19 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 
+// The built directory structure
+//
+// ├─┬ dist-electron
+// │ ├─┬ main
+// │ │ └── index.js    > Electron-Main
+// │ └─┬ preload
+// │   └── index.js    > Preload-Scripts
+// ├─┬ dist
+// │ └── index.html    > Electron-Renderer
+
 process.env.DIST = path.join(__dirname, '../renderer')
-process.env.VITE_PUBLIC = app.isPackaged 
-  ? process.env.DIST
+process.env.PUBLIC = app.isPackaged 
+  ? process.env.DIST 
   : path.join(process.env.DIST, '../public')
 
 let win: BrowserWindow | null
@@ -24,6 +34,7 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
+    // Load the index.html when not in development
     win.loadFile(path.join(process.env.DIST, 'index.html'))
   }
 }
