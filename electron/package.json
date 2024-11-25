@@ -5,9 +5,11 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "rimraf dist && tsc && npm run build:renderer",
-    "build:renderer": "tsc -p tsconfig.renderer.json && cp renderer/index.css dist/renderer/",
-    "watch": "tsc -w",
+    "build": "rimraf dist && npm run build:main && npm run build:renderer",
+    "build:main": "tsc",
+    "build:renderer": "tsc -p tsconfig.renderer.json && npm run build:css",
+    "build:css": "tailwindcss -i ./renderer/index.css -o ./dist/renderer/index.css",
+    "watch": "concurrently \"tsc -w\" \"tailwindcss -i ./renderer/index.css -o ./dist/renderer/index.css --watch\"",
     "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
     "clean": "rimraf dist"
   },
