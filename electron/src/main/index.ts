@@ -16,15 +16,22 @@ function createWindow() {
     }
   })
 
+  console.log('Development URL:', VITE_DEV_SERVER_URL) // Debug için log ekledim
+
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
     win.webContents.openDevTools()
   } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    const indexHtml = path.join(__dirname, '../renderer/index.html')
+    console.log('Production path:', indexHtml) // Debug için log ekledim
+    win.loadFile(indexHtml)
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+  console.log('App is ready and window created') // Debug için log ekledim
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

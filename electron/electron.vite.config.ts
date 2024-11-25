@@ -24,6 +24,9 @@ export default defineConfig({
         '@': path.resolve(__dirname, 'src'),
         '@renderer': path.resolve(__dirname, 'src/renderer')
       }
+    },
+    server: {
+      port: 3000
     }
   }
 })
