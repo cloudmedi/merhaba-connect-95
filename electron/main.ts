@@ -23,16 +23,19 @@ const createWindow = () => {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
-    }
+    },
+    // Add window styling
+    titleBarStyle: 'hiddenInset',
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    backgroundColor: '#00ffffff'
   });
 
   // Load the app
   if (process.env.NODE_ENV === 'development') {
-    // In development, load from localhost:5173 (Vite's default dev server)
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    // In production, load the built files
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 };
