@@ -5,7 +5,8 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "rimraf dist && tsc && electron-builder",
+    "build": "rimraf dist && tsc && npm run build:renderer",
+    "build:renderer": "tsc -p tsconfig.renderer.json && cp renderer/index.css dist/renderer/",
     "watch": "tsc -w",
     "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
     "clean": "rimraf dist"

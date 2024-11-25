@@ -18,12 +18,11 @@
     "skipLibCheck": true
   },
   "include": [
-    "*.ts",
-    "renderer/**/*.ts",
-    "renderer/**/*.tsx"
+    "*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "renderer"
   ]
 }
