@@ -119,7 +119,7 @@ export function MusicPlayer({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
-      {/* Blurred background with artwork */}
+      {/* Enhanced blurred background with artwork */}
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
@@ -130,28 +130,30 @@ export function MusicPlayer({
         }}
       />
       
-      {/* Dark gradient overlay */}
+      {/* Improved gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
 
-      {/* Content */}
-      <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
+      {/* Content with better spacing and organization */}
+      <div className="relative px-8 py-5 flex items-center justify-between max-w-screen-2xl mx-auto">
+        {/* Left section: Artwork and song info */}
+        <div className="flex items-center gap-5 flex-1 min-w-[200px] max-w-[320px]">
           <img 
             src={getOptimizedImageUrl(playlist.artwork)} 
             alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg"
+            className="w-16 h-16 rounded-lg object-cover shadow-lg transition-transform hover:scale-105"
           />
           <div className="min-w-0">
-            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
+            <h3 className="text-white font-semibold text-base truncate mb-1 hover:text-white/90 transition-colors cursor-default">
               {currentSong?.title}
             </h3>
-            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
+            <p className="text-white/60 text-sm truncate hover:text-white/70 transition-colors cursor-default">
               {currentSong?.artist}
             </p>
           </div>
         </div>
 
-        <div className="flex-1 max-w-2xl px-4">
+        {/* Center section: Audio player with enhanced styling */}
+        <div className="flex-1 max-w-2xl px-6">
           <AudioPlayer
             audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
@@ -162,12 +164,13 @@ export function MusicPlayer({
           />
         </div>
 
-        <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
-          <div className="flex items-center gap-2">
+        {/* Right section: Volume and close controls */}
+        <div className="flex items-center gap-5 flex-1 justify-end min-w-[200px]">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/10"
+              className="text-white/70 hover:text-white hover:bg-white/10 transition-all"
               onClick={toggleMute}
             >
               {isMuted || volume === 0 ? (
@@ -181,14 +184,14 @@ export function MusicPlayer({
               onValueChange={handleVolumeChange}
               max={100}
               step={1}
-              className="w-24"
+              className="w-28"
             />
           </div>
           
           <Button 
             variant="ghost" 
             size="icon"
-            className="text-white/70 hover:text-white hover:bg-white/10"
+            className="text-white/70 hover:text-white hover:bg-white/10 transition-all ml-2"
             onClick={onClose}
           >
             <X className="h-5 w-5" />
