@@ -17,6 +17,7 @@ export function CategoriesContent() {
   const fetchCategories = async () => {
     try {
       const data = await categoryService.getCategories();
+      console.log('Fetched categories:', data);
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -34,23 +35,41 @@ export function CategoriesContent() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'categories' },
         (payload: RealtimePostgresChangesPayload<Category>) => {
+          console.log('Realtime payload received:', payload);
+          
           // Handle different types of changes
           if (payload.eventType === 'UPDATE') {
-            setCategories(prev => 
-              prev.map(cat => 
+            console.log('Handling UPDATE event');
+            setCategories(prev => {
+              const updated = prev.map(cat => 
                 cat.id === payload.new.id ? { ...cat, ...payload.new } : cat
-              ).sort((a, b) => a.position - b.position)
-            );
+              ).sort((a, b) => a.position - b.position);
+              console.log('Updated categories:', updated);
+              return updated;
+            });
           } else if (payload.eventType === 'INSERT') {
-            setCategories(prev => [...prev, payload.new].sort((a, b) => a.position - b.position));
+            console.log('Handling INSERT event');
+            setCategories(prev => {
+              const updated = [...prev, payload.new].sort((a, b) => a.position - b.position);
+              console.log('Updated categories after insert:', updated);
+              return updated;
+            });
           } else if (payload.eventType === 'DELETE') {
-            setCategories(prev => prev.filter(cat => cat.id !== payload.old.id));
+            console.log('Handling DELETE event');
+            setCategories(prev => {
+              const updated = prev.filter(cat => cat.id !== payload.old.id);
+              console.log('Updated categories after delete:', updated);
+              return updated;
+            });
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, []);

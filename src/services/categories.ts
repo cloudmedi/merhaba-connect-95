@@ -9,6 +9,7 @@ export const categoryService = {
       .order('position');
     
     if (error) {
+      console.error('Error fetching categories:', error);
       toast.error("Failed to fetch categories");
       throw error;
     }
@@ -28,6 +29,8 @@ export const categoryService = {
       ? (maxPositionData[0].position + 1) 
       : 1;
 
+    console.log('Creating category with position:', nextPosition);
+
     const { data, error } = await supabase
       .from('categories')
       .insert([{ ...category, position: nextPosition }])
@@ -35,6 +38,7 @@ export const categoryService = {
       .single();
     
     if (error) {
+      console.error('Error creating category:', error);
       toast.error("Failed to create category");
       throw error;
     }
@@ -51,6 +55,7 @@ export const categoryService = {
       .single();
     
     if (error) {
+      console.error('Error updating category:', error);
       toast.error("Failed to update category");
       throw error;
     }
@@ -59,6 +64,8 @@ export const categoryService = {
   },
 
   async updatePositions(updates: { id: string; position: number }[]) {
+    console.log('Updating positions:', updates);
+    
     // Sort updates by new position to ensure consistent ordering
     const sortedUpdates = [...updates].sort((a, b) => a.position - b.position);
     
@@ -85,6 +92,8 @@ export const categoryService = {
           
         if (error) throw error;
       }
+
+      console.log('Position updates completed successfully');
     } catch (error: any) {
       console.error('Error updating positions:', error);
       toast.error("Failed to update category positions");
@@ -99,6 +108,7 @@ export const categoryService = {
       .eq('id', id);
     
     if (error) {
+      console.error('Error deleting category:', error);
       toast.error("Failed to delete category");
       throw error;
     }
