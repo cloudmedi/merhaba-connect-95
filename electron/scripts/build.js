@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 
-// Clean dist directory
+// Clean and ensure dist directory exists
 fs.emptyDirSync(path.join(__dirname, '../dist'));
 
 // Copy index.html to dist
@@ -10,16 +10,18 @@ fs.copyFileSync(
   path.join(__dirname, '../dist/index.html')
 );
 
-// Copy renderer directory to dist
-const rendererDir = path.join(__dirname, '../renderer');
-if (fs.existsSync(rendererDir)) {
-  fs.copySync(rendererDir, path.join(__dirname, '../dist/renderer'));
-}
-
 // Copy preload.js to dist
 fs.copyFileSync(
   path.join(__dirname, '../preload.js'),
   path.join(__dirname, '../dist/preload.js')
 );
+
+// Copy renderer files
+const rendererSrcDir = path.join(__dirname, '../renderer');
+const rendererDestDir = path.join(__dirname, '../dist/renderer');
+
+if (fs.existsSync(rendererSrcDir)) {
+  fs.copySync(rendererSrcDir, rendererDestDir);
+}
 
 console.log('Build completed successfully!');

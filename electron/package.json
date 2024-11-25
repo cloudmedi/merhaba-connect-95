@@ -7,8 +7,8 @@
     "start": "electron .",
     "build": "tsc && node scripts/build.js",
     "watch": "tsc -w",
-    "dev": "tsc && cross-env NODE_ENV=development electron .",
-    "prebuild": "npm run build"
+    "dev": "concurrently \"npm run watch\" \"cross-env NODE_ENV=development electron .\"",
+    "prebuild": "rimraf dist && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -19,6 +19,8 @@
     "electron": "^28.0.0",
     "typescript": "^5.0.0",
     "fs-extra": "^11.2.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
   }
 }

@@ -26,36 +26,27 @@ const createWindow = () => {
   });
 
   if (isDev) {
-    console.log('Running in development mode - loading from localhost:5173');
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    const indexPath = path.join(__dirname, 'index.html');
-    console.log('Running in production mode - loading from:', indexPath);
-    mainWindow.loadFile(indexPath).catch(err => {
+    mainWindow.loadFile(path.join(__dirname, 'index.html')).catch(err => {
       console.error('Failed to load index.html:', err);
     });
   }
-
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('Failed to load:', errorCode, errorDescription);
-  });
 };
 
 // App lifecycle handlers
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
-});
+app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
   }
 });
 
@@ -76,7 +67,7 @@ ipcMain.handle('register-device', async (event, deviceInfo) => {
         settings: {
           autoSync: true,
           syncInterval: 30,
-          maxStorageSize: 1024 * 1024 * 1024 // 1GB default
+          maxStorageSize: 1024 * 1024 * 1024
         },
         token: token
       }])
