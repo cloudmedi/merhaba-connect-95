@@ -34,65 +34,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-white text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
   }
-}
-
-/* Hide scrollbars but keep scroll functionality */
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-*::-webkit-scrollbar {
-  display: none;
-}
-
-/* Skeleton Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton-loading {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(to right, #f5f5f5 4%, #eeeeee 25%, #f5f5f5 36%);
-  background-size: 1000px 100%;
 }
 
 /* Music Player Styles */
 .music-player-backdrop {
   backdrop-filter: blur(80px);
   -webkit-backdrop-filter: blur(80px);
-}
-
-/* FullCalendar Custom Styles */
-.fc {
-  @apply font-sans;
-}
-
-.fc .fc-toolbar.fc-header-toolbar {
-  @apply mb-4;
-}
-
-.fc .fc-toolbar-title {
-  @apply text-lg font-semibold text-gray-900;
-}
-
-.fc .fc-button {
-  @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#6E59A5] focus:ring-offset-2;
-}
-
-.fc .fc-button-primary {
-  @apply bg-[#6E59A5] border-[#6E59A5] text-white hover:bg-[#5a478a] hover:border-[#5a478a];
-}
-
-.fc .fc-button-primary:not(:disabled).fc-button-active,
-.fc .fc-button-primary:not(:disabled):active {
-  @apply bg-[#4c3b7a] border-[#4c3b7a];
 }
