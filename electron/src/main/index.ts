@@ -19,8 +19,11 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // Düzeltilmiş yol
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    // Düzeltilmiş path
+    const indexHtml = path.join(__dirname, '../renderer/index.html')
+    win.loadFile(indexHtml).catch(e => {
+      console.error('Failed to load app:', e)
+    })
   }
 }
 
