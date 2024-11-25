@@ -34,38 +34,30 @@ export function CategoriesContent() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'categories' },
-        (payload: RealtimePostgresChangesPayload<Category>) => {
+        async (payload: RealtimePostgresChangesPayload<Category>) => {
           console.log('Realtime payload received:', payload);
           
-          // Handle different types of changes
+          // Always fetch fresh data after any change
+          await fetchCategories();
+
+          // Show appropriate toast messages
           if (payload.eventType === 'UPDATE') {
-            console.log('Handling UPDATE event');
-            setCategories(prev => {
-              const updated = prev.map(cat => 
-                cat.id === payload.new.id ? { ...cat, ...payload.new } : cat
-              ).sort((a, b) => a.position - b.position);
-              console.log('Updated categories:', updated);
-              return updated;
-            });
+            toast.success("Category updated successfully");
           } else if (payload.eventType === 'INSERT') {
-            console.log('Handling INSERT event');
-            setCategories(prev => {
-              const updated = [...prev, payload.new].sort((a, b) => a.position - b.position);
-              console.log('Updated categories after insert:', updated);
-              return updated;
-            });
+            toast.success("New category added");
           } else if (payload.eventType === 'DELETE') {
-            console.log('Handling DELETE event');
-            setCategories(prev => {
-              const updated = prev.filter(cat => cat.id !== payload.old.id);
-              console.log('Updated categories after delete:', updated);
-              return updated;
-            });
+            toast.success("Category deleted");
           }
         }
       )
       .subscribe((status) => {
         console.log('Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to category changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Error subscribing to category changes');
+          toast.error("Error subscribing to category updates");
+        }
       });
 
     return () => {
