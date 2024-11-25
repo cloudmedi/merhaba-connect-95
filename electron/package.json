@@ -17,7 +17,8 @@
     },
     "files": [
       "dist/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "index.html"
     ],
     "win": {
       "target": "nsis"

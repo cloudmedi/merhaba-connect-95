@@ -31,10 +31,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     try {
-      const indexPath = isPackaged 
-        ? path.join(__dirname, '../renderer/index.html')
-        : path.join(__dirname, 'index.html');
-      
+      const indexPath = path.join(__dirname, '../index.html');
       console.log('Loading index.html from:', indexPath);
       mainWindow.loadFile(indexPath).catch(err => {
         console.error('Failed to load index.html:', err);
