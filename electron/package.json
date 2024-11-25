@@ -2,7 +2,7 @@
   "name": "lovable-offline-player",
   "version": "1.0.0",
   "description": "Offline music player for Lovable",
-  "main": "dist/main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
     "start": "electron .",
     "build": "tsc",
