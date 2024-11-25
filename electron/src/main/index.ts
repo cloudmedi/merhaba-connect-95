@@ -9,8 +9,8 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false, // Geçici olarak false yapıyoruz
+      nodeIntegration: false,
+      contextIsolation: true,
       webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js')
     }

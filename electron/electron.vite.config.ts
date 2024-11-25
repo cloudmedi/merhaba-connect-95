@@ -19,7 +19,7 @@ export default defineConfig({
       outDir: 'out/renderer',
       rollupOptions: {
         input: {
-          index: path.join(__dirname, 'src/renderer/index.html')
+          index: path.join(__dirname, 'index.html')
         }
       }
     },
