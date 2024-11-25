@@ -58,17 +58,17 @@ export function ManagerHeader() {
         <div className="px-4 md:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left side - Navigation */}
-            <nav className="flex items-center space-x-6">
+            <nav className="flex items-center space-x-8">
               {navItems.map((item) => (
                 <NavLink
                   key={item.href}
                   to={item.href}
                   end={item.exact}
                   className={({ isActive }) =>
-                    `px-2 py-1 text-sm font-medium ${
+                    `text-sm font-medium transition-colors ${
                       isActive
-                        ? "text-[#6E59A5]"
-                        : "text-gray-600"
+                        ? "text-[#6E59A5] relative after:absolute after:bottom-[-18px] after:left-0 after:w-full after:h-[2px] after:bg-[#6E59A5]"
+                        : "text-gray-600 hover:text-gray-900"
                     }`
                   }
                 >
@@ -79,8 +79,8 @@ export function ManagerHeader() {
 
             {/* Right side - User info and Actions */}
             <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm text-gray-500">Welcome back,</p>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Welcome back</p>
                 <h1 className="text-sm font-medium text-gray-900">{firstName}</h1>
               </div>
 
@@ -89,11 +89,11 @@ export function ManagerHeader() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative text-gray-400"
+                    className="relative text-gray-600 hover:text-gray-900 transition-colors"
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#9b87f5] text-[11px] font-medium text-white flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#6E59A5] text-[10px] font-medium text-white flex items-center justify-center">
                         {unreadCount}
                       </span>
                     )}
@@ -114,11 +114,11 @@ export function ManagerHeader() {
                           notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className={`p-4 cursor-pointer ${
+                              className={`p-4 cursor-pointer transition-colors ${
                                 notification.status === "unread"
                                   ? "bg-gray-50"
                                   : "bg-white"
-                              }`}
+                              } hover:bg-gray-50`}
                               onClick={() => handleNotificationClick(notification)}
                             >
                               <div className="flex gap-3">
@@ -135,7 +135,7 @@ export function ManagerHeader() {
                                   }`}>
                                     {notification.title}
                                   </p>
-                                  <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
+                                  <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                                   <p className="text-xs text-gray-500 mt-2">
                                     {formatDistanceToNow(new Date(notification.created_at), {
                                       addSuffix: true,
@@ -155,7 +155,7 @@ export function ManagerHeader() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden">
-                    <div className="h-full w-full rounded-full bg-[#9b87f5] flex items-center justify-center">
+                    <div className="h-full w-full rounded-full bg-[#6E59A5] flex items-center justify-center">
                       <span className="text-sm font-medium text-white">
                         {firstName.charAt(0)}
                       </span>
