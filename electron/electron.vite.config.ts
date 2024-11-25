@@ -4,7 +4,6 @@ import path from 'path'
 
 export default defineConfig({
   main: {
-    plugins: [],
     build: {
       outDir: 'out/main',
       rollupOptions: {
@@ -15,7 +14,6 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [],
     build: {
       outDir: 'out/preload',
       rollupOptions: {
@@ -35,11 +33,6 @@ export default defineConfig({
       alias: {
         '@renderer': path.resolve(__dirname, 'src/renderer'),
         '@': path.resolve(__dirname, 'src')
-      }
-    },
-    server: {
-      headers: {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
       }
     }
   }
