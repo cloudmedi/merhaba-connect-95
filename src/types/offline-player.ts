@@ -13,6 +13,12 @@ export interface OfflinePlayer {
   };
   created_at: string;
   updated_at: string;
+  devices?: {
+    id: string;
+    name: string;
+    branch_id: string;
+    status: string;
+  };
 }
 
 export interface SyncHistory {

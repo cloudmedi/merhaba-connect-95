@@ -6,14 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { OfflinePlayer } from "@/types/offline-player";
 
 interface OfflinePlayerCardProps {
-  player: OfflinePlayer & {
-    devices: {
-      id: string;
-      name: string;
-      branch_id: string;
-      status: string;
-    };
-  };
+  player: OfflinePlayer;
   onSync?: (playerId: string) => void;
   onSettings?: (player: OfflinePlayer) => void;
 }
@@ -27,7 +20,7 @@ export function OfflinePlayerCard({ player, onSync, onSettings }: OfflinePlayerC
     <Card className="hover:bg-gray-50 transition-colors">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">
-          {player.devices.name}
+          {player.devices?.name || 'Unknown Device'}
         </CardTitle>
         <Badge 
           variant={player.sync_status === 'completed' ? 'default' : 'secondary'}
