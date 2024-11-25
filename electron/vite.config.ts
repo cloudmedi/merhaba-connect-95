@@ -5,20 +5,16 @@ import path from 'node:path';
 export default defineConfig({
   main: {
     build: {
-      lib: {
-        entry: path.join(__dirname, 'main.ts')
-      },
       rollupOptions: {
+        input: path.join(__dirname, 'main.ts'),
         external: ['@supabase/supabase-js', 'electron-store', 'howler']
       }
     }
   },
   preload: {
     build: {
-      lib: {
-        entry: path.join(__dirname, 'preload.ts')
-      },
       rollupOptions: {
+        input: path.join(__dirname, 'preload.ts'),
         external: ['electron']
       }
     }
