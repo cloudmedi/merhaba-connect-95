@@ -4,7 +4,10 @@
     "outDir": "dist/renderer",
     "module": "ESNext",
     "jsx": "react-jsx",
-    "rootDir": "renderer"
+    "rootDir": "renderer",
+    "paths": {
+      "@/*": ["./renderer/*"]
+    }
   },
   "include": [
     "renderer/**/*"
