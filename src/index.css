@@ -66,9 +66,49 @@
 }
 
 /* Music Player Styles */
+
+/* Music Player Styles */
 .music-player-backdrop {
   backdrop-filter: blur(80px);
   -webkit-backdrop-filter: blur(80px);
+}
+
+/* Hero Section Animation */
+@keyframes heroGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.hero-gradient {
+  background-size: 200% 200%;
+  animation: heroGradient 15s ease infinite;
+}
+
+/* Playlist Card Hover Effects */
+.playlist-card-hover {
+  transition: all 0.3s ease;
+}
+
+.playlist-card-hover:hover {
+  transform: translateY(-4px);
+}
+
+/* Category Title Styles */
+.category-title {
+  @apply text-2xl font-bold text-gray-900;
+  letter-spacing: -0.02em;
+}
+
+.category-description {
+  @apply text-sm text-gray-500 mt-1;
+  letter-spacing: -0.01em;
 }
 
 /* FullCalendar Custom Styles */
