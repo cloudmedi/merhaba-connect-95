@@ -3,7 +3,10 @@ import { contextBridge, ipcRenderer } from 'electron'
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld(
-  'api', {
+  'electronAPI', {
+    getDeviceId: () => ipcRenderer.invoke('getDeviceId'),
+    getDeviceToken: () => ipcRenderer.invoke('getDeviceToken'),
+    registerDevice: (deviceInfo: any) => ipcRenderer.invoke('registerDevice', deviceInfo),
     send: (channel: string, data: any) => {
       // whitelist channels
       let validChannels = ['toMain']
