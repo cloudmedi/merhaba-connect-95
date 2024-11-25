@@ -35,22 +35,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        // Get the user's profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
         setUser({
           id: session.user.id,
           email: session.user.email!,
-          firstName: profile?.first_name || session.user.user_metadata.firstName || '',
-          lastName: profile?.last_name || session.user.user_metadata.lastName || '',
-          role: profile?.role || session.user.user_metadata.role || 'manager',
-          isActive: profile?.is_active ?? true,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'manager',
+          isActive: true,
           createdAt: session.user.created_at,
           updatedAt: session.user.updated_at || session.user.created_at
         });
@@ -75,26 +68,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
         setUser({
           id: data.user.id,
           email: data.user.email!,
-          firstName: profile?.first_name || data.user.user_metadata.firstName || '',
-          lastName: profile?.last_name || data.user.user_metadata.lastName || '',
-          role: profile?.role || data.user.user_metadata.role || 'manager',
-          isActive: profile?.is_active ?? true,
+          firstName: data.user.user_metadata.firstName || '',
+          lastName: data.user.user_metadata.lastName || '',
+          role: data.user.user_metadata.role || 'manager',
+          isActive: true,
           createdAt: data.user.created_at,
           updatedAt: data.user.updated_at || data.user.created_at
         });
         
         toast.success('Login successful');
         
-        if (profile?.role === 'super_admin') {
+        if (data.user.user_metadata.role === 'super_admin') {
           window.location.href = '/super-admin';
         } else {
           window.location.href = '/manager';
