@@ -15,20 +15,20 @@ export function DeviceStats() {
   const healthPercentage = ((stats.online / stats.total) * 100) || 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <Card className="p-4 hover:shadow-lg transition-shadow">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Devices</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</h3>
           </div>
-          <div className="p-3 bg-blue-100 rounded-full">
-            <HardDrive className="h-6 w-6 text-blue-600" />
+          <div className="p-3 bg-purple-50 rounded-full">
+            <HardDrive className="h-6 w-6 text-[#6E59A5]" />
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 hover:shadow-lg transition-shadow">
+      <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Online Devices</p>
@@ -37,32 +37,32 @@ export function DeviceStats() {
               {Math.round(healthPercentage)}% operational
             </p>
           </div>
-          <div className="p-3 bg-emerald-100 rounded-full">
+          <div className="p-3 bg-emerald-50 rounded-full">
             <Signal className="h-6 w-6 text-emerald-600" />
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 hover:shadow-lg transition-shadow">
+      <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Offline Devices</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.offline}</h3>
           </div>
-          <div className="p-3 bg-gray-100 rounded-full">
+          <div className="p-3 bg-gray-50 rounded-full">
             <Activity className="h-6 w-6 text-gray-600" />
           </div>
         </div>
       </Card>
 
-      <Card className="p-4 hover:shadow-lg transition-shadow">
+      <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Warnings</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.warning}</h3>
           </div>
-          <div className="p-3 bg-yellow-100 rounded-full">
-            <AlertTriangle className="h-6 w-6 text-yellow-600" />
+          <div className="p-3 bg-amber-50 rounded-full">
+            <AlertTriangle className="h-6 w-6 text-amber-600" />
           </div>
         </div>
       </Card>

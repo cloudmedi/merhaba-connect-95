@@ -33,7 +33,7 @@ export default function Devices() {
   });
 
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50 rounded-lg border-2 border-dashed">
+    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50/50 rounded-lg border-2 border-dashed border-gray-200">
       <img 
         src="/placeholder.svg" 
         alt="No devices" 
@@ -43,7 +43,7 @@ export default function Devices() {
       <p className="text-sm text-gray-500 mb-4 max-w-sm">
         Get started by adding your first device. You can manage all your devices from here.
       </p>
-      <Button>
+      <Button className="bg-[#6E59A5] hover:bg-[#5A478A] text-white">
         <Plus className="w-4 h-4 mr-2" />
         Add New Device
       </Button>
@@ -51,50 +51,73 @@ export default function Devices() {
   );
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
-      <DeviceHeader />
-      <DeviceStats />
-      
-      <Tabs defaultValue="devices" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="devices">Devices</TabsTrigger>
-          <TabsTrigger value="auto-groups">Auto Groups</TabsTrigger>
-          <TabsTrigger value="custom-groups">Custom Groups</TabsTrigger>
-        </TabsList>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <DeviceHeader />
+        <DeviceStats />
         
-        <TabsContent value="devices">
-          <div className="space-y-6">
-            <DeviceFilters 
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              typeFilter={typeFilter}
-              onTypeFilterChange={setTypeFilter}
-              locationFilter={locationFilter}
-              onLocationFilterChange={setLocationFilter}
-            />
+        <Card className="border-none shadow-sm bg-white/80 backdrop-blur-sm">
+          <Tabs defaultValue="devices" className="w-full">
+            <div className="border-b">
+              <div className="px-6 pt-4">
+                <TabsList className="inline-flex h-9 items-center justify-center rounded-lg bg-gray-100 p-1 text-gray-500">
+                  <TabsTrigger 
+                    value="devices"
+                    className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  >
+                    Devices
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="auto-groups"
+                    className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  >
+                    Auto Groups
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="custom-groups"
+                    className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  >
+                    Custom Groups
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
             
-            <Card className="border-none shadow-md bg-white/50 backdrop-blur-sm">
-              <ScrollArea className="h-[calc(100vh-680px)] rounded-lg">
-                {filteredDevices.length === 0 ? (
-                  <EmptyState />
-                ) : (
-                  <DeviceList devices={filteredDevices} />
-                )}
-              </ScrollArea>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="auto-groups">
-          <DeviceGroups />
-        </TabsContent>
-        
-        <TabsContent value="custom-groups">
-          <BranchGroupsTab />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="devices" className="p-6">
+              <div className="space-y-6">
+                <DeviceFilters 
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  typeFilter={typeFilter}
+                  onTypeFilterChange={setTypeFilter}
+                  locationFilter={locationFilter}
+                  onLocationFilterChange={setLocationFilter}
+                />
+                
+                <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
+                  <ScrollArea className="h-[calc(100vh-480px)] rounded-lg">
+                    {filteredDevices.length === 0 ? (
+                      <EmptyState />
+                    ) : (
+                      <DeviceList devices={filteredDevices} />
+                    )}
+                  </ScrollArea>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="auto-groups" className="p-6">
+              <DeviceGroups />
+            </TabsContent>
+            
+            <TabsContent value="custom-groups" className="p-6">
+              <BranchGroupsTab />
+            </TabsContent>
+          </Tabs>
+        </Card>
+      </div>
     </div>
   );
 }
