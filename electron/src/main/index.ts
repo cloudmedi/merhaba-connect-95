@@ -22,12 +22,14 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
+      webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js'),
     },
   })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
+    win.webContents.openDevTools()
   } else {
     win.loadFile(path.join(DIST_PATH, 'index.html'))
   }

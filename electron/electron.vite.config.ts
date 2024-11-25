@@ -39,7 +39,7 @@ export default defineConfig({
     },
     server: {
       headers: {
-        'Content-Security-Policy': "script-src 'self' 'unsafe-inline'",
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
         'Content-Type': 'application/javascript; charset=utf-8'
       }
     }
