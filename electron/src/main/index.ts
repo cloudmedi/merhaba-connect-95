@@ -3,14 +3,15 @@ import path from 'node:path'
 
 // The built directory structure
 //
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.js
+// ├─┬ out
+// │ ├─┬ main
+// │ │ └── index.js
+// │ ├─┬ preload
+// │ │ └── index.js
+// │ └─┬ renderer
+// │   └── index.html
 // │
-process.env.DIST = path.join(__dirname, '../dist')
+process.env.DIST = path.join(__dirname, '../renderer')
 process.env.VITE_PUBLIC = app.isPackaged ? process.env.DIST : path.join(process.env.DIST, '../public')
 
 let win: BrowserWindow | null
