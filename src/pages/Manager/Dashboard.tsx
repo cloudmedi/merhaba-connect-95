@@ -151,7 +151,7 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id}
+          key={`player-${currentPlaylist.id}`}
           playlist={{
             title: currentPlaylist.title,
             artwork: currentPlaylist.artwork_url,
