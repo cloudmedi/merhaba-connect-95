@@ -4,10 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 import Store from 'electron-store';
 import { Howl } from 'howler';
 
+// Initialize store and window
 const store = new Store();
 let mainWindow: BrowserWindow | null = null;
 let audioPlayer: Howl | null = null;
 
+// Create the main window
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -19,6 +21,7 @@ const createWindow = () => {
     }
   });
 
+  // Load the app
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
@@ -27,6 +30,7 @@ const createWindow = () => {
   }
 };
 
+// App lifecycle handlers
 app.whenReady().then(() => {
   createWindow();
 
