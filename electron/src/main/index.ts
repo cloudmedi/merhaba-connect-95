@@ -11,15 +11,15 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: true,
-      webSecurity: false, // Development için geçici olarak devre dışı
+      webSecurity: false,
       preload: path.join(__dirname, '../preload/index.js')
     }
   })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
+    win.webContents.openDevTools() // Geliştirme sırasında DevTools'u açık tutuyoruz
   } else {
-    // Düzeltilmiş dosya yolu - resources dizini kaldırıldı
     win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 }
