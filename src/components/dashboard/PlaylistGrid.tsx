@@ -113,18 +113,18 @@ export function PlaylistGrid({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{title}</h2>
           {description && (
-            <p className="text-sm text-gray-500 mt-1">{description}</p>
+            <p className="text-sm text-gray-500">{description}</p>
           )}
         </div>
         {categoryId && (
           <Button 
             variant="ghost" 
-            className="text-sm font-medium text-[#6E59A5] hover:text-[#5A478A] hover:bg-[#6E59A5]/5"
+            className="text-sm text-gray-500 hover:text-gray-900"
             onClick={handleViewAll}
           >
             View All
@@ -132,19 +132,19 @@ export function PlaylistGrid({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {playlists.map((playlist) => (
           <Card
             key={playlist.id}
-            className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-all duration-300"
+            className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors"
             onClick={() => handleCardClick(playlist)}
           >
-            <div className="aspect-square relative overflow-hidden rounded-xl">
+            <div className="aspect-square relative overflow-hidden">
               {playlist.artwork_url ? (
                 <img
                   src={playlist.artwork_url}
                   alt={playlist.title}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -156,7 +156,7 @@ export function PlaylistGrid({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/30 transition-all duration-300"
+                    className="w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm text-white hover:scale-110 hover:bg-black/30 transition-all duration-300"
                     onClick={(e) => handlePlayClick(e, playlist)}
                   >
                     {currentPlayingId === playlist.id && isPlaying ? (
@@ -168,7 +168,7 @@ export function PlaylistGrid({
                 </div>
               )}
               {currentPlayingId === playlist.id && isPlaying && (
-                <div className="absolute bottom-3 right-3">
+                <div className="absolute bottom-2 right-2">
                   <div className="w-3 h-3 rounded-full bg-white/90 animate-pulse" />
                 </div>
               )}
@@ -177,13 +177,10 @@ export function PlaylistGrid({
               <h3 className="font-medium text-gray-900 truncate">
                 {playlist.title}
               </h3>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                  {playlist.genre || "Various"}
-                </span>
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                  {playlist.mood || "Various"}
-                </span>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>{playlist.genre || "Various"}</span>
+                <span>•</span>
+                <span>{playlist.mood || "Various"}</span>
               </div>
             </CardContent>
           </Card>
