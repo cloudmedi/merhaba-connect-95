@@ -53,21 +53,21 @@ export function ManagerHeader() {
   };
 
   return (
-    <div className="bg-[#1A1F2C] border-b border-gray-800">
+    <div className="bg-[#F8F9FC] border-b border-gray-200">
       <div className="px-4 md:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left side - Navigation */}
-          <nav className="flex items-center space-x-1">
+          <nav className="flex items-center space-x-6">
             {navItems.map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
                 end={item.exact}
                 className={({ isActive }) =>
-                  `px-4 py-1.5 text-sm font-medium rounded-md ${
+                  `px-2 py-1 text-sm font-medium ${
                     isActive
-                      ? "bg-[#9b87f5] text-white"
-                      : "text-gray-400"
+                      ? "text-[#6E59A5]"
+                      : "text-gray-600"
                   }`
                 }
               >
@@ -79,11 +79,10 @@ export function ManagerHeader() {
           {/* Right side - User info and Actions */}
           <div className="flex items-center gap-6">
             <div>
-              <p className="text-sm text-gray-400">Welcome back,</p>
-              <h1 className="text-sm font-medium text-white">{firstName}</h1>
+              <p className="text-sm text-gray-500">Welcome back,</p>
+              <h1 className="text-sm font-medium text-gray-900">{firstName}</h1>
             </div>
 
-            {/* Notifications */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button
@@ -152,7 +151,6 @@ export function ManagerHeader() {
               </SheetContent>
             </Sheet>
 
-            {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden">
