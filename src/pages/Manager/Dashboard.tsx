@@ -92,10 +92,8 @@ export default function ManagerDashboard() {
 
   const handlePlayPlaylist = (playlist: any) => {
     if (currentPlaylist?.id === playlist.id) {
-      // If clicking the same playlist, toggle play state
       setIsPlaying(!isPlaying);
     } else {
-      // If clicking a different playlist, start playing it
       setCurrentPlaylist(playlist);
       setIsPlaying(true);
     }
@@ -153,6 +151,7 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
+          key={currentPlaylist.id}
           playlist={{
             title: currentPlaylist.title,
             artwork: currentPlaylist.artwork_url,

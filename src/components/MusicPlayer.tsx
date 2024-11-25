@@ -114,7 +114,7 @@ export function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up" style={{ pointerEvents: 'auto' }}>
       <div className="bg-[#121212] border-t border-white/10">
         <div className="max-w-screen-2xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
