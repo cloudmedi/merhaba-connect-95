@@ -3,7 +3,7 @@ import path from 'node:path'
 import crypto from 'crypto'
 import Store from 'electron-store'
 
-// Store şemasını tanımlayalım
+// Define store schema
 const schema = {
   deviceId: {
     type: 'string'
@@ -13,18 +13,19 @@ const schema = {
   }
 }
 
-// Store'u başlatalım
-const store = new Store({ schema })
+// Initialize store with schema
+Store.initRenderer();
+const store = new Store({ schema });
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
-// 6 haneli token üretme fonksiyonu
+// Generate 6-digit token
 function generateDeviceToken(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
-// Device ID ve token yönetimi
+// Device ID and token management
 function initializeDevice() {
   let deviceId = store.get('deviceId') as string
   let deviceToken = store.get('deviceToken') as string
@@ -44,7 +45,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
       webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js')
