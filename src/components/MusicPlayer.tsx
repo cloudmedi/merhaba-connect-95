@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Volume2, VolumeX } from "lucide-react";
+import { X } from "lucide-react";
 import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
-import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
+import { PlayerLayout } from "./music/PlayerLayout";
+import { PlayerArtwork } from "./music/PlayerArtwork";
+import { VolumeControl } from "./music/VolumeControl";
 
 interface MusicPlayerProps {
   playlist: {
@@ -95,11 +97,6 @@ export function MusicPlayer({
     setVolume(isMuted ? 75 : 0);
   };
 
-  const getOptimizedImageUrl = (url: string) => {
-    if (!url || !url.includes('b-cdn.net')) return url;
-    return `${url}?width=400&quality=85&format=webp`;
-  };
-
   const getAudioUrl = (song: any) => {
     if (!song.file_url) {
       console.error('No file_url provided for song:', song);
@@ -118,86 +115,44 @@ export function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
-      {/* Enhanced blurred background with artwork */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center music-player-backdrop"
-        style={{ 
-          backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
-          filter: 'blur(80px)',
-          transform: 'scale(1.2)',
-          opacity: '0.15'
-        }}
+    <PlayerLayout artwork={playlist.artwork}>
+      {/* Left section: Artwork and song info */}
+      <PlayerArtwork
+        artwork={playlist.artwork}
+        title={currentSong.title}
+        artist={currentSong.artist}
       />
-      
-      {/* Improved gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
 
-      {/* Content with better spacing and organization */}
-      <div className="relative px-8 py-5 flex items-center justify-between max-w-screen-2xl mx-auto">
-        {/* Left section: Artwork and song info */}
-        <div className="flex items-center gap-5 flex-1 min-w-[200px] max-w-[320px]">
-          <img 
-            src={getOptimizedImageUrl(playlist.artwork)} 
-            alt={currentSong?.title}
-            className="w-16 h-16 rounded-lg object-cover shadow-lg transition-transform hover:scale-105"
-          />
-          <div className="min-w-0">
-            <h3 className="text-white font-semibold text-base truncate mb-1 hover:text-white/90 transition-colors cursor-default">
-              {currentSong?.title}
-            </h3>
-            <p className="text-white/60 text-sm truncate hover:text-white/70 transition-colors cursor-default">
-              {currentSong?.artist}
-            </p>
-          </div>
-        </div>
-
-        {/* Center section: Audio player with enhanced styling */}
-        <div className="flex-1 max-w-2xl px-6">
-          <AudioPlayer
-            audioUrl={getAudioUrl(currentSong)}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            volume={isMuted ? 0 : volume / 100}
-            autoPlay={autoPlay}
-            onPlayStateChange={handlePlayPause}
-          />
-        </div>
-
-        {/* Right section: Volume and close controls */}
-        <div className="flex items-center gap-5 flex-1 justify-end min-w-[200px]">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/10 transition-all"
-              onClick={toggleMute}
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="h-5 w-5" />
-              ) : (
-                <Volume2 className="h-5 w-5" />
-              )}
-            </Button>
-            <Slider
-              value={[isMuted ? 0 : volume]}
-              onValueChange={handleVolumeChange}
-              max={100}
-              step={1}
-              className="w-28"
-            />
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white/70 hover:text-white hover:bg-white/10 transition-all ml-2"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+      {/* Center section: Audio player with enhanced styling */}
+      <div className="flex-1 max-w-2xl px-6">
+        <AudioPlayer
+          audioUrl={getAudioUrl(currentSong)}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          volume={isMuted ? 0 : volume / 100}
+          autoPlay={autoPlay}
+          onPlayStateChange={handlePlayPause}
+        />
       </div>
-    </div>
+
+      {/* Right section: Volume and close controls */}
+      <div className="flex items-center gap-5 flex-1 justify-end min-w-[200px]">
+        <VolumeControl
+          volume={volume}
+          isMuted={isMuted}
+          onVolumeChange={handleVolumeChange}
+          onToggleMute={toggleMute}
+        />
+        
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-white/70 hover:text-white hover:bg-white/10 transition-all ml-2"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+    </PlayerLayout>
   );
 }
