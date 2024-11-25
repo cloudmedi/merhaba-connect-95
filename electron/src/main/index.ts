@@ -19,18 +19,12 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    const indexPath = path.join(__dirname, '../../renderer/index.html')
-    console.log('Loading index from:', indexPath)
-    win.loadFile(indexPath)
+    // Düzeltilmiş yol
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
-
-  // Debug için DevTools'u açalım
-  win.webContents.openDevTools()
 }
 
-app.whenReady().then(() => {
-  createWindow()
-})
+app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
