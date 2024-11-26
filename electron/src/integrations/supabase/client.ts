@@ -29,6 +29,24 @@ async function createDeviceToken(macAddress: string) {
   return tokenData;
 }
 
+async function updateDeviceStatus(supabase: any, deviceId: string, status: 'online' | 'offline', systemInfo: any) {
+  try {
+    const { error } = await supabase
+      .from('devices')
+      .update({
+        status,
+        system_info: systemInfo,
+        last_seen: new Date().toISOString()
+      })
+      .eq('id', deviceId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating device status:', error);
+    throw error;
+  }
+}
+
 async function initSupabase() {
   if (supabase) return supabase;
 
@@ -47,6 +65,11 @@ async function initSupabase() {
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: false
+        },
+        realtime: {
+          params: {
+            eventsPerSecond: 10
+          }
         }
       }
     );
@@ -73,6 +96,22 @@ async function initSupabase() {
     
     if (existingToken) {
       console.log('Found existing token:', existingToken);
+      
+      // Start sending device status updates
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await updateDeviceStatus(supabase, macAddress, 'online', systemInfo);
+
+      // Set up periodic status updates
+      setInterval(async () => {
+        const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
+        await updateDeviceStatus(supabase, macAddress, 'online', updatedSystemInfo);
+      }, 30000); // Update every 30 seconds
+
+      // Set up offline status on window close
+      window.addEventListener('beforeunload', async () => {
+        await updateDeviceStatus(supabase, macAddress, 'offline', systemInfo);
+      });
+
       return supabase;
     }
     
