@@ -1,27 +1,21 @@
 import { supabase } from './client';
+import { validateDeviceToken } from './deviceToken';
 
 export async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   try {
-    // First verify the token is valid and active
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('device_tokens')
-      .select('*')
-      .eq('token', deviceToken)
-      .eq('status', 'active')
-      .single();
+    // Get MAC address for token validation
+    const macAddress = await (window as any).electronAPI.getMacAddress();
+    if (!macAddress) {
+      throw new Error('Could not get MAC address');
+    }
 
-    if (tokenError || !tokenData) {
-      console.error('Token validation error:', tokenError);
+    // Validate token before updating status
+    const isValid = await validateDeviceToken(deviceToken, macAddress);
+    if (!isValid) {
       throw new Error('Invalid or expired token');
     }
 
-    // Check if token is expired
-    if (new Date(tokenData.expires_at) < new Date()) {
-      console.error('Token expired:', tokenData.expires_at);
-      throw new Error('Token has expired');
-    }
-
-    // First create device if it doesn't exist
+    // First create/update device if it doesn't exist
     const { data: device, error: createError } = await supabase
       .from('devices')
       .upsert({
@@ -71,24 +65,6 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       // Wait before retry
       await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
     }
-
-    // Enable realtime subscription for this device
-    const channel = supabase.channel(`device_status_${deviceToken}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices',
-          filter: `token=eq.${deviceToken}`
-        },
-        (payload) => {
-          console.log('Realtime device status update:', payload);
-        }
-      )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-      });
 
     return { success: true };
   } catch (error) {

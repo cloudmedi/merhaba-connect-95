@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createDeviceToken } from './deviceToken';
+import { createDeviceToken, validateDeviceToken } from './deviceToken';
 import { updateDeviceStatus } from './deviceStatus';
 
 let supabase: ReturnType<typeof createClient>;
@@ -40,12 +40,18 @@ async function initSupabase() {
       throw new Error('Failed to create/get device token');
     }
 
+    // Validate token
+    const isValid = await validateDeviceToken(tokenData.token, macAddress);
+    if (!isValid) {
+      throw new Error('Invalid or expired token');
+    }
+
     // Set up initial status and heartbeat
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
     await updateDeviceStatus(tokenData.token, 'online', systemInfo);
 
     // Set up heartbeat interval
-    setInterval(async () => {
+    const heartbeatInterval = setInterval(async () => {
       try {
         const currentSystemInfo = await (window as any).electronAPI.getSystemInfo();
         await updateDeviceStatus(tokenData.token, 'online', currentSystemInfo);
@@ -56,6 +62,7 @@ async function initSupabase() {
 
     // Update status when window is closing
     window.addEventListener('beforeunload', async (event) => {
+      clearInterval(heartbeatInterval);
       event.preventDefault();
       try {
         const finalSystemInfo = await (window as any).electronAPI.getSystemInfo();
