@@ -11,7 +11,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import DataTableLoader from "@/components/loaders/DataTableLoader";
 
 export default function Devices() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,7 +19,7 @@ export default function Devices() {
   const [locationFilter, setLocationFilter] = useState("all");
   const { devices, isLoading, error } = useDevices();
 
-  if (isLoading) return <DataTableLoader />;
+  if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading devices</div>;
 
   const filteredDevices = devices.filter(device => {
