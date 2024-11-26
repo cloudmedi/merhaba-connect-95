@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-async function createDeviceToken() {
+async function createDeviceToken(macAddress: string) {
   const supabase = await initSupabase();
   const token = Math.random().toString(36).substring(2, 8).toUpperCase();
   const expirationDate = new Date();
@@ -10,6 +10,7 @@ async function createDeviceToken() {
     .from('device_tokens')
     .insert({
       token,
+      mac_address: macAddress,
       status: 'active',
       expires_at: expirationDate.toISOString()
     })
@@ -54,7 +55,11 @@ async function initSupabase() {
     const macAddress = await (window as any).electronAPI.getMacAddress();
     console.log('MAC Address:', macAddress);
     
-    // Önce MAC adresine ait aktif token var mı kontrol et
+    if (!macAddress) {
+      throw new Error('Could not get MAC address');
+    }
+    
+    // MAC adresine ait aktif token var mı kontrol et
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
@@ -73,10 +78,9 @@ async function initSupabase() {
     }
     
     // Eğer token yoksa yeni oluştur
-    const tokenData = await createDeviceToken();
+    const tokenData = await createDeviceToken(macAddress);
     console.log('Created new token:', tokenData);
     
-    console.log('Supabase initialized successfully');
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);
