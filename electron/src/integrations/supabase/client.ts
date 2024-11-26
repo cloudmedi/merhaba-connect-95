@@ -1,10 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let supabase: ReturnType<typeof createClient>;
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables');
+async function initSupabase() {
+  if (supabase) return supabase;
+
+  const envVars = await (window as any).electronAPI.getEnvVars();
+  
+  if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
+    console.error('Missing Supabase environment variables:', envVars);
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  supabase = createClient(envVars.VITE_SUPABASE_URL, envVars.VITE_SUPABASE_ANON_KEY);
+  return supabase;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export { initSupabase };

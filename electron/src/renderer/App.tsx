@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './App.css'
-import { supabase } from '../integrations/supabase/client'
+import { initSupabase } from '../integrations/supabase/client'
 
 interface SystemInfo {
   cpu: {
@@ -58,25 +58,28 @@ function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null)
   const [deviceToken, setDeviceToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [supabaseError, setSupabaseError] = useState<string | null>(null)
 
   useEffect(() => {
-    const initializeDevice = async () => {
+    const initialize = async () => {
       try {
-        const macAddress = await window.electronAPI.getMacAddress()
+        const supabase = await initSupabase();
+        
+        const macAddress = await window.electronAPI.getMacAddress();
         
         const { data: existingToken } = await supabase
           .from('device_tokens')
           .select('token')
           .eq('device_id', macAddress)
           .eq('status', 'active')
-          .maybeSingle()
+          .maybeSingle();
 
         if (existingToken) {
-          setDeviceToken(existingToken.token)
+          setDeviceToken(existingToken.token);
         } else {
-          const newToken = generateToken()
-          const expirationDate = new Date()
-          expirationDate.setFullYear(expirationDate.getFullYear() + 1) 
+          const newToken = generateToken();
+          const expirationDate = new Date();
+          expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
           const { data, error } = await supabase
             .from('device_tokens')
@@ -86,26 +89,41 @@ function App() {
               expires_at: expirationDate.toISOString()
             })
             .select()
-            .single()
+            .single();
 
-          if (error) throw error
-          setDeviceToken(newToken)
+          if (error) throw error;
+          setDeviceToken(newToken);
         }
-      } catch (error) {
-        console.error('Token oluşturma hatası:', error)
+      } catch (error: any) {
+        console.error('Initialization error:', error);
+        setSupabaseError(error.message);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    initializeDevice()
+    initialize();
     
-    window.electronAPI.getSystemInfo().then(setSystemInfo)
-    window.electronAPI.onSystemInfoUpdate(setSystemInfo)
-  }, [])
+    window.electronAPI.getSystemInfo().then(setSystemInfo);
+    window.electronAPI.onSystemInfoUpdate(setSystemInfo);
+  }, []);
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (supabaseError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center flex-col gap-4">
+        <div className="text-red-500">Error: {supabaseError}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -184,4 +202,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

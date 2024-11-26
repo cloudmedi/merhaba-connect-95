@@ -2,6 +2,10 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import si from 'systeminformation'
 import { networkInterfaces } from 'os'
+import dotenv from 'dotenv'
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '../../.env') })
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
@@ -71,13 +75,18 @@ function createWindow() {
     }
   })
 
+  // Pass environment variables to renderer process
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.send('env-vars', {
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY
+    })
+  })
+
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    const indexHtml = path.join(__dirname, '../renderer/index.html')
-    win.loadFile(indexHtml).catch(e => {
-      console.error('Failed to load app:', e)
-    })
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
   // Sistem bilgilerini her 5 saniyede bir güncelle
