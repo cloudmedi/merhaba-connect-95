@@ -2,9 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { createDeviceToken, validateDeviceToken } from './deviceToken';
 import { updateDeviceStatus } from './deviceStatus';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 let supabase: ReturnType<typeof createClient>;
 let statusChannel: RealtimeChannel;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -13,7 +16,7 @@ async function initSupabase() {
     const envVars = await (window as any).electronAPI.getEnvVars();
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
-      throw new Error('Missing Supabase connection details');
+      throw new Error('Supabase bağlantı bilgileri eksik');
     }
 
     supabase = createClient(
@@ -34,43 +37,50 @@ async function initSupabase() {
     );
     
     const macAddress = await (window as any).electronAPI.getMacAddress();
-    if (!macAddress) throw new Error('Could not get MAC address');
+    if (!macAddress) throw new Error('MAC adresi alınamadı');
 
-    // Get or create device token
     const tokenData = await createDeviceToken(macAddress);
     if (!tokenData?.token) {
-      throw new Error('Failed to create/get device token');
+      throw new Error('Device token oluşturulamadı');
     }
 
-    // Validate token
     const isValid = await validateDeviceToken(tokenData.token, macAddress);
     if (!isValid) {
-      throw new Error('Invalid or expired token');
+      throw new Error('Geçersiz token');
     }
 
-    // Set up realtime channel for device status
-    setupRealtimeChannel(tokenData.token);
+    await setupRealtimeChannel(tokenData.token);
 
-    // Set up initial status and heartbeat
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    await updateDeviceStatus(tokenData.token, 'online', systemInfo);
+    const statusUpdate = await updateDeviceStatus(tokenData.token, 'online', systemInfo);
+    
+    if (!statusUpdate.success) {
+      toast.error('Cihaz durumu güncellenemedi: ' + statusUpdate.error);
+    }
 
-    // Set up heartbeat interval with retry mechanism
+    // Heartbeat interval
     const heartbeatInterval = setInterval(async () => {
       try {
         const currentSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(tokenData.token, 'online', currentSystemInfo);
-      } catch (error) {
-        console.error('Heartbeat update failed:', error);
-        // Try to reconnect realtime channel
-        await reconnectRealtimeChannel(tokenData.token);
-      }
-    }, 30000); // Every 30 seconds
+        const heartbeatUpdate = await updateDeviceStatus(tokenData.token, 'online', currentSystemInfo);
+        
+        if (!heartbeatUpdate.success) {
+          throw new Error(heartbeatUpdate.error);
+        }
 
-    // Update status when window is closing
+        // Başarılı heartbeat sonrası reconnect sayacını sıfırla
+        reconnectAttempts = 0;
+      } catch (error) {
+        console.error('Heartbeat hatası:', error);
+        handleConnectionError(tokenData.token);
+      }
+    }, 30000);
+
+    // Pencere kapanırken cleanup
     window.addEventListener('beforeunload', async (event) => {
       clearInterval(heartbeatInterval);
       event.preventDefault();
+      
       try {
         const finalSystemInfo = await (window as any).electronAPI.getSystemInfo();
         await updateDeviceStatus(tokenData.token, 'offline', finalSystemInfo);
@@ -78,33 +88,34 @@ async function initSupabase() {
           await statusChannel.unsubscribe();
         }
       } catch (error) {
-        console.error('Failed to update offline status:', error);
+        console.error('Çıkış durumu güncellenirken hata:', error);
       }
     });
 
     return supabase;
   } catch (error) {
-    console.error('Supabase initialization error:', error);
+    console.error('Supabase başlatma hatası:', error);
     throw error;
   }
 }
 
 async function setupRealtimeChannel(token: string) {
   try {
-    // Unsubscribe from existing channel if any
     if (statusChannel) {
       await statusChannel.unsubscribe();
     }
 
     statusChannel = supabase.channel(`device_status:${token}`)
       .on('presence', { event: 'sync' }, () => {
-        console.log('Status sync successful');
+        console.log('Status sync başarılı');
       })
       .on('presence', { event: 'join' }, () => {
-        console.log('Device joined status channel');
+        console.log('Cihaz kanala katıldı');
+        toast.success('Realtime bağlantısı kuruldu');
       })
       .on('presence', { event: 'leave' }, () => {
-        console.log('Device left status channel');
+        console.log('Cihaz kanaldan ayrıldı');
+        toast.warning('Realtime bağlantısı kesildi');
       })
       .on(
         'postgres_changes',
@@ -115,7 +126,7 @@ async function setupRealtimeChannel(token: string) {
           filter: `token=eq.${token}`
         },
         (payload) => {
-          console.log('Device status changed:', payload);
+          console.log('Cihaz durumu değişti:', payload);
         }
       );
 
@@ -130,18 +141,32 @@ async function setupRealtimeChannel(token: string) {
         });
       }
     });
+
+    // Başarılı bağlantı sonrası reconnect sayacını sıfırla
+    reconnectAttempts = 0;
   } catch (error) {
-    console.error('Failed to setup realtime channel:', error);
-    // Retry after 5 seconds
-    setTimeout(() => setupRealtimeChannel(token), 5000);
+    console.error('Realtime kanal kurulumu hatası:', error);
+    handleConnectionError(token);
   }
 }
 
-async function reconnectRealtimeChannel(token: string) {
-  try {
-    await setupRealtimeChannel(token);
-  } catch (error) {
-    console.error('Failed to reconnect realtime channel:', error);
+async function handleConnectionError(token: string) {
+  reconnectAttempts++;
+  
+  if (reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
+    const backoffTime = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+    console.log(`Yeniden bağlanmayı deniyor... Deneme ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+    
+    setTimeout(async () => {
+      try {
+        await setupRealtimeChannel(token);
+      } catch (error) {
+        console.error('Yeniden bağlanma hatası:', error);
+      }
+    }, backoffTime);
+  } else {
+    toast.error('Bağlantı kurulamadı. Lütfen ağ bağlantınızı kontrol edin.');
+    console.error('Maksimum yeniden bağlanma denemesi aşıldı');
   }
 }
 
