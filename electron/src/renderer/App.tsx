@@ -20,31 +20,46 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        // Initialize Supabase
-        const supabase = await initSupabase();
-        
         // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
-        
         if (!macAddress) {
           throw new Error('Could not get MAC address');
         }
 
-        // Get active token for this MAC address
-        const { data: activeToken, error: tokenError } = await supabase
+        // Initialize Supabase
+        const supabase = await initSupabase();
+        
+        // Get or create token for this device
+        const { data: existingToken, error: tokenError } = await supabase
           .from('device_tokens')
           .select('token')
           .eq('mac_address', macAddress)
           .eq('status', 'active')
           .maybeSingle();
 
-        if (tokenError) {
-          console.error('Token query error:', tokenError);
-          throw tokenError;
-        }
+        if (tokenError) throw tokenError;
 
-        if (activeToken?.token) {
-          setDeviceToken(activeToken.token);
+        if (existingToken?.token) {
+          setDeviceToken(existingToken.token);
+        } else {
+          // Create new token if none exists
+          const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const expirationDate = new Date();
+          expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+          const { data: newToken, error: createError } = await supabase
+            .from('device_tokens')
+            .insert({
+              token,
+              mac_address: macAddress,
+              status: 'active',
+              expires_at: expirationDate.toISOString()
+            })
+            .select()
+            .single();
+
+          if (createError) throw createError;
+          setDeviceToken(newToken.token);
         }
 
         setIsLoading(false);
