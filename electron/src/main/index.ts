@@ -1,15 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
-
-// Generate a random 6-digit token
-function generateToken() {
-  return Math.floor(100000 + Math.random() * 900000).toString()
-}
-
-const token = generateToken()
 
 function createWindow() {
   win = new BrowserWindow({
@@ -23,14 +16,10 @@ function createWindow() {
     }
   })
 
-  // Handle token request from renderer
-  ipcMain.handle('get-token', () => {
-    return token
-  })
-
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
+    // Düzeltilmiş path
     const indexHtml = path.join(__dirname, '../renderer/index.html')
     win.loadFile(indexHtml).catch(e => {
       console.error('Failed to load app:', e)
