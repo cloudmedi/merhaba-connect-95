@@ -7,7 +7,6 @@ import type { Device } from "./types";
 export const useDevices = () => {
   const queryClient = useQueryClient();
   
-  // Use the subscription hook
   useDeviceSubscription(queryClient);
 
   const { data: devices = [], isLoading, error } = useQuery({
@@ -35,30 +34,17 @@ export const useDevices = () => {
         `)
         .eq('branches.company_id', userProfile.company_id);
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Cihazlar yüklenirken bir hata oluştu');
+        throw error;
+      }
+
       return data as Device[];
     },
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('*, licenses(*)')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      const licenseQuantity = userProfile?.licenses?.[0]?.quantity || 0;
-      
-      const { count: currentDevices } = await supabase
-        .from('devices')
-        .select('*', { count: 'exact', head: true })
-        .eq('branch_id', device.branch_id);
-
-      if (currentDevices !== null && currentDevices >= licenseQuantity) {
-        throw new Error(`License limit reached (${licenseQuantity} devices). Please upgrade your license to add more devices.`);
-      }
-
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -74,10 +60,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device added successfully');
+      toast.success('Cihaz başarıyla eklendi');
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error('Cihaz eklenirken bir hata oluştu: ' + error.message);
     },
   });
 
@@ -98,10 +84,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device updated successfully');
+      toast.success('Cihaz başarıyla güncellendi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to update device: ' + error.message);
+      toast.error('Cihaz güncellenirken bir hata oluştu: ' + error.message);
     },
   });
 
@@ -116,10 +102,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device deleted successfully');
+      toast.success('Cihaz başarıyla silindi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to delete device: ' + error.message);
+      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
     },
   });
 
