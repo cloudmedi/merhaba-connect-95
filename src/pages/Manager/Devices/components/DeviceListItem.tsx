@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useOfflinePlayers } from "@/hooks/useOfflinePlayers";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Device } from "../hooks/types";
+import type { Device, SystemInfo } from "../hooks/types";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Cpu, Memory, HardDrive } from "lucide-react";
+import { Activity, Cpu, HardDrive, MemoryStick } from "lucide-react";
 
 function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -62,7 +62,7 @@ export function DeviceListItem({ device }: { device: Device }) {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{device.name}</h3>
           <Badge 
-            variant={device.status === 'online' ? 'success' : 'destructive'}
+            variant={device.status === 'online' ? 'default' : 'destructive'}
             className="capitalize"
           >
             {device.status}
@@ -77,7 +77,7 @@ export function DeviceListItem({ device }: { device: Device }) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Memory className="w-4 h-4 text-gray-500" />
+            <MemoryStick className="w-4 h-4 text-gray-500" />
             <span className="text-gray-600">
               {systemInfo?.memory?.total ? formatBytes(systemInfo.memory.total) : '?'}
             </span>
@@ -153,7 +153,7 @@ export function DeviceListItem({ device }: { device: Device }) {
 
                 <div>
                   <h5 className="font-medium mb-2">Network Interfaces</h5>
-                  {systemInfo?.network?.map((net: any, index: number) => (
+                  {systemInfo?.network?.map((net, index) => (
                     <div key={index} className="mb-2">
                       <p className="text-sm text-gray-600">Interface: {net.iface}</p>
                       <p className="text-sm text-gray-600">IP: {net.ip4}</p>
