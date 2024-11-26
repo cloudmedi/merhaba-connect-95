@@ -19,8 +19,17 @@ export default function Devices() {
   const [locationFilter, setLocationFilter] = useState("all");
   const { devices, isLoading, error } = useDevices();
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading devices</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="flex items-center justify-center h-screen text-red-600">
+      Cihazlar yüklenirken bir hata oluştu
+    </div>
+  );
 
   const filteredDevices = devices.filter(device => {
     const matchesSearch = device.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -38,13 +47,13 @@ export default function Devices() {
         alt="No devices" 
         className="w-32 h-32 mb-4 opacity-50"
       />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Cihaz bulunamadı</h3>
       <p className="text-sm text-gray-500 mb-4 max-w-sm">
-        Get started by adding your first device. You can manage all your devices from here.
+        İlk cihazınızı ekleyerek başlayın. Tüm cihazlarınızı buradan yönetebilirsiniz.
       </p>
       <Button className="bg-[#6E59A5] hover:bg-[#5A478A] text-white">
         <Plus className="w-4 h-4 mr-2" />
-        Add New Device
+        Yeni Cihaz Ekle
       </Button>
     </div>
   );
@@ -64,19 +73,19 @@ export default function Devices() {
                     value="devices"
                     className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                   >
-                    Devices
+                    Cihazlar
                   </TabsTrigger>
                   <TabsTrigger 
                     value="auto-groups"
                     className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                   >
-                    Auto Groups
+                    Otomatik Gruplar
                   </TabsTrigger>
                   <TabsTrigger 
                     value="custom-groups"
                     className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                   >
-                    Custom Groups
+                    Özel Gruplar
                   </TabsTrigger>
                 </TabsList>
               </div>

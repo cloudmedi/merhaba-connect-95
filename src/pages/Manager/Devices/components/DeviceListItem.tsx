@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useOfflinePlayers } from "@/hooks/useOfflinePlayers";
 import { toast } from "sonner";
 import { Device } from "../hooks/types";
 import { formatDistanceToNow } from "date-fns";
@@ -23,17 +22,7 @@ interface DeviceListItemProps {
 }
 
 export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps) {
-  const { registerPlayer } = useOfflinePlayers();
   const [showPreview, setShowPreview] = useState(false);
-
-  const handleRegisterOfflinePlayer = async () => {
-    try {
-      await registerPlayer.mutateAsync(device.id);
-      toast.success('Cihaz başarıyla offline player olarak kaydedildi');
-    } catch (error) {
-      toast.error('Cihaz kaydedilirken bir hata oluştu');
-    }
-  };
 
   const lastSeen = device.last_seen 
     ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
@@ -154,20 +143,17 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
           <Button 
             variant="destructive" 
             size="sm"
-            onClick={() => onDelete(device.id)}
+            onClick={() => {
+              if (confirm('Bu cihazı silmek istediğinizden emin misiniz?')) {
+                onDelete(device.id);
+                toast.success('Cihaz başarıyla silindi');
+              }
+            }}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Sil
           </Button>
         </div>
-
-        <Button 
-          variant="secondary" 
-          size="sm"
-          onClick={handleRegisterOfflinePlayer}
-        >
-          Offline Player Olarak Kaydet
-        </Button>
       </div>
     </Card>
   );
