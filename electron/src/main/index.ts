@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import * as si from 'systeminformation'
-import { networkInterfaces } from 'os'
 import dotenv from 'dotenv'
+import { getDeviceIdentifier } from '../utils/deviceIdentifier'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -21,18 +21,6 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 }
 
 let win: BrowserWindow | null
-
-async function getMacAddress(): Promise<string> {
-  const interfaces = networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const net of interfaces[name] || []) {
-      if (!net.internal) {
-        return net.mac;
-      }
-    }
-  }
-  return '';
-}
 
 async function getSystemInfo() {
   const cpu = await si.cpu()
@@ -88,11 +76,6 @@ function createWindow() {
   win.webContents.on('did-finish-load', () => {
     if (!win) return;
     
-    console.log('Sending environment variables to renderer:', {
-      VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY
-    });
-    
     win.webContents.send('env-vars', {
       VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY
@@ -123,4 +106,4 @@ app.on('activate', () => {
 
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo)
-ipcMain.handle('get-mac-address', getMacAddress)
+ipcMain.handle('get-device-id', getDeviceIdentifier)

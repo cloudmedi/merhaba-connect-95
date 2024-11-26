@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
-  getMacAddress: () => ipcRenderer.invoke('get-mac-address'),
+  getDeviceId: () => ipcRenderer.invoke('get-device-id'),
   onSystemInfoUpdate: (callback: (data: any) => void) => {
     ipcRenderer.on('system-info-update', (_event, value) => callback(value))
   },

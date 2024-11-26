@@ -28,11 +28,42 @@ async function initSupabase() {
       }
     );
     
-    // Test connection
-    const { data, error } = await supabase.from('device_tokens').select('*').limit(1);
-    if (error) {
-      console.error('Supabase connection test failed:', error);
-      throw error;
+    // Get device ID
+    const deviceId = await (window as any).electronAPI.getDeviceId();
+    console.log('Device ID:', deviceId);
+    
+    // Test connection and check/create device token
+    const { data: existingToken, error: tokenError } = await supabase
+      .from('device_tokens')
+      .select('*')
+      .eq('device_id', deviceId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (tokenError) {
+      console.error('Error checking device token:', tokenError);
+      throw tokenError;
+    }
+
+    if (!existingToken) {
+      // Generate new token
+      const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const expirationDate = new Date();
+      expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+      const { error: insertError } = await supabase
+        .from('device_tokens')
+        .insert({
+          token,
+          device_id: deviceId,
+          status: 'active',
+          expires_at: expirationDate.toISOString()
+        });
+
+      if (insertError) {
+        console.error('Error creating device token:', insertError);
+        throw insertError;
+      }
     }
     
     console.log('Supabase initialized successfully');
