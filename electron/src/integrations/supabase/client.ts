@@ -35,37 +35,36 @@ async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offli
 
     if (checkError) throw checkError;
 
-    // For new devices, always create as offline
     if (!existingDevice) {
+      // Yeni cihaz oluşturulduğunda manager'ın görebilmesi için
       const { error: createError } = await supabase
         .from('devices')
         .insert({
           name: `Device ${deviceToken}`,
           category: 'player',
           token: deviceToken,
-          status: 'offline', // Always start as offline
+          status: status, // Manager'dan gelen status'ü kullan
           system_info: systemInfo || {},
           last_seen: new Date().toISOString(),
           schedule: {}
-        });
+        })
+        .select();
 
       if (createError) throw createError;
       return;
     }
 
-    // Only update status if device exists and current status is different
-    if (existingDevice.status !== status) {
-      const { error: updateError } = await supabase
-        .from('devices')
-        .update({
-          status,
-          system_info: systemInfo || {},
-          last_seen: new Date().toISOString(),
-        })
-        .eq('token', deviceToken);
+    // Status değiştiğinde güncelle
+    const { error: updateError } = await supabase
+      .from('devices')
+      .update({
+        status,
+        system_info: systemInfo || {},
+        last_seen: new Date().toISOString(),
+      })
+      .eq('token', deviceToken);
 
-      if (updateError) throw updateError;
-    }
+    if (updateError) throw updateError;
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
@@ -120,11 +119,7 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Set initial status and subscribe to changes
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    await updateDeviceStatus(deviceToken, 'offline', systemInfo);
-
-    // Subscribe to device status changes
+    // Manager'dan gelen status değişikliklerini dinle
     const channel = supabase.channel(`device_status_${deviceToken}`)
       .on(
         'postgres_changes',
@@ -137,19 +132,19 @@ async function initSupabase() {
         async (payload: any) => {
           console.log('Device status changed:', payload);
           
-          // Handle status changes from manager
-          if (payload.new && payload.new.status === 'online') {
-            // Manager has activated the device
+          // Manager'dan gelen status değişikliğini uygula
+          if (payload.new && payload.new.status) {
             const systemInfo = await (window as any).electronAPI.getSystemInfo();
-            await updateDeviceStatus(deviceToken, 'online', systemInfo);
+            await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
           }
         }
       )
       .subscribe();
 
-    // Set offline status when app closes
+    // Uygulama kapanırken offline yap
     window.addEventListener('beforeunload', async (event) => {
       event.preventDefault();
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'offline', systemInfo);
     });
     
