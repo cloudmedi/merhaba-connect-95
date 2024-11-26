@@ -11,7 +11,7 @@ async function createDeviceToken(macAddress: string) {
     .insert({
       token,
       mac_address: macAddress,
-      status: 'active', // Changed from 'pending' to 'active'
+      status: 'active',
       expires_at: expirationDate.toISOString()
     })
     .select()
@@ -38,14 +38,19 @@ async function updateDeviceStatus(supabase: any, deviceId: string, status: 'onli
         system_info: systemInfo,
         last_seen: new Date().toISOString()
       })
-      .eq('id', deviceId);
+      .eq('mac_address', deviceId); // MAC adresini kullanarak cihazı güncelle
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating device status:', error);
+      throw error;
+    }
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
   }
 }
+
+let statusUpdateInterval: NodeJS.Timeout;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -81,7 +86,7 @@ async function initSupabase() {
       throw new Error('Could not get MAC address');
     }
 
-    // Check for existing active token with MAC address
+    // Mevcut aktif token kontrolü
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
@@ -93,31 +98,43 @@ async function initSupabase() {
       console.error('Error checking existing token:', tokenError);
       throw tokenError;
     }
-    
-    if (existingToken) {
-      console.log('Found existing token:', existingToken);
-      
-      // Start sending device status updates
+
+    // Durum güncelleme işlemlerini başlat
+    const startStatusUpdates = async () => {
+      // İlk sistem bilgilerini al ve durumu güncelle
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(supabase, macAddress, 'online', systemInfo);
 
-      // Set up periodic status updates
-      setInterval(async () => {
+      // Varolan interval'i temizle
+      if (statusUpdateInterval) {
+        clearInterval(statusUpdateInterval);
+      }
+
+      // Yeni interval başlat
+      statusUpdateInterval = setInterval(async () => {
         const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
         await updateDeviceStatus(supabase, macAddress, 'online', updatedSystemInfo);
-      }, 30000); // Update every 30 seconds
+      }, 15000); // Her 15 saniyede bir güncelle
+    };
 
-      // Set up offline status on window close
-      window.addEventListener('beforeunload', async () => {
-        await updateDeviceStatus(supabase, macAddress, 'offline', systemInfo);
-      });
-
-      return supabase;
+    if (existingToken) {
+      console.log('Found existing token:', existingToken);
+      await startStatusUpdates();
+    } else {
+      // Yeni token oluştur
+      const tokenData = await createDeviceToken(macAddress);
+      console.log('Created new token:', tokenData);
+      await startStatusUpdates();
     }
-    
-    // Create new token if none exists
-    const tokenData = await createDeviceToken(macAddress);
-    console.log('Created new token:', tokenData);
+
+    // Uygulama kapanırken offline durumuna geç
+    window.addEventListener('beforeunload', async () => {
+      if (statusUpdateInterval) {
+        clearInterval(statusUpdateInterval);
+      }
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await updateDeviceStatus(supabase, macAddress, 'offline', systemInfo);
+    });
     
     return supabase;
   } catch (error) {
