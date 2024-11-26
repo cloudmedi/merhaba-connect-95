@@ -71,7 +71,7 @@ function App() {
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
-      <Toaster />
+      <Toaster position="top-right" />
     </div>
   );
 }
