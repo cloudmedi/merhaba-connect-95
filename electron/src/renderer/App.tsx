@@ -26,21 +26,21 @@ function App() {
         const supabase = await initSupabase();
         console.log('Supabase initialized successfully');
         
-        // Get device ID
-        const deviceId = await window.electronAPI.getDeviceId();
-        console.log('Device ID obtained:', deviceId);
+        // Get MAC address
+        const macAddress = await window.electronAPI.getMacAddress();
+        console.log('MAC Address:', macAddress);
         
-        if (!deviceId) {
-          throw new Error('Could not get device identifier');
+        if (!macAddress) {
+          throw new Error('Could not get MAC address');
         }
 
-        // Get active token for this device
+        // Get active token for this MAC address
         const { data: activeToken, error: tokenError } = await supabase
           .from('device_tokens')
           .select('token')
-          .eq('device_id', deviceId)
+          .eq('mac_address', macAddress)
           .eq('status', 'active')
-          .single();
+          .maybeSingle();
 
         if (tokenError) {
           console.error('Token query error:', tokenError);

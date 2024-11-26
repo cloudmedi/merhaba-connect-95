@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Token yönetimi için ayrı fonksiyonlar
 async function createDeviceToken() {
   const supabase = await initSupabase();
   const token = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -52,10 +51,28 @@ async function initSupabase() {
       }
     );
     
-    const deviceId = await (window as any).electronAPI.getDeviceId();
-    console.log('Device ID:', deviceId);
+    const macAddress = await (window as any).electronAPI.getMacAddress();
+    console.log('MAC Address:', macAddress);
     
-    // Sadece token oluştur
+    // Önce MAC adresine ait aktif token var mı kontrol et
+    const { data: existingToken, error: tokenError } = await supabase
+      .from('device_tokens')
+      .select('token')
+      .eq('mac_address', macAddress)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (tokenError) {
+      console.error('Error checking existing token:', tokenError);
+      throw tokenError;
+    }
+    
+    if (existingToken) {
+      console.log('Found existing token:', existingToken);
+      return supabase;
+    }
+    
+    // Eğer token yoksa yeni oluştur
     const tokenData = await createDeviceToken();
     console.log('Created new token:', tokenData);
     
