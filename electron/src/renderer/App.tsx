@@ -7,6 +7,7 @@ import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
 import { LoadingState } from './components/LoadingState';
+import { Toaster } from 'sonner';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -28,7 +29,7 @@ function App() {
         const macAddress = await window.electronAPI.getMacAddress();
         
         if (!macAddress) {
-          throw new Error('Could not get MAC address');
+          throw new Error('MAC adresi alınamadı');
         }
 
         // Get or create token for this MAC address
@@ -37,19 +38,19 @@ function App() {
           setDeviceToken(tokenData.token);
         }
 
+        // Get initial system info
+        const info = await window.electronAPI.getSystemInfo();
+        setSystemInfo(info);
+
         setIsLoading(false);
       } catch (error: any) {
-        console.error('Initialization error:', error);
-        setError(error.message || 'An error occurred');
+        console.error('Başlatma hatası:', error);
+        setError(error.message || 'Bir hata oluştu');
         setIsLoading(false);
       }
     };
 
     initialize();
-    
-    // Set up system info listeners
-    window.electronAPI.getSystemInfo().then(setSystemInfo);
-    window.electronAPI.onSystemInfoUpdate(setSystemInfo);
   }, [retryCount]);
 
   const handleRetry = () => {
@@ -70,6 +71,7 @@ function App() {
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
+      <Toaster />
     </div>
   );
 }
