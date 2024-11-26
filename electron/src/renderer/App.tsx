@@ -5,6 +5,7 @@ import { SystemInfo } from './types';
 import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
+import { toast } from 'sonner';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -13,48 +14,43 @@ function App() {
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    const initialize = async () => {
+    const generateToken = async () => {
       try {
-        setError(null);
         const macAddress = await window.electronAPI.getMacAddress();
         if (!macAddress) {
-          throw new Error('Could not get MAC address');
+          throw new Error('MAC adresi alınamadı');
         }
 
         const supabase = await initSupabase();
-        const { data: existingToken } = await supabase
-          .from('device_tokens')
-          .select('token')
-          .eq('mac_address', macAddress)
-          .eq('status', 'active')
-          .maybeSingle();
-
-        if (existingToken?.token) {
-          setDeviceToken(existingToken.token);
-          return;
-        }
-
         const token = Math.random().toString(36).substring(2, 8).toUpperCase();
         const expirationDate = new Date();
         expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
-        await supabase
+        const { data, error: insertError } = await supabase
           .from('device_tokens')
           .insert({
             token,
             mac_address: macAddress,
             status: 'active',
             expires_at: expirationDate.toISOString()
-          });
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
 
         setDeviceToken(token);
+        toast.success('Token başarıyla oluşturuldu');
       } catch (error: any) {
-        console.error('Initialization error:', error);
-        setError(error.message || 'An error occurred');
+        console.error('Token oluşturma hatası:', error);
+        setError(error.message || 'Token oluşturulurken bir hata oluştu');
+        toast.error('Token oluşturulamadı');
       }
     };
 
-    initialize();
+    generateToken();
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
   }, [retryCount]);
