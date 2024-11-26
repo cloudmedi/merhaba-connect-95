@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,50 +19,17 @@ interface NewDeviceDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface Branch {
-  id: string;
-  name: string;
-}
-
 export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<"player" | "display" | "controller">("player");
   const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
   const [ipAddress, setIpAddress] = useState("");
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const { createDevice } = useDevices();
-
-  useEffect(() => {
-    fetchBranches();
-  }, []);
-
-  const fetchBranches = async () => {
-    try {
-      const { data: branchesData, error } = await supabase
-        .from('branches')
-        .select('id, name');
-
-      if (error) throw error;
-      setBranches(branchesData || []);
-      if (branchesData && branchesData.length > 0) {
-        setSelectedBranchId(branchesData[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching branches:', error);
-      toast.error('Failed to load branches');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedBranchId) {
-      toast.error('Please select a branch');
-      return;
-    }
-
     try {
       // First verify the token
       const { data: tokenData, error: tokenError } = await supabase
@@ -87,7 +54,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         status: 'offline',
         schedule: {},
         system_info: {},
-        branch_id: selectedBranchId
+        branch_id: null
       });
 
       // Update token status to used
@@ -110,7 +77,6 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     setLocation("");
     setToken("");
     setIpAddress("");
-    setSelectedBranchId(branches[0]?.id || "");
   };
 
   return (
@@ -140,21 +106,6 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
                 <SelectItem value="player">Player</SelectItem>
                 <SelectItem value="display">Display</SelectItem>
                 <SelectItem value="controller">Controller</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="branch">Branch</Label>
-            <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select branch" />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map((branch) => (
-                  <SelectItem key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </SelectItem>
-                ))}
               </SelectContent>
             </Select>
           </div>
