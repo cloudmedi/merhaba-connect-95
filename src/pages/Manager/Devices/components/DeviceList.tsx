@@ -1,8 +1,10 @@
 import { Device } from "../hooks/types";
 import { DeviceListItem } from "./DeviceListItem";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
+import { useDevices } from "../hooks/useDevices";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody } from "@/components/ui/table";
 
 interface DeviceListProps {
   devices: Device[];
@@ -22,23 +24,37 @@ export function DeviceList({ devices }: DeviceListProps) {
 
   const handleEdit = async (device: Device) => {
     try {
-      // For now just show a toast, implement edit dialog later
       toast.info('Düzenleme özelliği yakında eklenecek');
     } catch (error) {
       toast.error('Bir hata oluştu');
     }
   };
 
+  if (devices.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <p className="text-gray-500 mb-2">Henüz kayıtlı cihaz bulunmuyor</p>
+        <p className="text-sm text-gray-400">Yeni bir cihaz ekleyerek başlayın</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-      {devices.map((device) => (
-        <DeviceListItem 
-          key={device.id} 
-          device={device}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
-      ))}
-    </div>
+    <Card className="border-none">
+      <ScrollArea className="h-[calc(100vh-400px)]">
+        <Table>
+          <TableBody>
+            {devices.map((device) => (
+              <DeviceListItem 
+                key={device.id} 
+                device={device}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </Card>
   );
 }

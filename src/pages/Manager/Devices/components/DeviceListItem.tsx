@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Device } from "../hooks/types";
+import { TableRow, TableCell } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Edit, Trash2, Eye, Monitor, Signal, AlertTriangle } from "lucide-react";
+import { Device } from "../hooks/types";
+import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -35,126 +40,118 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
   };
 
   return (
-    <Card className="p-6 hover:shadow-md transition-all duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          {getStatusIcon()}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{device.name}</h3>
-            <p className="text-sm text-gray-500">{device.branches?.name || 'Şube atanmamış'}</p>
-          </div>
+    <TableRow className="hover:bg-gray-50/50">
+      <TableCell className="w-[40px]">
+        {getStatusIcon()}
+      </TableCell>
+      <TableCell className="font-medium">
+        <div>
+          <p className="font-medium text-gray-900">{device.name}</p>
+          <p className="text-sm text-gray-500">{device.branches?.name || 'Şube atanmamış'}</p>
         </div>
+      </TableCell>
+      <TableCell>
         <Badge variant={device.status === 'online' ? 'success' : 'secondary'}>
           {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
         </Badge>
-      </div>
-
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Son görülme:</span>
-          <span>{lastSeen}</span>
-        </div>
-        
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">IP Adresi:</span>
-          <span>{device.ip_address || 'Bilinmiyor'}</span>
-        </div>
-
-        {device.system_info && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Sistem:</span>
-            <span>{device.system_info.os?.platform || 'Bilinmiyor'}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Dialog open={showPreview} onOpenChange={setShowPreview}>
+      </TableCell>
+      <TableCell className="text-gray-500">
+        {device.ip_address || '-'}
+      </TableCell>
+      <TableCell className="text-gray-500">
+        {lastSeen}
+      </TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <Eye className="h-4 w-4 mr-2" />
-                Önizle
-              </Button>
+                Detaylar
+              </DropdownMenuItem>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Cihaz Detayları - {device.name}</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="space-y-4">
+            <DropdownMenuItem onClick={() => onEdit(device)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Düzenle
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-red-600"
+              onClick={() => {
+                if (confirm('Bu cihazı silmek istediğinizden emin misiniz?')) {
+                  onDelete(device.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Sil
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Cihaz Detayları - {device.name}</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Sistem Bilgileri</h4>
+                  {device.system_info?.cpu && (
+                    <div className="space-y-1">
+                      <p className="text-sm"><span className="font-medium">CPU:</span> {device.system_info.cpu.brand}</p>
+                      <p className="text-sm"><span className="font-medium">Çekirdek:</span> {device.system_info.cpu.cores}</p>
+                      <p className="text-sm"><span className="font-medium">Hız:</span> {device.system_info.cpu.speed} GHz</p>
+                    </div>
+                  )}
+                </div>
+                {device.system_info?.memory && (
                   <div>
-                    <h4 className="font-medium mb-2">Sistem Bilgileri</h4>
-                    {device.system_info?.cpu && (
-                      <div className="space-y-1">
-                        <p className="text-sm"><span className="font-medium">CPU:</span> {device.system_info.cpu.brand}</p>
-                        <p className="text-sm"><span className="font-medium">Çekirdek:</span> {device.system_info.cpu.cores}</p>
-                        <p className="text-sm"><span className="font-medium">Hız:</span> {device.system_info.cpu.speed} GHz</p>
-                      </div>
-                    )}
+                    <h4 className="font-medium mb-2">Bellek</h4>
+                    <div className="space-y-1">
+                      <p className="text-sm">
+                        <span className="font-medium">Toplam:</span> {Math.round(device.system_info.memory.total / (1024 * 1024 * 1024))} GB
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Kullanılan:</span> {Math.round(device.system_info.memory.used / (1024 * 1024 * 1024))} GB
+                      </p>
+                    </div>
                   </div>
-                  {device.system_info?.memory && (
-                    <div>
-                      <h4 className="font-medium mb-2">Bellek</h4>
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          <span className="font-medium">Toplam:</span> {Math.round(device.system_info.memory.total / (1024 * 1024 * 1024))} GB
-                        </p>
-                        <p className="text-sm">
-                          <span className="font-medium">Kullanılan:</span> {Math.round(device.system_info.memory.used / (1024 * 1024 * 1024))} GB
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {device.system_info?.os && (
-                    <div>
-                      <h4 className="font-medium mb-2">İşletim Sistemi</h4>
-                      <div className="space-y-1">
-                        <p className="text-sm"><span className="font-medium">Platform:</span> {device.system_info.os.platform}</p>
-                        <p className="text-sm"><span className="font-medium">Sürüm:</span> {device.system_info.os.release}</p>
-                        <p className="text-sm"><span className="font-medium">Mimari:</span> {device.system_info.os.arch}</p>
-                      </div>
-                    </div>
-                  )}
-                  {device.system_info?.network && (
-                    <div>
-                      <h4 className="font-medium mb-2">Ağ</h4>
-                      {device.system_info.network.map((net, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <p className="text-sm"><span className="font-medium">Arayüz:</span> {net.iface}</p>
-                          <p className="text-sm"><span className="font-medium">IP:</span> {net.ip4}</p>
-                          <p className="text-sm"><span className="font-medium">MAC:</span> {net.mac}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            </DialogContent>
-          </Dialog>
-
-          <Button variant="outline" size="sm" onClick={() => onEdit(device)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Düzenle
-          </Button>
-
-          <Button 
-            variant="destructive" 
-            size="sm"
-            onClick={() => {
-              if (confirm('Bu cihazı silmek istediğinizden emin misiniz?')) {
-                onDelete(device.id);
-                toast.success('Cihaz başarıyla silindi');
-              }
-            }}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Sil
-          </Button>
-        </div>
-      </div>
-    </Card>
+              <div className="space-y-4">
+                {device.system_info?.os && (
+                  <div>
+                    <h4 className="font-medium mb-2">İşletim Sistemi</h4>
+                    <div className="space-y-1">
+                      <p className="text-sm"><span className="font-medium">Platform:</span> {device.system_info.os.platform}</p>
+                      <p className="text-sm"><span className="font-medium">Sürüm:</span> {device.system_info.os.release}</p>
+                      <p className="text-sm"><span className="font-medium">Mimari:</span> {device.system_info.os.arch}</p>
+                    </div>
+                  </div>
+                )}
+                {device.system_info?.network && (
+                  <div>
+                    <h4 className="font-medium mb-2">Ağ</h4>
+                    {device.system_info.network.map((net, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <p className="text-sm"><span className="font-medium">Arayüz:</span> {net.iface}</p>
+                        <p className="text-sm"><span className="font-medium">IP:</span> {net.ip4}</p>
+                        <p className="text-sm"><span className="font-medium">MAC:</span> {net.mac}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </TableCell>
+    </TableRow>
   );
 }
