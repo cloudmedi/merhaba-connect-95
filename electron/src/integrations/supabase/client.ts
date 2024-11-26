@@ -43,6 +43,59 @@ async function linkDeviceToToken(deviceId: string, token: string) {
   }
 }
 
+async function getOrCreateDefaultBranch() {
+  const supabase = await initSupabase();
+  
+  // Get user's profile and company_id
+  const { data: userProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('company_id')
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Error fetching user profile:', profileError);
+    throw profileError;
+  }
+
+  if (!userProfile?.company_id) {
+    throw new Error('No company associated with user profile');
+  }
+
+  // Get or create a default branch for the company
+  const { data: branches, error: branchError } = await supabase
+    .from('branches')
+    .select('id')
+    .eq('company_id', userProfile.company_id)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (branchError) {
+    console.error('Error fetching branches:', branchError);
+    throw branchError;
+  }
+
+  if (branches && branches.length > 0) {
+    return branches[0].id;
+  }
+
+  // Create a default branch if none exists
+  const { data: newBranch, error: createBranchError } = await supabase
+    .from('branches')
+    .insert({
+      name: 'Default Branch',
+      company_id: userProfile.company_id
+    })
+    .select()
+    .single();
+
+  if (createBranchError || !newBranch) {
+    console.error('Error creating default branch:', createBranchError);
+    throw createBranchError || new Error('Failed to create default branch');
+  }
+
+  return newBranch.id;
+}
+
 async function initSupabase() {
   if (supabase) return supabase;
 
@@ -82,6 +135,9 @@ async function initSupabase() {
     }
 
     if (!existingDevice) {
+      // Get or create default branch
+      const branchId = await getOrCreateDefaultBranch();
+      
       // Önce token oluştur
       const tokenData = await createDeviceToken();
       console.log('Created new token:', tokenData);
@@ -94,6 +150,7 @@ async function initSupabase() {
           name: 'Electron App',
           category: 'player',
           status: 'online',
+          branch_id: branchId,
           system_info: {},
           schedule: {}
         });
