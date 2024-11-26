@@ -6,6 +6,7 @@ import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
 import { LoadingState } from './components/LoadingState';
+import { toast } from 'sonner';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -23,14 +24,22 @@ function App() {
         // Initialize Supabase
         await initSupabase();
         
-        // Get stored token
-        const storedToken = localStorage.getItem('deviceToken');
-        if (storedToken) {
-          setDeviceToken(storedToken);
-          
-          // Update device status if we have a token
+        // Get stored token or generate new one
+        let token = localStorage.getItem('deviceToken');
+        
+        if (!token) {
+          token = await window.electronAPI.generateDeviceToken();
+          if (token) {
+            localStorage.setItem('deviceToken', token);
+            toast.success('Device token generated successfully');
+          }
+        }
+        
+        setDeviceToken(token);
+        
+        if (token) {
           const systemInfo = await window.electronAPI.getSystemInfo();
-          await updateDeviceStatus(storedToken, 'online', systemInfo);
+          await updateDeviceStatus(token, 'online', systemInfo);
         }
 
         setIsLoading(false);

@@ -3,6 +3,7 @@ import path from 'node:path'
 import * as si from 'systeminformation'
 import dotenv from 'dotenv'
 import { getDeviceIdentifier } from '../utils/deviceIdentifier'
+import { supabase } from '../integrations/supabase/client'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -14,13 +15,35 @@ const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
 if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing Supabase environment variables:', {
-    VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY
-  })
+  console.error('Missing Supabase environment variables')
 }
 
 let win: BrowserWindow | null
+
+async function generateDeviceToken(macAddress: string) {
+  try {
+    const token = Math.random().toString(36).substring(2, 8).toUpperCase()
+    const expirationDate = new Date()
+    expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+
+    const { data, error } = await supabase
+      .from('device_tokens')
+      .insert({
+        token,
+        mac_address: macAddress,
+        status: 'active',
+        expires_at: expirationDate.toISOString()
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    return data.token
+  } catch (error) {
+    console.error('Error generating token:', error)
+    throw error
+  }
+}
 
 async function getMacAddress() {
   try {
@@ -123,3 +146,8 @@ app.on('activate', () => {
 ipcMain.handle('get-system-info', getSystemInfo)
 ipcMain.handle('get-device-id', getDeviceIdentifier)
 ipcMain.handle('get-mac-address', getMacAddress)
+ipcMain.handle('generate-device-token', async () => {
+  const macAddress = await getMacAddress()
+  if (!macAddress) throw new Error('Could not get MAC address')
+  return generateDeviceToken(macAddress)
+})
