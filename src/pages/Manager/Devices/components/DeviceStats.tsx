@@ -19,7 +19,7 @@ export function DeviceStats() {
       <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Total Devices</p>
+            <p className="text-sm font-medium text-gray-500">Toplam Cihaz</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</h3>
           </div>
           <div className="p-3 bg-purple-50 rounded-full">
@@ -31,10 +31,10 @@ export function DeviceStats() {
       <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Online Devices</p>
+            <p className="text-sm font-medium text-gray-500">Çevrimiçi Cihazlar</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.online}</h3>
             <p className="text-xs text-emerald-600 mt-1">
-              {Math.round(healthPercentage)}% operational
+              {Math.round(healthPercentage)}% aktif
             </p>
           </div>
           <div className="p-3 bg-emerald-50 rounded-full">
@@ -46,7 +46,7 @@ export function DeviceStats() {
       <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Offline Devices</p>
+            <p className="text-sm font-medium text-gray-500">Çevrimdışı Cihazlar</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.offline}</h3>
           </div>
           <div className="p-3 bg-gray-50 rounded-full">
@@ -58,7 +58,7 @@ export function DeviceStats() {
       <Card className="p-6 hover:shadow-md transition-all duration-200 border border-gray-100">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Warnings</p>
+            <p className="text-sm font-medium text-gray-500">Uyarılar</p>
             <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.warning}</h3>
           </div>
           <div className="p-3 bg-amber-50 rounded-full">

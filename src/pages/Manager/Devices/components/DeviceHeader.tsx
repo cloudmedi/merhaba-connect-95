@@ -9,12 +9,12 @@ export function DeviceHeader() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Devices</h2>
-        <p className="text-sm text-gray-500">Manage your connected devices</p>
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Cihazlar</h2>
+        <p className="text-sm text-gray-500">Bağlı cihazlarınızı yönetin</p>
       </div>
       <Button onClick={() => setShowNewDeviceDialog(true)} className="bg-[#6E59A5] hover:bg-[#5A478A]">
         <Plus className="mr-2 h-4 w-4" />
-        Add Device
+        Cihaz Ekle
       </Button>
       <NewDeviceDialog 
         open={showNewDeviceDialog} 
