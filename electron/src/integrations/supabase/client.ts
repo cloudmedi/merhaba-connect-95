@@ -15,11 +15,15 @@ async function createDeviceToken() {
       expires_at: expirationDate.toISOString()
     })
     .select()
-    .single();
+    .maybeSingle();
 
   if (tokenError) {
     console.error('Error creating token:', tokenError);
     throw tokenError;
+  }
+
+  if (!tokenData) {
+    throw new Error('Failed to create device token');
   }
 
   return tokenData;
@@ -65,11 +69,11 @@ async function initSupabase() {
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
-    // First get the user's profile and company_id
+    // Get user's profile and company_id
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
       .select('company_id')
-      .single();
+      .maybeSingle();
 
     if (profileError) {
       console.error('Error fetching user profile:', profileError);
@@ -99,11 +103,11 @@ async function initSupabase() {
           company_id: userProfile.company_id
         })
         .select()
-        .single();
+        .maybeSingle();
 
-      if (createBranchError) {
+      if (createBranchError || !newBranch) {
         console.error('Error creating default branch:', createBranchError);
-        throw createBranchError;
+        throw createBranchError || new Error('Failed to create default branch');
       }
 
       branchId = newBranch.id;
@@ -113,12 +117,17 @@ async function initSupabase() {
       console.log('Using existing branch:', branchId);
     }
 
-    // Now check for existing device
+    // Check for existing device
     const { data: existingDevice, error: deviceError } = await supabase
       .from('devices')
       .select('id')
       .eq('id', deviceId)
       .maybeSingle();
+
+    if (deviceError) {
+      console.error('Error checking device:', deviceError);
+      throw deviceError;
+    }
 
     if (!existingDevice) {
       const { error: insertDeviceError } = await supabase
