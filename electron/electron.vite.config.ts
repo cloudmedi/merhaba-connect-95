@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       rollupOptions: {
-        external: ['dotenv', 'systeminformation', '@supabase/supabase-js']
+        external: ['dotenv', 'systeminformation', '@supabase/supabase-js', 'uuid']
       }
     }
   },
