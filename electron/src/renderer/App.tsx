@@ -66,7 +66,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
