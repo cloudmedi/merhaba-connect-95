@@ -30,8 +30,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@': path.resolve('src'),
-        '@renderer': path.resolve('src/renderer'),
-        'sonner': path.resolve(__dirname, 'node_modules/sonner')
+        '@renderer': path.resolve('src/renderer')
       }
     }
   }
