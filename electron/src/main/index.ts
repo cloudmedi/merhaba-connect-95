@@ -2,13 +2,13 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import si from 'systeminformation'
 import { networkInterfaces } from 'os'
-import dotenv from 'dotenv'
 
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env') })
+// Load environment variables from process.env
+const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
+const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null
-const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 // MAC adresi alma fonksiyonu
 async function getMacAddress(): Promise<string> {
@@ -78,8 +78,8 @@ function createWindow() {
   // Pass environment variables to renderer process
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('env-vars', {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY
+      VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY
     })
   })
 
