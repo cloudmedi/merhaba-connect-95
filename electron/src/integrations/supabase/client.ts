@@ -6,16 +6,16 @@ async function initSupabase() {
   if (supabase) return supabase;
 
   try {
-    // Çevre değişkenlerini al
+    // Get environment variables
     const envVars = await (window as any).electronAPI.getEnvVars();
     console.log('Environment variables received:', envVars);
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
       console.error('Missing Supabase environment variables:', envVars);
-      throw new Error('Supabase bağlantı bilgileri eksik. Lütfen .env dosyasını kontrol edin.');
+      throw new Error('Missing Supabase connection details. Please check your .env file.');
     }
 
-    // Supabase istemcisini oluştur
+    // Create Supabase client
     supabase = createClient(
       envVars.VITE_SUPABASE_URL,
       envVars.VITE_SUPABASE_ANON_KEY,
@@ -28,7 +28,7 @@ async function initSupabase() {
       }
     );
     
-    // Bağlantıyı test et
+    // Test connection
     const { data, error } = await supabase.from('device_tokens').select('*').limit(1);
     if (error) {
       console.error('Supabase connection test failed:', error);

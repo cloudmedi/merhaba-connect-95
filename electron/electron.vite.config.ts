@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       rollupOptions: {
-        external: ['dotenv', 'systeminformation']
+        external: ['dotenv', 'systeminformation', '@supabase/supabase-js']
       }
     }
   },
@@ -30,12 +30,8 @@ export default defineConfig({
     resolve: {
       alias: {
         '@': path.resolve('src'),
-        '@renderer': path.resolve('src/renderer'),
-        '@supabase/supabase-js': path.resolve('node_modules/@supabase/supabase-js/dist/module/index.js')
+        '@renderer': path.resolve('src/renderer')
       }
-    },
-    optimizeDeps: {
-      include: ['@supabase/supabase-js']
     }
   }
 })
