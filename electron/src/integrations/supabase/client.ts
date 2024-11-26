@@ -32,11 +32,16 @@ async function createDeviceToken(macAddress: string) {
 async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   try {
     // First check if device exists
-    const { data: existingDevice } = await supabase
+    const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
-      .select('id')
+      .select('id, name')
       .eq('token', deviceToken)
       .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking device:', checkError);
+      throw checkError;
+    }
 
     if (!existingDevice) {
       // If device doesn't exist, create it
@@ -164,7 +169,8 @@ async function initSupabase() {
     await startStatusUpdates();
 
     // Set offline status when app closes
-    window.addEventListener('beforeunload', async () => {
+    window.addEventListener('beforeunload', async (event) => {
+      event.preventDefault();
       if (statusUpdateInterval) {
         clearInterval(statusUpdateInterval);
       }
