@@ -35,6 +35,7 @@ declare global {
       getSystemInfo: () => Promise<SystemInfo>;
       getDeviceId: () => Promise<string>;
       getMacAddress: () => Promise<string | null>;
+      onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
       getEnvVars: () => Promise<Record<string, string>>;
     };
   }

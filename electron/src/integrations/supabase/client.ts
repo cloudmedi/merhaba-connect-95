@@ -1,13 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { createDeviceToken, validateDeviceToken } from './deviceToken';
+import { createDeviceToken } from './deviceToken';
 import { updateDeviceStatus } from './deviceStatus';
-import { RealtimeChannel } from '@supabase/supabase-js';
-import { toast } from 'sonner';
 
 let supabase: ReturnType<typeof createClient>;
-let statusChannel: RealtimeChannel;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -16,7 +11,7 @@ async function initSupabase() {
     const envVars = await (window as any).electronAPI.getEnvVars();
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
-      throw new Error('Supabase bağlantı bilgileri eksik');
+      throw new Error('Missing Supabase connection details');
     }
 
     supabase = createClient(
@@ -37,137 +32,80 @@ async function initSupabase() {
     );
     
     const macAddress = await (window as any).electronAPI.getMacAddress();
-    if (!macAddress) throw new Error('MAC adresi alınamadı');
+    if (!macAddress) throw new Error('Could not get MAC address');
 
-    const tokenData = await createDeviceToken(macAddress);
-    if (!tokenData?.token) {
-      throw new Error('Device token oluşturulamadı');
+    // Get or create device token
+    const { data: existingToken, error: tokenError } = await supabase
+      .from('device_tokens')
+      .select('token, expires_at')
+      .eq('mac_address', macAddress)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (tokenError) throw tokenError;
+
+    let deviceToken;
+    if (existingToken) {
+      // Check if token is expired
+      if (new Date(existingToken.expires_at) < new Date()) {
+        // Create new token if expired
+        const tokenData = await createDeviceToken(macAddress);
+        deviceToken = tokenData.token;
+      } else {
+        deviceToken = existingToken.token;
+      }
+    } else {
+      const tokenData = await createDeviceToken(macAddress);
+      deviceToken = tokenData.token;
     }
 
-    const isValid = await validateDeviceToken(tokenData.token, macAddress);
-    if (!isValid) {
-      throw new Error('Geçersiz token');
+    // Subscribe to device status changes only if device exists
+    const { data: device } = await supabase
+      .from('devices')
+      .select('id')
+      .eq('token', deviceToken)
+      .maybeSingle();
+
+    if (device) {
+      const channel = supabase.channel(`device_status_${deviceToken}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'devices',
+            filter: `token=eq.${deviceToken}`
+          },
+          async (payload: any) => {
+            console.log('Device status changed:', payload);
+            
+            if (payload.new && payload.new.status) {
+              const systemInfo = await (window as any).electronAPI.getSystemInfo();
+              await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
+            }
+          }
+        )
+        .subscribe((status: string) => {
+          console.log('Realtime subscription status:', status);
+        });
+
+      // Set initial online status and update on window events
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await updateDeviceStatus(deviceToken, 'online', systemInfo);
+
+      // Update status when window is closing
+      window.addEventListener('beforeunload', async (event) => {
+        event.preventDefault();
+        const systemInfo = await (window as any).electronAPI.getSystemInfo();
+        await updateDeviceStatus(deviceToken, 'offline', systemInfo);
+      });
     }
-
-    await setupRealtimeChannel(tokenData.token);
-
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    const statusUpdate = await updateDeviceStatus(tokenData.token, 'online', systemInfo);
     
-    if (!statusUpdate.success) {
-      toast.error('Cihaz durumu güncellenemedi: ' + statusUpdate.error);
-    }
-
-    // Heartbeat interval
-    const heartbeatInterval = setInterval(async () => {
-      try {
-        const currentSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        const heartbeatUpdate = await updateDeviceStatus(tokenData.token, 'online', currentSystemInfo);
-        
-        if (!heartbeatUpdate.success) {
-          throw new Error(heartbeatUpdate.error);
-        }
-
-        // Başarılı heartbeat sonrası reconnect sayacını sıfırla
-        reconnectAttempts = 0;
-      } catch (error) {
-        console.error('Heartbeat hatası:', error);
-        handleConnectionError(tokenData.token);
-      }
-    }, 30000);
-
-    // Pencere kapanırken cleanup
-    window.addEventListener('beforeunload', async (event) => {
-      clearInterval(heartbeatInterval);
-      event.preventDefault();
-      
-      try {
-        const finalSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(tokenData.token, 'offline', finalSystemInfo);
-        if (statusChannel) {
-          await statusChannel.unsubscribe();
-        }
-      } catch (error) {
-        console.error('Çıkış durumu güncellenirken hata:', error);
-      }
-    });
-
     return supabase;
   } catch (error) {
-    console.error('Supabase başlatma hatası:', error);
+    console.error('Supabase initialization error:', error);
     throw error;
   }
 }
 
-async function setupRealtimeChannel(token: string) {
-  try {
-    if (statusChannel) {
-      await statusChannel.unsubscribe();
-    }
-
-    statusChannel = supabase.channel(`device_status:${token}`)
-      .on('presence', { event: 'sync' }, () => {
-        console.log('Status sync başarılı');
-      })
-      .on('presence', { event: 'join' }, () => {
-        console.log('Cihaz kanala katıldı');
-        toast.success('Realtime bağlantısı kuruldu');
-      })
-      .on('presence', { event: 'leave' }, () => {
-        console.log('Cihaz kanaldan ayrıldı');
-        toast.warning('Realtime bağlantısı kesildi');
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices',
-          filter: `token=eq.${token}`
-        },
-        (payload) => {
-          console.log('Cihaz durumu değişti:', payload);
-        }
-      );
-
-    await statusChannel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        await statusChannel.track({
-          token,
-          status: 'online',
-          system_info: systemInfo,
-          last_seen: new Date().toISOString()
-        });
-      }
-    });
-
-    // Başarılı bağlantı sonrası reconnect sayacını sıfırla
-    reconnectAttempts = 0;
-  } catch (error) {
-    console.error('Realtime kanal kurulumu hatası:', error);
-    handleConnectionError(token);
-  }
-}
-
-async function handleConnectionError(token: string) {
-  reconnectAttempts++;
-  
-  if (reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
-    const backoffTime = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-    console.log(`Yeniden bağlanmayı deniyor... Deneme ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
-    
-    setTimeout(async () => {
-      try {
-        await setupRealtimeChannel(token);
-      } catch (error) {
-        console.error('Yeniden bağlanma hatası:', error);
-      }
-    }, backoffTime);
-  } else {
-    toast.error('Bağlantı kurulamadı. Lütfen ağ bağlantınızı kontrol edin.');
-    console.error('Maksimum yeniden bağlanma denemesi aşıldı');
-  }
-}
-
-export { supabase, initSupabase };
+export { supabase, initSupabase, createDeviceToken, updateDeviceStatus };
