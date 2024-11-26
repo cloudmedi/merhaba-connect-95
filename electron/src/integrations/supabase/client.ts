@@ -36,34 +36,33 @@ async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'o
 
     if (checkError) throw checkError;
 
+    const deviceData = {
+      status,
+      system_info: systemInfo || {},
+      last_seen: new Date().toISOString(),
+    };
+
     if (!existingDevice) {
-      // For new devices, we need to create with minimal required fields
-      const { error: createError } = await supabase
-        .from('devices')
-        .insert([{
-          name: `Device ${deviceToken}`,
-          category: 'player',
-          token: deviceToken,
-          status: status,
-          system_info: systemInfo || {},
-          last_seen: new Date().toISOString(),
-          schedule: {} // Required default value
-        }]);
-
-      if (createError) throw createError;
-    } else {
-      // For existing devices, only update status and system info
-      const { error: updateError } = await supabase
-        .from('devices')
-        .update({
-          status: status,
-          system_info: systemInfo || {},
-          last_seen: new Date().toISOString()
-        })
-        .eq('token', deviceToken);
-
-      if (updateError) throw updateError;
+      // For new devices, include required fields
+      Object.assign(deviceData, {
+        name: `Device ${deviceToken}`,
+        category: 'player',
+        token: deviceToken,
+        schedule: {},
+      });
     }
+
+    const query = existingDevice
+      ? supabase
+          .from('devices')
+          .update(deviceData)
+          .eq('token', deviceToken)
+      : supabase
+          .from('devices')
+          .insert([deviceData]);
+
+    const { error: upsertError } = await query;
+    if (upsertError) throw upsertError;
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
