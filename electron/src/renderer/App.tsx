@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './App.css'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '../integrations/supabase/client'
 
 interface SystemInfo {
   cpu: {
@@ -62,10 +62,8 @@ function App() {
   useEffect(() => {
     const initializeDevice = async () => {
       try {
-        // MAC adresini al
         const macAddress = await window.electronAPI.getMacAddress()
         
-        // Mevcut token'ı kontrol et
         const { data: existingToken } = await supabase
           .from('device_tokens')
           .select('token')
@@ -76,10 +74,9 @@ function App() {
         if (existingToken) {
           setDeviceToken(existingToken.token)
         } else {
-          // Yeni token oluştur
           const newToken = generateToken()
           const expirationDate = new Date()
-          expirationDate.setFullYear(expirationDate.getFullYear() + 1) // 1 yıl geçerli
+          expirationDate.setFullYear(expirationDate.getFullYear() + 1) 
 
           const { data, error } = await supabase
             .from('device_tokens')
@@ -103,7 +100,6 @@ function App() {
 
     initializeDevice()
     
-    // Sistem bilgilerini al
     window.electronAPI.getSystemInfo().then(setSystemInfo)
     window.electronAPI.onSystemInfoUpdate(setSystemInfo)
   }, [])
