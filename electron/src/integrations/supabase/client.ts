@@ -29,20 +29,6 @@ async function createDeviceToken() {
   return tokenData;
 }
 
-async function linkDeviceToToken(deviceId: string, token: string) {
-  const supabase = await initSupabase();
-  const { error: updateError } = await supabase
-    .from('device_tokens')
-    .update({ device_id: deviceId })
-    .eq('token', token)
-    .eq('status', 'active');
-
-  if (updateError) {
-    console.error('Error linking device to token:', updateError);
-    throw updateError;
-  }
-}
-
 async function initSupabase() {
   if (supabase) return supabase;
 
@@ -69,43 +55,9 @@ async function initSupabase() {
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
-    // Check for existing device
-    const { data: existingDevice, error: deviceError } = await supabase
-      .from('devices')
-      .select('id')
-      .eq('id', deviceId)
-      .maybeSingle();
-
-    if (deviceError) {
-      console.error('Error checking device:', deviceError);
-      throw deviceError;
-    }
-
-    if (!existingDevice) {
-      // Önce token oluştur
-      const tokenData = await createDeviceToken();
-      console.log('Created new token:', tokenData);
-      
-      // Sonra cihazı ekle
-      const { error: insertDeviceError } = await supabase
-        .from('devices')
-        .insert({
-          id: deviceId,
-          name: 'Electron App',
-          category: 'player',
-          status: 'online',
-          system_info: {},
-          schedule: {}
-        });
-
-      if (insertDeviceError) {
-        console.error('Error creating device:', insertDeviceError);
-        throw insertDeviceError;
-      }
-
-      // Son olarak token'ı cihaza bağla
-      await linkDeviceToToken(deviceId, tokenData.token);
-    }
+    // Sadece token oluştur
+    const tokenData = await createDeviceToken();
+    console.log('Created new token:', tokenData);
     
     console.log('Supabase initialized successfully');
     return supabase;
@@ -117,4 +69,4 @@ async function initSupabase() {
 
 let supabase: ReturnType<typeof createClient>;
 
-export { initSupabase, createDeviceToken, linkDeviceToToken };
+export { initSupabase, createDeviceToken };
