@@ -26,7 +26,7 @@ async function createDeviceToken(macAddress: string) {
   return tokenData;
 }
 
-async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
+async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   try {
     const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
@@ -42,27 +42,30 @@ async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'o
       last_seen: new Date().toISOString(),
     };
 
+    // Only create new device if it doesn't exist
     if (!existingDevice) {
-      // For new devices, include required fields
-      Object.assign(deviceData, {
-        name: `Device ${deviceToken}`,
-        category: 'player',
-        token: deviceToken,
-        schedule: {},
-      });
+      const { error: createError } = await supabase
+        .from('devices')
+        .insert({
+          name: `Device ${deviceToken}`,
+          category: 'player',
+          token: deviceToken,
+          status: 'offline', // Always start as offline until manager activates
+          system_info: systemInfo || {},
+          last_seen: new Date().toISOString(),
+          schedule: {}
+        });
+
+      if (createError) throw createError;
+    } else {
+      // Update existing device status
+      const { error: updateError } = await supabase
+        .from('devices')
+        .update(deviceData)
+        .eq('token', deviceToken);
+
+      if (updateError) throw updateError;
     }
-
-    const query = existingDevice
-      ? supabase
-          .from('devices')
-          .update(deviceData)
-          .eq('token', deviceToken)
-      : supabase
-          .from('devices')
-          .insert([deviceData]);
-
-    const { error: upsertError } = await query;
-    if (upsertError) throw upsertError;
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
@@ -99,6 +102,7 @@ async function initSupabase() {
     const macAddress = await (window as any).electronAPI.getMacAddress();
     if (!macAddress) throw new Error('Could not get MAC address');
 
+    // Get or create device token
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
@@ -116,24 +120,26 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Set initial online status
+    // Set initial status as offline until manager activates
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    await updateDeviceStatus(supabase, deviceToken, 'online', systemInfo);
+    await updateDeviceStatus(deviceToken, 'offline', systemInfo);
 
-    // Clear any existing interval
-    if (statusUpdateInterval) {
-      clearInterval(statusUpdateInterval);
-    }
-
-    // Start status updates
-    statusUpdateInterval = setInterval(async () => {
-      try {
-        const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(supabase, deviceToken, 'online', updatedSystemInfo);
-      } catch (error) {
-        console.error('Error in status update interval:', error);
-      }
-    }, 15000);
+    // Subscribe to device status changes
+    const channel = supabase.channel('device_status')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices',
+          filter: `token=eq.${deviceToken}`
+        },
+        async (payload) => {
+          console.log('Device status changed:', payload);
+          // Handle status changes here
+        }
+      )
+      .subscribe();
 
     // Set offline status when app closes
     window.addEventListener('beforeunload', async (event) => {
@@ -142,7 +148,7 @@ async function initSupabase() {
         clearInterval(statusUpdateInterval);
       }
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(supabase, deviceToken, 'offline', systemInfo);
+      await updateDeviceStatus(deviceToken, 'offline', systemInfo);
     });
     
     return supabase;
