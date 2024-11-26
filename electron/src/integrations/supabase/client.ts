@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
 let supabase: ReturnType<typeof createClient>;
-let statusUpdateInterval: NodeJS.Timeout;
 
 async function createDeviceToken(macAddress: string) {
   const supabase = await initSupabase();
@@ -30,19 +29,13 @@ async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offli
   try {
     const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
-      .select('id, name')
+      .select('id, name, status')
       .eq('token', deviceToken)
       .maybeSingle();
 
     if (checkError) throw checkError;
 
-    const deviceData = {
-      status,
-      system_info: systemInfo || {},
-      last_seen: new Date().toISOString(),
-    };
-
-    // Only create new device if it doesn't exist
+    // For new devices, always create as offline
     if (!existingDevice) {
       const { error: createError } = await supabase
         .from('devices')
@@ -50,18 +43,25 @@ async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offli
           name: `Device ${deviceToken}`,
           category: 'player',
           token: deviceToken,
-          status: 'offline', // Always start as offline until manager activates
+          status: 'offline', // Always start as offline
           system_info: systemInfo || {},
           last_seen: new Date().toISOString(),
           schedule: {}
         });
 
       if (createError) throw createError;
-    } else {
-      // Update existing device status
+      return;
+    }
+
+    // Only update status if device exists and current status is different
+    if (existingDevice.status !== status) {
       const { error: updateError } = await supabase
         .from('devices')
-        .update(deviceData)
+        .update({
+          status,
+          system_info: systemInfo || {},
+          last_seen: new Date().toISOString(),
+        })
         .eq('token', deviceToken);
 
       if (updateError) throw updateError;
@@ -120,12 +120,12 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Set initial status as offline until manager activates
+    // Set initial status and subscribe to changes
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
     await updateDeviceStatus(deviceToken, 'offline', systemInfo);
 
     // Subscribe to device status changes
-    const channel = supabase.channel('device_status')
+    const channel = supabase.channel(`device_status_${deviceToken}`)
       .on(
         'postgres_changes',
         {
@@ -134,9 +134,15 @@ async function initSupabase() {
           table: 'devices',
           filter: `token=eq.${deviceToken}`
         },
-        async (payload) => {
+        async (payload: any) => {
           console.log('Device status changed:', payload);
-          // Handle status changes here
+          
+          // Handle status changes from manager
+          if (payload.new && payload.new.status === 'online') {
+            // Manager has activated the device
+            const systemInfo = await (window as any).electronAPI.getSystemInfo();
+            await updateDeviceStatus(deviceToken, 'online', systemInfo);
+          }
         }
       )
       .subscribe();
@@ -144,10 +150,6 @@ async function initSupabase() {
     // Set offline status when app closes
     window.addEventListener('beforeunload', async (event) => {
       event.preventDefault();
-      if (statusUpdateInterval) {
-        clearInterval(statusUpdateInterval);
-      }
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'offline', systemInfo);
     });
     
