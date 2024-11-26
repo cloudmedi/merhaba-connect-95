@@ -57,7 +57,7 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Get device info
+    // Get device info and set up realtime subscription
     const { data: device } = await supabase
       .from('devices')
       .select('id')
@@ -65,7 +65,6 @@ async function initSupabase() {
       .maybeSingle();
 
     if (device) {
-      // Enable REPLICA IDENTITY FULL for realtime
       const channel = supabase.channel('device_status')
         .on(
           'postgres_changes',
@@ -88,7 +87,7 @@ async function initSupabase() {
           console.log('Realtime subscription status:', status);
         });
 
-      // Set initial online status and update system info
+      // Set initial online status
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'online', systemInfo);
 
