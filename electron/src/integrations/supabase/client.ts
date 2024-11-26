@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-async function createDeviceToken(macAddress: string) {
+async function createDeviceToken(deviceId: string) {
   const supabase = await initSupabase();
   const token = Math.random().toString(36).substring(2, 8).toUpperCase();
   const expirationDate = new Date();
@@ -10,7 +10,7 @@ async function createDeviceToken(macAddress: string) {
     .from('device_tokens')
     .insert({
       token,
-      mac_address: macAddress,
+      device_id: deviceId,
       status: 'active',
       expires_at: expirationDate.toISOString()
     })
@@ -58,12 +58,46 @@ async function initSupabase() {
     if (!macAddress) {
       throw new Error('Could not get MAC address');
     }
+
+    // Önce MAC adresi ile eşleşen bir cihaz var mı kontrol et
+    const { data: existingDevice, error: deviceError } = await supabase
+      .from('devices')
+      .select('id')
+      .eq('system_info->mac_address', macAddress)
+      .maybeSingle();
+
+    if (deviceError) {
+      console.error('Error checking existing device:', deviceError);
+      throw deviceError;
+    }
+
+    let deviceId = existingDevice?.id;
+
+    // Eğer cihaz yoksa yeni cihaz kaydı oluştur
+    if (!deviceId) {
+      const { data: newDevice, error: createError } = await supabase
+        .from('devices')
+        .insert({
+          name: 'Offline Player',
+          category: 'player',
+          system_info: { mac_address: macAddress }
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating device:', createError);
+        throw createError;
+      }
+
+      deviceId = newDevice.id;
+    }
     
-    // MAC adresine ait aktif token var mı kontrol et
+    // Device ID ile aktif token var mı kontrol et
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
-      .eq('mac_address', macAddress)
+      .eq('device_id', deviceId)
       .eq('status', 'active')
       .maybeSingle();
     
@@ -78,7 +112,7 @@ async function initSupabase() {
     }
     
     // Eğer token yoksa yeni oluştur
-    const tokenData = await createDeviceToken(macAddress);
+    const tokenData = await createDeviceToken(deviceId);
     console.log('Created new token:', tokenData);
     
     return supabase;
