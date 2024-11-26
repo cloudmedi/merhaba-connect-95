@@ -27,38 +27,45 @@ async function createDeviceToken(macAddress: string) {
 }
 
 async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
-  const { data: existingDevice, error: checkError } = await supabase
-    .from('devices')
-    .select('id, name')
-    .eq('token', deviceToken)
-    .maybeSingle();
-
-  if (checkError) throw checkError;
-
-  if (!existingDevice) {
-    const { error: createError } = await supabase
+  try {
+    const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
-      .insert({
-        name: `Device ${deviceToken}`,
-        token: deviceToken,
-        category: 'player',
-        status,
-        system_info: systemInfo,
-        last_seen: new Date().toISOString()
-      });
+      .select('id, name')
+      .eq('token', deviceToken)
+      .maybeSingle();
 
-    if (createError) throw createError;
-  } else {
-    const { error: updateError } = await supabase
-      .from('devices')
-      .update({
-        status,
-        system_info: systemInfo,
-        last_seen: new Date().toISOString()
-      })
-      .eq('token', deviceToken);
+    if (checkError) throw checkError;
 
-    if (updateError) throw updateError;
+    const deviceData = {
+      name: existingDevice?.name || `Device ${deviceToken}`,
+      category: 'player',
+      status,
+      system_info: systemInfo,
+      last_seen: new Date().toISOString(),
+      token: deviceToken
+    };
+
+    if (!existingDevice) {
+      const { error: createError } = await supabase
+        .from('devices')
+        .insert([deviceData]);
+
+      if (createError) throw createError;
+    } else {
+      const { error: updateError } = await supabase
+        .from('devices')
+        .update({
+          status,
+          system_info: systemInfo,
+          last_seen: new Date().toISOString()
+        })
+        .eq('token', deviceToken);
+
+      if (updateError) throw updateError;
+    }
+  } catch (error) {
+    console.error('Error updating device status:', error);
+    throw error;
   }
 }
 
