@@ -22,23 +22,23 @@ function App() {
         
         console.log('Starting initialization...');
         
-        // Supabase'i başlat
+        // Initialize Supabase
         const supabase = await initSupabase();
         console.log('Supabase initialized successfully');
         
-        // MAC adresini al
-        const macAddress = await window.electronAPI.getMacAddress();
-        console.log('MAC address obtained:', macAddress);
+        // Get device ID instead of MAC address
+        const deviceId = await window.electronAPI.getDeviceId();
+        console.log('Device ID obtained:', deviceId);
         
-        if (!macAddress) {
-          throw new Error('MAC adresi alınamadı');
+        if (!deviceId) {
+          throw new Error('Could not get device identifier');
         }
 
-        // Mevcut token'ı kontrol et
+        // Check existing token
         const { data: existingToken, error: tokenError } = await supabase
           .from('device_tokens')
           .select('token, status')
-          .eq('device_id', macAddress)
+          .eq('device_id', deviceId)
           .eq('status', 'active')
           .maybeSingle();
 
@@ -51,7 +51,7 @@ function App() {
           console.log('Existing token found:', existingToken.token);
           setDeviceToken(existingToken.token);
         } else {
-          // Yeni token oluştur
+          // Generate new token
           const newToken = Math.random().toString(36).substring(2, 8).toUpperCase();
           console.log('Generating new token:', newToken);
           
@@ -62,7 +62,7 @@ function App() {
             .from('device_tokens')
             .insert({
               token: newToken,
-              device_id: macAddress,
+              device_id: deviceId,
               status: 'active',
               expires_at: expirationDate.toISOString()
             });
@@ -78,14 +78,14 @@ function App() {
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
-        setError(error.message || 'Bir hata oluştu');
+        setError(error.message || 'An error occurred');
         setIsLoading(false);
       }
     };
 
     initialize();
     
-    // Sistem bilgisi dinleyicilerini ayarla
+    // Set up system info listeners
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
   }, [retryCount]);

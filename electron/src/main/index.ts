@@ -22,6 +22,21 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 
 let win: BrowserWindow | null
 
+async function getMacAddress() {
+  try {
+    const networkInterfaces = await si.networkInterfaces()
+    for (const iface of networkInterfaces) {
+      if (!iface.internal && iface.mac) {
+        return iface.mac
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('Error getting MAC address:', error)
+    return null
+  }
+}
+
 async function getSystemInfo() {
   const cpu = await si.cpu()
   const mem = await si.mem()
@@ -107,3 +122,4 @@ app.on('activate', () => {
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo)
 ipcMain.handle('get-device-id', getDeviceIdentifier)
+ipcMain.handle('get-mac-address', getMacAddress)
