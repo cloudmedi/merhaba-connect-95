@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useDeviceSubscription } from "./useDeviceSubscription";
 import type { Device } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
   
+  // Set up realtime subscription
   useDeviceSubscription(queryClient);
 
   const { data: devices = [], isLoading, error } = useQuery({
@@ -43,78 +43,9 @@ export const useDevices = () => {
     },
   });
 
-  const createDevice = useMutation({
-    mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data, error } = await supabase
-        .from('devices')
-        .insert({
-          ...device,
-          last_seen: new Date().toISOString(),
-          ip_address: window.location.hostname,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla eklendi');
-    },
-    onError: (error: Error) => {
-      toast.error('Cihaz eklenirken bir hata oluştu: ' + error.message);
-    },
-  });
-
-  const updateDevice = useMutation({
-    mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('devices')
-        .update({
-          ...device,
-          last_seen: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla güncellendi');
-    },
-    onError: (error: Error) => {
-      toast.error('Cihaz güncellenirken bir hata oluştu: ' + error.message);
-    },
-  });
-
-  const deleteDevice = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('devices')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla silindi');
-    },
-    onError: (error: Error) => {
-      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
-    },
-  });
-
   return {
     devices,
     isLoading,
-    error,
-    createDevice,
-    updateDevice,
-    deleteDevice,
+    error
   };
 };

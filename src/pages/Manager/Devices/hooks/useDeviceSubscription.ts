@@ -22,16 +22,17 @@ export const useDeviceSubscription = (queryClient: QueryClient) => {
           const event = payload.eventType;
           const deviceName = (payload.new as Device)?.name || (payload.old as Device)?.name;
           
-          if (event === 'INSERT') {
-            toast.success(`Cihaz "${deviceName}" eklendi`);
-          } else if (event === 'UPDATE') {
+          if (event === 'UPDATE') {
             const oldStatus = (payload.old as Device)?.status;
             const newStatus = (payload.new as Device)?.status;
+            
             if (oldStatus !== newStatus) {
-              toast.info(`Cihaz "${deviceName}" şu anda ${newStatus}`);
+              if (newStatus === 'online') {
+                toast.success(`${deviceName} çevrimiçi oldu`);
+              } else if (newStatus === 'offline') {
+                toast.warning(`${deviceName} çevrimdışı oldu`);
+              }
             }
-          } else if (event === 'DELETE') {
-            toast.success(`Cihaz "${deviceName}" kaldırıldı`);
           }
         }
       )
