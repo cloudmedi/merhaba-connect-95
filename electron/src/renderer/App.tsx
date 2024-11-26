@@ -29,7 +29,11 @@ function App() {
         // Initialize Supabase
         const supabase = await initSupabase();
         
-        // Get or create token for this device
+        // Generate a new token if none exists
+        const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const expirationDate = new Date();
+        expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
         const { data: existingToken, error: tokenError } = await supabase
           .from('device_tokens')
           .select('token')
@@ -42,24 +46,17 @@ function App() {
         if (existingToken?.token) {
           setDeviceToken(existingToken.token);
         } else {
-          // Create new token if none exists
-          const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-          const expirationDate = new Date();
-          expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-          const { data: newToken, error: createError } = await supabase
+          const { error: createError } = await supabase
             .from('device_tokens')
             .insert({
               token,
               mac_address: macAddress,
               status: 'active',
               expires_at: expirationDate.toISOString()
-            })
-            .select()
-            .single();
+            });
 
           if (createError) throw createError;
-          setDeviceToken(newToken.token);
+          setDeviceToken(token);
         }
 
         setIsLoading(false);
