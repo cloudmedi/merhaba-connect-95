@@ -32,7 +32,32 @@ async function initSupabase() {
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
-    // Test connection and check/create device token
+    // First create the device if it doesn't exist
+    const { data: existingDevice, error: deviceError } = await supabase
+      .from('devices')
+      .select('id')
+      .eq('id', deviceId)
+      .single();
+
+    if (deviceError || !existingDevice) {
+      const { error: insertDeviceError } = await supabase
+        .from('devices')
+        .insert({
+          id: deviceId,
+          name: 'Electron App',
+          category: 'player',
+          status: 'online',
+          system_info: {},
+          schedule: {}
+        });
+
+      if (insertDeviceError) {
+        console.error('Error creating device:', insertDeviceError);
+        throw insertDeviceError;
+      }
+    }
+    
+    // Now check/create device token
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('*')
