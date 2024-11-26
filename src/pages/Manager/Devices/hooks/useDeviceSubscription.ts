@@ -23,15 +23,15 @@ export const useDeviceSubscription = (queryClient: QueryClient) => {
           const deviceName = (payload.new as Device)?.name || (payload.old as Device)?.name;
           
           if (event === 'INSERT') {
-            toast.success(`Device "${deviceName}" has been added`);
+            toast.success(`Cihaz "${deviceName}" eklendi`);
           } else if (event === 'UPDATE') {
             const oldStatus = (payload.old as Device)?.status;
             const newStatus = (payload.new as Device)?.status;
             if (oldStatus !== newStatus) {
-              toast.info(`Device "${deviceName}" is now ${newStatus}`);
+              toast.info(`Cihaz "${deviceName}" şu anda ${newStatus}`);
             }
           } else if (event === 'DELETE') {
-            toast.success(`Device "${deviceName}" has been removed`);
+            toast.success(`Cihaz "${deviceName}" kaldırıldı`);
           }
         }
       )
