@@ -3,8 +3,7 @@ import { DeviceListItem } from "./DeviceListItem";
 import { toast } from "sonner";
 import { useDevices } from "../hooks/useDevices";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Table, TableBody } from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface DeviceListProps {
   devices: Device[];
@@ -41,20 +40,27 @@ export function DeviceList({ devices }: DeviceListProps) {
 
   return (
     <Card className="border-none">
-      <ScrollArea className="h-[calc(100vh-400px)]">
-        <Table>
-          <TableBody>
-            {devices.map((device) => (
-              <DeviceListItem 
-                key={device.id} 
-                device={device}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px]"></TableHead>
+            <TableHead>Device Name</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Last Seen</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {devices.map((device) => (
+            <DeviceListItem 
+              key={device.id} 
+              device={device}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          ))}
+        </TableBody>
+      </Table>
     </Card>
   );
 }

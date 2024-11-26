@@ -4,7 +4,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Device } from "../hooks/types";
-import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
+import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
@@ -27,7 +26,7 @@ interface DeviceListItemProps {
 }
 
 export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps) {
-  const [showPreview, setShowPreview] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const lastSeen = device.last_seen 
     ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
@@ -56,9 +55,6 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
         </Badge>
       </TableCell>
       <TableCell className="text-gray-500">
-        {device.ip_address || '-'}
-      </TableCell>
-      <TableCell className="text-gray-500">
         {lastSeen}
       </TableCell>
       <TableCell className="text-right">
@@ -69,14 +65,12 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DialogTrigger asChild>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <Eye className="h-4 w-4 mr-2" />
-                Detaylar
-              </DropdownMenuItem>
-            </DialogTrigger>
+            <DropdownMenuItem onClick={() => setShowDetails(true)}>
+              <Eye className="h-4 w-4 mr-2" />
+              Detaylar
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(device)}>
-              <Edit className="h-4 w-4 mr-2" />
+              <Pencil className="h-4 w-4 mr-2" />
               Düzenle
             </DropdownMenuItem>
             <DropdownMenuItem 
@@ -93,7 +87,7 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <Dialog open={showDetails} onOpenChange={setShowDetails}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Cihaz Detayları - {device.name}</DialogTitle>
