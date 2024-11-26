@@ -6,8 +6,6 @@ import { toast } from "sonner";
 import { Device } from "../hooks/types";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceListItemProps {
   device: Device;
@@ -15,47 +13,6 @@ interface DeviceListItemProps {
 
 export function DeviceListItem({ device }: DeviceListItemProps) {
   const { registerPlayer } = useOfflinePlayers();
-  const [status, setStatus] = useState(device.status);
-  const [lastSeen, setLastSeen] = useState(device.last_seen);
-
-  useEffect(() => {
-    // Subscribe to device status changes
-    const channel = supabase
-      .channel(`device-${device.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices',
-          filter: `id=eq.${device.id}`
-        },
-        (payload: any) => {
-          if (payload.new) {
-            setStatus(payload.new.status);
-            setLastSeen(payload.new.last_seen);
-          }
-        }
-      )
-      .subscribe();
-
-    // Check if device is actually offline
-    const checkOfflineStatus = setInterval(() => {
-      const lastSeenDate = new Date(lastSeen || '');
-      const now = new Date();
-      const diffInSeconds = (now.getTime() - lastSeenDate.getTime()) / 1000;
-      
-      // If no heartbeat received in 60 seconds, consider device offline
-      if (diffInSeconds > 60 && status === 'online') {
-        setStatus('offline');
-      }
-    }, 10000);
-
-    return () => {
-      supabase.removeChannel(channel);
-      clearInterval(checkOfflineStatus);
-    };
-  }, [device.id, lastSeen, status]);
 
   const handleRegisterOfflinePlayer = async () => {
     try {
@@ -66,8 +23,8 @@ export function DeviceListItem({ device }: DeviceListItemProps) {
     }
   };
 
-  const formattedLastSeen = lastSeen 
-    ? formatDistanceToNow(new Date(lastSeen), { addSuffix: true, locale: tr })
+  const lastSeen = device.last_seen 
+    ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
     : 'Hiç bağlanmadı';
 
   return (
@@ -78,15 +35,15 @@ export function DeviceListItem({ device }: DeviceListItemProps) {
             <h3 className="text-lg font-semibold">{device.name}</h3>
             <p className="text-sm text-gray-500">{device.branches?.name || 'Şube atanmamış'}</p>
           </div>
-          <Badge variant={status === 'online' ? 'success' : 'secondary'}>
-            {status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+          <Badge variant={device.status === 'online' ? 'success' : 'secondary'}>
+            {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
           </Badge>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500">Son görülme:</span>
-            <span>{formattedLastSeen}</span>
+            <span>{lastSeen}</span>
           </div>
           
           <div className="flex items-center justify-between text-sm">

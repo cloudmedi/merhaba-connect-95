@@ -26,10 +26,7 @@ async function createDeviceToken(macAddress: string) {
 }
 
 async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
-  const supabase = await initSupabase();
-  
   try {
-    // First try to find the device
     const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
       .select('id, name, status')
@@ -39,48 +36,35 @@ async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offli
     if (checkError) throw checkError;
 
     if (!existingDevice) {
-      // Create new device if it doesn't exist
+      // Yeni cihaz oluşturulduğunda manager'ın görebilmesi için
       const { error: createError } = await supabase
         .from('devices')
         .insert({
           name: `Device ${deviceToken}`,
           category: 'player',
           token: deviceToken,
-          status: status,
+          status: status, // Manager'dan gelen status'ü kullan
           system_info: systemInfo || {},
           last_seen: new Date().toISOString(),
           schedule: {}
-        });
+        })
+        .select();
 
       if (createError) throw createError;
       return;
     }
 
-    // Update existing device status
+    // Status değiştiğinde güncelle
     const { error: updateError } = await supabase
       .from('devices')
       .update({
-        status: status,
+        status,
         system_info: systemInfo || {},
         last_seen: new Date().toISOString(),
       })
       .eq('token', deviceToken);
 
     if (updateError) throw updateError;
-
-    // Set up heartbeat interval
-    if (status === 'online') {
-      setInterval(async () => {
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        await supabase
-          .from('devices')
-          .update({
-            last_seen: new Date().toISOString(),
-            system_info: systemInfo
-          })
-          .eq('token', deviceToken);
-      }, 30000); // Send heartbeat every 30 seconds
-    }
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
@@ -135,16 +119,35 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Set initial online status
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    await updateDeviceStatus(deviceToken, 'online', systemInfo);
+    // Manager'dan gelen status değişikliklerini dinle
+    const channel = supabase.channel(`device_status_${deviceToken}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices',
+          filter: `token=eq.${deviceToken}`
+        },
+        async (payload: any) => {
+          console.log('Device status changed:', payload);
+          
+          // Manager'dan gelen status değişikliğini uygula
+          if (payload.new && payload.new.status) {
+            const systemInfo = await (window as any).electronAPI.getSystemInfo();
+            await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
+          }
+        }
+      )
+      .subscribe();
 
-    // Handle window close/reload
-    window.addEventListener('beforeunload', async () => {
+    // Uygulama kapanırken offline yap
+    window.addEventListener('beforeunload', async (event) => {
+      event.preventDefault();
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'offline', systemInfo);
     });
-
+    
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);
@@ -152,4 +155,4 @@ async function initSupabase() {
   }
 }
 
-export { initSupabase, createDeviceToken, updateDeviceStatus };
+export { initSupabase, createDeviceToken };
