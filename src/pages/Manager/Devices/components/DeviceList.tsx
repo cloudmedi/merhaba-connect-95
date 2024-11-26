@@ -16,7 +16,7 @@ export function DeviceList({ devices }: DeviceListProps) {
   }
 
   return (
-    <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
       {devices.map((device) => (
         <DeviceListItem key={device.id} device={device} />
       ))}
