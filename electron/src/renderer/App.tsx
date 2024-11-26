@@ -7,6 +7,7 @@ import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
 import { LoadingState } from './components/LoadingState';
+import { DeviceStats } from './components/DeviceStats';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -14,6 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [deviceStatus, setDeviceStatus] = useState<'online' | 'offline'>('offline');
 
   useEffect(() => {
     const initialize = async () => {
@@ -35,12 +37,14 @@ function App() {
         const tokenData = await createDeviceToken(macAddress);
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
+          setDeviceStatus('online');
         }
 
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
         setError(error.message || 'An error occurred');
+        setDeviceStatus('offline');
         setIsLoading(false);
       }
     };
@@ -50,6 +54,11 @@ function App() {
     // Set up system info listeners
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
+
+    // Cleanup function
+    return () => {
+      setDeviceStatus('offline');
+    };
   }, [retryCount]);
 
   const handleRetry = () => {
@@ -68,6 +77,7 @@ function App() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         <TokenDisplay token={deviceToken} />
+        <DeviceStats systemInfo={systemInfo} deviceStatus={deviceStatus} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
     </div>
