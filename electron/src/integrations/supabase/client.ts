@@ -11,7 +11,7 @@ async function createDeviceToken(macAddress: string) {
     .insert({
       token,
       mac_address: macAddress,
-      status: 'active',
+      status: 'active', // Changed from 'pending' to 'active'
       expires_at: expirationDate.toISOString()
     })
     .select()
@@ -58,7 +58,7 @@ async function initSupabase() {
       throw new Error('Could not get MAC address');
     }
 
-    // MAC adresi ile eşleşen aktif token var mı kontrol et
+    // Check for existing active token with MAC address
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
@@ -76,7 +76,7 @@ async function initSupabase() {
       return supabase;
     }
     
-    // Eğer token yoksa yeni oluştur
+    // Create new token if none exists
     const tokenData = await createDeviceToken(macAddress);
     console.log('Created new token:', tokenData);
     
