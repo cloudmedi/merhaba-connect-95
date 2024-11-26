@@ -20,15 +20,15 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        },
-        external: ['@supabase/supabase-js']
+        }
       }
     },
     plugins: [react()],
     resolve: {
       alias: {
         '@': path.resolve('src'),
-        '@renderer': path.resolve('src/renderer')
+        '@renderer': path.resolve('src/renderer'),
+        '@supabase/supabase-js': path.resolve('node_modules/@supabase/supabase-js/dist/module/index.js')
       }
     },
     optimizeDeps: {
