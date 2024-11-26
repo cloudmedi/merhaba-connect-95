@@ -20,22 +20,39 @@ function App() {
         setIsLoading(true);
         setError(null);
         
+        // Initialize Supabase
         const supabase = await initSupabase();
-        const macAddress = await window.electronAPI.getMacAddress();
+        console.log('Supabase initialized successfully');
         
+        // Get MAC address
+        const macAddress = await window.electronAPI.getMacAddress();
+        console.log('MAC address obtained:', macAddress);
+        
+        if (!macAddress) {
+          throw new Error('MAC adresi alınamadı');
+        }
+
+        // Check for existing token
         const { data: existingToken, error: tokenError } = await supabase
           .from('device_tokens')
-          .select('token')
+          .select('token, status')
           .eq('device_id', macAddress)
           .eq('status', 'active')
           .maybeSingle();
 
-        if (tokenError) throw tokenError;
+        if (tokenError) {
+          console.error('Token query error:', tokenError);
+          throw tokenError;
+        }
 
-        if (existingToken) {
+        if (existingToken?.token) {
+          console.log('Existing token found:', existingToken.token);
           setDeviceToken(existingToken.token);
         } else {
+          // Generate new token
           const newToken = Math.random().toString(36).substring(2, 8).toUpperCase();
+          console.log('Generating new token:', newToken);
+          
           const expirationDate = new Date();
           expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
@@ -44,29 +61,44 @@ function App() {
             .insert({
               token: newToken,
               device_id: macAddress,
+              status: 'active',
               expires_at: expirationDate.toISOString()
             });
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Token insert error:', insertError);
+            throw insertError;
+          }
+
           setDeviceToken(newToken);
         }
 
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
-        setError(error.message);
+        setError(error.message || 'Bir hata oluştu');
         setIsLoading(false);
       }
     };
 
     initialize();
     
+    // Set up system info listeners
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
+
+    return () => {
+      // Cleanup if needed
+    };
   }, [retryCount]);
 
+  const handleRetry = () => {
+    console.log('Retrying initialization...');
+    setRetryCount(prev => prev + 1);
+  };
+
   if (error) {
-    return <ErrorState error={error} onRetry={() => setRetryCount(prev => prev + 1)} />;
+    return <ErrorState error={error} onRetry={handleRetry} />;
   }
 
   if (isLoading) {
