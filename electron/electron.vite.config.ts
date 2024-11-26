@@ -23,7 +23,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        }
+        },
+        external: ['sonner']
       }
     },
     plugins: [react()],
@@ -32,6 +33,9 @@ export default defineConfig({
         '@': path.resolve('src'),
         '@renderer': path.resolve('src/renderer')
       }
+    },
+    optimizeDeps: {
+      include: ['sonner']
     }
   }
 })
