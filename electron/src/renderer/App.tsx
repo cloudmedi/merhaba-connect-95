@@ -20,11 +20,13 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        // Initialize Supabase
+        console.log('Starting initialization...');
+        
+        // Supabase'i başlat
         const supabase = await initSupabase();
         console.log('Supabase initialized successfully');
         
-        // Get MAC address
+        // MAC adresini al
         const macAddress = await window.electronAPI.getMacAddress();
         console.log('MAC address obtained:', macAddress);
         
@@ -32,7 +34,7 @@ function App() {
           throw new Error('MAC adresi alınamadı');
         }
 
-        // Check for existing token
+        // Mevcut token'ı kontrol et
         const { data: existingToken, error: tokenError } = await supabase
           .from('device_tokens')
           .select('token, status')
@@ -49,7 +51,7 @@ function App() {
           console.log('Existing token found:', existingToken.token);
           setDeviceToken(existingToken.token);
         } else {
-          // Generate new token
+          // Yeni token oluştur
           const newToken = Math.random().toString(36).substring(2, 8).toUpperCase();
           console.log('Generating new token:', newToken);
           
@@ -83,13 +85,9 @@ function App() {
 
     initialize();
     
-    // Set up system info listeners
+    // Sistem bilgisi dinleyicilerini ayarla
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
-
-    return () => {
-      // Cleanup if needed
-    };
   }, [retryCount]);
 
   const handleRetry = () => {

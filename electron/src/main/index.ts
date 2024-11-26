@@ -2,20 +2,30 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import si from 'systeminformation'
 import { networkInterfaces } from 'os'
+import dotenv from 'dotenv'
 
-// Load environment variables from process.env
+// .env dosyasını yükle
+dotenv.config({ path: path.join(__dirname, '../../../.env') })
+dotenv.config({ path: path.join(__dirname, '../../.env') })
+
+// Çevre değişkenlerini kontrol et
 const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
+if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
+  console.error('Missing Supabase environment variables:', {
+    VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY
+  })
+}
+
 let win: BrowserWindow | null
 
-// MAC adresi alma fonksiyonu
 async function getMacAddress(): Promise<string> {
   const interfaces = networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const net of interfaces[name] || []) {
-      // Skip internal interfaces
       if (!net.internal) {
         return net.mac;
       }
@@ -75,9 +85,16 @@ function createWindow() {
     }
   })
 
-  // Pass environment variables to renderer process
+  // Çevre değişkenlerini renderer sürecine gönder
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('env-vars', {
+    if (!win) return;
+    
+    console.log('Sending environment variables to renderer:', {
+      VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY
+    });
+    
+    win.webContents.send('env-vars', {
       VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY
     })
@@ -88,14 +105,6 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
-
-  // Sistem bilgilerini her 5 saniyede bir güncelle
-  setInterval(async () => {
-    if (win) {
-      const systemInfo = await getSystemInfo()
-      win.webContents.send('system-info-update', systemInfo)
-    }
-  }, 5000)
 }
 
 app.whenReady().then(createWindow)
