@@ -46,9 +46,7 @@ async function initSupabase() {
 
     let deviceToken;
     if (existingToken) {
-      // Check if token is expired
       if (new Date(existingToken.expires_at) < new Date()) {
-        // Create new token if expired
         const tokenData = await createDeviceToken(macAddress);
         deviceToken = tokenData.token;
       } else {
@@ -59,7 +57,7 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Subscribe to device status changes only if device exists
+    // Get device info
     const { data: device } = await supabase
       .from('devices')
       .select('id')
@@ -67,7 +65,8 @@ async function initSupabase() {
       .maybeSingle();
 
     if (device) {
-      const channel = supabase.channel(`device_status_${deviceToken}`)
+      // Enable REPLICA IDENTITY FULL for realtime
+      const channel = supabase.channel('device_status')
         .on(
           'postgres_changes',
           {
@@ -89,14 +88,13 @@ async function initSupabase() {
           console.log('Realtime subscription status:', status);
         });
 
-      // Set initial online status and update on window events
+      // Set initial online status and update system info
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'online', systemInfo);
 
       // Update status when window is closing
       window.addEventListener('beforeunload', async (event) => {
         event.preventDefault();
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
         await updateDeviceStatus(deviceToken, 'offline', systemInfo);
       });
     }

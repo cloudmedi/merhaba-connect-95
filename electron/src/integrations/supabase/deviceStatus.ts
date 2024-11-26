@@ -27,7 +27,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
 
     if (checkError) throw checkError;
 
-    // Only update status if device exists (must be added by manager first)
+    // Only update status if device exists
     if (existingDevice) {
       const { error: updateError } = await supabase
         .from('devices')
@@ -39,6 +39,8 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
         .eq('token', deviceToken);
 
       if (updateError) throw updateError;
+      
+      console.log('Device status updated:', status);
     }
   } catch (error) {
     console.error('Error updating device status:', error);
