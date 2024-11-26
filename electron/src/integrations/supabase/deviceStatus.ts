@@ -39,34 +39,37 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
     // Update device status with retry mechanism
     let retryCount = 0;
     const maxRetries = 3;
+    let lastError = null;
     
     while (retryCount < maxRetries) {
-      const { error: updateError } = await supabase
-        .from('devices')
-        .update({
-          status,
-          system_info: systemInfo || {},
-          last_seen: new Date().toISOString(),
-        })
-        .eq('token', deviceToken);
+      try {
+        const { error: updateError } = await supabase
+          .from('devices')
+          .update({
+            status,
+            system_info: systemInfo || {},
+            last_seen: new Date().toISOString(),
+          })
+          .eq('token', deviceToken);
 
-      if (!updateError) {
-        console.log('Device status updated successfully:', status);
-        break;
+        if (!updateError) {
+          console.log('Device status updated successfully:', status);
+          return { success: true, device };
+        }
+
+        lastError = updateError;
+        retryCount++;
+        
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+      } catch (error) {
+        lastError = error;
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
       }
-
-      console.error(`Update attempt ${retryCount + 1} failed:`, updateError);
-      retryCount++;
-      
-      if (retryCount === maxRetries) {
-        throw new Error('Failed to update device status after multiple attempts');
-      }
-
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
     }
 
-    return { success: true };
+    throw new Error(`Failed to update device status after ${maxRetries} attempts. Last error: ${lastError?.message}`);
   } catch (error) {
     console.error('Error updating device status:', error);
     throw error;
