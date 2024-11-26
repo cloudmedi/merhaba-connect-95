@@ -26,7 +26,7 @@ function App() {
         const supabase = await initSupabase();
         console.log('Supabase initialized successfully');
         
-        // Get device ID instead of MAC address
+        // Get device ID
         const deviceId = await window.electronAPI.getDeviceId();
         console.log('Device ID obtained:', deviceId);
         
@@ -34,45 +34,21 @@ function App() {
           throw new Error('Could not get device identifier');
         }
 
-        // Check existing token
-        const { data: existingToken, error: tokenError } = await supabase
+        // Get active token for this device
+        const { data: activeToken, error: tokenError } = await supabase
           .from('device_tokens')
-          .select('token, status')
+          .select('token')
           .eq('device_id', deviceId)
           .eq('status', 'active')
-          .maybeSingle();
+          .single();
 
         if (tokenError) {
           console.error('Token query error:', tokenError);
           throw tokenError;
         }
 
-        if (existingToken?.token) {
-          console.log('Existing token found:', existingToken.token);
-          setDeviceToken(existingToken.token);
-        } else {
-          // Generate new token
-          const newToken = Math.random().toString(36).substring(2, 8).toUpperCase();
-          console.log('Generating new token:', newToken);
-          
-          const expirationDate = new Date();
-          expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-          const { error: insertError } = await supabase
-            .from('device_tokens')
-            .insert({
-              token: newToken,
-              device_id: deviceId,
-              status: 'active',
-              expires_at: expirationDate.toISOString()
-            });
-
-          if (insertError) {
-            console.error('Token insert error:', insertError);
-            throw insertError;
-          }
-
-          setDeviceToken(newToken);
+        if (activeToken?.token) {
+          setDeviceToken(activeToken.token);
         }
 
         setIsLoading(false);

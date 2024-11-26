@@ -1,21 +1,55 @@
 import { createClient } from '@supabase/supabase-js';
 
-let supabase: ReturnType<typeof createClient>;
+// Separate token management functions
+async function createDeviceToken() {
+  const supabase = await initSupabase();
+  const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const expirationDate = new Date();
+  expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+  const { data: tokenData, error: tokenError } = await supabase
+    .from('device_tokens')
+    .insert({
+      token,
+      status: 'active',
+      expires_at: expirationDate.toISOString()
+    })
+    .select()
+    .single();
+
+  if (tokenError) {
+    console.error('Error creating token:', tokenError);
+    throw tokenError;
+  }
+
+  return tokenData;
+}
+
+async function linkDeviceToToken(deviceId: string, token: string) {
+  const supabase = await initSupabase();
+  const { error: updateError } = await supabase
+    .from('device_tokens')
+    .update({ device_id: deviceId })
+    .eq('token', token)
+    .eq('status', 'active');
+
+  if (updateError) {
+    console.error('Error linking device to token:', updateError);
+    throw updateError;
+  }
+}
 
 async function initSupabase() {
   if (supabase) return supabase;
 
   try {
-    // Get environment variables
     const envVars = await (window as any).electronAPI.getEnvVars();
     console.log('Environment variables received:', envVars);
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
-      console.error('Missing Supabase environment variables:', envVars);
       throw new Error('Missing Supabase connection details. Please check your .env file.');
     }
 
-    // Create Supabase client
     supabase = createClient(
       envVars.VITE_SUPABASE_URL,
       envVars.VITE_SUPABASE_ANON_KEY,
@@ -28,7 +62,6 @@ async function initSupabase() {
       }
     );
     
-    // Get device ID
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
@@ -57,7 +90,7 @@ async function initSupabase() {
       }
     }
     
-    // Now check/create device token
+    // Check for existing active token
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('*')
@@ -70,25 +103,10 @@ async function initSupabase() {
       throw tokenError;
     }
 
+    // If no token exists or is not linked to this device, create a new one
     if (!existingToken) {
-      // Generate new token
-      const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const expirationDate = new Date();
-      expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-      const { error: insertError } = await supabase
-        .from('device_tokens')
-        .insert({
-          token,
-          device_id: deviceId,
-          status: 'active',
-          expires_at: expirationDate.toISOString()
-        });
-
-      if (insertError) {
-        console.error('Error creating device token:', insertError);
-        throw insertError;
-      }
+      const tokenData = await createDeviceToken();
+      await linkDeviceToToken(deviceId, tokenData.token);
     }
     
     console.log('Supabase initialized successfully');
@@ -99,4 +117,6 @@ async function initSupabase() {
   }
 }
 
-export { initSupabase };
+let supabase: ReturnType<typeof createClient>;
+
+export { initSupabase, createDeviceToken, linkDeviceToToken };

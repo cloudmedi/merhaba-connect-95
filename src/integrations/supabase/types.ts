@@ -371,7 +371,7 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string | null
-          device_id: string
+          device_id: string | null
           expires_at: string
           id: string
           status: Database["public"]["Enums"]["token_status"] | null
@@ -380,7 +380,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          device_id: string
+          device_id?: string | null
           expires_at: string
           id?: string
           status?: Database["public"]["Enums"]["token_status"] | null
@@ -389,7 +389,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          device_id?: string
+          device_id?: string | null
           expires_at?: string
           id?: string
           status?: Database["public"]["Enums"]["token_status"] | null
