@@ -1,16 +1,15 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
-import Store from 'electron-store'
-
-const store = new Store()
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
-// 6 haneli token oluşturan fonksiyon
+// Generate a random 6-digit token
 function generateToken() {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
+
+const token = generateToken()
 
 function createWindow() {
   win = new BrowserWindow({
@@ -24,12 +23,10 @@ function createWindow() {
     }
   })
 
-  // Token oluştur veya var olanı al
-  let token = store.get('deviceToken') as string
-  if (!token) {
-    token = generateToken()
-    store.set('deviceToken', token)
-  }
+  // Handle token request from renderer
+  ipcMain.handle('get-token', () => {
+    return token
+  })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -39,17 +36,9 @@ function createWindow() {
       console.error('Failed to load app:', e)
     })
   }
-
-  // Token'i renderer process'e gönder
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('device-token', token)
-  })
 }
 
-app.whenReady().then(() => {
-  createWindow()
-  Store.initRenderer()
-})
+app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -62,9 +51,4 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
-})
-
-// Token'i renderer process'ten istendiğinde gönder
-ipcMain.handle('get-token', () => {
-  return store.get('deviceToken')
 })
