@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 import type { Device } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
 
   // Set up realtime subscription
-  React.useEffect(() => {
+  useEffect(() => {
     const channel = supabase
       .channel('device_changes')
       .on(
@@ -70,7 +71,7 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+      return (data as Device[]) || [];
     },
   });
 

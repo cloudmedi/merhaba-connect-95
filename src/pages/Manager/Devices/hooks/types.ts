@@ -23,6 +23,7 @@ export interface SystemInfo {
     ip4: string;
     mac: string;
   }>;
+  health?: 'healthy' | 'warning' | 'critical';
 }
 
 export interface DeviceSystemInfo {
@@ -31,6 +32,7 @@ export interface DeviceSystemInfo {
   memory?: SystemInfo['memory'];
   os?: SystemInfo['os'];
   network?: SystemInfo['network'];
+  health?: SystemInfo['health'];
   [key: string]: Json | undefined;
 }
 

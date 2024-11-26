@@ -9,7 +9,7 @@ export function DeviceStats() {
     total: devices.length,
     online: devices.filter(d => d.status === 'online').length,
     offline: devices.filter(d => d.status === 'offline').length,
-    warning: devices.filter(d => d.system_info.health === 'warning').length
+    warning: devices.filter(d => d.system_info?.health === 'warning').length
   };
 
   const healthPercentage = ((stats.online / stats.total) * 100) || 0;
