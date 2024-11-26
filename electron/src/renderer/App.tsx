@@ -5,52 +5,59 @@ import { SystemInfo } from './types';
 import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
-import { toast } from 'sonner';
+import { LoadingState } from './components/LoadingState';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    const generateToken = async () => {
+    const initialize = async () => {
       try {
-        const macAddress = await window.electronAPI.getMacAddress();
-        if (!macAddress) {
-          throw new Error('MAC adresi alınamadı');
-        }
-
+        setIsLoading(true);
+        setError(null);
+        
+        // Initialize Supabase
         const supabase = await initSupabase();
-        const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const expirationDate = new Date();
-        expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-        const { data, error: insertError } = await supabase
-          .from('device_tokens')
-          .insert({
-            token,
-            mac_address: macAddress,
-            status: 'active',
-            expires_at: expirationDate.toISOString()
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          throw insertError;
+        
+        // Get MAC address
+        const macAddress = await window.electronAPI.getMacAddress();
+        
+        if (!macAddress) {
+          throw new Error('Could not get MAC address');
         }
 
-        setDeviceToken(token);
-        toast.success('Token başarıyla oluşturuldu');
+        // Get active token for this MAC address
+        const { data: activeToken, error: tokenError } = await supabase
+          .from('device_tokens')
+          .select('token')
+          .eq('mac_address', macAddress)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (tokenError) {
+          console.error('Token query error:', tokenError);
+          throw tokenError;
+        }
+
+        if (activeToken?.token) {
+          setDeviceToken(activeToken.token);
+        }
+
+        setIsLoading(false);
       } catch (error: any) {
-        console.error('Token oluşturma hatası:', error);
-        setError(error.message || 'Token oluşturulurken bir hata oluştu');
-        toast.error('Token oluşturulamadı');
+        console.error('Initialization error:', error);
+        setError(error.message || 'An error occurred');
+        setIsLoading(false);
       }
     };
 
-    generateToken();
+    initialize();
+    
+    // Set up system info listeners
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
   }, [retryCount]);
@@ -61,6 +68,10 @@ function App() {
 
   if (error) {
     return <ErrorState error={error} onRetry={handleRetry} />;
+  }
+
+  if (isLoading) {
+    return <LoadingState />;
   }
 
   return (

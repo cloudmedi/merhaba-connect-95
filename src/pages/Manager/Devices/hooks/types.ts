@@ -1,30 +1,36 @@
 import type { Json } from "@/integrations/supabase/types";
 
-export interface DeviceSystemInfo {
-  health?: 'healthy' | 'warning' | 'critical';
-  version?: string;
-  cpu?: {
+export interface SystemInfo {
+  cpu: {
     manufacturer: string;
     brand: string;
     speed: number;
     cores: number;
   };
-  memory?: {
+  memory: {
     total: number;
     free: number;
     used: number;
   };
-  os?: {
+  os: {
     platform: string;
     distro: string;
     release: string;
     arch: string;
   };
-  network?: Array<{
+  network: Array<{
     iface: string;
     ip4: string;
     mac: string;
   }>;
+}
+
+export interface DeviceSystemInfo {
+  version?: string;
+  cpu?: SystemInfo['cpu'];
+  memory?: SystemInfo['memory'];
+  os?: SystemInfo['os'];
+  network?: SystemInfo['network'];
   [key: string]: Json | undefined;
 }
 
