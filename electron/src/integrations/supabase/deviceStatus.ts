@@ -21,21 +21,25 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       throw new Error('Token has expired');
     }
 
-    // Get device info
-    const { data: existingDevice, error: checkError } = await supabase
+    // First create device if it doesn't exist
+    const { data: device, error: createError } = await supabase
       .from('devices')
-      .select('id, name, status')
-      .eq('token', deviceToken)
-      .maybeSingle();
+      .upsert({
+        token: deviceToken,
+        name: `Device ${deviceToken}`,
+        category: 'player',
+        status: status,
+        system_info: systemInfo || {},
+        last_seen: new Date().toISOString(),
+      }, {
+        onConflict: 'token'
+      })
+      .select()
+      .single();
 
-    if (checkError) {
-      console.error('Error checking device:', checkError);
-      throw checkError;
-    }
-
-    if (!existingDevice) {
-      console.error('Device not found for token:', deviceToken);
-      throw new Error('Device not found');
+    if (createError) {
+      console.error('Error creating/updating device:', createError);
+      throw createError;
     }
 
     // Update device status with retry mechanism
