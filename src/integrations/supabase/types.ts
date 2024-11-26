@@ -371,40 +371,32 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string | null
-          device_id: string | null
           expires_at: string
           id: string
+          mac_address: string
           status: Database["public"]["Enums"]["token_status"] | null
           token: string
           used_at: string | null
         }
         Insert: {
           created_at?: string | null
-          device_id?: string | null
           expires_at: string
           id?: string
+          mac_address: string
           status?: Database["public"]["Enums"]["token_status"] | null
           token: string
           used_at?: string | null
         }
         Update: {
           created_at?: string | null
-          device_id?: string | null
           expires_at?: string
           id?: string
+          mac_address?: string
           status?: Database["public"]["Enums"]["token_status"] | null
           token?: string
           used_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "device_tokens_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "devices"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       devices: {
         Row: {

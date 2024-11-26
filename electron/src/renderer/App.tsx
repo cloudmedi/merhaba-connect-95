@@ -20,15 +20,11 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        console.log('Starting initialization...');
-        
         // Initialize Supabase
         const supabase = await initSupabase();
-        console.log('Supabase initialized successfully');
         
         // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
-        console.log('MAC Address:', macAddress);
         
         if (!macAddress) {
           throw new Error('Could not get MAC address');
@@ -67,7 +63,6 @@ function App() {
   }, [retryCount]);
 
   const handleRetry = () => {
-    console.log('Retrying initialization...');
     setRetryCount(prev => prev + 1);
   };
 
