@@ -36,27 +36,28 @@ async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'o
 
     if (checkError) throw checkError;
 
-    const deviceData = {
-      name: existingDevice?.name || `Device ${deviceToken}`,
-      category: 'player',
-      status,
-      system_info: systemInfo,
-      last_seen: new Date().toISOString(),
-      token: deviceToken
-    };
-
     if (!existingDevice) {
+      // For new devices, we need to create with minimal required fields
       const { error: createError } = await supabase
         .from('devices')
-        .insert([deviceData]);
+        .insert([{
+          name: `Device ${deviceToken}`,
+          category: 'player',
+          token: deviceToken,
+          status: status,
+          system_info: systemInfo || {},
+          last_seen: new Date().toISOString(),
+          schedule: {} // Required default value
+        }]);
 
       if (createError) throw createError;
     } else {
+      // For existing devices, only update status and system info
       const { error: updateError } = await supabase
         .from('devices')
         .update({
-          status,
-          system_info: systemInfo,
+          status: status,
+          system_info: systemInfo || {},
           last_seen: new Date().toISOString()
         })
         .eq('token', deviceToken);
