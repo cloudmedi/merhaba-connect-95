@@ -65,7 +65,7 @@ async function initSupabase() {
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
-    // First get the default branch for the company
+    // First get the user's profile and company_id
     const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
       .select('company_id')
@@ -76,14 +76,21 @@ async function initSupabase() {
       throw profileError;
     }
 
+    if (!userProfile?.company_id) {
+      throw new Error('No company associated with user profile');
+    }
+
     // Get or create a default branch for the company
-    const { data: defaultBranch, error: branchError } = await supabase
+    const { data: branches, error: branchError } = await supabase
       .from('branches')
       .select('id')
       .eq('company_id', userProfile.company_id)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
-    if (branchError) {
+    let branchId: string;
+
+    if (branchError || !branches?.length) {
       // Create a default branch if none exists
       const { data: newBranch, error: createBranchError } = await supabase
         .from('branches')
@@ -99,8 +106,11 @@ async function initSupabase() {
         throw createBranchError;
       }
 
-      const branchId = newBranch.id;
+      branchId = newBranch.id;
       console.log('Created default branch:', branchId);
+    } else {
+      branchId = branches[0].id;
+      console.log('Using existing branch:', branchId);
     }
 
     // Now check for existing device
@@ -108,15 +118,9 @@ async function initSupabase() {
       .from('devices')
       .select('id')
       .eq('id', deviceId)
-      .single();
+      .maybeSingle();
 
-    if (deviceError || !existingDevice) {
-      const { data: branch } = await supabase
-        .from('branches')
-        .select('id')
-        .eq('company_id', userProfile.company_id)
-        .single();
-
+    if (!existingDevice) {
       const { error: insertDeviceError } = await supabase
         .from('devices')
         .insert({
@@ -124,7 +128,7 @@ async function initSupabase() {
           name: 'Electron App',
           category: 'player',
           status: 'online',
-          branch_id: branch.id, // Set the branch_id to comply with RLS
+          branch_id: branchId,
           system_info: {},
           schedule: {}
         });
