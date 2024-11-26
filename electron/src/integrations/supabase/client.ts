@@ -65,7 +65,45 @@ async function initSupabase() {
     const deviceId = await (window as any).electronAPI.getDeviceId();
     console.log('Device ID:', deviceId);
     
-    // First create the device if it doesn't exist
+    // First get the default branch for the company
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      throw profileError;
+    }
+
+    // Get or create a default branch for the company
+    const { data: defaultBranch, error: branchError } = await supabase
+      .from('branches')
+      .select('id')
+      .eq('company_id', userProfile.company_id)
+      .single();
+
+    if (branchError) {
+      // Create a default branch if none exists
+      const { data: newBranch, error: createBranchError } = await supabase
+        .from('branches')
+        .insert({
+          name: 'Default Branch',
+          company_id: userProfile.company_id
+        })
+        .select()
+        .single();
+
+      if (createBranchError) {
+        console.error('Error creating default branch:', createBranchError);
+        throw createBranchError;
+      }
+
+      const branchId = newBranch.id;
+      console.log('Created default branch:', branchId);
+    }
+
+    // Now check for existing device
     const { data: existingDevice, error: deviceError } = await supabase
       .from('devices')
       .select('id')
@@ -73,6 +111,12 @@ async function initSupabase() {
       .single();
 
     if (deviceError || !existingDevice) {
+      const { data: branch } = await supabase
+        .from('branches')
+        .select('id')
+        .eq('company_id', userProfile.company_id)
+        .single();
+
       const { error: insertDeviceError } = await supabase
         .from('devices')
         .insert({
@@ -80,6 +124,7 @@ async function initSupabase() {
           name: 'Electron App',
           category: 'player',
           status: 'online',
+          branch_id: branch.id, // Set the branch_id to comply with RLS
           system_info: {},
           schedule: {}
         });
