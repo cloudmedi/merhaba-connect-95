@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { initSupabase, updateDeviceStatus } from '../integrations/supabase/client';
+import { initSupabase } from '../integrations/supabase/client';
 import { SystemInfo } from './types';
 import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
 import { LoadingState } from './components/LoadingState';
-import { Toaster, toast } from 'sonner';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -22,24 +21,30 @@ function App() {
         setError(null);
         
         // Initialize Supabase
-        await initSupabase();
+        const supabase = await initSupabase();
         
-        // Get stored token or generate new one
-        let token = localStorage.getItem('deviceToken');
+        // Get MAC address
+        const macAddress = await window.electronAPI.getMacAddress();
         
-        if (!token) {
-          token = await window.electronAPI.generateDeviceToken();
-          if (token) {
-            localStorage.setItem('deviceToken', token);
-            toast.success('Device token generated successfully');
-          }
+        if (!macAddress) {
+          throw new Error('Could not get MAC address');
         }
-        
-        setDeviceToken(token);
-        
-        if (token) {
-          const systemInfo = await window.electronAPI.getSystemInfo();
-          await updateDeviceStatus(token, 'online', systemInfo);
+
+        // Get active token for this MAC address
+        const { data: activeToken, error: tokenError } = await supabase
+          .from('device_tokens')
+          .select('token')
+          .eq('mac_address', macAddress)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (tokenError) {
+          console.error('Token query error:', tokenError);
+          throw tokenError;
+        }
+
+        if (activeToken?.token) {
+          setDeviceToken(activeToken.token);
         }
 
         setIsLoading(false);
@@ -75,7 +80,6 @@ function App() {
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
-      <Toaster />
     </div>
   );
 }

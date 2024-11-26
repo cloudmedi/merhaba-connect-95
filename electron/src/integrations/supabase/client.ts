@@ -2,11 +2,61 @@ import { createClient } from '@supabase/supabase-js';
 
 let supabase: ReturnType<typeof createClient>;
 
+async function createDeviceToken(macAddress: string) {
+  const supabase = await initSupabase();
+  const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const expirationDate = new Date();
+  expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+  const { data: tokenData, error: tokenError } = await supabase
+    .from('device_tokens')
+    .insert({
+      token,
+      mac_address: macAddress,
+      status: 'active',
+      expires_at: expirationDate.toISOString()
+    })
+    .select()
+    .maybeSingle();
+
+  if (tokenError) throw tokenError;
+  if (!tokenData) throw new Error('Failed to create device token');
+
+  return tokenData;
+}
+
 async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   const supabase = await initSupabase();
   
   try {
-    // Only update existing device status
+    // First try to find the device
+    const { data: existingDevice, error: checkError } = await supabase
+      .from('devices')
+      .select('id, name, status')
+      .eq('token', deviceToken)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (!existingDevice) {
+      // Create new device if it doesn't exist
+      const { error: createError } = await supabase
+        .from('devices')
+        .insert({
+          name: `Device ${deviceToken}`,
+          category: 'player',
+          token: deviceToken,
+          status: status,
+          system_info: systemInfo || {},
+          last_seen: new Date().toISOString(),
+          schedule: {}
+        });
+
+      if (createError) throw createError;
+      return;
+    }
+
+    // Update existing device status
     const { error: updateError } = await supabase
       .from('devices')
       .update({
@@ -63,6 +113,37 @@ async function initSupabase() {
         }
       }
     );
+    
+    const macAddress = await (window as any).electronAPI.getMacAddress();
+    if (!macAddress) throw new Error('Could not get MAC address');
+
+    // Get or create device token
+    const { data: existingToken, error: tokenError } = await supabase
+      .from('device_tokens')
+      .select('token')
+      .eq('mac_address', macAddress)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (tokenError) throw tokenError;
+
+    let deviceToken;
+    if (existingToken) {
+      deviceToken = existingToken.token;
+    } else {
+      const tokenData = await createDeviceToken(macAddress);
+      deviceToken = tokenData.token;
+    }
+
+    // Set initial online status
+    const systemInfo = await (window as any).electronAPI.getSystemInfo();
+    await updateDeviceStatus(deviceToken, 'online', systemInfo);
+
+    // Handle window close/reload
+    window.addEventListener('beforeunload', async () => {
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await updateDeviceStatus(deviceToken, 'offline', systemInfo);
+    });
 
     return supabase;
   } catch (error) {
@@ -71,4 +152,4 @@ async function initSupabase() {
   }
 }
 
-export { initSupabase, updateDeviceStatus };
+export { initSupabase, createDeviceToken, updateDeviceStatus };

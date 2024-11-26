@@ -32,9 +32,6 @@ export default defineConfig({
         '@': path.resolve('src'),
         '@renderer': path.resolve('src/renderer')
       }
-    },
-    optimizeDeps: {
-      include: ['sonner']
     }
   }
 })
