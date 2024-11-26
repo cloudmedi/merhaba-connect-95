@@ -31,21 +31,48 @@ async function createDeviceToken(macAddress: string) {
 
 async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   try {
-    const { error } = await supabase
+    // First check if device exists
+    const { data: existingDevice } = await supabase
       .from('devices')
-      .update({
-        status,
-        system_info: systemInfo,
-        last_seen: new Date().toISOString()
-      })
-      .eq('token', deviceToken);
+      .select('id')
+      .eq('token', deviceToken)
+      .maybeSingle();
 
-    if (error) {
-      console.error('Error updating device status:', error);
-      throw error;
+    if (!existingDevice) {
+      // If device doesn't exist, create it
+      const { error: createError } = await supabase
+        .from('devices')
+        .insert({
+          name: `Device ${deviceToken}`,
+          token: deviceToken,
+          category: 'player',
+          status,
+          system_info: systemInfo,
+          last_seen: new Date().toISOString()
+        });
+
+      if (createError) {
+        console.error('Error creating device:', createError);
+        throw createError;
+      }
+    } else {
+      // If device exists, update it
+      const { error: updateError } = await supabase
+        .from('devices')
+        .update({
+          status,
+          system_info: systemInfo,
+          last_seen: new Date().toISOString()
+        })
+        .eq('token', deviceToken);
+
+      if (updateError) {
+        console.error('Error updating device status:', updateError);
+        throw updateError;
+      }
     }
   } catch (error) {
-    console.error('Error updating device status:', error);
+    console.error('Error in updateDeviceStatus:', error);
     throw error;
   }
 }
@@ -86,7 +113,7 @@ async function initSupabase() {
       throw new Error('Could not get MAC address');
     }
 
-    // Mevcut aktif token kontrolü
+    // Check for existing active token
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
       .select('token')
@@ -104,30 +131,39 @@ async function initSupabase() {
       console.log('Found existing token:', existingToken);
       deviceToken = existingToken.token;
     } else {
-      // Yeni token oluştur
+      // Create new token
       const tokenData = await createDeviceToken(macAddress);
       console.log('Created new token:', tokenData);
       deviceToken = tokenData.token;
     }
 
-    // Durum güncelleme işlemlerini başlat
+    // Start status updates
     const startStatusUpdates = async () => {
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(supabase, deviceToken, 'online', systemInfo);
+      try {
+        const systemInfo = await (window as any).electronAPI.getSystemInfo();
+        console.log('Updating device status with token:', deviceToken);
+        await updateDeviceStatus(supabase, deviceToken, 'online', systemInfo);
 
-      if (statusUpdateInterval) {
-        clearInterval(statusUpdateInterval);
+        if (statusUpdateInterval) {
+          clearInterval(statusUpdateInterval);
+        }
+
+        statusUpdateInterval = setInterval(async () => {
+          try {
+            const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
+            await updateDeviceStatus(supabase, deviceToken, 'online', updatedSystemInfo);
+          } catch (error) {
+            console.error('Error in status update interval:', error);
+          }
+        }, 15000);
+      } catch (error) {
+        console.error('Error starting status updates:', error);
       }
-
-      statusUpdateInterval = setInterval(async () => {
-        const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(supabase, deviceToken, 'online', updatedSystemInfo);
-      }, 15000);
     };
 
     await startStatusUpdates();
 
-    // Uygulama kapanırken offline durumuna geç
+    // Set offline status when app closes
     window.addEventListener('beforeunload', async () => {
       if (statusUpdateInterval) {
         clearInterval(statusUpdateInterval);
