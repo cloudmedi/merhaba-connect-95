@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { initSupabase } from '../integrations/supabase/client';
+import { initSupabase, updateDeviceStatus } from '../integrations/supabase/client';
 import { SystemInfo } from './types';
 import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
@@ -21,30 +21,16 @@ function App() {
         setError(null);
         
         // Initialize Supabase
-        const supabase = await initSupabase();
+        await initSupabase();
         
-        // Get MAC address
-        const macAddress = await window.electronAPI.getMacAddress();
-        
-        if (!macAddress) {
-          throw new Error('Could not get MAC address');
-        }
-
-        // Get active token for this MAC address
-        const { data: activeToken, error: tokenError } = await supabase
-          .from('device_tokens')
-          .select('token')
-          .eq('mac_address', macAddress)
-          .eq('status', 'active')
-          .maybeSingle();
-
-        if (tokenError) {
-          console.error('Token query error:', tokenError);
-          throw tokenError;
-        }
-
-        if (activeToken?.token) {
-          setDeviceToken(activeToken.token);
+        // Get stored token
+        const storedToken = localStorage.getItem('deviceToken');
+        if (storedToken) {
+          setDeviceToken(storedToken);
+          
+          // Update device status if we have a token
+          const systemInfo = await window.electronAPI.getSystemInfo();
+          await updateDeviceStatus(storedToken, 'online', systemInfo);
         }
 
         setIsLoading(false);
