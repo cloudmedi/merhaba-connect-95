@@ -8,6 +8,22 @@ async function createDeviceToken(macAddress: string) {
   const expirationDate = new Date();
   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
+  // First check if there's an existing active token
+  const { data: existingToken, error: checkError } = await supabase
+    .from('device_tokens')
+    .select('token')
+    .eq('mac_address', macAddress)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (checkError) throw checkError;
+  
+  // If token exists, return it
+  if (existingToken) {
+    return existingToken;
+  }
+
+  // If no active token exists, create a new one
   const { data: tokenData, error: tokenError } = await supabase
     .from('device_tokens')
     .insert({
@@ -17,7 +33,7 @@ async function createDeviceToken(macAddress: string) {
       expires_at: expirationDate.toISOString()
     })
     .select()
-    .maybeSingle();
+    .single();
 
   if (tokenError) throw tokenError;
   if (!tokenData) throw new Error('Failed to create device token');
@@ -26,7 +42,26 @@ async function createDeviceToken(macAddress: string) {
 }
 
 async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
+  const supabase = await initSupabase();
+  
   try {
+    // First verify the token is valid and active
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('device_tokens')
+      .select('*')
+      .eq('token', deviceToken)
+      .eq('status', 'active')
+      .single();
+
+    if (tokenError || !tokenData) {
+      throw new Error('Invalid or expired token');
+    }
+
+    // Check if token is expired
+    if (new Date(tokenData.expires_at) < new Date()) {
+      throw new Error('Token has expired');
+    }
+
     const { data: existingDevice, error: checkError } = await supabase
       .from('devices')
       .select('id, name, status')
@@ -36,25 +71,24 @@ async function updateDeviceStatus(deviceToken: string, status: 'online' | 'offli
     if (checkError) throw checkError;
 
     if (!existingDevice) {
-      // Yeni cihaz oluşturulduğunda manager'ın görebilmesi için
+      // Create new device
       const { error: createError } = await supabase
         .from('devices')
         .insert({
           name: `Device ${deviceToken}`,
           category: 'player',
           token: deviceToken,
-          status: status, // Manager'dan gelen status'ü kullan
+          status: status,
           system_info: systemInfo || {},
           last_seen: new Date().toISOString(),
           schedule: {}
-        })
-        .select();
+        });
 
       if (createError) throw createError;
       return;
     }
 
-    // Status değiştiğinde güncelle
+    // Update existing device
     const { error: updateError } = await supabase
       .from('devices')
       .update({
@@ -104,7 +138,7 @@ async function initSupabase() {
     // Get or create device token
     const { data: existingToken, error: tokenError } = await supabase
       .from('device_tokens')
-      .select('token')
+      .select('token, expires_at')
       .eq('mac_address', macAddress)
       .eq('status', 'active')
       .maybeSingle();
@@ -113,13 +147,20 @@ async function initSupabase() {
 
     let deviceToken;
     if (existingToken) {
-      deviceToken = existingToken.token;
+      // Check if token is expired
+      if (new Date(existingToken.expires_at) < new Date()) {
+        // Create new token if expired
+        const tokenData = await createDeviceToken(macAddress);
+        deviceToken = tokenData.token;
+      } else {
+        deviceToken = existingToken.token;
+      }
     } else {
       const tokenData = await createDeviceToken(macAddress);
       deviceToken = tokenData.token;
     }
 
-    // Manager'dan gelen status değişikliklerini dinle
+    // Subscribe to device status changes
     const channel = supabase.channel(`device_status_${deviceToken}`)
       .on(
         'postgres_changes',
@@ -132,16 +173,21 @@ async function initSupabase() {
         async (payload: any) => {
           console.log('Device status changed:', payload);
           
-          // Manager'dan gelen status değişikliğini uygula
           if (payload.new && payload.new.status) {
             const systemInfo = await (window as any).electronAPI.getSystemInfo();
             await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
           }
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        console.log('Realtime subscription status:', status);
+      });
 
-    // Uygulama kapanırken offline yap
+    // Set initial online status and update on window events
+    const systemInfo = await (window as any).electronAPI.getSystemInfo();
+    await updateDeviceStatus(deviceToken, 'online', systemInfo);
+
+    // Update status when window is closing
     window.addEventListener('beforeunload', async (event) => {
       event.preventDefault();
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
@@ -155,4 +201,4 @@ async function initSupabase() {
   }
 }
 
-export { initSupabase, createDeviceToken };
+export { initSupabase, createDeviceToken, updateDeviceStatus };
