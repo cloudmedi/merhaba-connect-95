@@ -3,7 +3,7 @@ import path from 'node:path'
 import * as si from 'systeminformation'
 import dotenv from 'dotenv'
 import { getDeviceIdentifier } from '../utils/deviceIdentifier'
-import { supabase } from '../integrations/supabase/client'
+import { supabase } from '../integrations/supabase/mainClient'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })

@@ -64,22 +64,6 @@ async function initSupabase() {
       }
     );
 
-    const deviceToken = localStorage.getItem('deviceToken');
-    if (!deviceToken) {
-      console.log('No device token found');
-      return supabase;
-    }
-
-    // Set initial online status if we have a token
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    await updateDeviceStatus(deviceToken, 'online', systemInfo);
-
-    // Handle window close/reload
-    window.addEventListener('beforeunload', async () => {
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(deviceToken, 'offline', systemInfo);
-    });
-
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);
