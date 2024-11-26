@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -30,6 +31,20 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     e.preventDefault();
     
     try {
+      // First verify the token
+      const { data: tokenData, error: tokenError } = await supabase
+        .from('device_tokens')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'active')
+        .single();
+
+      if (tokenError || !tokenData) {
+        toast.error('Invalid or expired token');
+        return;
+      }
+
+      // Create the device
       await createDevice.mutateAsync({
         name,
         category,
@@ -42,11 +57,17 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         branch_id: null
       });
 
+      // Update token status to used
+      await supabase
+        .from('device_tokens')
+        .update({ status: 'used' })
+        .eq('token', token);
+
       toast.success('Device added successfully');
       onOpenChange(false);
       resetForm();
-    } catch (error) {
-      toast.error('Failed to add device');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add device');
     }
   };
 
@@ -113,6 +134,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Enter device token"
+              required
             />
           </div>
           <DialogFooter>
