@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MaintenanceTab } from "./maintenance/MaintenanceTab";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Device } from "../hooks/types";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Cpu, Chip, HardDrive } from "lucide-react";
+import { Activity, Cpu, MemoryStick, HardDrive } from "lucide-react";
 
 function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -77,7 +77,7 @@ export function DeviceListItem({ device }: { device: Device }) {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Chip className="w-4 h-4 text-gray-500" />
+            <MemoryStick className="w-4 h-4 text-gray-500" />
             <span className="text-gray-600">
               {systemInfo?.memory?.total ? formatBytes(systemInfo.memory.total) : '?'}
             </span>

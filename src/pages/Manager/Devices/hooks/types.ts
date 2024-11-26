@@ -27,11 +27,13 @@ export interface SystemInfoNetwork {
 }
 
 export interface DeviceSystemInfo {
-  cpu?: SystemInfoCPU;
-  memory?: SystemInfoMemory;
-  os?: SystemInfoOS;
-  network?: SystemInfoNetwork[];
   version?: string;
+  system_info?: {
+    cpu?: SystemInfoCPU;
+    memory?: SystemInfoMemory;
+    os?: SystemInfoOS;
+    network?: SystemInfoNetwork[];
+  };
   [key: string]: Json | undefined;
 }
 
