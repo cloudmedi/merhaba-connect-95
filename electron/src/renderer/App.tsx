@@ -22,23 +22,19 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        // Initialize Supabase
         await initSupabase();
         
-        // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
         
         if (!macAddress) {
           throw new Error('MAC adresi alınamadı');
         }
 
-        // Get or create token for this MAC address
         const tokenData = await createDeviceToken(macAddress);
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
         }
 
-        // Get initial system info
         const info = await window.electronAPI.getSystemInfo();
         setSystemInfo(info);
 
@@ -71,7 +67,7 @@ function App() {
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
-      <Toaster position="top-right" />
+      <Toaster position="top-right" richColors />
     </div>
   );
 }

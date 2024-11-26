@@ -7,7 +7,7 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       rollupOptions: {
-        external: ['dotenv', 'systeminformation', '@supabase/supabase-js', 'uuid', 'sonner']
+        external: ['dotenv', 'systeminformation', '@supabase/supabase-js', 'uuid']
       }
     }
   },
@@ -23,15 +23,15 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        },
-        external: ['sonner']
+        }
       }
     },
     plugins: [react()],
     resolve: {
       alias: {
         '@': path.resolve('src'),
-        '@renderer': path.resolve('src/renderer')
+        '@renderer': path.resolve('src/renderer'),
+        'sonner': path.resolve(__dirname, 'node_modules/sonner')
       }
     }
   }
