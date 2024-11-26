@@ -13,7 +13,8 @@
     "dotenv": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "systeminformation": "latest"
+    "systeminformation": "latest",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",
