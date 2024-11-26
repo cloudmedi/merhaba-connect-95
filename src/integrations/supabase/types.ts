@@ -368,6 +368,44 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          expires_at: string
+          id: string
+          status: Database["public"]["Enums"]["token_status"] | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          expires_at: string
+          id?: string
+          status?: Database["public"]["Enums"]["token_status"] | null
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["token_status"] | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           branch_id: string | null
@@ -1496,7 +1534,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      token_status: "active" | "used" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never

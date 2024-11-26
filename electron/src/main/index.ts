@@ -1,9 +1,24 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import si from 'systeminformation'
+import { networkInterfaces } from 'os'
 
 let win: BrowserWindow | null
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+
+// MAC adresi alma fonksiyonu
+async function getMacAddress(): Promise<string> {
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name] || []) {
+      // Skip internal interfaces
+      if (!net.internal) {
+        return net.mac;
+      }
+    }
+  }
+  return '';
+}
 
 async function getSystemInfo() {
   const cpu = await si.cpu()
@@ -89,5 +104,6 @@ app.on('activate', () => {
   }
 })
 
-// IPC handler for getting system info
+// IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo)
+ipcMain.handle('get-mac-address', getMacAddress)
