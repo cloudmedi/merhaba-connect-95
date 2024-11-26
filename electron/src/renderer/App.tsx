@@ -19,7 +19,7 @@ function App() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
         if (!macAddress) {
@@ -28,37 +28,37 @@ function App() {
 
         // Initialize Supabase
         const supabase = await initSupabase();
-        
-        // Generate a new token if none exists
-        const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const expirationDate = new Date();
-        expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
-        const { data: existingToken, error: tokenError } = await supabase
+        // Check for existing token
+        const { data: existingToken } = await supabase
           .from('device_tokens')
           .select('token')
           .eq('mac_address', macAddress)
           .eq('status', 'active')
           .maybeSingle();
 
-        if (tokenError) throw tokenError;
-
         if (existingToken?.token) {
           setDeviceToken(existingToken.token);
-        } else {
-          const { error: createError } = await supabase
-            .from('device_tokens')
-            .insert({
-              token,
-              mac_address: macAddress,
-              status: 'active',
-              expires_at: expirationDate.toISOString()
-            });
-
-          if (createError) throw createError;
-          setDeviceToken(token);
+          setIsLoading(false);
+          return;
         }
 
+        // Generate new token
+        const token = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const expirationDate = new Date();
+        expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+        // Insert new token
+        await supabase
+          .from('device_tokens')
+          .insert({
+            token,
+            mac_address: macAddress,
+            status: 'active',
+            expires_at: expirationDate.toISOString()
+          });
+
+        setDeviceToken(token);
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
@@ -68,7 +68,7 @@ function App() {
     };
 
     initialize();
-    
+
     // Set up system info listeners
     window.electronAPI.getSystemInfo().then(setSystemInfo);
     window.electronAPI.onSystemInfoUpdate(setSystemInfo);
