@@ -1,14 +1,14 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
-import si from 'systeminformation'
+import * as si from 'systeminformation'
 import { networkInterfaces } from 'os'
 import dotenv from 'dotenv'
 
-// .env dosyasını yükle
+// Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
-// Çevre değişkenlerini kontrol et
+// Check environment variables
 const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
@@ -85,7 +85,6 @@ function createWindow() {
     }
   })
 
-  // Çevre değişkenlerini renderer sürecine gönder
   win.webContents.on('did-finish-load', () => {
     if (!win) return;
     
