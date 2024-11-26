@@ -29,7 +29,7 @@ async function createDeviceToken(macAddress: string) {
   return tokenData;
 }
 
-async function updateDeviceStatus(supabase: any, deviceId: string, status: 'online' | 'offline', systemInfo: any) {
+async function updateDeviceStatus(supabase: any, deviceToken: string, status: 'online' | 'offline', systemInfo: any) {
   try {
     const { error } = await supabase
       .from('devices')
@@ -38,7 +38,7 @@ async function updateDeviceStatus(supabase: any, deviceId: string, status: 'onli
         system_info: systemInfo,
         last_seen: new Date().toISOString()
       })
-      .eq('mac_address', deviceId); // MAC adresini kullanarak cihazı güncelle
+      .eq('token', deviceToken);
 
     if (error) {
       console.error('Error updating device status:', error);
@@ -99,33 +99,33 @@ async function initSupabase() {
       throw tokenError;
     }
 
-    // Durum güncelleme işlemlerini başlat
-    const startStatusUpdates = async () => {
-      // İlk sistem bilgilerini al ve durumu güncelle
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(supabase, macAddress, 'online', systemInfo);
-
-      // Varolan interval'i temizle
-      if (statusUpdateInterval) {
-        clearInterval(statusUpdateInterval);
-      }
-
-      // Yeni interval başlat
-      statusUpdateInterval = setInterval(async () => {
-        const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(supabase, macAddress, 'online', updatedSystemInfo);
-      }, 15000); // Her 15 saniyede bir güncelle
-    };
-
+    let deviceToken;
     if (existingToken) {
       console.log('Found existing token:', existingToken);
-      await startStatusUpdates();
+      deviceToken = existingToken.token;
     } else {
       // Yeni token oluştur
       const tokenData = await createDeviceToken(macAddress);
       console.log('Created new token:', tokenData);
-      await startStatusUpdates();
+      deviceToken = tokenData.token;
     }
+
+    // Durum güncelleme işlemlerini başlat
+    const startStatusUpdates = async () => {
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await updateDeviceStatus(supabase, deviceToken, 'online', systemInfo);
+
+      if (statusUpdateInterval) {
+        clearInterval(statusUpdateInterval);
+      }
+
+      statusUpdateInterval = setInterval(async () => {
+        const updatedSystemInfo = await (window as any).electronAPI.getSystemInfo();
+        await updateDeviceStatus(supabase, deviceToken, 'online', updatedSystemInfo);
+      }, 15000);
+    };
+
+    await startStatusUpdates();
 
     // Uygulama kapanırken offline durumuna geç
     window.addEventListener('beforeunload', async () => {
@@ -133,7 +133,7 @@ async function initSupabase() {
         clearInterval(statusUpdateInterval);
       }
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(supabase, macAddress, 'offline', systemInfo);
+      await updateDeviceStatus(supabase, deviceToken, 'offline', systemInfo);
     });
     
     return supabase;
