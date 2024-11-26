@@ -1,6 +1,10 @@
 import * as si from 'systeminformation';
 import { networkInterfaces } from 'os';
 import { platform } from 'os';
+import { v5 as uuidv5 } from 'uuid';
+
+// UUID namespace for our application (generated once using v4)
+const NAMESPACE = '1b671a64-40d5-491e-99b0-da01ff1f3341';
 
 async function getMacAddress(): Promise<string | null> {
   const interfaces = networkInterfaces();
@@ -33,25 +37,16 @@ async function getSystemFingerprint(): Promise<string> {
   const fingerprintString = Object.values(fingerprintData)
     .filter(Boolean)
     .join('_');
-  
-  // Create a simple hash of the string
-  let hash = 0;
-  for (let i = 0; i < fingerprintString.length; i++) {
-    const char = fingerprintString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  
-  return Math.abs(hash).toString(16).padStart(8, '0');
+    
+  return fingerprintString;
 }
 
 export async function getDeviceIdentifier(): Promise<string> {
-  const platformType = platform();
-  let identifier: string;
-  
   try {
     // First try to get MAC address
     const macAddress = await getMacAddress();
+    let identifier: string;
+    
     if (macAddress) {
       identifier = macAddress.replace(/:/g, '');
     } else {
@@ -59,16 +54,19 @@ export async function getDeviceIdentifier(): Promise<string> {
       identifier = await getSystemFingerprint();
     }
     
-    // Add platform prefix
+    // Add platform prefix to make the identifier more unique
+    const platformType = platform();
     const prefix = platformType === 'win32' ? 'win' : 
                   platformType === 'darwin' ? 'mac' : 
                   platformType === 'linux' ? 'linux' : 'desktop';
     
-    return `${prefix}_${identifier}`;
+    // Generate a UUID v5 using the identifier
+    const deviceId = uuidv5(`${prefix}_${identifier}`, NAMESPACE);
+    return deviceId;
   } catch (error) {
     console.error('Error getting device identifier:', error);
-    // Last resort: generate a random identifier
+    // Last resort: generate a UUID v5 from random data
     const random = Math.random().toString(36).substring(2, 15);
-    return `${platformType}_${random}`;
+    return uuidv5(random, NAMESPACE);
   }
 }
