@@ -6,7 +6,7 @@ import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
 import { ErrorState } from './components/ErrorState';
 import { LoadingState } from './components/LoadingState';
-import { toast } from 'sonner';
+import { Toaster, toast } from 'sonner';
 
 function App() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
@@ -75,6 +75,7 @@ function App() {
         <TokenDisplay token={deviceToken} />
         {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
+      <Toaster />
     </div>
   );
 }
