@@ -35,72 +35,36 @@ async function initSupabase() {
     if (!macAddress) throw new Error('Could not get MAC address');
 
     // Get or create device token
-    const { data: existingToken, error: tokenError } = await supabase
-      .from('device_tokens')
-      .select('token, expires_at')
-      .eq('mac_address', macAddress)
-      .eq('status', 'active')
-      .maybeSingle();
+    const tokenData = await createDeviceToken(macAddress);
+    if (!tokenData?.token) {
+      throw new Error('Failed to create/get device token');
+    }
 
-    if (tokenError) throw tokenError;
+    // Set up initial status and heartbeat
+    const systemInfo = await (window as any).electronAPI.getSystemInfo();
+    await updateDeviceStatus(tokenData.token, 'online', systemInfo);
 
-    let deviceToken;
-    if (existingToken) {
-      // Check if token is expired
-      if (new Date(existingToken.expires_at) < new Date()) {
-        // Create new token if expired
-        const tokenData = await createDeviceToken(macAddress);
-        deviceToken = tokenData.token;
-      } else {
-        deviceToken = existingToken.token;
+    // Set up heartbeat interval
+    setInterval(async () => {
+      try {
+        const currentSystemInfo = await (window as any).electronAPI.getSystemInfo();
+        await updateDeviceStatus(tokenData.token, 'online', currentSystemInfo);
+      } catch (error) {
+        console.error('Heartbeat update failed:', error);
       }
-    } else {
-      const tokenData = await createDeviceToken(macAddress);
-      deviceToken = tokenData.token;
-    }
+    }, 30000); // Every 30 seconds
 
-    // Subscribe to device status changes only if device exists
-    const { data: device } = await supabase
-      .from('devices')
-      .select('id')
-      .eq('token', deviceToken)
-      .maybeSingle();
+    // Update status when window is closing
+    window.addEventListener('beforeunload', async (event) => {
+      event.preventDefault();
+      try {
+        const finalSystemInfo = await (window as any).electronAPI.getSystemInfo();
+        await updateDeviceStatus(tokenData.token, 'offline', finalSystemInfo);
+      } catch (error) {
+        console.error('Failed to update offline status:', error);
+      }
+    });
 
-    if (device) {
-      const channel = supabase.channel(`device_status_${deviceToken}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'devices',
-            filter: `token=eq.${deviceToken}`
-          },
-          async (payload: any) => {
-            console.log('Device status changed:', payload);
-            
-            if (payload.new && payload.new.status) {
-              const systemInfo = await (window as any).electronAPI.getSystemInfo();
-              await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
-            }
-          }
-        )
-        .subscribe((status: string) => {
-          console.log('Realtime subscription status:', status);
-        });
-
-      // Set initial online status and update on window events
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(deviceToken, 'online', systemInfo);
-
-      // Update status when window is closing
-      window.addEventListener('beforeunload', async (event) => {
-        event.preventDefault();
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(deviceToken, 'offline', systemInfo);
-      });
-    }
-    
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);
@@ -108,4 +72,4 @@ async function initSupabase() {
   }
 }
 
-export { supabase, initSupabase, createDeviceToken, updateDeviceStatus };
+export { supabase, initSupabase };
