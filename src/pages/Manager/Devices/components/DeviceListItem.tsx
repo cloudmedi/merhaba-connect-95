@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { EditDeviceDialog } from "./EditDeviceDialog";
 
 interface DeviceListItemProps {
   device: Device;
@@ -27,6 +28,7 @@ interface DeviceListItemProps {
 
 export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const lastSeen = device.last_seen 
     ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
@@ -69,7 +71,7 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
               <Eye className="h-4 w-4 mr-2" />
               Detaylar
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(device)}>
+            <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
               <Pencil className="h-4 w-4 mr-2" />
               Düzenle
             </DropdownMenuItem>
@@ -145,6 +147,13 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
             </div>
           </DialogContent>
         </Dialog>
+
+        <EditDeviceDialog
+          device={device}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSave={onEdit}
+        />
       </TableCell>
     </TableRow>
   );
