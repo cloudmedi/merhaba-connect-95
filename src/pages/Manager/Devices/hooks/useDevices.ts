@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import type { Device } from "./types";
+import type { Device, DeviceCategory, DeviceStatus } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
@@ -83,7 +83,14 @@ export const useDevices = () => {
           throw devicesError;
         }
 
-        return data || [];
+        // Type assertion to ensure category and status are correct
+        return (data?.map(device => ({
+          ...device,
+          category: device.category as DeviceCategory,
+          status: device.status as DeviceStatus,
+          system_info: device.system_info || {},
+          schedule: device.schedule || {}
+        })) || []) as Device[];
       } catch (error) {
         console.error('Cihazlar yüklenirken hata:', error);
         throw error;
