@@ -71,7 +71,9 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+      
+      // Type assertion to ensure the response matches our Device type
+      return (data as unknown as Device[]) || [];
     },
   });
 
