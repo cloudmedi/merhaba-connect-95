@@ -10,7 +10,7 @@ export const useDevices = () => {
   // Set up realtime subscription
   useEffect(() => {
     const channel = supabase
-      .channel('device_status')
+      .channel('device_changes')
       .on(
         'postgres_changes',
         {
@@ -22,7 +22,6 @@ export const useDevices = () => {
           console.log('Device change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['devices'] });
           
-          // Show toast notification for status changes
           if (payload.eventType === 'UPDATE') {
             const oldStatus = payload.old?.status;
             const newStatus = payload.new?.status;
@@ -48,16 +47,21 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('id', user.id)
         .single();
 
       if (!userProfile?.company_id) {
+        console.warn('User has no company_id assigned');
         return [];
       }
 
+      // Modified query to include all devices for the company, regardless of branch
       const { data, error } = await supabase
         .from('devices')
         .select(`
@@ -68,23 +72,36 @@ export const useDevices = () => {
             company_id
           )
         `)
-        .eq('branches.company_id', userProfile.company_id);
+        .or(`branch_id.is.null,branches.company_id.eq.${userProfile.company_id}`);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching devices:', error);
+        throw error;
+      }
       
-      // Type assertion to ensure the response matches our Device type
-      return (data as unknown as Device[]) || [];
+      return (data as Device[]) || [];
     },
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .single();
+
       const { data, error } = await supabase
         .from('devices')
         .insert({
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
+          // Ensure the device is associated with a company even if no branch is selected
+          company_id: userProfile?.company_id
         })
         .select()
         .single();
