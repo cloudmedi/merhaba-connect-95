@@ -47,8 +47,55 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Oturum açmış kullanıcı bulunamadı');
+        }
+
+        const { data: userProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          throw new Error('Kullanıcı profili yüklenirken hata oluştu');
+        }
+
+        if (!userProfile?.company_id) {
+          throw new Error('Kullanıcı bir şirkete atanmamış');
+        }
+
+        const { data, error: devicesError } = await supabase
+          .from('devices')
+          .select(`
+            *,
+            branches (
+              id,
+              name,
+              company_id
+            )
+          `)
+          .or(`branch_id.is.null,branches.company_id.eq.${userProfile.company_id}`);
+
+        if (devicesError) {
+          throw devicesError;
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Cihazlar yüklenirken hata:', error);
+        throw error;
+      }
+    },
+    retry: 1,
+  });
+
+  const createDevice = useMutation({
+    mutationFn: async (device: Omit<Device, 'id'>) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
+      if (!user) throw new Error('Oturum açmış kullanıcı bulunamadı');
 
       const { data: userProfile } = await supabase
         .from('profiles')
@@ -57,42 +104,8 @@ export const useDevices = () => {
         .single();
 
       if (!userProfile?.company_id) {
-        console.warn('User has no company_id assigned');
-        return [];
+        throw new Error('Kullanıcı bir şirkete atanmamış');
       }
-
-      // Modified query to include all devices for the company, regardless of branch
-      const { data, error } = await supabase
-        .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name,
-            company_id
-          )
-        `)
-        .or(`branch_id.is.null,branches.company_id.eq.${userProfile.company_id}`);
-
-      if (error) {
-        console.error('Error fetching devices:', error);
-        throw error;
-      }
-      
-      return (data as Device[]) || [];
-    },
-  });
-
-  const createDevice = useMutation({
-    mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
 
       const { data, error } = await supabase
         .from('devices')
@@ -100,8 +113,7 @@ export const useDevices = () => {
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
-          // Ensure the device is associated with a company even if no branch is selected
-          company_id: userProfile?.company_id
+          company_id: userProfile.company_id
         })
         .select()
         .single();
