@@ -1,13 +1,49 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useDeviceSubscription } from "./useDeviceSubscription";
+import { useEffect } from "react";
 import type { Device } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
-  
-  useDeviceSubscription(queryClient);
+
+  // Set up realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('device_status')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices'
+        },
+        (payload) => {
+          console.log('Device change received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+          
+          // Show toast notification for status changes
+          if (payload.eventType === 'UPDATE') {
+            const oldStatus = payload.old?.status;
+            const newStatus = payload.new?.status;
+            const deviceName = payload.new?.name;
+            
+            if (oldStatus !== newStatus) {
+              if (newStatus === 'online') {
+                toast.success(`${deviceName} çevrimiçi oldu`);
+              } else if (newStatus === 'offline') {
+                toast.warning(`${deviceName} çevrimdışı oldu`);
+              }
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
@@ -34,12 +70,8 @@ export const useDevices = () => {
         `)
         .eq('branches.company_id', userProfile.company_id);
 
-      if (error) {
-        toast.error('Cihazlar yüklenirken bir hata oluştu');
-        throw error;
-      }
-
-      return data as Device[];
+      if (error) throw error;
+      return data || [];
     },
   });
 
