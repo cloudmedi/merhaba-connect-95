@@ -42,18 +42,15 @@ export interface DeviceSchedule {
   [key: string]: Json | undefined;
 }
 
-export type DeviceCategory = 'player' | 'display' | 'controller';
-export type DeviceStatus = 'online' | 'offline';
-
 export interface Device {
   id: string;
   name: string;
-  category: DeviceCategory;
-  status: DeviceStatus;
+  category: 'player' | 'display' | 'controller';
+  status: 'online' | 'offline';
   ip_address?: string | null;
   system_info: DeviceSystemInfo;
   schedule: DeviceSchedule;
-  token?: string | null;
+  token?: string;
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;

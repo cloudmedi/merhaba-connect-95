@@ -3,7 +3,6 @@ import { createDeviceToken } from './deviceToken';
 import { updateDeviceStatus } from './deviceStatus';
 
 let supabase: ReturnType<typeof createClient>;
-let deviceStatusChannel: any;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -31,7 +30,7 @@ async function initSupabase() {
         }
       }
     );
-
+    
     const macAddress = await (window as any).electronAPI.getMacAddress();
     if (!macAddress) throw new Error('Could not get MAC address');
 
@@ -58,56 +57,47 @@ async function initSupabase() {
       deviceToken = tokenData.token;
     }
 
-    // Set up realtime subscription for device status
-    if (deviceStatusChannel) {
-      await supabase.removeChannel(deviceStatusChannel);
-    }
+    // Get device info and set up realtime subscription
+    const { data: device } = await supabase
+      .from('devices')
+      .select('id')
+      .eq('token', deviceToken)
+      .maybeSingle();
 
-    deviceStatusChannel = supabase.channel(`device_status_${deviceToken}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices',
-          filter: `token=eq.${deviceToken}`
-        },
-        async (payload: any) => {
-          console.log('Device status change detected:', payload);
-          
-          if (payload.new && payload.new.status) {
-            try {
+    if (device) {
+      const channel = supabase.channel('device_status')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'devices',
+            filter: `token=eq.${deviceToken}`
+          },
+          async (payload: any) => {
+            console.log('Device status changed:', payload);
+            
+            if (payload.new && payload.new.status) {
               const systemInfo = await (window as any).electronAPI.getSystemInfo();
               await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
-            } catch (error) {
-              console.error('Error handling status change:', error);
             }
           }
-        }
-      )
-      .subscribe((status: string) => {
-        console.log('Realtime subscription status:', status);
-      });
+        )
+        .subscribe((status: string) => {
+          console.log('Realtime subscription status:', status);
+        });
 
-    // Set initial online status
-    try {
+      // Set initial online status
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'online', systemInfo);
-    } catch (error) {
-      console.error('Error setting initial status:', error);
-    }
 
-    // Update status when window is closing
-    window.addEventListener('beforeunload', async (event) => {
-      event.preventDefault();
-      try {
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      // Update status when window is closing
+      window.addEventListener('beforeunload', async (event) => {
+        event.preventDefault();
         await updateDeviceStatus(deviceToken, 'offline', systemInfo);
-      } catch (error) {
-        console.error('Error updating offline status:', error);
-      }
-    });
-
+      });
+    }
+    
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);

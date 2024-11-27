@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import type { Device, DeviceCategory, DeviceStatus } from "./types";
+import type { Device } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
@@ -10,7 +10,7 @@ export const useDevices = () => {
   // Set up realtime subscription
   useEffect(() => {
     const channel = supabase
-      .channel('device_changes')
+      .channel('device_status')
       .on(
         'postgres_changes',
         {
@@ -22,6 +22,7 @@ export const useDevices = () => {
           console.log('Device change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['devices'] });
           
+          // Show toast notification for status changes
           if (payload.eventType === 'UPDATE') {
             const oldStatus = payload.old?.status;
             const newStatus = payload.new?.status;
@@ -47,80 +48,43 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('Oturum açmış kullanıcı bulunamadı');
-        }
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
 
-        const { data: userProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('company_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          throw new Error('Kullanıcı profili yüklenirken hata oluştu');
-        }
-
-        if (!userProfile?.company_id) {
-          throw new Error('Kullanıcı bir şirkete atanmamış');
-        }
-
-        const { data, error: devicesError } = await supabase
-          .from('devices')
-          .select(`
-            *,
-            branches (
-              id,
-              name,
-              company_id
-            )
-          `)
-          .or(`branch_id.is.null,branches.company_id.eq.${userProfile.company_id}`);
-
-        if (devicesError) {
-          throw devicesError;
-        }
-
-        // Type assertion to ensure category and status are correct
-        return (data?.map(device => ({
-          ...device,
-          category: device.category as DeviceCategory,
-          status: device.status as DeviceStatus,
-          system_info: device.system_info || {},
-          schedule: device.schedule || {}
-        })) || []) as Device[];
-      } catch (error) {
-        console.error('Cihazlar yüklenirken hata:', error);
-        throw error;
+      if (!userProfile?.company_id) {
+        return [];
       }
+
+      const { data, error } = await supabase
+        .from('devices')
+        .select(`
+          *,
+          branches (
+            id,
+            name,
+            company_id
+          )
+        `)
+        .eq('branches.company_id', userProfile.company_id);
+
+      if (error) throw error;
+      
+      // Type assertion to ensure the response matches our Device type
+      return (data as unknown as Device[]) || [];
     },
-    retry: 1,
   });
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Oturum açmış kullanıcı bulunamadı');
-
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        throw new Error('Kullanıcı bir şirkete atanmamış');
-      }
-
       const { data, error } = await supabase
         .from('devices')
         .insert({
           ...device,
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
-          company_id: userProfile.company_id
         })
         .select()
         .single();
