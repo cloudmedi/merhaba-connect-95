@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { ManagerList } from "./manager-selection/ManagerList";
 import { SchedulingSection } from "./manager-selection/SchedulingSection";
@@ -31,6 +32,7 @@ export function AssignManagersDialog({
   const [scheduledAt, setScheduledAt] = useState<Date>();
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("assigned");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -39,7 +41,6 @@ export function AssignManagersDialog({
     }
   }, [open, searchQuery]);
 
-  // Reset selected managers when dialog opens with initial managers
   useEffect(() => {
     if (open && initialSelectedManagers) {
       setSelectedManagers(initialSelectedManagers);
@@ -97,6 +98,10 @@ export function AssignManagersDialog({
     onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
   };
 
+  const filteredManagers = activeTab === "assigned" 
+    ? managers.filter(m => selectedManagers.some(sm => sm.id === m.id))
+    : managers;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -105,16 +110,6 @@ export function AssignManagersDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search managers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
           <SchedulingSection
             scheduledAt={scheduledAt}
             expiresAt={expiresAt}
@@ -122,12 +117,52 @@ export function AssignManagersDialog({
             onExpiresAtChange={setExpiresAt}
           />
 
-          <ManagerList
-            managers={managers}
-            selectedManagers={selectedManagers}
-            onSelectManager={handleSelectManager}
-            isLoading={isLoading}
-          />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="assigned" className="relative">
+                Assigned Managers
+                {selectedManagers.length > 0 && (
+                  <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-600">
+                    {selectedManagers.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="all">All Managers</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="assigned" className="mt-4">
+              {selectedManagers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No managers assigned yet
+                </div>
+              ) : (
+                <ManagerList
+                  managers={filteredManagers}
+                  selectedManagers={selectedManagers}
+                  onSelectManager={handleSelectManager}
+                  isLoading={isLoading}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="all" className="mt-4">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search managers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <ManagerList
+                managers={filteredManagers}
+                selectedManagers={selectedManagers}
+                onSelectManager={handleSelectManager}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
