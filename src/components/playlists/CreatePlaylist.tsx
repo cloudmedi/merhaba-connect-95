@@ -29,7 +29,8 @@ export function CreatePlaylist() {
     selectedMoods: [],
     isCatalog: false,
     isPublic: false,
-    isHero: false
+    isHero: false,
+    assignedManagers: [] // Yeni eklenen state
   });
 
   const isEditMode = location.state?.editMode;
@@ -39,15 +40,32 @@ export function CreatePlaylist() {
     if (isEditMode && existingPlaylist) {
       const fetchPlaylistDetails = async () => {
         try {
+          // Playlist şarkılarını getir
           const { data: playlistSongs } = await supabase
             .from('playlist_songs')
             .select('songs(*)')
             .eq('playlist_id', existingPlaylist.id)
             .order('position');
 
+          // Playlist kategorilerini getir
           const { data: playlistCategories } = await supabase
             .from('playlist_categories')
             .select('categories(*)')
+            .eq('playlist_id', existingPlaylist.id);
+
+          // Atanmış kullanıcıları getir
+          const { data: assignedManagers } = await supabase
+            .from('playlist_assignments')
+            .select(`
+              user_id,
+              profiles:user_id (
+                id,
+                first_name,
+                last_name,
+                email,
+                avatar_url
+              )
+            `)
             .eq('playlist_id', existingPlaylist.id);
 
           setPlaylistData({
@@ -61,7 +79,8 @@ export function CreatePlaylist() {
             selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
             isCatalog: existingPlaylist.is_catalog || false,
             isPublic: existingPlaylist.is_public || false,
-            isHero: existingPlaylist.is_hero || false
+            isHero: existingPlaylist.is_hero || false,
+            assignedManagers: assignedManagers?.map(am => am.profiles) || []
           });
         } catch (error) {
           console.error('Error fetching playlist details:', error);
@@ -125,7 +144,9 @@ export function CreatePlaylist() {
           disabled={!isEditMode || !existingPlaylist?.id}
         >
           <Users className="w-4 h-4 mr-2" />
-          Assign to Managers
+          {playlistData.assignedManagers.length > 0 
+            ? `Assigned to ${playlistData.assignedManagers.length} Manager${playlistData.assignedManagers.length > 1 ? 's' : ''}`
+            : "Assign to Managers"}
         </Button>
 
         <PlaylistTabs
@@ -137,8 +158,18 @@ export function CreatePlaylist() {
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
           playlistId={existingPlaylist?.id || ''}
+          initialSelectedManagers={playlistData.assignedManagers}
           onAssign={async (managerIds, scheduledAt, expiresAt) => {
             try {
+              // Önce mevcut atamaları temizle
+              const { error: deleteError } = await supabase
+                .from('playlist_assignments')
+                .delete()
+                .eq('playlist_id', existingPlaylist?.id);
+
+              if (deleteError) throw deleteError;
+
+              // Yeni atamaları ekle
               const assignments = managerIds.map(userId => ({
                 user_id: userId,
                 playlist_id: existingPlaylist?.id,
@@ -147,18 +178,39 @@ export function CreatePlaylist() {
                 notification_sent: false
               }));
 
-              const { error } = await supabase
+              const { error: insertError } = await supabase
                 .from('playlist_assignments')
                 .insert(assignments);
 
-              if (error) throw error;
+              if (insertError) throw insertError;
 
+              // Playlist'in assigned_to alanını güncelle
+              const { error: updateError } = await supabase
+                .from('playlists')
+                .update({ assigned_to: managerIds })
+                .eq('id', existingPlaylist?.id);
+
+              if (updateError) throw updateError;
+
+              // Başarılı mesajı göster
               toast({
                 title: "Success",
                 description: `Playlist assigned to ${managerIds.length} managers`,
               });
 
+              // Dialog'u kapat ve state'i güncelle
               setIsAssignDialogOpen(false);
+              
+              // Atanmış kullanıcıları yeniden yükle
+              const { data: updatedManagers } = await supabase
+                .from('profiles')
+                .select('*')
+                .in('id', managerIds);
+
+              setPlaylistData(prev => ({
+                ...prev,
+                assignedManagers: updatedManagers || []
+              }));
             } catch (error: any) {
               console.error('Error assigning playlist:', error);
               toast({
