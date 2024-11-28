@@ -136,6 +136,18 @@ export function AssignManagersDialog({
     }
   };
 
+  const filteredManagers = activeTab === "assigned" 
+    ? selectedManagers
+    : managers.filter(m => {
+        if (!searchQuery) return true;
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          m.email.toLowerCase().includes(searchLower) ||
+          m.first_name?.toLowerCase().includes(searchLower) ||
+          m.last_name?.toLowerCase().includes(searchLower)
+        );
+      });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
