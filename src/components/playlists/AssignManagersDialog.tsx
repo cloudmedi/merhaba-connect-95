@@ -15,16 +15,18 @@ interface AssignManagersDialogProps {
   onOpenChange: (open: boolean) => void;
   onAssign: (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => void;
   playlistId: string;
+  initialSelectedManagers?: Manager[];
 }
 
 export function AssignManagersDialog({ 
   open, 
   onOpenChange, 
   onAssign,
-  playlistId 
+  playlistId,
+  initialSelectedManagers = []
 }: AssignManagersDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedManagers, setSelectedManagers] = useState<Manager[]>([]);
+  const [selectedManagers, setSelectedManagers] = useState<Manager[]>(initialSelectedManagers);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [scheduledAt, setScheduledAt] = useState<Date>();
   const [expiresAt, setExpiresAt] = useState<Date>();
@@ -37,6 +39,13 @@ export function AssignManagersDialog({
     }
   }, [open, searchQuery]);
 
+  // Reset selected managers when dialog opens with initial managers
+  useEffect(() => {
+    if (open && initialSelectedManagers) {
+      setSelectedManagers(initialSelectedManagers);
+    }
+  }, [open, initialSelectedManagers]);
+
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
@@ -46,14 +55,12 @@ export function AssignManagersDialog({
         return;
       }
 
-      // Tüm manager'ları getir, company_id kontrolü olmadan
       let query = supabase
         .from("profiles")
         .select("id, email, first_name, last_name, role, avatar_url")
         .eq("role", "manager")
         .eq("is_active", true);
 
-      // Add search filter if there's a query
       if (searchQuery) {
         query = query.or(`email.ilike.%${searchQuery}%,first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
       }
@@ -87,48 +94,7 @@ export function AssignManagersDialog({
       return;
     }
 
-    try {
-      // Önce mevcut atamayı temizle
-      const { error: deleteError } = await supabase
-        .from('playlist_assignments')
-        .delete()
-        .eq('playlist_id', playlistId);
-
-      if (deleteError) throw deleteError;
-
-      // Yeni atamaları ekle
-      const assignments = selectedManagers.map(manager => ({
-        user_id: manager.id,
-        playlist_id: playlistId,
-        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-        expires_at: expiresAt?.toISOString() || null,
-        notification_sent: false
-      }));
-
-      const { error: insertError } = await supabase
-        .from('playlist_assignments')
-        .insert(assignments);
-
-      if (insertError) throw insertError;
-
-      // Playlist tablosundaki assigned_to alanını güncelle
-      const { error: updateError } = await supabase
-        .from('playlists')
-        .update({ assigned_to: selectedManagers.map(m => m.id) })
-        .eq('id', playlistId);
-
-      if (updateError) throw updateError;
-
-      toast.success(`Playlist assigned to ${selectedManagers.length} managers`);
-      onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
-      setSelectedManagers([]);
-      setScheduledAt(undefined);
-      setExpiresAt(undefined);
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error assigning playlist:', error);
-      toast.error(error.message || "Failed to assign playlist");
-    }
+    onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
   };
 
   return (
