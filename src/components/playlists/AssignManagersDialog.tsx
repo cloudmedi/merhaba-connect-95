@@ -14,7 +14,7 @@ interface AssignManagersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAssign: (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => void;
-  playlistId: string; // Add this prop
+  playlistId: string;
 }
 
 export function AssignManagersDialog({ 
@@ -79,9 +79,7 @@ export function AssignManagersDialog({
 
       const { data: managersData, error: managersError } = await query;
 
-      if (managersError) {
-        throw managersError;
-      }
+      if (managersError) throw managersError;
 
       setManagers(managersData || []);
     } catch (error: any) {
@@ -109,6 +107,15 @@ export function AssignManagersDialog({
     }
 
     try {
+      // Önce mevcut atamayı temizle
+      const { error: deleteError } = await supabase
+        .from('playlist_assignments')
+        .delete()
+        .eq('playlist_id', playlistId);
+
+      if (deleteError) throw deleteError;
+
+      // Yeni atamaları ekle
       const assignments = selectedManagers.map(manager => ({
         user_id: manager.id,
         playlist_id: playlistId,
@@ -117,11 +124,19 @@ export function AssignManagersDialog({
         notification_sent: false
       }));
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('playlist_assignments')
         .insert(assignments);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Playlist tablosundaki assigned_to alanını güncelle
+      const { error: updateError } = await supabase
+        .from('playlists')
+        .update({ assigned_to: selectedManagers.map(m => m.id) })
+        .eq('id', playlistId);
+
+      if (updateError) throw updateError;
 
       toast.success(`Playlist assigned to ${selectedManagers.length} managers`);
       onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
