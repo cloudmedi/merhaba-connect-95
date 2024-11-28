@@ -95,12 +95,46 @@ export function AssignManagersDialog({
       return;
     }
 
-    onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
-  };
+    try {
+      // Önce mevcut atamaları temizle
+      const { error: deleteError } = await supabase
+        .from('playlist_assignments')
+        .delete()
+        .eq('playlist_id', playlistId);
 
-  const filteredManagers = activeTab === "assigned" 
-    ? managers.filter(m => selectedManagers.some(sm => sm.id === m.id))
-    : managers;
+      if (deleteError) throw deleteError;
+
+      // Yeni atamaları ekle
+      const assignments = selectedManagers.map(manager => ({
+        user_id: manager.id,
+        playlist_id: playlistId,
+        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
+        expires_at: expiresAt?.toISOString() || null,
+        notification_sent: false
+      }));
+
+      const { error: insertError } = await supabase
+        .from('playlist_assignments')
+        .insert(assignments);
+
+      if (insertError) throw insertError;
+
+      // Playlist'in assigned_to alanını güncelle
+      const { error: updateError } = await supabase
+        .from('playlists')
+        .update({ assigned_to: selectedManagers.map(m => m.id) })
+        .eq('id', playlistId);
+
+      if (updateError) throw updateError;
+
+      toast.success(`Playlist assigned to ${selectedManagers.length} managers`);
+      onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error assigning playlist:', error);
+      toast.error(error.message || "Failed to assign playlist");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
