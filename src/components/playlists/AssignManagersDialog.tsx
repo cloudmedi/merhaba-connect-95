@@ -35,7 +35,7 @@ export function AssignManagersDialog({
     if (open) {
       fetchManagers();
     }
-  }, [open, searchQuery, user?.id]);
+  }, [open, searchQuery]);
 
   const fetchManagers = async () => {
     try {
@@ -46,29 +46,10 @@ export function AssignManagersDialog({
         return;
       }
 
-      // Get the current user's company ID
-      const { data: adminProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("company_id, role")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Profile error:", profileError);
-        toast.error("Failed to get company information");
-        return;
-      }
-
-      if (!adminProfile?.company_id) {
-        toast.error("No company associated with your account");
-        return;
-      }
-
-      // Fetch all managers from the same company
+      // Tüm manager'ları getir, company_id kontrolü olmadan
       let query = supabase
         .from("profiles")
         .select("id, email, first_name, last_name, role, avatar_url")
-        .eq("company_id", adminProfile.company_id)
         .eq("role", "manager")
         .eq("is_active", true);
 
