@@ -58,13 +58,11 @@ async function initSupabase() {
         console.log('Presence state synced:', state);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        // Only log if we're not already tracking presence
         if (!isTrackingPresence) {
           console.log('Device joined:', key, newPresences);
         }
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        // Only log if we're actually leaving (not just updating)
         if (isTrackingPresence) {
           console.log('Device left:', key, leftPresences);
         }

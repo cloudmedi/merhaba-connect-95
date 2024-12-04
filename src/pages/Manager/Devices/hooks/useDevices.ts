@@ -9,56 +9,35 @@ export const useDevices = () => {
   const presenceChannel = supabase.channel('device_status');
   const broadcastChannel = supabase.channel('device_broadcast');
 
-  // Helper function to validate device category
   const validateDeviceCategory = (category: string): DeviceCategory => {
     const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
     return validCategories.includes(category as DeviceCategory) 
       ? (category as DeviceCategory) 
-      : 'player'; // Default to 'player' if invalid category
+      : 'player';
   };
 
-  // Set up realtime subscription
   useEffect(() => {
-    // Subscribe to device presence channel
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const presenceState = presenceChannel.presenceState();
         console.log('Device presence state:', presenceState);
-        
-        // Update devices when presence changes
         queryClient.invalidateQueries({ queryKey: ['devices'] });
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         const device = newPresences[0];
+        console.log('Device joined:', device);
         toast.success(`Device ${device.token} is now online`);
         queryClient.invalidateQueries({ queryKey: ['devices'] });
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         const device = leftPresences[0];
+        console.log('Device left:', device);
         toast.warning(`Device ${device.token} is now offline`);
         queryClient.invalidateQueries({ queryKey: ['devices'] });
       })
       .subscribe();
 
-    // Also subscribe to direct database changes
-    const channel = supabase
-      .channel('device_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices'
-        },
-        (payload) => {
-          console.log('Device change received:', payload);
-          queryClient.invalidateQueries({ queryKey: ['devices'] });
-        }
-      )
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
       supabase.removeChannel(presenceChannel);
     };
   }, [queryClient]);
@@ -90,10 +69,8 @@ export const useDevices = () => {
 
       if (error) throw error;
       
-      // Get presence state to determine online status
       const presenceState = presenceChannel.presenceState();
       
-      // Update device status based on presence and ensure category is of correct type
       const devicesWithStatus = data.map(device => ({
         ...device,
         status: Object.values(presenceState)
@@ -137,54 +114,10 @@ export const useDevices = () => {
     },
   });
 
-  const updateDevice = useMutation({
-    mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('devices')
-        .update({
-          ...device,
-          last_seen: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla güncellendi');
-    },
-    onError: (error: Error) => {
-      toast.error('Cihaz güncellenirken bir hata oluştu: ' + error.message);
-    },
-  });
-
-  const deleteDevice = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('devices')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla silindi');
-    },
-    onError: (error: Error) => {
-      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
-    },
-  });
-
   return {
     devices,
     isLoading,
     error,
-    createDevice,
-    updateDevice,
-    deleteDevice,
+    createDevice
   };
 };
