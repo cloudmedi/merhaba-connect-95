@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -11,6 +11,8 @@ import { Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useScheduleEvents } from "@/hooks/useScheduleEvents";
 import { toast } from "sonner";
+import { CalendarHeader } from "./components/CalendarHeader";
+import { CalendarView } from "./components/CalendarView";
 
 export default function Schedule() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -20,9 +22,12 @@ export default function Schedule() {
   } | null>(null);
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
-  console.log('Schedule component - Raw events from hook:', events);
+  useEffect(() => {
+    console.log('Schedule mounted - Events:', events);
+  }, [events]);
 
   const handleEventDrop = async (info: any) => {
+    console.log('Event drop - Info:', info);
     const updatedEvent: ScheduleEvent = {
       ...info.event.extendedProps,
       id: info.event.id,
@@ -33,6 +38,7 @@ export default function Schedule() {
 
     try {
       await updateEvent.mutateAsync(updatedEvent);
+      toast.success("Event updated successfully");
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error("Failed to update event");
@@ -54,11 +60,11 @@ export default function Schedule() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="p-6">Loading...</div>;
   }
 
   const formattedEvents = events.map(event => {
-    console.log('Formatting individual event:', event);
+    console.log('Formatting event:', event);
     const formattedEvent = {
       id: event.id,
       title: event.title,
@@ -77,134 +83,18 @@ export default function Schedule() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Schedule</h1>
-          <p className="text-sm text-gray-500">Manage your playlists and announcements schedule</p>
-        </div>
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => exportEvents(events, 'ics')}>
-                Export as ICS
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportEvents(events, 'csv')}>
-                Export as CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <Button 
-            onClick={() => setIsCreateEventOpen(true)}
-            className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
-          >
-            + Create Event
-          </Button>
-        </div>
-      </div>
+      <CalendarHeader 
+        onCreateEvent={() => setIsCreateEventOpen(true)}
+        onExport={exportEvents}
+        events={events}
+      />
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="calendar-container p-4">
-          <style>
-            {`
-              .fc {
-                --fc-border-color: #e5e7eb;
-                --fc-button-bg-color: #fff;
-                --fc-button-border-color: #d1d5db;
-                --fc-button-text-color: #374151;
-                --fc-button-hover-bg-color: #f3f4f6;
-                --fc-button-hover-border-color: #9ca3af;
-                --fc-button-active-bg-color: #6E59A5;
-                --fc-button-active-border-color: #6E59A5;
-                --fc-button-active-text-color: #fff;
-                --fc-today-bg-color: #f3f4f6;
-                --fc-now-indicator-color: #6E59A5;
-              }
-              
-              .fc .fc-button {
-                padding: 0.5rem 1rem;
-                font-weight: 500;
-                border-radius: 0.375rem;
-                transition: all 0.2s;
-              }
-
-              .fc .fc-button:focus {
-                box-shadow: 0 0 0 2px rgba(110, 89, 165, 0.2);
-              }
-
-              .fc .fc-toolbar-title {
-                font-size: 1.25rem;
-                font-weight: 600;
-                color: #111827;
-              }
-
-              .fc .fc-col-header-cell {
-                padding: 0.75rem 0;
-                font-weight: 500;
-                background-color: #f9fafb;
-              }
-
-              .fc .fc-timegrid-slot {
-                height: 3rem;
-              }
-
-              .fc .fc-timegrid-slot-label {
-                font-size: 0.875rem;
-                color: #6b7280;
-              }
-
-              .fc .fc-event {
-                border-radius: 0.25rem;
-                padding: 0.25rem 0.5rem;
-                font-size: 0.875rem;
-                border: none;
-                transition: transform 0.2s;
-              }
-
-              .fc .fc-event:hover {
-                transform: translateY(-1px);
-              }
-
-              .fc .fc-toolbar.fc-header-toolbar {
-                margin-bottom: 1.5rem;
-              }
-
-              .fc .fc-view-harness {
-                background-color: #fff;
-              }
-            `}
-          </style>
-          
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'timeGridWeek,timeGridDay'
-            }}
-            slotMinTime="00:00:00"
-            slotMaxTime="24:00:00"
-            expandRows={true}
-            height="auto"
-            allDaySlot={false}
-            slotDuration="01:00:00"
-            editable={true}
-            droppable={true}
-            eventDrop={handleEventDrop}
-            selectable={true}
-            selectMirror={true}
-            dayMaxEvents={true}
-            weekends={true}
-            nowIndicator={true}
+          <CalendarView
             events={formattedEvents}
-            select={handleSelect}
+            onEventDrop={handleEventDrop}
+            onSelect={handleSelect}
           />
         </div>
       </div>
