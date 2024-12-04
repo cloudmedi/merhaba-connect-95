@@ -10,8 +10,8 @@ interface PlaylistSong {
   duration: number;
   file_url: string;
   bunny_id?: string;
-  position?: number;
-  playlist_id?: string;
+  position: number;
+  playlist_id: string;
   artwork_url?: string;
 }
 
@@ -38,21 +38,21 @@ export function SongList({
   isFetchingNextPage,
   fetchNextPage
 }: SongListProps) {
-  const { ref, inView } = useInView();
+  const { ref, inView } = useInView({
+    threshold: 0.5
+  });
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage && fetchNextPage) {
+      console.log('Loading more songs...'); // Debug log
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const formatDuration = (duration: string | number) => {
-    if (typeof duration === 'number') {
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-    return duration;
+  const formatDuration = (duration: number) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handleSongClick = (song: PlaylistSong, index: number) => {

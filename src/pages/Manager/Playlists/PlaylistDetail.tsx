@@ -58,19 +58,29 @@ export function PlaylistDetail() {
   } = useInfiniteQuery({
     queryKey: ['playlist-songs', id],
     queryFn: async ({ pageParam = 0 }) => {
+      console.log('Fetching page:', pageParam); // Debug log
+      const from = pageParam * SONGS_PER_PAGE;
+      const to = from + SONGS_PER_PAGE - 1;
+      
       const { data, error } = await supabase
         .from('paginated_playlist_songs')
         .select('*')
         .eq('playlist_id', id)
-        .range(pageParam * SONGS_PER_PAGE, (pageParam + 1) * SONGS_PER_PAGE - 1)
+        .range(from, to)
         .order('position');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching songs:', error); // Debug log
+        throw error;
+      }
+      
+      console.log('Fetched songs:', data?.length); // Debug log
       return data as PlaylistSong[];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === SONGS_PER_PAGE ? allPages.length : undefined;
+      if (!lastPage || lastPage.length < SONGS_PER_PAGE) return undefined;
+      return allPages.length;
     }
   });
 
@@ -101,7 +111,8 @@ export function PlaylistDetail() {
   }
 
   // Flatten all songs from all pages
-  const allSongs = songPages?.pages.flat() || [];
+  const allSongs = songPages?.pages.flatMap(page => page) || [];
+  console.log('Total songs loaded:', allSongs.length); // Debug log
 
   const handleSongSelect = (song: PlaylistSong) => {
     const index = allSongs.findIndex(s => s.song_id === song.song_id);
