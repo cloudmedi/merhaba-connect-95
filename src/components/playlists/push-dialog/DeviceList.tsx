@@ -2,10 +2,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import type { Device } from "@/pages/Manager/Devices/hooks/types";
+import type { PushDialogDevice } from "./deviceTypes";
 
 interface DeviceListProps {
-  devices: Device[];
+  devices: PushDialogDevice[];
   selectedDevices: string[];
   onToggleDevice: (deviceId: string) => void;
 }
