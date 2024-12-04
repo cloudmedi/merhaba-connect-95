@@ -140,23 +140,17 @@ export function PlaylistGrid({
             onClick={() => handleCardClick(playlist)}
           >
             <div className="aspect-square relative overflow-hidden">
-              {playlist.artwork_url ? (
-                <img
-                  src={playlist.artwork_url}
-                  alt={playlist.title}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">No Artwork</span>
-                </div>
-              )}
+              <img
+                src={playlist.artwork_url}
+                alt={playlist.title}
+                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+              />
               {onPlay && (
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 border border-white/10"
+                    className="w-10 h-10 rounded-full bg-black/40 hover:bg-black/40 transition-all duration-300"
                     onClick={(e) => handlePlayClick(e, playlist)}
                   >
                     {currentPlayingId === playlist.id && isPlaying ? (
