@@ -188,4 +188,5 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
         </div>
       </DialogContent>
     </Dialog>
-  </div>
+  );
+}
