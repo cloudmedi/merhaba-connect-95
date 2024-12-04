@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -15,19 +15,10 @@ export function PlaylistDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
-  const {
-    data: playlistData,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = useInfiniteQuery({
+  const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
-    queryFn: async ({ pageParam = 0 }) => {
-      console.log('Fetching page:', pageParam);
-      const from = pageParam * 50;
-      const to = from + 49;
-
+    queryFn: async () => {
+      console.log('Fetching playlist data...');
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -38,8 +29,12 @@ export function PlaylistDetail() {
         .eq('id', id)
         .single();
 
-      if (playlistError) throw playlistError;
+      if (playlistError) {
+        console.error('Error fetching playlist:', playlistError);
+        throw playlistError;
+      }
 
+      console.log('Fetching playlist songs...');
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -57,21 +52,20 @@ export function PlaylistDetail() {
           )
         `)
         .eq('playlist_id', id)
-        .order('position')
-        .range(from, to);
+        .order('position');
 
-      if (songsError) throw songsError;
+      if (songsError) {
+        console.error('Error fetching songs:', songsError);
+        throw songsError;
+      }
 
-      console.log(`Fetched ${playlistSongs.length} songs for page ${pageParam}`);
+      console.log(`Found ${playlistSongs.length} songs`);
 
       return {
         ...playlist,
-        songs: playlistSongs.map(ps => ps.songs),
-        nextPage: playlistSongs.length === 50 ? pageParam + 1 : undefined
+        songs: playlistSongs.map(ps => ps.songs)
       };
-    },
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 0
+    }
   });
 
   if (isLoading) {
@@ -85,7 +79,7 @@ export function PlaylistDetail() {
     );
   }
 
-  if (!playlistData?.pages[0]) {
+  if (!playlist) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -101,81 +95,91 @@ export function PlaylistDetail() {
     );
   }
 
-  const playlist = playlistData.pages[0];
-  const allSongs = playlistData.pages.flatMap(page => page.songs);
-
-  const handleSongSelect = (song: any, index: number) => {
-    setCurrentSongIndex(index);
-    setIsPlaying(true);
-    toast.success("Playing selected song");
+  const handleSongSelect = (song: any) => {
+    const index = playlist.songs.findIndex((s: any) => s.id === song.id);
+    if (index !== -1) {
+      setCurrentSongIndex(index);
+      setIsPlaying(true);
+      toast.success("Playing selected song");
+    }
   };
 
   const handlePlayClick = () => {
-    if (allSongs && allSongs.length > 0) {
+    if (playlist.songs && playlist.songs.length > 0) {
       setCurrentSongIndex(0);
       setIsPlaying(true);
       toast.success("Playing playlist");
     }
   };
 
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-    const threshold = 100; // pixels from bottom
+  const calculateTotalDuration = () => {
+    if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
-    if (scrollHeight - scrollTop <= clientHeight + threshold) {
-      if (hasNextPage && !isFetchingNextPage) {
-        console.log('Loading next page of songs...');
-        fetchNextPage();
-      }
+    const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
+      return acc + (song.duration || 0);
+    }, 0);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
     }
+    return `${minutes} min`;
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="p-6 space-y-8">
         <PlaylistDetailHeader
-          playlist={playlist}
           onBack={() => navigate("/manager")}
-          onPlayClick={handlePlayClick}
-          onPushClick={() => setIsPushDialogOpen(true)}
+          artworkUrl={playlist.artwork_url}
+          name={playlist.name}
+          genreName={playlist.genres?.name}
+          moodName={playlist.moods?.name}
+          songCount={playlist.songs?.length}
+          duration={calculateTotalDuration()}
+          onPlay={handlePlayClick}
+          onPush={() => setIsPushDialogOpen(true)}
+          isHero={playlist.is_hero}
+          id={playlist.id}
         />
 
-        <PlaylistSongList
-          songs={allSongs}
+        <PlaylistSongList 
+          songs={playlist.songs}
           onSongSelect={handleSongSelect}
           currentSongIndex={isPlaying ? currentSongIndex : undefined}
+          onCurrentSongIndexChange={setCurrentSongIndex}
           isPlaying={isPlaying}
-          onScroll={handleScroll}
-          isFetchingNextPage={isFetchingNextPage}
+        />
+
+        {isPlaying && playlist.songs && (
+          <MusicPlayer
+            playlist={{
+              title: playlist.name,
+              artwork: playlist.artwork_url || "/placeholder.svg",
+              songs: playlist.songs.map((song: any) => ({
+                id: song.id,
+                title: song.title,
+                artist: song.artist || "Unknown Artist",
+                duration: song.duration?.toString() || "0:00",
+                file_url: song.file_url,
+                bunny_id: song.bunny_id
+              }))
+            }}
+            onClose={() => setIsPlaying(false)}
+            initialSongIndex={currentSongIndex}
+            onSongChange={setCurrentSongIndex}
+            autoPlay={true}
+          />
+        )}
+
+        <PushPlaylistDialog
+          isOpen={isPushDialogOpen}
+          onClose={() => setIsPushDialogOpen(false)}
+          playlistTitle={playlist.name}
         />
       </div>
-
-      <PushPlaylistDialog
-        isOpen={isPushDialogOpen}
-        onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.name}
-      />
-
-      {isPlaying && allSongs && (
-        <MusicPlayer
-          playlist={{
-            title: playlist.name,
-            artwork: playlist.artwork_url || "/placeholder.svg",
-            songs: allSongs.map(song => ({
-              id: song.id,
-              title: song.title,
-              artist: song.artist || "Unknown Artist",
-              duration: song.duration?.toString() || "0:00",
-              file_url: song.file_url,
-              bunny_id: song.bunny_id
-            }))
-          }}
-          onClose={() => setIsPlaying(false)}
-          initialSongIndex={currentSongIndex}
-          onSongChange={setCurrentSongIndex}
-          autoPlay={true}
-        />
-      )}
     </div>
   );
 }

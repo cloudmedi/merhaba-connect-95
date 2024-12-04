@@ -4,21 +4,21 @@ import { formatDuration } from "../utils/playlistUtils";
 
 interface PlaylistSongListProps {
   songs: any[];
-  onSongSelect: (song: any, index: number) => void;
+  onSongSelect: (song: any) => void;
   currentSongIndex?: number;
+  onCurrentSongIndexChange?: (index: number) => void;
   isPlaying?: boolean;
-  onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
-  isFetchingNextPage: boolean;
 }
 
 export function PlaylistSongList({
   songs,
   onSongSelect,
   currentSongIndex,
-  isPlaying,
-  onScroll,
-  isFetchingNextPage
+  onCurrentSongIndexChange,
+  isPlaying
 }: PlaylistSongListProps) {
+  console.log('Rendering PlaylistSongList with', songs?.length, 'songs');
+  
   return (
     <div className="mt-12">
       <div className="grid grid-cols-12 text-xs text-gray-500 uppercase tracking-wider pb-4 border-b">
@@ -28,15 +28,12 @@ export function PlaylistSongList({
         <div className="col-span-2 text-right">DURATION</div>
       </div>
 
-      <ScrollArea 
-        className="h-[calc(100vh-400px)]"
-        onScrollCapture={onScroll}
-      >
+      <ScrollArea className="h-[calc(100vh-400px)]">
         <div className="space-y-1">
-          {songs.map((song, index) => (
+          {songs?.map((song, index) => (
             <div 
               key={`${song.id}-${index}`}
-              onClick={() => onSongSelect(song, index)}
+              onClick={() => onSongSelect(song)}
               className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-colors items-center border-b border-gray-100 cursor-pointer ${
                 currentSongIndex === index ? 'bg-purple-50/50' : ''
               }`}
@@ -56,13 +53,6 @@ export function PlaylistSongList({
               </div>
             </div>
           ))}
-
-          {isFetchingNextPage && (
-            <div className="py-4 text-center text-gray-500">
-              <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              Loading more songs...
-            </div>
-          )}
         </div>
       </ScrollArea>
     </div>
