@@ -51,7 +51,10 @@ export class PresenceManager {
         await this.supabase.removeChannel(this.presenceChannel);
       }
 
-      this.presenceChannel = this.supabase.channel(`device_${this.deviceToken}`, {
+      const channelName = `device_${this.deviceToken}`;
+      console.log('Setting up presence channel:', channelName);
+
+      this.presenceChannel = this.supabase.channel(channelName, {
         config: {
           presence: {
             key: this.deviceToken,
@@ -61,7 +64,8 @@ export class PresenceManager {
 
       this.presenceChannel
         .on('presence', { event: 'sync' }, () => {
-          console.log('Presence state synced:', this.presenceChannel?.presenceState());
+          const state = this.presenceChannel?.presenceState();
+          console.log('Presence state synced:', state);
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
           console.log('Device joined:', key, newPresences);
