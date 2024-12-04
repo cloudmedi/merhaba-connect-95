@@ -12,7 +12,7 @@ interface DeviceListProps {
 }
 
 export function DeviceList({ devices }: DeviceListProps) {
-  const { deleteDevice, updateDevice } = useDevices();
+  const { deleteDevice } = useDevices();
 
   useEffect(() => {
     const channel = supabase.channel('device_status')
@@ -25,6 +25,20 @@ export function DeviceList({ devices }: DeviceListProps) {
         },
         (payload) => {
           console.log('Device status changed:', payload);
+          
+          if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
+            const oldStatus = payload.old.status;
+            const newStatus = payload.new.status;
+            const deviceName = payload.new.name;
+            
+            if (oldStatus !== newStatus) {
+              if (newStatus === 'online') {
+                toast.success(`${deviceName} çevrimiçi oldu`);
+              } else if (newStatus === 'offline') {
+                toast.error(`${deviceName} çevrimdışı oldu`);
+              }
+            }
+          }
         }
       )
       .subscribe();
@@ -40,14 +54,6 @@ export function DeviceList({ devices }: DeviceListProps) {
       toast.success('Cihaz başarıyla silindi');
     } catch (error) {
       toast.error('Cihaz silinirken bir hata oluştu');
-    }
-  };
-
-  const handleEdit = async (device: Device) => {
-    try {
-      toast.info('Düzenleme özelliği yakında eklenecek');
-    } catch (error) {
-      toast.error('Bir hata oluştu');
     }
   };
 
@@ -78,7 +84,6 @@ export function DeviceList({ devices }: DeviceListProps) {
               key={device.id} 
               device={device}
               onDelete={handleDelete}
-              onEdit={handleEdit}
             />
           ))}
         </TableBody>

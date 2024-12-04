@@ -69,28 +69,6 @@ async function initSupabase() {
       .maybeSingle();
 
     if (device) {
-      const channel = supabase.channel('device_status')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'devices',
-            filter: `token=eq.${deviceToken}`
-          },
-          async (payload: any) => {
-            console.log('Device status changed:', payload);
-            
-            if (payload.new && payload.new.status) {
-              const systemInfo = await (window as any).electronAPI.getSystemInfo();
-              await updateDeviceStatus(deviceToken, payload.new.status, systemInfo);
-            }
-          }
-        )
-        .subscribe((status: string) => {
-          console.log('Realtime subscription status:', status);
-        });
-
       // Set initial online status
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'online', systemInfo);
