@@ -75,6 +75,13 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (playlist: GridPlaylist) => {
+    // If clicking the currently playing playlist, we want to toggle play/pause
+    if (playlist.id === currentPlayingId) {
+      onPlay?.(playlist);
+      return;
+    }
+
+    // Otherwise, load and play the new playlist
     const playlistWithSongs = {
       ...playlist,
       songs: playlistSongs
