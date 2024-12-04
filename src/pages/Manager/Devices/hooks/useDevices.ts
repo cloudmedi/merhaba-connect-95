@@ -93,6 +93,7 @@ export const useDevices = () => {
       console.log('Devices with status:', devicesWithStatus);
       return devicesWithStatus;
     },
+    refetchInterval: 5000, // Her 5 saniyede bir yenile
   });
 
   const createDevice = useMutation({

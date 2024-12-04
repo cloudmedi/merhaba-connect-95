@@ -70,6 +70,7 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
       <TableCell>
         <Badge 
           variant={device.status === 'online' ? 'success' : 'secondary'}
+          className={device.status === 'online' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}
         >
           {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
         </Badge>
