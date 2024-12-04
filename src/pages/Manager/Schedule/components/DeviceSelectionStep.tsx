@@ -52,15 +52,21 @@ export function DeviceSelectionStep({
 
   const handleSelectGroup = (group: any, isSelected: boolean) => {
     const deviceIds = group.devices.map((device: any) => device.id);
+    let newSelectedDevices = [...selectedDevices];
     
     if (isSelected) {
       // Add all devices from the group that aren't already selected
-      const newDevices = deviceIds.filter(id => !selectedDevices.includes(id));
-      onDevicesChange([...selectedDevices, ...newDevices]);
+      deviceIds.forEach(id => {
+        if (!newSelectedDevices.includes(id)) {
+          newSelectedDevices.push(id);
+        }
+      });
     } else {
       // Remove all devices that belong to this group
-      onDevicesChange(selectedDevices.filter(id => !deviceIds.includes(id)));
+      newSelectedDevices = newSelectedDevices.filter(id => !deviceIds.includes(id));
     }
+    
+    onDevicesChange(newSelectedDevices);
   };
 
   if (isLoadingDevices || isLoadingGroups) {

@@ -27,7 +27,7 @@ export function GroupList({ groups, selectedDevices, onSelectGroup }: GroupListP
               <Checkbox
                 checked={allSelected}
                 className={someSelected && !allSelected ? "opacity-50" : ""}
-                onCheckedChange={(checked) => onSelectGroup(group, !!checked)}
+                onCheckedChange={() => onSelectGroup(group, !allSelected)}
               />
               <div>
                 <div className="flex items-center gap-2">
