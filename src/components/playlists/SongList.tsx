@@ -3,17 +3,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 
-interface Song {
-  id: string | number;
+interface PlaylistSong {
+  song_id: string;
   title: string;
   artist: string;
-  duration: string | number;
-  file_url?: string;
+  duration: number;
+  file_url: string;
+  bunny_id?: string;
+  position?: number;
+  playlist_id?: string;
+  artwork_url?: string;
 }
 
 interface SongListProps {
-  songs: Song[];
-  onSongSelect?: (song: Song) => void;
+  songs: PlaylistSong[];
+  onSongSelect?: (song: PlaylistSong) => void;
   currentSongId?: string | number;
   currentSongIndex?: number;
   onCurrentSongIndexChange?: (index: number) => void;
@@ -51,7 +55,7 @@ export function SongList({
     return duration;
   };
 
-  const handleSongClick = (song: Song, index: number) => {
+  const handleSongClick = (song: PlaylistSong, index: number) => {
     onSongSelect?.(song);
     onCurrentSongIndexChange?.(index);
   };
@@ -68,10 +72,10 @@ export function SongList({
       <ScrollArea className="h-[calc(100vh-400px)]">
         {songs.map((song, index) => (
           <div 
-            key={song.id}
+            key={song.song_id}
             onClick={() => handleSongClick(song, index)}
             className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-all duration-200 items-center border-b border-gray-100 cursor-pointer group ${
-              (currentSongId === song.id || currentSongIndex === index) 
+              (currentSongId === song.song_id || currentSongIndex === index) 
                 ? 'bg-purple-50/50' 
                 : ''
             }`}
@@ -82,13 +86,13 @@ export function SongList({
             <div className="col-span-5 font-medium text-gray-900 flex items-center gap-3">
               <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                 <Music2 className={`w-4 h-4 ${
-                  currentSongId === song.id 
+                  currentSongId === song.song_id 
                     ? 'text-purple-600' 
                     : 'text-gray-400 group-hover:text-purple-600'
                 }`} />
               </div>
               <span className={`truncate ${
-                currentSongId === song.id 
+                currentSongId === song.song_id 
                   ? 'text-purple-600' 
                   : 'group-hover:text-purple-600'
               }`}>

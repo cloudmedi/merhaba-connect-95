@@ -68,10 +68,10 @@ export function PlaylistDetail() {
       if (error) throw error;
       return data as PlaylistSong[];
     },
+    initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === SONGS_PER_PAGE ? allPages.length : undefined;
-    },
-    initialPageParam: 0
+    }
   });
 
   const isLoading = isPlaylistLoading || isSongsLoading;
@@ -151,13 +151,7 @@ export function PlaylistDetail() {
         />
 
         <SongList 
-          songs={allSongs.map(song => ({
-            id: song.song_id,
-            title: song.title,
-            artist: song.artist,
-            duration: song.duration,
-            file_url: song.file_url
-          }))}
+          songs={allSongs}
           onSongSelect={handleSongSelect}
           currentSongIndex={isPlaying ? currentSongIndex : undefined}
           onCurrentSongIndexChange={setCurrentSongIndex}
