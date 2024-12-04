@@ -7,7 +7,7 @@ interface TrackInfoProps {
   artist: string;
   isOffline: boolean;
   downloadStatus?: {
-    status: string;
+    status: 'pending' | 'downloading' | 'completed' | 'error';
     progress: number;
   };
 }

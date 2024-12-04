@@ -10,6 +10,7 @@ interface PlayerControlsProps {
   onPrevious: () => void;
   onPlayStateChange: (playing: boolean) => void;
   autoPlay?: boolean;
+  isPlaying?: boolean;
 }
 
 export function PlayerControls({
@@ -18,6 +19,7 @@ export function PlayerControls({
   onPrevious,
   onPlayStateChange,
   autoPlay = true,
+  isPlaying = false,
 }: PlayerControlsProps) {
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
