@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useDeviceSelection } from "./device-selection/useDeviceSelection";
 import { SearchBar } from "./device-selection/SearchBar";
-import { DeviceList } from "./device-selection/DeviceList";
-import { GroupList } from "./device-selection/GroupList";
+import { TabNavigation } from "./device-selection/TabNavigation";
+import { TabContent } from "./device-selection/TabContent";
+import { NavigationButtons } from "./device-selection/NavigationButtons";
+import { useDeviceSelection } from "./device-selection/useDeviceSelection";
 
 interface DeviceSelectionStepProps {
   selectedDevices: string[];
@@ -55,76 +53,47 @@ export function DeviceSelectionStep({
     let newSelectedDevices = [...selectedDevices];
     
     if (isSelected) {
-      // Add all devices from the group that aren't already selected
       deviceIds.forEach(id => {
         if (!newSelectedDevices.includes(id)) {
           newSelectedDevices.push(id);
         }
       });
     } else {
-      // Remove all devices that belong to this group
       newSelectedDevices = newSelectedDevices.filter(id => !deviceIds.includes(id));
     }
     
     onDevicesChange(newSelectedDevices);
   };
 
-  if (isLoadingDevices || isLoadingGroups) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-[300px] w-full" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="devices">Cihazlar</TabsTrigger>
-          <TabsTrigger value="groups">Gruplar</TabsTrigger>
-        </TabsList>
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="mt-4">
-          <SearchBar 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            showSelectAll={activeTab === "devices"}
-            onSelectAll={handleSelectAll}
-            selectAllText={selectedDevices.length === filteredDevices.length ? "Seçimi Kaldır" : "Tümünü Seç"}
-          />
-        </div>
-
-        <TabsContent value="devices">
-          <DeviceList 
-            devices={filteredDevices}
-            selectedDevices={selectedDevices}
-            onToggleDevice={toggleDevice}
-          />
-        </TabsContent>
-
-        <TabsContent value="groups">
-          <GroupList 
-            groups={filteredGroups}
-            selectedDevices={selectedDevices}
-            onSelectGroup={handleSelectGroup}
-          />
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
-          Geri
-        </Button>
-        <Button 
-          onClick={onNext}
-          disabled={selectedDevices.length === 0}
-          className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
-        >
-          İleri
-        </Button>
+      <div className="mt-4">
+        <SearchBar 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          showSelectAll={activeTab === "devices"}
+          onSelectAll={handleSelectAll}
+          selectAllText={selectedDevices.length === filteredDevices.length ? "Seçimi Kaldır" : "Tümünü Seç"}
+        />
       </div>
+
+      <TabContent 
+        activeTab={activeTab}
+        isLoading={isLoadingDevices || isLoadingGroups}
+        devices={filteredDevices}
+        groups={filteredGroups}
+        selectedDevices={selectedDevices}
+        onToggleDevice={toggleDevice}
+        onSelectGroup={handleSelectGroup}
+      />
+
+      <NavigationButtons 
+        onBack={onBack}
+        onNext={onNext}
+        isNextDisabled={selectedDevices.length === 0}
+      />
     </div>
   );
 }
