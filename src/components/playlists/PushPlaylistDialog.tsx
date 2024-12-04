@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Device } from "@/pages/Manager/Devices/hooks/types";
+import type { Device, DeviceSystemInfo } from "@/pages/Manager/Devices/hooks/types";
 import { DialogHeader } from "./push-dialog/DialogHeader";
 import { SearchBar } from "./push-dialog/SearchBar";
 import { DeviceList } from "./push-dialog/DeviceList";
 import { GroupList } from "./push-dialog/GroupList";
 import { DialogFooter } from "./push-dialog/DialogFooter";
+import type { Group } from "./push-dialog/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -27,6 +28,21 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     return validCategories.includes(category as Device['category']) 
       ? category as Device['category']
       : 'player';
+  };
+
+  const validateDeviceStatus = (status: string): Device['status'] => {
+    return status === 'online' ? 'online' : 'offline';
+  };
+
+  const validateSystemInfo = (info: any): DeviceSystemInfo => {
+    if (typeof info === 'string') {
+      try {
+        return JSON.parse(info);
+      } catch {
+        return {};
+      }
+    }
+    return info || {};
   };
 
   // Fetch devices
@@ -57,8 +73,9 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
       return data.map(device => ({
         ...device,
         category: validateDeviceCategory(device.category),
-        status: device.status as Device['status']
-      }));
+        status: validateDeviceStatus(device.status),
+        system_info: validateSystemInfo(device.system_info)
+      })) as Device[];
     },
   });
 
@@ -93,7 +110,20 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
         .eq('company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+
+      // Transform the data to match the Group type
+      return (data || []).map(group => ({
+        ...group,
+        branch_group_assignments: group.branch_group_assignments?.map(assignment => ({
+          branches: {
+            ...assignment.branches,
+            devices: assignment.branches?.devices?.map(device => ({
+              ...device,
+              status: validateDeviceStatus(device.status)
+            }))
+          }
+        }))
+      })) as Group[];
     },
   });
 
