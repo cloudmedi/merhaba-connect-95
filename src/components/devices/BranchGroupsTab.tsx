@@ -8,13 +8,11 @@ import { GroupList } from "./branch-groups/GroupList";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import type { Branch } from "@/pages/Manager/Announcements/types";
 
 export function BranchGroupsTab() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [groups, setGroups] = useState([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchGroups = async () => {
@@ -26,14 +24,7 @@ export function BranchGroupsTab() {
           id,
           name,
           description,
-          created_at,
-          branch_group_assignments (
-            branches (
-              id,
-              name,
-              location
-            )
-          )
+          created_at
         `);
 
       if (groupsError) {
@@ -52,23 +43,8 @@ export function BranchGroupsTab() {
     }
   };
 
-  const fetchBranches = async () => {
-    const { data, error } = await supabase
-      .from('branches')
-      .select('id, name, location');
-
-    if (error) {
-      console.error('Error fetching branches:', error);
-      toast.error("Şubeler yüklenirken bir hata oluştu");
-      return;
-    }
-
-    setBranches(data || []);
-  };
-
   useEffect(() => {
     fetchGroups();
-    fetchBranches();
   }, []);
 
   const filteredGroups = groups.filter(group =>
@@ -136,7 +112,6 @@ export function BranchGroupsTab() {
           <GroupList 
             groups={filteredGroups} 
             onRefresh={handleDeleteSuccess}
-            branches={branches}
           />
         )}
 
@@ -144,7 +119,6 @@ export function BranchGroupsTab() {
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
           onSuccess={handleCreateSuccess}
-          branches={branches}
         />
       </div>
     </Card>

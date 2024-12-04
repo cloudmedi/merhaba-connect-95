@@ -29,20 +29,6 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
     try {
       console.log('Starting deletion process for group:', groupId);
       
-      // First delete all assignments
-      const { error: assignmentError } = await supabase
-        .from('branch_group_assignments')
-        .delete()
-        .eq('group_id', groupId);
-
-      if (assignmentError) {
-        console.error('Error deleting assignments:', assignmentError);
-        throw new Error('Grup bağlantıları silinirken bir hata oluştu');
-      }
-
-      console.log('Successfully deleted group assignments');
-
-      // Then delete the group
       const { error: groupError } = await supabase
         .from('branch_groups')
         .delete()
@@ -54,11 +40,9 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
       }
 
       console.log('Successfully deleted group');
-      
-      // Only show success message and refresh after both operations complete
       toast.success("Grup başarıyla silindi");
-      await onDeleted(); // Wait for the refresh to complete
-      onClose(); // Close the dialog only after successful deletion and refresh
+      await onDeleted();
+      onClose();
     } catch (error) {
       console.error('Error in delete operation:', error);
       toast.error(error instanceof Error ? error.message : "Grup silinirken bir hata oluştu");
@@ -73,7 +57,7 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
         <AlertDialogHeader>
           <AlertDialogTitle>Grubu Sil</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu grubu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve grup içindeki tüm şube bağlantıları silinecektir.
+            Bu grubu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -3,9 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Edit, Trash2, Users } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Branch } from "@/pages/Manager/Announcements/types";
 import { DeleteGroupDialog } from "./DeleteGroupDialog";
 import { EditGroupDialog } from "./EditGroupDialog";
 
@@ -13,23 +12,15 @@ interface BranchGroup {
   id: string;
   name: string;
   description?: string;
-  branch_group_assignments?: {
-    branches: {
-      id: string;
-      name: string;
-      location?: string;
-    };
-  }[];
   created_at?: string;
 }
 
 interface GroupListProps {
   groups: BranchGroup[];
   onRefresh: () => Promise<void>;
-  branches: Branch[];
 }
 
-export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
+export function GroupList({ groups, onRefresh }: GroupListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<BranchGroup | null>(null);
@@ -38,7 +29,6 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
     <ScrollArea className="h-[400px]">
       <div className="space-y-4">
         {groups.map((group) => {
-          const branchCount = group.branch_group_assignments?.length || 0;
           const createdAt = group.created_at 
             ? formatDistanceToNow(new Date(group.created_at), { addSuffix: true, locale: tr }) 
             : '';
@@ -52,10 +42,6 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-base">{group.name}</h3>
-                    <Badge variant="secondary" className="ml-2">
-                      <Users className="w-3 h-3 mr-1" />
-                      {branchCount} şube
-                    </Badge>
                   </div>
                   {group.description && (
                     <p className="text-sm text-gray-500 mt-1">{group.description}</p>
@@ -111,7 +97,6 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
           setSelectedGroup(null);
         }}
         group={selectedGroup}
-        branches={branches}
         onSuccess={onRefresh}
       />
     </ScrollArea>

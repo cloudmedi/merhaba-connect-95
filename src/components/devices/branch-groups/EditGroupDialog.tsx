@@ -1,77 +1,42 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { GroupForm } from "./GroupForm";
-import { BranchSelection } from "./BranchSelection";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Branch } from "@/pages/Manager/Announcements/types";
+
+interface Group {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 interface EditGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  group: {
-    id: string;
-    name: string;
-    description?: string;
-    branch_group_assignments?: {
-      branches: {
-        id: string;
-        name: string;
-        location?: string;
-      };
-    }[];
-  } | null;
-  branches: Branch[];
+  group: Group | null;
   onSuccess: () => Promise<void>;
 }
 
-export function EditGroupDialog({ isOpen, onClose, group, branches, onSuccess }: EditGroupDialogProps) {
-  const [groupName, setGroupName] = useState(group?.name || "");
+export function EditGroupDialog({ isOpen, onClose, group, onSuccess }: EditGroupDialogProps) {
+  const [name, setName] = useState(group?.name || "");
   const [description, setDescription] = useState(group?.description || "");
-  const [selectedBranches, setSelectedBranches] = useState<string[]>(
-    group?.branch_group_assignments?.map(assignment => assignment.branches.id) || []
-  );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleEdit = async () => {
-    if (!group) return;
-    setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!group?.id || isLoading) return;
 
+    setIsLoading(true);
     try {
-      // Update group details
-      const { error: groupError } = await supabase
+      const { error } = await supabase
         .from('branch_groups')
-        .update({
-          name: groupName,
-          description: description
-        })
+        .update({ name, description })
         .eq('id', group.id);
 
-      if (groupError) throw groupError;
-
-      // Delete existing assignments
-      const { error: deleteError } = await supabase
-        .from('branch_group_assignments')
-        .delete()
-        .eq('group_id', group.id);
-
-      if (deleteError) throw deleteError;
-
-      // Create new assignments
-      if (selectedBranches.length > 0) {
-        const { error: assignError } = await supabase
-          .from('branch_group_assignments')
-          .insert(
-            selectedBranches.map(branchId => ({
-              branch_id: branchId,
-              group_id: group.id
-            }))
-          );
-
-        if (assignError) throw assignError;
-      }
+      if (error) throw error;
 
       toast.success("Grup başarıyla güncellendi");
       await onSuccess();
@@ -80,47 +45,46 @@ export function EditGroupDialog({ isOpen, onClose, group, branches, onSuccess }:
       console.error('Error updating group:', error);
       toast.error("Grup güncellenirken bir hata oluştu");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Grubu Düzenle</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-6">
-          <GroupForm
-            groupName={groupName}
-            description={description}
-            setGroupName={setGroupName}
-            setDescription={setDescription}
-          />
-
-          <BranchSelection
-            branches={branches}
-            selectedBranches={selectedBranches}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            setSelectedBranches={setSelectedBranches}
-          />
-
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              {selectedBranches.length} şube seçildi
-            </p>
-            <div className="space-x-2">
-              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-                İptal
-              </Button>
-              <Button onClick={handleEdit} disabled={isSubmitting}>
-                {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
-              </Button>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Grup Adı</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Grup adı girin"
+              required
+            />
           </div>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Açıklama</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Grup açıklaması girin"
+              rows={3}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              İptal
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
