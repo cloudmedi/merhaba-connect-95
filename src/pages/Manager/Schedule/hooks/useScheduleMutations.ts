@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DatabaseScheduleEvent, ScheduleEvent } from "../types/scheduleTypes";
-import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "../utils/eventMappers";
+import { ScheduleEvent } from "../types/scheduleTypes";
+import { mapEventToDatabase } from "../utils/eventMappers";
 
 export function useScheduleMutations() {
   const queryClient = useQueryClient();
@@ -18,19 +18,11 @@ export function useScheduleMutations() {
         .eq('id', userData.user?.id)
         .single();
       
-      const eventData = {
-        ...mapEventToDatabase(event),
+      const eventData = mapEventToDatabase({
+        ...event,
         created_by: userData.user?.id,
         company_id: userProfile?.company_id,
-      };
-
-      // Convert notifications and recurrence to JSON strings
-      if (eventData.notifications) {
-        eventData.notifications = JSON.stringify(eventData.notifications);
-      }
-      if (eventData.recurrence) {
-        eventData.recurrence = JSON.stringify(eventData.recurrence);
-      }
+      });
 
       console.log('💾 Mapped event data for database:', eventData);
 
@@ -65,9 +57,7 @@ export function useScheduleMutations() {
         }
       }
 
-      const createdEvent = mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
-      console.log('🎉 Final created event:', createdEvent);
-      return createdEvent;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-events'] });
@@ -82,14 +72,6 @@ export function useScheduleMutations() {
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
       const eventData = mapEventToDatabase(event);
-      
-      // Convert notifications and recurrence to JSON strings
-      if (eventData.notifications) {
-        eventData.notifications = JSON.stringify(eventData.notifications);
-      }
-      if (eventData.recurrence) {
-        eventData.recurrence = JSON.stringify(eventData.recurrence);
-      }
 
       const { error: updateError } = await supabase
         .from('schedule_events')
