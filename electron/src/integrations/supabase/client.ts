@@ -124,4 +124,4 @@ async function initSupabase() {
   }
 }
 
-export { supabase, initSupabase };
+export { supabase, initSupabase, createDeviceToken };

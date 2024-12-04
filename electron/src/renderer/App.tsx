@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { initSupabase, createDeviceToken } from '../integrations/supabase/client';
+import { initSupabase } from '../integrations/supabase/client';
+import { createDeviceToken } from '../integrations/supabase/deviceToken';
 import { SystemInfo } from './types';
 import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
