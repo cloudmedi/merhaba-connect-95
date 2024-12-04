@@ -3,10 +3,12 @@ import { Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { NewDeviceDialog } from "./NewDeviceDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
+import { useDevices } from "../hooks/useDevices";
 
 export function DeviceHeader() {
   const [showNewDeviceDialog, setShowNewDeviceDialog] = useState(false);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const { devices } = useDevices();
 
   return (
     <div className="flex items-center justify-between">
@@ -38,6 +40,7 @@ export function DeviceHeader() {
       <CreateGroupDialog
         open={showCreateGroupDialog}
         onOpenChange={setShowCreateGroupDialog}
+        devices={devices}
       />
     </div>
   );
