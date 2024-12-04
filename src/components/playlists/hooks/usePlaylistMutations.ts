@@ -55,7 +55,6 @@ export function usePlaylistMutations() {
         name: playlistData.title,
         description: playlistData.description,
         artwork_url,
-        created_by: user.id,
         genre_id: playlistData.selectedGenres[0]?.id || null,
         mood_id: playlistData.selectedMoods[0]?.id || null,
         is_public: playlistData.isPublic || false,
@@ -76,45 +75,33 @@ export function usePlaylistMutations() {
         if (error) throw error;
         playlist = data;
 
-        // Update playlist categories
+        // Update categories with UPSERT
         if (playlistData.selectedCategories.length > 0) {
-          // First delete existing categories
-          await supabase
-            .from('playlist_categories')
-            .delete()
-            .eq('playlist_id', playlist.id);
-
-          // Then insert new categories
-          const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
-            playlist_id: playlist.id,
-            category_id: category.id
-          }));
-
           const { error: categoryError } = await supabase
             .from('playlist_categories')
-            .insert(categoryAssignments);
+            .upsert(
+              playlistData.selectedCategories.map((category: any) => ({
+                playlist_id: playlist.id,
+                category_id: category.id
+              })),
+              { onConflict: 'playlist_id,category_id' }
+            );
 
           if (categoryError) throw categoryError;
         }
 
-        // Update playlist songs
+        // Update songs with UPSERT
         if (playlistData.selectedSongs.length > 0) {
-          // First delete existing songs
-          await supabase
-            .from('playlist_songs')
-            .delete()
-            .eq('playlist_id', playlist.id);
-
-          // Then insert new songs with positions
-          const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
-            playlist_id: playlist.id,
-            song_id: song.id,
-            position: index
-          }));
-
           const { error: songError } = await supabase
             .from('playlist_songs')
-            .insert(songAssignments);
+            .upsert(
+              playlistData.selectedSongs.map((song: any, index: number) => ({
+                playlist_id: playlist.id,
+                song_id: song.id,
+                position: index
+              })),
+              { onConflict: 'playlist_id,song_id' }
+            );
 
           if (songError) throw songError;
         }
