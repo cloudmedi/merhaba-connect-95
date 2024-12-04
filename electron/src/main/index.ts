@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
-import * as si from 'systeminformation'
 import dotenv from 'dotenv'
 import { getDeviceIdentifier } from '../utils/deviceIdentifier'
+import { DownloadManager } from './managers/downloadManager'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -21,61 +21,9 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 }
 
 let win: BrowserWindow | null
+const downloadManager = new DownloadManager(app.getPath('userData'))
 
-async function getMacAddress() {
-  try {
-    const networkInterfaces = await si.networkInterfaces()
-    for (const iface of networkInterfaces) {
-      if (!iface.internal && iface.mac) {
-        return iface.mac
-      }
-    }
-    return null
-  } catch (error) {
-    console.error('Error getting MAC address:', error)
-    return null
-  }
-}
-
-async function getSystemInfo() {
-  const cpu = await si.cpu()
-  const mem = await si.mem()
-  const os = await si.osInfo()
-  const disk = await si.fsSize()
-  const network = await si.networkInterfaces()
-
-  return {
-    cpu: {
-      manufacturer: cpu.manufacturer,
-      brand: cpu.brand,
-      speed: cpu.speed,
-      cores: cpu.cores,
-    },
-    memory: {
-      total: mem.total,
-      free: mem.free,
-      used: mem.used,
-    },
-    os: {
-      platform: os.platform,
-      distro: os.distro,
-      release: os.release,
-      arch: os.arch,
-    },
-    disk: disk.map(d => ({
-      fs: d.fs,
-      size: d.size,
-      used: d.used,
-      available: d.available,
-    })),
-    network: network.map(n => ({
-      iface: n.iface,
-      ip4: n.ip4,
-      mac: n.mac,
-    })),
-  }
-}
-
+// Create window function
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -88,9 +36,13 @@ function createWindow() {
     }
   })
 
+  if (win) {
+    downloadManager.setWindow(win)
+  }
+
   win.webContents.on('did-finish-load', () => {
-    if (!win) return;
-    
+    if (!win) return
+
     win.webContents.send('env-vars', {
       VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY
@@ -104,7 +56,11 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow)
+// Initialize app
+app.whenReady().then(async () => {
+  await downloadManager.initializeDownloadManager()
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -119,7 +75,20 @@ app.on('activate', () => {
   }
 })
 
-// IPC handlers
-ipcMain.handle('get-system-info', getSystemInfo)
-ipcMain.handle('get-device-id', getDeviceIdentifier)
-ipcMain.handle('get-mac-address', getMacAddress)
+// IPC handlers for download management
+ipcMain.handle('start-playlist-download', (_, playlistId: string) => {
+  return downloadManager.startPlaylistDownload(playlistId)
+})
+
+ipcMain.handle('get-download-status', (_, playlistId: string) => {
+  return downloadManager.getDownloadStatus(playlistId)
+})
+
+ipcMain.handle('check-song-downloaded', (_, songId: string) => {
+  return downloadManager.checkSongDownloaded(songId)
+})
+
+// Add other IPC handlers here
+ipcMain.handle('get-system-info', getSystemInfo);
+ipcMain.handle('get-device-id', getDeviceIdentifier);
+ipcMain.handle('get-mac-address', getMacAddress);

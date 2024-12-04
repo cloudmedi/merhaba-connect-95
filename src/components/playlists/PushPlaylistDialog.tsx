@@ -1,142 +1,107 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { DeviceList } from "./push-dialog/DeviceList";
-import { DeviceGroups } from "./push-dialog/DeviceGroups";
-import type { Device } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
   onClose: () => void;
   playlistTitle: string;
-  playlistId: string;
 }
 
-export function PushPlaylistDialog({ 
-  isOpen, 
-  onClose, 
-  playlistTitle,
-  playlistId 
-}: PushPlaylistDialogProps) {
-  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+// Mock data - replace with actual API data
+const MOCK_BRANCHES = [
+  { id: "1", name: "Branch 1", location: "Location 1" },
+  { id: "2", name: "Branch 2", location: "Location 2" },
+  { id: "3", name: "Branch 3", location: "Location 3" },
+];
 
-  const { data: devices, isLoading: isLoadingDevices } = useQuery({
-    queryKey: ['devices'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
+export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlaylistDialogProps) {
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.company_id) throw new Error('No company associated with user');
-
-      const { data, error } = await supabase
-        .from('devices')
-        .select('*')
-        .eq('branches.company_id', profile.company_id);
-
-      if (error) throw error;
-
-      return (data as Device[]);
-    }
-  });
-
-  const handleDeviceToggle = (deviceId: string) => {
-    setSelectedDevices(prev => {
-      if (prev.includes(deviceId)) {
-        return prev.filter(id => id !== deviceId);
+  const handleBranchToggle = (branchId: string) => {
+    setSelectedBranches(prev => {
+      if (prev.includes(branchId)) {
+        return prev.filter(id => id !== branchId);
       }
-      return [...prev, deviceId];
+      return [...prev, branchId];
     });
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (devices) {
-      if (checked) {
-        setSelectedDevices(devices.map(d => d.id));
-      } else {
-        setSelectedDevices([]);
-      }
-    }
-  };
-
   const handlePush = async () => {
-    if (selectedDevices.length === 0) {
-      toast.error("Please select at least one device");
+    if (selectedBranches.length === 0) {
+      toast.error("Please select at least one branch");
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('offline_playlists')
-        .insert(
-          selectedDevices.map(deviceId => ({
-            device_id: deviceId,
-            playlist_id: playlistId,
-            sync_status: 'pending'
-          }))
-        );
-
-      if (error) throw error;
-
-      toast.success(`Playlist "${playlistTitle}" pushed to ${selectedDevices.length} devices`);
+      // Here you would implement the actual push logic
+      toast.success(`Playlist "${playlistTitle}" pushed to ${selectedBranches.length} branches`);
       onClose();
-      setSelectedDevices([]);
+      setSelectedBranches([]);
     } catch (error) {
-      console.error('Error pushing playlist:', error);
       toast.error("Failed to push playlist");
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Push Playlist to Devices</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">Push Playlist</DialogTitle>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onClose}
+              className="h-6 w-6 rounded-full"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Select branches to push "{playlistTitle}"
+          </p>
         </DialogHeader>
 
-        <Tabs defaultValue="devices">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="devices">Devices</TabsTrigger>
-            <TabsTrigger value="groups">Groups</TabsTrigger>
-          </TabsList>
+        <div className="mt-4">
+          <div className="border rounded-lg">
+            {MOCK_BRANCHES.map((branch) => (
+              <div
+                key={branch.id}
+                className="flex items-start p-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                onClick={() => handleBranchToggle(branch.id)}
+              >
+                <Checkbox
+                  checked={selectedBranches.includes(branch.id)}
+                  onCheckedChange={() => handleBranchToggle(branch.id)}
+                  className="mt-1"
+                />
+                <div className="ml-3">
+                  <h4 className="text-sm font-medium">{branch.name}</h4>
+                  <p className="text-sm text-gray-500">{branch.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="devices">
-            <DeviceList
-              devices={devices || []}
-              selectedDevices={selectedDevices}
-              onDeviceToggle={handleDeviceToggle}
-              onSelectAll={handleSelectAll}
-              isLoading={isLoadingDevices}
-            />
-          </TabsContent>
-
-          <TabsContent value="groups">
-            <DeviceGroups
-              selectedDevices={selectedDevices}
-              onDeviceToggle={handleDeviceToggle}
-            />
-          </TabsContent>
-        </Tabs>
-
-        <div className="flex justify-between items-center mt-4">
-          <p className="text-sm text-gray-500">
-            {selectedDevices.length} devices selected
-          </p>
-          <div className="space-x-2">
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-gray-500">
+            {selectedBranches.length} branches selected
+          </span>
+          <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handlePush}>
-              Push to Devices
+            <Button 
+              onClick={handlePush}
+              disabled={selectedBranches.length === 0}
+              className="bg-[#1A1F2C] text-white hover:bg-[#2A2F3C]"
+            >
+              Push to Branches
             </Button>
           </div>
         </div>
