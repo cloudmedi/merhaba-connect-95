@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScheduleEvent } from "../types";
+import { DatabaseScheduleEvent, ScheduleEvent } from "../types/scheduleTypes";
+import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "../utils/eventMappers";
 
-export const useScheduleEvents = () => {
+export function useScheduleEvents() {
   const queryClient = useQueryClient();
 
   const { data: events = [], isLoading, error } = useQuery({
@@ -33,12 +34,13 @@ export const useScheduleEvents = () => {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as ScheduleEvent[];
+      
+      return (data as DatabaseScheduleEvent[]).map(mapDatabaseToScheduleEvent);
     },
   });
 
   const createEvent = useMutation({
-    mutationFn: async (event: Omit<ScheduleEvent, 'id'>) => {
+    mutationFn: async (event: Omit<ScheduleEvent, 'id' | 'color'>) => {
       const { data: userData } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
         .from('profiles')
@@ -47,7 +49,7 @@ export const useScheduleEvents = () => {
         .single();
       
       const eventData = {
-        ...event,
+        ...mapEventToDatabase(event),
         created_by: userData.user?.id,
         company_id: userProfile?.company_id,
       };
@@ -73,7 +75,7 @@ export const useScheduleEvents = () => {
         if (assignmentError) throw assignmentError;
       }
 
-      return data;
+      return mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-events'] });
@@ -87,15 +89,7 @@ export const useScheduleEvents = () => {
 
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
-      const eventData = {
-        title: event.title,
-        description: event.description,
-        playlist_id: event.playlist_id,
-        start_time: event.start_time,
-        end_time: event.end_time,
-        recurrence: event.recurrence,
-        notifications: event.notifications,
-      };
+      const eventData = mapEventToDatabase(event);
 
       const { error: updateError } = await supabase
         .from('schedule_events')
@@ -163,4 +157,4 @@ export const useScheduleEvents = () => {
     updateEvent,
     deleteEvent,
   };
-};
+}
