@@ -9,8 +9,36 @@ export const useDevices = () => {
 
   // Set up realtime subscription
   useEffect(() => {
+    // Subscribe to device presence channel
+    const presenceChannel = supabase.channel('device_presence')
+      .on(
+        'presence',
+        { event: 'sync' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+        }
+      )
+      .on(
+        'presence',
+        { event: 'join' },
+        ({ key, newPresences }) => {
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+          toast.success(`Device ${key} is now online`);
+        }
+      )
+      .on(
+        'presence',
+        { event: 'leave' },
+        ({ key, leftPresences }) => {
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+          toast.warning(`Device ${key} is now offline`);
+        }
+      )
+      .subscribe();
+
+    // Also subscribe to direct database changes
     const channel = supabase
-      .channel('device_status')
+      .channel('device_changes')
       .on(
         'postgres_changes',
         {
@@ -21,27 +49,13 @@ export const useDevices = () => {
         (payload) => {
           console.log('Device change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['devices'] });
-          
-          // Show toast notification for status changes
-          if (payload.eventType === 'UPDATE') {
-            const oldStatus = payload.old?.status;
-            const newStatus = payload.new?.status;
-            const deviceName = payload.new?.name;
-            
-            if (oldStatus !== newStatus) {
-              if (newStatus === 'online') {
-                toast.success(`${deviceName} çevrimiçi oldu`);
-              } else if (newStatus === 'offline') {
-                toast.warning(`${deviceName} çevrimdışı oldu`);
-              }
-            }
-          }
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
     };
   }, [queryClient]);
 
