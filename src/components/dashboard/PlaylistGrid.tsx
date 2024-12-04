@@ -156,20 +156,20 @@ export function PlaylistGrid({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm text-white hover:scale-110 hover:bg-white/20 transition-all duration-300 border border-white/20"
+                    className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm text-white hover:scale-105 hover:bg-white/20 transition-all duration-300 border border-white/10"
                     onClick={(e) => handlePlayClick(e, playlist)}
                   >
                     {currentPlayingId === playlist.id && isPlaying ? (
-                      <Pause className="w-8 h-8" />
+                      <Pause className="w-5 h-5" />
                     ) : (
-                      <Play className="w-8 h-8 ml-1" />
+                      <Play className="w-5 h-5 ml-0.5" />
                     )}
                   </Button>
                 </div>
               )}
               {currentPlayingId === playlist.id && isPlaying && (
-                <div className="absolute bottom-3 right-3">
-                  <div className="w-3 h-3 rounded-full bg-white/90 animate-pulse shadow-lg" />
+                <div className="absolute bottom-2 right-2">
+                  <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse shadow-sm" />
                 </div>
               )}
             </div>
