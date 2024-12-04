@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useDevices } from "../hooks/useDevices";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeviceListProps {
   devices: Device[];
@@ -11,6 +13,26 @@ interface DeviceListProps {
 
 export function DeviceList({ devices }: DeviceListProps) {
   const { deleteDevice, updateDevice } = useDevices();
+
+  useEffect(() => {
+    const channel = supabase.channel('device_status')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices'
+        },
+        (payload) => {
+          console.log('Device status changed:', payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleDelete = async (id: string) => {
     try {

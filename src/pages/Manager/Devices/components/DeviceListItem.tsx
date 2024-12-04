@@ -4,7 +4,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Device } from "../hooks/types";
-import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2 } from "lucide-react";
+import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2, Power } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { EditDeviceDialog } from "./EditDeviceDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DeviceListItemProps {
   device: Device;
@@ -40,6 +42,26 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
     return <Monitor className="h-4 w-4 text-gray-400" />;
   };
 
+  const toggleDeviceStatus = async () => {
+    try {
+      const newStatus = device.status === 'online' ? 'offline' : 'online';
+      const { error } = await supabase
+        .from('devices')
+        .update({ 
+          status: newStatus,
+          last_seen: new Date().toISOString()
+        })
+        .eq('id', device.id);
+
+      if (error) throw error;
+      
+      toast.success(`Cihaz durumu ${newStatus === 'online' ? 'çevrimiçi' : 'çevrimdışı'} olarak güncellendi`);
+    } catch (error) {
+      console.error('Status update error:', error);
+      toast.error('Cihaz durumu güncellenirken bir hata oluştu');
+    }
+  };
+
   return (
     <TableRow className="hover:bg-gray-50/50">
       <TableCell className="w-[40px]">
@@ -52,8 +74,15 @@ export function DeviceListItem({ device, onDelete, onEdit }: DeviceListItemProps
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={device.status === 'online' ? 'success' : 'secondary'}>
-          {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+        <Badge 
+          variant={device.status === 'online' ? 'success' : 'secondary'}
+          className="cursor-pointer"
+          onClick={toggleDeviceStatus}
+        >
+          <div className="flex items-center gap-1">
+            <Power className="h-3 w-3" />
+            {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+          </div>
         </Badge>
       </TableCell>
       <TableCell className="text-gray-500">
