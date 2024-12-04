@@ -1,13 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Device } from "./types";
+import { useEffect } from "react";
+import type { Device, DeviceCategory } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
+  const presenceChannel = supabase.channel('device_status');
+  const broadcastChannel = supabase.channel('device_broadcast');
 
   // Set up realtime subscription
-  React.useEffect(() => {
+  useEffect(() => {
+    // Subscribe to device presence channel
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = presenceChannel.presenceState();
+        console.log('Device presence state:', presenceState);
+        
+        // Update devices when presence changes
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        const device = newPresences[0];
+        toast.success(`Device ${device.token} is now online`);
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        const device = leftPresences[0];
+        toast.warning(`Device ${device.token} is now offline`);
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
+      .subscribe();
+
+    // Also subscribe to direct database changes
     const channel = supabase
       .channel('device_changes')
       .on(
@@ -20,27 +45,13 @@ export const useDevices = () => {
         (payload) => {
           console.log('Device change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['devices'] });
-          
-          // Show toast notification for status changes
-          if (payload.eventType === 'UPDATE') {
-            const oldStatus = payload.old?.status;
-            const newStatus = payload.new?.status;
-            const deviceName = payload.new?.name;
-            
-            if (oldStatus !== newStatus) {
-              if (newStatus === 'online') {
-                toast.success(`${deviceName} is now online`);
-              } else if (newStatus === 'offline') {
-                toast.warning(`${deviceName} is now offline`);
-              }
-            }
-          }
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
     };
   }, [queryClient]);
 
@@ -70,7 +81,20 @@ export const useDevices = () => {
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data || [];
+      
+      // Get presence state to determine online status
+      const presenceState = presenceChannel.presenceState();
+      
+      // Update device status based on presence and ensure category is of correct type
+      const devicesWithStatus = data.map(device => ({
+        ...device,
+        status: Object.values(presenceState)
+          .flat()
+          .some((p: any) => p.token === device.token) ? 'online' : 'offline',
+        category: validateDeviceCategory(device.category)
+      })) as Device[];
+      
+      return devicesWithStatus;
     },
   });
 
@@ -81,12 +105,19 @@ export const useDevices = () => {
         .insert({
           ...device,
           last_seen: new Date().toISOString(),
-          ip_address: window.location.hostname,
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Broadcast to device to check its status
+      await broadcastChannel.send({
+        type: 'broadcast',
+        event: 'status_check',
+        payload: { token: device.token }
+      });
+
       return data;
     },
     onSuccess: () => {
@@ -115,10 +146,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device updated successfully');
+      toast.success('Cihaz başarıyla güncellendi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to update device: ' + error.message);
+      toast.error('Cihaz güncellenirken bir hata oluştu: ' + error.message);
     },
   });
 
@@ -133,12 +164,20 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device deleted successfully');
+      toast.success('Cihaz başarıyla silindi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to delete device: ' + error.message);
+      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
     },
   });
+
+  // Helper function to validate device category
+  const validateDeviceCategory = (category: string): DeviceCategory => {
+    const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
+    return validCategories.includes(category as DeviceCategory) 
+      ? (category as DeviceCategory) 
+      : 'player'; // Default to 'player' if invalid category
+  };
 
   return {
     devices,
