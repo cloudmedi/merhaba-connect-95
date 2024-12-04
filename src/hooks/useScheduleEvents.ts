@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DatabaseScheduleEvent, ScheduleEvent } from "@/pages/Manager/Schedule/types/scheduleTypes";
-import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "@/pages/Manager/Schedule/utils/eventMappers";
+import { DatabaseScheduleEvent, ScheduleEvent } from "../types/scheduleTypes";
+import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "../utils/eventMappers";
 
 export function useScheduleEvents() {
   const queryClient = useQueryClient();
@@ -10,10 +10,10 @@ export function useScheduleEvents() {
   const { data: events = [], isLoading, error } = useQuery({
     queryKey: ['schedule-events'],
     queryFn: async () => {
-      console.log('Fetching schedule events...');
+      console.log('🔍 Fetching schedule events...');
       
       const { data: userData } = await supabase.auth.getUser();
-      console.log('Current user:', userData);
+      console.log('👤 Current user:', userData);
       
       const { data: userProfile } = await supabase
         .from('profiles')
@@ -21,7 +21,7 @@ export function useScheduleEvents() {
         .eq('id', userData.user?.id)
         .single();
 
-      console.log('User profile:', userProfile);
+      console.log('🏢 User profile:', userProfile);
 
       const { data, error } = await supabase
         .from('schedule_events')
@@ -40,20 +40,20 @@ export function useScheduleEvents() {
         .order('start_time', { ascending: true });
 
       if (error) {
-        console.error('Error fetching events:', error);
+        console.error('❌ Error fetching events:', error);
         throw error;
       }
 
-      console.log('Raw events from database:', data);
+      console.log('📊 Raw events from database:', data);
       const mappedEvents = (data as DatabaseScheduleEvent[]).map(mapDatabaseToScheduleEvent);
-      console.log('Mapped events:', mappedEvents);
+      console.log('🎯 Mapped events:', mappedEvents);
       return mappedEvents;
     },
   });
 
   const createEvent = useMutation({
     mutationFn: async (event: Omit<ScheduleEvent, 'id' | 'color'>) => {
-      console.log('Creating event with data:', event);
+      console.log('📝 Creating event with data:', event);
       
       const { data: userData } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
@@ -68,7 +68,7 @@ export function useScheduleEvents() {
         company_id: userProfile?.company_id,
       };
 
-      console.log('Mapped event data for database:', eventData);
+      console.log('💾 Mapped event data for database:', eventData);
 
       const { data, error } = await supabase
         .from('schedule_events')
@@ -77,11 +77,11 @@ export function useScheduleEvents() {
         .single();
 
       if (error) {
-        console.error('Error creating event:', error);
+        console.error('❌ Error creating event:', error);
         throw error;
       }
 
-      console.log('Created event in database:', data);
+      console.log('✅ Created event in database:', data);
 
       if (event.devices?.length) {
         const deviceAssignments = event.devices.map(device => ({
@@ -89,20 +89,20 @@ export function useScheduleEvents() {
           device_id: device.device_id
         }));
 
-        console.log('Creating device assignments:', deviceAssignments);
+        console.log('🔗 Creating device assignments:', deviceAssignments);
 
         const { error: assignmentError } = await supabase
           .from('schedule_device_assignments')
           .insert(deviceAssignments);
 
         if (assignmentError) {
-          console.error('Error creating device assignments:', assignmentError);
+          console.error('❌ Error creating device assignments:', assignmentError);
           throw assignmentError;
         }
       }
 
       const createdEvent = mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
-      console.log('Final created event:', createdEvent);
+      console.log('🎉 Final created event:', createdEvent);
       return createdEvent;
     },
     onSuccess: () => {
@@ -111,7 +111,7 @@ export function useScheduleEvents() {
     },
     onError: (error) => {
       toast.error('Failed to create event');
-      console.error('Error creating event:', error);
+      console.error('❌ Error creating event:', error);
     },
   });
 

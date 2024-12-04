@@ -1,14 +1,8 @@
 import { useState, useEffect } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { CreateEventDialog } from "./components/CreateEventDialog";
 import { ScheduleEvent } from "./types/scheduleTypes";
 import { exportEvents } from "./utils/eventUtils";
-import { Download } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useScheduleEvents } from "@/hooks/useScheduleEvents";
 import { toast } from "sonner";
 import { CalendarHeader } from "./components/CalendarHeader";
@@ -23,11 +17,11 @@ export default function Schedule() {
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
   useEffect(() => {
-    console.log('Schedule mounted - Events:', events);
+    console.log('📅 Schedule mounted - Events:', events);
   }, [events]);
 
   const handleEventDrop = async (info: any) => {
-    console.log('Event drop - Info:', info);
+    console.log('🔄 Event drop - Info:', info);
     const updatedEvent: ScheduleEvent = {
       ...info.event.extendedProps,
       id: info.event.id,
@@ -40,14 +34,14 @@ export default function Schedule() {
       await updateEvent.mutateAsync(updatedEvent);
       toast.success("Event updated successfully");
     } catch (error) {
-      console.error('Error updating event:', error);
+      console.error('❌ Error updating event:', error);
       toast.error("Failed to update event");
       info.revert();
     }
   };
 
   const handleSelect = (selectInfo: any) => {
-    console.log("Selected time range:", {
+    console.log("🕒 Selected time range:", {
       start: selectInfo.start.toISOString(),
       end: selectInfo.end.toISOString()
     });
@@ -64,7 +58,7 @@ export default function Schedule() {
   }
 
   const formattedEvents = events.map(event => {
-    console.log('Formatting event:', event);
+    console.log('🔄 Formatting event:', event);
     const formattedEvent = {
       id: event.id,
       title: event.title,
@@ -75,11 +69,11 @@ export default function Schedule() {
       textColor: event.color?.text || '#ffffff',
       extendedProps: event
     };
-    console.log('Formatted event:', formattedEvent);
+    console.log('✨ Formatted event:', formattedEvent);
     return formattedEvent;
   });
 
-  console.log("Final formatted events for calendar:", formattedEvents);
+  console.log("📊 Final formatted events for calendar:", formattedEvents);
 
   return (
     <div className="p-6 space-y-6">
