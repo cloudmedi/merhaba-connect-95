@@ -6,9 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampaignBasicInfo } from "./CampaignBasicInfo";
 import { CampaignSchedule } from "./CampaignSchedule";
-import { CampaignTargeting } from "./CampaignTargeting";
+import { DeviceSelection } from "@/components/devices/branch-groups/DeviceSelection";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 interface CreateCampaignDialogProps {
   open: boolean;
@@ -25,9 +26,32 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
     endDate: "",
     repeatType: "once",
     repeatInterval: 1,
-    branches: [] as string[]
+    devices: [] as string[]
   });
+  
   const { user } = useAuth();
+
+  // Fetch devices for the company
+  const { data: devices = [] } = useQuery({
+    queryKey: ['devices'],
+    queryFn: async () => {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (!userProfile?.company_id) return [];
+
+      const { data } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('branches.company_id', userProfile.company_id);
+
+      return data || [];
+    },
+    enabled: !!user
+  });
 
   const handleFormDataChange = (data: Partial<typeof formData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -72,18 +96,18 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         if (uploadError) throw uploadError;
       }
 
-      // Create branch associations
-      if (formData.branches.length > 0) {
-        const { error: branchError } = await supabase
-          .from('announcement_branches')
+      // Create device associations
+      if (formData.devices.length > 0) {
+        const { error: deviceError } = await supabase
+          .from('announcement_devices')
           .insert(
-            formData.branches.map(branchId => ({
+            formData.devices.map(deviceId => ({
               announcement_id: announcement.id,
-              branch_id: branchId
+              device_id: deviceId
             }))
           );
 
-        if (branchError) throw branchError;
+        if (deviceError) throw deviceError;
       }
 
       toast.success("Campaign created successfully");
@@ -94,6 +118,8 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
     }
   };
 
+  const [deviceSearchQuery, setDeviceSearchQuery] = useState("");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -102,10 +128,9 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic">Temel Bilgiler</TabsTrigger>
             <TabsTrigger value="schedule">Zamanlama</TabsTrigger>
-            <TabsTrigger value="targeting">Hedefleme</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="max-h-[70vh] mt-4">
@@ -114,17 +139,20 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
                 formData={formData}
                 onFormDataChange={handleFormDataChange}
               />
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-4">Cihazlar</h3>
+                <DeviceSelection
+                  devices={devices}
+                  selectedDevices={formData.devices}
+                  searchQuery={deviceSearchQuery}
+                  setSearchQuery={setDeviceSearchQuery}
+                  setSelectedDevices={(devices) => handleFormDataChange({ devices })}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="schedule">
               <CampaignSchedule 
-                formData={formData}
-                onFormDataChange={handleFormDataChange}
-              />
-            </TabsContent>
-
-            <TabsContent value="targeting">
-              <CampaignTargeting 
                 formData={formData}
                 onFormDataChange={handleFormDataChange}
               />
@@ -138,20 +166,12 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
           </Button>
           <div className="flex gap-2">
             {activeTab !== "basic" && (
-              <Button variant="outline" onClick={() => setActiveTab(prev => {
-                if (prev === "targeting") return "schedule";
-                if (prev === "schedule") return "basic";
-                return prev;
-              })}>
+              <Button variant="outline" onClick={() => setActiveTab("basic")}>
                 Geri
               </Button>
             )}
-            {activeTab !== "targeting" ? (
-              <Button onClick={() => setActiveTab(prev => {
-                if (prev === "basic") return "schedule";
-                if (prev === "schedule") return "targeting";
-                return prev;
-              })}>
+            {activeTab === "basic" ? (
+              <Button onClick={() => setActiveTab("schedule")}>
                 İleri
               </Button>
             ) : (
