@@ -41,7 +41,7 @@ export interface ScheduleEvent {
   }>;
 }
 
-export type DatabaseScheduleEvent = {
+export interface DatabaseScheduleEvent {
   id: string;
   title: string;
   description?: string;
@@ -62,4 +62,4 @@ export type DatabaseScheduleEvent = {
   devices?: Array<{
     device_id: string;
   }>;
-};
+}

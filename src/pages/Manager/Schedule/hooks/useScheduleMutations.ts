@@ -24,6 +24,14 @@ export function useScheduleMutations() {
         company_id: userProfile?.company_id,
       };
 
+      // Convert notifications and recurrence to JSON strings
+      if (eventData.notifications) {
+        eventData.notifications = JSON.stringify(eventData.notifications);
+      }
+      if (eventData.recurrence) {
+        eventData.recurrence = JSON.stringify(eventData.recurrence);
+      }
+
       console.log('💾 Mapped event data for database:', eventData);
 
       const { data, error } = await supabase
@@ -74,6 +82,14 @@ export function useScheduleMutations() {
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
       const eventData = mapEventToDatabase(event);
+      
+      // Convert notifications and recurrence to JSON strings
+      if (eventData.notifications) {
+        eventData.notifications = JSON.stringify(eventData.notifications);
+      }
+      if (eventData.recurrence) {
+        eventData.recurrence = JSON.stringify(eventData.recurrence);
+      }
 
       const { error: updateError } = await supabase
         .from('schedule_events')
