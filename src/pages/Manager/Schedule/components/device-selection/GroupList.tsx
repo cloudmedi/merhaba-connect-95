@@ -15,7 +15,7 @@ export function GroupList({ groups, selectedDevices, onSelectGroup }: GroupListP
       <div className="space-y-3">
         {groups.map((group) => {
           const deviceIds = group.devices.map((device: any) => device.id);
-          const allSelected = deviceIds.every(id => selectedDevices.includes(id));
+          const allSelected = deviceIds.length > 0 && deviceIds.every(id => selectedDevices.includes(id));
           const someSelected = deviceIds.some(id => selectedDevices.includes(id));
 
           return (
