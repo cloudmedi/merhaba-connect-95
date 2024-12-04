@@ -11,25 +11,18 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProps) {
-  const calendarRef = useRef<FullCalendar | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const calendarRef = useRef<FullCalendar>(null);
 
   useEffect(() => {
-    console.log("Calendar container mounted:", containerRef.current);
-    console.log("Calendar events:", events);
-  }, []);
-
-  useEffect(() => {
-    if (calendarRef.current) {
-      console.log("Calendar instance:", calendarRef.current.getApi());
-    }
-  }, [calendarRef.current]);
+    console.log("Calendar events to render:", events);
+  }, [events]);
 
   return (
-    <div ref={containerRef} className="calendar-container h-[600px]">
+    <div className="h-full">
       <style>
         {`
           .fc {
+            height: 100%;
             --fc-border-color: #e5e7eb;
             --fc-button-bg-color: #fff;
             --fc-button-border-color: #d1d5db;
@@ -41,7 +34,6 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
             --fc-button-active-text-color: #fff;
             --fc-today-bg-color: #f3f4f6;
             --fc-now-indicator-color: #6E59A5;
-            height: 100%;
           }
           
           .fc .fc-button {
@@ -94,12 +86,6 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
 
           .fc .fc-view-harness {
             background-color: #fff;
-          }
-
-          .calendar-container {
-            width: 100%;
-            min-height: 600px;
-            position: relative;
           }
         `}
       </style>
