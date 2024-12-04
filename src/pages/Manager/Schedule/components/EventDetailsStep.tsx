@@ -16,11 +16,44 @@ interface EventDetailsStepProps {
   onFormDataChange: (data: Partial<EventDetailsStepProps['formData']>) => void;
   onNext: () => void;
   onCancel: () => void;
+  initialTimeRange?: {
+    start: string;
+    end: string;
+  } | null;
 }
 
-export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel }: EventDetailsStepProps) {
+export function EventDetailsStep({ 
+  formData, 
+  onFormDataChange, 
+  onNext, 
+  onCancel,
+  initialTimeRange 
+}: EventDetailsStepProps) {
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
+
+  // Set initial values when component mounts or initialTimeRange changes
+  useState(() => {
+    if (initialTimeRange) {
+      const startDateTime = new Date(initialTimeRange.start);
+      const endDateTime = new Date(initialTimeRange.end);
+
+      onFormDataChange({
+        startDate: startDateTime.toISOString().split('T')[0],
+        startTime: startDateTime.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }),
+        endDate: endDateTime.toISOString().split('T')[0],
+        endTime: endDateTime.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        })
+      });
+    }
+  }, [initialTimeRange]);
 
   const handlePlaylistSelect = (playlist: any) => {
     setSelectedPlaylist(playlist);
