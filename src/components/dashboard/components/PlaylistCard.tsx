@@ -37,7 +37,7 @@ export function PlaylistCard({
           <Button
             size="icon"
             variant="ghost"
-            className="w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300"
+            className="w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100"
             onClick={handlePlayClick}
           >
             {currentPlayingId === playlist.id && isPlaying ? (
