@@ -78,25 +78,45 @@ export function usePlaylistMutations() {
 
         // Update playlist categories
         if (playlistData.selectedCategories.length > 0) {
-          const { error: updateError } = await supabase.rpc('update_playlist_categories', {
-            p_playlist_id: playlist.id,
-            p_category_ids: playlistData.selectedCategories.map((cat: any) => cat.id)
-          });
+          // First delete existing categories
+          await supabase
+            .from('playlist_categories')
+            .delete()
+            .eq('playlist_id', playlist.id);
 
-          if (updateError) throw updateError;
+          // Then insert new categories
+          const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
+            playlist_id: playlist.id,
+            category_id: category.id
+          }));
+
+          const { error: categoryError } = await supabase
+            .from('playlist_categories')
+            .insert(categoryAssignments);
+
+          if (categoryError) throw categoryError;
         }
 
         // Update playlist songs
         if (playlistData.selectedSongs.length > 0) {
-          const { error: updateError } = await supabase.rpc('update_playlist_songs', {
-            p_playlist_id: playlist.id,
-            p_song_ids: playlistData.selectedSongs.map((song: any, index: number) => ({ 
-              song_id: song.id, 
-              position: index
-            }))
-          });
+          // First delete existing songs
+          await supabase
+            .from('playlist_songs')
+            .delete()
+            .eq('playlist_id', playlist.id);
 
-          if (updateError) throw updateError;
+          // Then insert new songs with positions
+          const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
+            playlist_id: playlist.id,
+            song_id: song.id,
+            position: index
+          }));
+
+          const { error: songError } = await supabase
+            .from('playlist_songs')
+            .insert(songAssignments);
+
+          if (songError) throw songError;
         }
       } else {
         // Create new playlist
