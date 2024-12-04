@@ -9,6 +9,7 @@ async function initSupabase() {
   if (supabase) return supabase;
 
   try {
+    console.log('Initializing Supabase...');
     const envVars = await (window as any).electronAPI.getEnvVars();
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
@@ -32,6 +33,7 @@ async function initSupabase() {
       }
     );
     
+    console.log('Getting MAC address...');
     const macAddress = await (window as any).electronAPI.getMacAddress();
     if (!macAddress) {
       throw new Error('Could not get MAC address');
@@ -55,6 +57,7 @@ async function initSupabase() {
 
     systemInfoInterval = setInterval(async () => {
       try {
+        console.log('Updating system info...');
         await updateDeviceSystemInfo(deviceToken);
       } catch (error) {
         console.error('Error in periodic system info update:', error);
@@ -62,13 +65,21 @@ async function initSupabase() {
     }, 30000); // Update every 30 seconds
 
     // Get device info and set up realtime subscription
-    const { data: device } = await supabase
+    console.log('Checking for existing device...');
+    const { data: device, error: deviceError } = await supabase
       .from('devices')
       .select('id')
       .eq('token', deviceToken)
       .maybeSingle();
 
+    console.log('Device check result:', { device, deviceError });
+
+    if (deviceError) {
+      console.error('Error checking device:', deviceError);
+    }
+
     if (device) {
+      console.log('Device found, updating status...');
       // Set initial online status
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
       await updateDeviceStatus(deviceToken, 'online', systemInfo);
@@ -76,11 +87,14 @@ async function initSupabase() {
       // Update status when window is closing
       window.addEventListener('beforeunload', async (event) => {
         event.preventDefault();
+        console.log('Window closing, updating device status to offline...');
         if (systemInfoInterval) {
           clearInterval(systemInfoInterval);
         }
         await updateDeviceStatus(deviceToken, 'offline', systemInfo);
       });
+    } else {
+      console.log('No device found with token:', deviceToken);
     }
     
     return supabase;
