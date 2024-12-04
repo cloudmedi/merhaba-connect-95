@@ -101,16 +101,18 @@ export function PlaylistHeader({
           <img 
             src={artworkUrl || "/placeholder.svg"} 
             alt={name}
-            className="w-32 h-32 rounded-lg object-cover"
+            className="w-32 h-32 rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {onPlay && (
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-              <button
+              <Button
+                size="icon"
+                variant="ghost"
                 onClick={onPlay}
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
+                className="w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100"
               >
-                <Play className="w-6 h-6" />
-              </button>
+                <Play className="w-5 h-5 text-white" />
+              </Button>
             </div>
           )}
         </div>
