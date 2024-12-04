@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
 import type { Branch } from "@/pages/Manager/Announcements/types";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function BranchGroupsTab() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -18,11 +17,6 @@ export function BranchGroupsTab() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchGroups();
-    fetchBranches();
-  }, []);
-
   const fetchGroups = async () => {
     const { data: groupsData, error: groupsError } = await supabase
       .from('branch_groups')
@@ -30,6 +24,7 @@ export function BranchGroupsTab() {
         id,
         name,
         description,
+        created_at,
         branch_group_assignments (
           branches (
             id,
@@ -40,7 +35,7 @@ export function BranchGroupsTab() {
       `);
 
     if (groupsError) {
-      toast.error("Failed to load groups");
+      toast.error("Gruplar yüklenirken bir hata oluştu");
       return;
     }
 
@@ -54,12 +49,22 @@ export function BranchGroupsTab() {
       .select('id, name, location');
 
     if (error) {
-      toast.error("Failed to load branches");
+      toast.error("Şubeler yüklenirken bir hata oluştu");
       return;
     }
 
     setBranches(data || []);
   };
+
+  useEffect(() => {
+    fetchGroups();
+    fetchBranches();
+  }, []);
+
+  const filteredGroups = groups.filter(group =>
+    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    group.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50 rounded-lg border-2 border-dashed">
@@ -101,21 +106,18 @@ export function BranchGroupsTab() {
           </Button>
         </div>
 
-        <Tabs defaultValue="groups" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="groups">Gruplar</TabsTrigger>
-          </TabsList>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-              <DataTableLoader />
-            </div>
-          ) : groups.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <GroupList groups={groups} />
-          )}
-        </Tabs>
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <DataTableLoader />
+          </div>
+        ) : filteredGroups.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <GroupList 
+            groups={filteredGroups} 
+            onRefresh={fetchGroups}
+          />
+        )}
 
         <CreateGroupDialog
           isOpen={isCreateDialogOpen}
