@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
-import { PlaylistSong } from "@/components/playlists/types/playlist";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -51,22 +50,9 @@ export function PlaylistDetail() {
 
       if (songsError) throw songsError;
 
-      // Map the songs to match PlaylistSong interface
-      const mappedSongs: PlaylistSong[] = playlistSongs.map(ps => ({
-        song_id: ps.songs.id,
-        title: ps.songs.title,
-        artist: ps.songs.artist || '',
-        duration: ps.songs.duration || 0,
-        file_url: ps.songs.file_url,
-        bunny_id: undefined,
-        position: ps.position,
-        playlist_id: id || '',
-        artwork_url: ps.songs.artwork_url
-      }));
-
       return {
         ...playlist,
-        songs: mappedSongs
+        songs: playlistSongs.map(ps => ps.songs)
       };
     }
   });
@@ -87,8 +73,8 @@ export function PlaylistDetail() {
     );
   }
 
-  const handleSongSelect = (song: PlaylistSong) => {
-    const index = playlist.songs.findIndex((s) => s.song_id === song.song_id);
+  const handleSongSelect = (song: any) => {
+    const index = playlist.songs.findIndex((s: any) => s.id === song.id);
     if (index !== -1) {
       setCurrentSongIndex(index);
       setIsPlaying(true);
@@ -105,7 +91,7 @@ export function PlaylistDetail() {
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
     
-    const totalSeconds = playlist.songs.reduce((acc, song) => {
+    const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
       return acc + (song.duration || 0);
     }, 0);
     
@@ -148,8 +134,8 @@ export function PlaylistDetail() {
             playlist={{
               title: playlist.name,
               artwork: playlist.artwork_url || "/placeholder.svg",
-              songs: playlist.songs.map(song => ({
-                id: song.song_id,
+              songs: playlist.songs.map((song: any) => ({
+                id: song.id,
                 title: song.title,
                 artist: song.artist || "Unknown Artist",
                 duration: song.duration?.toString() || "0:00",

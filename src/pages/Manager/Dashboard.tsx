@@ -7,12 +7,17 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { toast } from "sonner";
+import { usePlaylistControl } from "@/components/dashboard/hooks/usePlaylistControl";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const {
+    currentPlaylist,
+    isPlaying,
+    handlePlayPlaylist,
+    handlePlayStateChange,
+    handleClose
+  } = usePlaylistControl();
 
   usePlaylistSubscription();
 
@@ -39,11 +44,9 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
-      // Get current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Get categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
@@ -86,32 +89,6 @@ export default function ManagerDashboard() {
       return categoriesWithPlaylists;
     }
   });
-
-  const handlePlayPlaylist = async (playlist: any) => {
-    try {
-      // If clicking the same playlist that's currently playing
-      if (currentPlaylist?.id === playlist.id) {
-        setIsPlaying(!isPlaying);
-        return;
-      }
-
-      // If clicking a different playlist
-      setCurrentPlaylist({
-        id: playlist.id,
-        title: playlist.title || playlist.name,
-        artwork: playlist.artwork_url,
-        songs: playlist.songs
-      });
-      setIsPlaying(true);
-    } catch (error) {
-      console.error('Error playing playlist:', error);
-      toast.error("Failed to play playlist");
-    }
-  };
-
-  const handlePlayStateChange = (playing: boolean) => {
-    setIsPlaying(playing);
-  };
 
   const filteredCategories = categories?.filter(category =>
     category.playlists.length > 0
@@ -161,12 +138,12 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id}
-          playlist={currentPlaylist}
-          onClose={() => {
-            setCurrentPlaylist(null);
-            setIsPlaying(false);
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork_url,
+            songs: currentPlaylist.songs
           }}
+          onClose={handleClose}
           onPlayStateChange={handlePlayStateChange}
           autoPlay={true}
         />

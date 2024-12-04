@@ -22,6 +22,8 @@ export function PlaylistCard({
     onPlay?.(playlist);
   };
 
+  const isCurrentlyPlaying = currentPlayingId === playlist.id && isPlaying;
+
   return (
     <div
       className="group cursor-pointer overflow-hidden bg-gray-50 border-none hover:bg-gray-100 transition-colors rounded-lg"
@@ -40,14 +42,14 @@ export function PlaylistCard({
             className="w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100"
             onClick={handlePlayClick}
           >
-            {currentPlayingId === playlist.id && isPlaying ? (
+            {isCurrentlyPlaying ? (
               <Pause className="w-5 h-5 text-white" />
             ) : (
               <Play className="w-5 h-5 ml-0.5 text-white" />
             )}
           </Button>
         </div>
-        {currentPlayingId === playlist.id && isPlaying && (
+        {isCurrentlyPlaying && (
           <div className="absolute bottom-2 right-2">
             <div className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse shadow-sm" />
           </div>
