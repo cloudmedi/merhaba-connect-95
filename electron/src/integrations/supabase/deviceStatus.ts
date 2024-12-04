@@ -44,7 +44,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       throw checkError;
     }
 
-    // Only update status if device exists
+    // Update device status if it exists
     if (existingDevice) {
       console.log('Updating device status to:', status);
       

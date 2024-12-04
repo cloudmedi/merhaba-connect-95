@@ -58,19 +58,15 @@ async function initSupabase() {
         console.log('Presence state synced:', state);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        if (!isTrackingPresence) {
-          console.log('Device joined:', key, newPresences);
-        }
+        console.log('Device joined:', key, newPresences);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        if (isTrackingPresence) {
-          console.log('Device left:', key, leftPresences);
-        }
+        console.log('Device left:', key, leftPresences);
       });
 
     // Subscribe to broadcast channel for device status requests
     const broadcastChannel = supabase.channel('device_broadcast')
-      .on('broadcast', { event: 'status_check' }, async (payload) => {
+      .on('broadcast', { event: 'device_added' }, async (payload) => {
         if (payload.token === deviceToken) {
           await updatePresence(deviceToken);
         }
@@ -111,6 +107,17 @@ async function updatePresence(deviceToken: string) {
       systemInfo,
       lastSeen: new Date().toISOString(),
     });
+
+    // Also update the device record in the database
+    await supabase
+      .from('devices')
+      .update({
+        status: 'online',
+        system_info: systemInfo,
+        last_seen: new Date().toISOString()
+      })
+      .eq('token', deviceToken);
+
   } catch (error) {
     console.error('Error updating presence:', error);
   }
@@ -124,6 +131,16 @@ async function cleanup() {
   if (presenceChannel) {
     const deviceToken = (await createDeviceToken(await (window as any).electronAPI.getMacAddress()))?.token;
     if (deviceToken) {
+      // Update device status to offline in the database
+      await supabase
+        .from('devices')
+        .update({
+          status: 'offline',
+          last_seen: new Date().toISOString()
+        })
+        .eq('token', deviceToken);
+
+      // Track offline status in presence channel
       await presenceChannel.track({
         token: deviceToken,
         status: 'offline',

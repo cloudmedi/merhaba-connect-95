@@ -85,6 +85,7 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      // First create the device
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -96,12 +97,18 @@ export const useDevices = () => {
 
       if (error) throw error;
 
-      // Broadcast to device to check its status
+      // Then broadcast to all clients that a new device is added
       await broadcastChannel.send({
         type: 'broadcast',
-        event: 'status_check',
+        event: 'device_added',
         payload: { token: device.token }
       });
+
+      // Also update the device token status to used
+      await supabase
+        .from('device_tokens')
+        .update({ status: 'used', used_at: new Date().toISOString() })
+        .eq('token', device.token);
 
       return data;
     },
