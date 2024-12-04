@@ -1,10 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import { createDeviceToken, updateDeviceSystemInfo } from './deviceToken';
-import { updateDeviceStatus } from './deviceStatus';
+import { createDeviceToken } from './deviceToken';
 
 let supabase: ReturnType<typeof createClient>;
-let systemInfoInterval: NodeJS.Timeout;
-let realtimeChannel: ReturnType<typeof createClient>['channel'];
+let presenceChannel: ReturnType<typeof createClient>['channel'];
+let heartbeatInterval: NodeJS.Timeout;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -28,21 +27,18 @@ async function initSupabase() {
         },
         realtime: {
           params: {
-            eventsPerSecond: 1
+            eventsPerSecond: 10
           }
         }
       }
     );
     
-    console.log('Getting MAC address...');
     const macAddress = await (window as any).electronAPI.getMacAddress();
     if (!macAddress) {
       throw new Error('Could not get MAC address');
     }
 
     console.log('Creating device token with MAC address:', macAddress);
-
-    // Get or create device token
     const tokenData = await createDeviceToken(macAddress);
     if (!tokenData) {
       throw new Error('Failed to get or create device token');
@@ -52,80 +48,73 @@ async function initSupabase() {
     const deviceToken = tokenData.token;
 
     // Clear existing intervals if any
-    if (systemInfoInterval) clearInterval(systemInfoInterval);
-    if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (presenceChannel) supabase.removeChannel(presenceChannel);
 
-    // Set up periodic system info updates
-    systemInfoInterval = setInterval(async () => {
-      try {
-        console.log('Updating system info...');
-        const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceSystemInfo(deviceToken);
-        console.log('System info updated:', systemInfo);
-      } catch (error) {
-        console.error('Error in periodic system info update:', error);
-      }
-    }, 30000); // Update every 30 seconds
+    // Set up device presence channel
+    presenceChannel = supabase.channel('device_status')
+      .on('presence', { event: 'sync' }, () => {
+        console.log('Presence state synced:', presenceChannel.presenceState());
+      })
+      .on('presence', { event: 'join' }, async ({ key, newPresences }) => {
+        console.log('Device joined:', key, newPresences);
+      })
+      .on('presence', { event: 'leave' }, async ({ key, leftPresences }) => {
+        console.log('Device left:', key, leftPresences);
+      });
 
-    // Set up realtime presence for device status
-    realtimeChannel = supabase.channel('device_status')
-      .on(
-        'presence',
-        { event: 'sync' },
-        () => {
-          console.log('Presence state synced:', realtimeChannel.presenceState());
-        }
-      )
-      .on(
-        'presence',
-        { event: 'join' },
-        async ({ key, newPresences }) => {
-          console.log('Join event:', key, newPresences);
+    // Subscribe to broadcast channel for device status requests
+    const broadcastChannel = supabase.channel('device_broadcast')
+      .on('broadcast', { event: 'status_check' }, async (payload) => {
+        if (payload.token === deviceToken) {
           const systemInfo = await (window as any).electronAPI.getSystemInfo();
-          await updateDeviceStatus(deviceToken, 'online', systemInfo);
+          await presenceChannel.track({
+            token: deviceToken,
+            status: 'online',
+            systemInfo,
+            lastSeen: new Date().toISOString(),
+          });
         }
-      )
-      .on(
-        'presence',
-        { event: 'leave' },
-        async ({ key, leftPresences }) => {
-          console.log('Leave event:', key, leftPresences);
-          const systemInfo = await (window as any).electronAPI.getSystemInfo();
-          await updateDeviceStatus(deviceToken, 'offline', systemInfo);
-        }
-      );
+      })
+      .subscribe();
 
-    // Track device presence
-    await realtimeChannel.subscribe(async (status) => {
+    // Start presence heartbeat
+    await presenceChannel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        console.log('Tracking presence with system info:', systemInfo);
         
-        // Track presence with detailed device information
-        await realtimeChannel.track({
+        // Send initial presence
+        await presenceChannel.track({
           token: deviceToken,
           status: 'online',
-          systemInfo: systemInfo,
+          systemInfo,
           lastSeen: new Date().toISOString(),
-          macAddress: macAddress
         });
+
+        // Set up heartbeat interval
+        heartbeatInterval = setInterval(async () => {
+          const systemInfo = await (window as any).electronAPI.getSystemInfo();
+          await presenceChannel.track({
+            token: deviceToken,
+            status: 'online',
+            systemInfo,
+            lastSeen: new Date().toISOString(),
+          });
+        }, 10000); // Send heartbeat every 10 seconds
       }
     });
 
     // Update status when window is closing
-    window.addEventListener('beforeunload', async (event) => {
-      event.preventDefault();
-      console.log('Window closing, updating device status to offline...');
-      if (systemInfoInterval) clearInterval(systemInfoInterval);
-      if (realtimeChannel) {
-        await realtimeChannel.track({
+    window.addEventListener('beforeunload', async () => {
+      if (presenceChannel) {
+        await presenceChannel.track({
           token: deviceToken,
           status: 'offline',
           lastSeen: new Date().toISOString(),
-          macAddress: macAddress
         });
-        supabase.removeChannel(realtimeChannel);
+        supabase.removeChannel(presenceChannel);
       }
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
     });
     
     return supabase;
@@ -135,4 +124,4 @@ async function initSupabase() {
   }
 }
 
-export { supabase, initSupabase, createDeviceToken, updateDeviceStatus };
+export { supabase, initSupabase };

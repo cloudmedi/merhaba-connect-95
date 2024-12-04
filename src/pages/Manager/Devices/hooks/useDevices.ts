@@ -6,34 +6,30 @@ import type { Device } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
+  const presenceChannel = supabase.channel('device_status');
+  const broadcastChannel = supabase.channel('device_broadcast');
 
   // Set up realtime subscription
   useEffect(() => {
     // Subscribe to device presence channel
-    const presenceChannel = supabase.channel('device_presence')
-      .on(
-        'presence',
-        { event: 'sync' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['devices'] });
-        }
-      )
-      .on(
-        'presence',
-        { event: 'join' },
-        ({ key, newPresences }) => {
-          queryClient.invalidateQueries({ queryKey: ['devices'] });
-          toast.success(`Device ${key} is now online`);
-        }
-      )
-      .on(
-        'presence',
-        { event: 'leave' },
-        ({ key, leftPresences }) => {
-          queryClient.invalidateQueries({ queryKey: ['devices'] });
-          toast.warning(`Device ${key} is now offline`);
-        }
-      )
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = presenceChannel.presenceState();
+        console.log('Device presence state:', presenceState);
+        
+        // Update devices when presence changes
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        const device = newPresences[0];
+        toast.success(`Device ${device.token} is now online`);
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        const device = leftPresences[0];
+        toast.warning(`Device ${device.token} is now offline`);
+        queryClient.invalidateQueries({ queryKey: ['devices'] });
+      })
       .subscribe();
 
     // Also subscribe to direct database changes
@@ -86,8 +82,22 @@ export const useDevices = () => {
 
       if (error) throw error;
       
-      // Type assertion to ensure the response matches our Device type
-      return (data as unknown as Device[]) || [];
+      // Get presence state to determine online status
+      const presenceState = presenceChannel.presenceState();
+      
+      // Update device status based on presence
+      const devicesWithStatus = data.map(device => {
+        const presence = Object.values(presenceState)
+          .flat()
+          .find((p: any) => p.token === device.token);
+          
+        return {
+          ...device,
+          status: presence ? 'online' : 'offline'
+        };
+      });
+      
+      return devicesWithStatus;
     },
   });
 
@@ -98,20 +108,27 @@ export const useDevices = () => {
         .insert({
           ...device,
           last_seen: new Date().toISOString(),
-          ip_address: window.location.hostname,
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Broadcast to device to check its status
+      await broadcastChannel.send({
+        type: 'broadcast',
+        event: 'status_check',
+        payload: { token: device.token }
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla eklendi');
+      toast.success('Device added successfully');
     },
     onError: (error: Error) => {
-      toast.error('Cihaz eklenirken bir hata oluştu: ' + error.message);
+      toast.error('Failed to add device: ' + error.message);
     },
   });
 
