@@ -5,6 +5,7 @@ export interface PushDialogDevice extends Omit<BaseDevice, 'system_info'> {
   branches?: {
     id: string;
     name: string;
+    company_id: string | null;
   } | null;
 }
 
