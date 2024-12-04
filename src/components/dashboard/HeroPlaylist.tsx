@@ -57,9 +57,9 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
           <p className="text-2xl opacity-90">{playlist.name}</p>
           <Button 
             onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
-            className="mt-4 bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all border border-white/30 flex items-center gap-2"
+            className="mt-4 bg-white/20 hover:bg-white/30 transition-all border border-white/30 flex items-center gap-3"
           >
-            <Play className="w-4 h-4" />
+            <Play className="w-5 h-5 text-white" />
             Listen
           </Button>
         </div>
