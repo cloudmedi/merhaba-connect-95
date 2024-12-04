@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Device } from "@/pages/Manager/Devices/hooks/types";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { tr } from "date-fns/locale";
 
 interface DeviceListProps {
   devices: Device[];
@@ -43,25 +42,22 @@ export function DeviceList({
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-          placeholder="Search devices..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      <div className="flex items-center space-x-2 px-1">
-        <Checkbox
-          checked={areAllSelected}
-          onCheckedChange={onSelectAll}
-          id="select-all"
-        />
-        <label htmlFor="select-all" className="text-sm font-medium">
-          Select All
-        </label>
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search devices..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <button
+          onClick={() => onSelectAll(!areAllSelected)}
+          className="text-sm text-gray-500 hover:text-gray-900"
+        >
+          {areAllSelected ? "Deselect All" : "Select All"}
+        </button>
       </div>
 
       <ScrollArea className="h-[300px]">
@@ -91,7 +87,7 @@ export function DeviceList({
                 </p>
                 {device.last_seen && (
                   <p className="text-xs text-gray-400 mt-1">
-                    Last seen: {formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })}
+                    Last seen: {formatDistanceToNow(new Date(device.last_seen), { addSuffix: true })}
                   </p>
                 )}
               </div>

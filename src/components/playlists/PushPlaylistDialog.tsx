@@ -45,12 +45,7 @@ export function PushPlaylistDialog({
 
       if (error) throw error;
 
-      // Transform the data to match Device type
-      return (data as any[]).map(device => ({
-        ...device,
-        category: device.category as Device['category'],
-        status: device.status as Device['status'],
-      })) as Device[];
+      return (data as Device[]);
     }
   });
 
@@ -80,7 +75,6 @@ export function PushPlaylistDialog({
     }
 
     try {
-      // Create offline playlist entries for each selected device
       const { error } = await supabase
         .from('offline_playlists')
         .insert(
