@@ -153,6 +153,7 @@ export function PlaylistDetail() {
           isOpen={isPushDialogOpen}
           onClose={() => setIsPushDialogOpen(false)}
           playlistTitle={playlist.name}
+          playlistId={playlist.id}
         />
       </div>
     </DashboardLayout>

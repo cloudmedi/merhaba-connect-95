@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DeviceList } from "./push-dialog/DeviceList";
 import { DeviceGroups } from "./push-dialog/DeviceGroups";
+import type { Device } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -43,7 +44,13 @@ export function PushPlaylistDialog({
         .eq('branches.company_id', profile.company_id);
 
       if (error) throw error;
-      return data;
+
+      // Transform the data to match Device type
+      return (data as any[]).map(device => ({
+        ...device,
+        category: device.category as Device['category'],
+        status: device.status as Device['status'],
+      })) as Device[];
     }
   });
 
