@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useDeviceVerification } from "./device-verification/useDeviceVerification";
 import { DeviceForm } from "./device-verification/DeviceForm";
+import { DeviceSystemInfo } from "../hooks/types";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -34,7 +35,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
       const deviceInfo = await verifyTokenAndGetDeviceInfo(token);
       if (!deviceInfo) return;
 
-      // Create the device
+      // Create the device with properly typed system info
       await createDevice.mutateAsync({
         name,
         category,
@@ -43,7 +44,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         ip_address: ipAddress,
         status: 'offline',
         schedule: {},
-        system_info: deviceInfo.systemInfo,
+        system_info: deviceInfo.systemInfo as DeviceSystemInfo,
         branch_id: null
       });
 
