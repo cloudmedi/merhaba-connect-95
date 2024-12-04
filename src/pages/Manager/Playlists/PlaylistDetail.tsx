@@ -4,10 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { PushPlaylistDialog } from "./PushPlaylistDialog";
+import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Music2, Play } from "lucide-react";
+import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { toast } from "sonner";
 
 export function PlaylistDetail() {
@@ -68,9 +67,12 @@ export function PlaylistDetail() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-semibold text-gray-900">Playlist not found</h2>
-          <Button variant="outline" onClick={() => navigate("/manager")}>
+          <button 
+            onClick={() => navigate("/manager")}
+            className="text-purple-600 hover:text-purple-700 font-medium"
+          >
             Back to Media Library
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -111,87 +113,26 @@ export function PlaylistDetail() {
   return (
     <div className="min-h-screen bg-white">
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
-        {/* Header Section */}
-        <div className="flex items-center gap-2 text-gray-500">
-          <button 
-            onClick={() => navigate("/manager")}
-            className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Media Library
-          </button>
-        </div>
+        <PlaylistHeader
+          onBack={() => navigate("/manager")}
+          artworkUrl={playlist.artwork_url}
+          name={playlist.name}
+          genreName={playlist.genres?.name}
+          moodName={playlist.moods?.name}
+          songCount={playlist.songs?.length || 0}
+          duration={calculateTotalDuration()}
+          onPlay={handlePlayClick}
+          onPush={() => setIsPushDialogOpen(true)}
+        />
 
-        {/* Playlist Info Section */}
-        <div className="flex items-start gap-8">
-          <div className="relative group">
-            <img 
-              src={playlist.artwork_url || "/placeholder.svg"} 
-              alt={playlist.name}
-              className="w-48 h-48 rounded-lg object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handlePlayClick}
-                className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300"
-              >
-                <Play className="w-6 h-6" />
-              </Button>
-            </div>
-          </div>
+        <SongList 
+          songs={playlist.songs}
+          onSongSelect={handleSongSelect}
+          currentSongIndex={isPlaying ? currentSongIndex : undefined}
+          onCurrentSongIndexChange={setCurrentSongIndex}
+          isPlaying={isPlaying}
+        />
 
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{playlist.name}</h1>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Music2 className="w-4 h-4" /> {playlist.songs?.length || 0} songs
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> {calculateTotalDuration()}
-                </span>
-                {playlist.genres?.name && (
-                  <>
-                    <span>•</span>
-                    <span className="px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-medium">
-                      {playlist.genres.name}
-                    </span>
-                  </>
-                )}
-                {playlist.moods?.name && (
-                  <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                    {playlist.moods.name}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button 
-                onClick={() => setIsPushDialogOpen(true)}
-                className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-8"
-              >
-                Push
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Songs List */}
-        <div className="mt-8">
-          <SongList 
-            songs={playlist.songs}
-            onSongSelect={handleSongSelect}
-            currentSongIndex={isPlaying ? currentSongIndex : undefined}
-            onCurrentSongIndexChange={setCurrentSongIndex}
-            isPlaying={isPlaying}
-          />
-        </div>
-
-        {/* Music Player */}
         {isPlaying && playlist.songs && (
           <MusicPlayer
             playlist={{
@@ -212,7 +153,6 @@ export function PlaylistDetail() {
           />
         )}
 
-        {/* Push Dialog */}
         <PushPlaylistDialog
           isOpen={isPushDialogOpen}
           onClose={() => setIsPushDialogOpen(false)}

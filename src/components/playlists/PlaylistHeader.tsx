@@ -1,24 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Play, Star } from "lucide-react";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { ArrowLeft, Play } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export interface PlaylistHeaderProps {
-  onBack?: () => void;
+interface PlaylistHeaderProps {
+  onBack: () => void;
   artworkUrl?: string;
-  name?: string;
+  name: string;
   genreName?: string;
   moodName?: string;
-  songCount?: number;
-  duration?: string;
-  onPlay?: () => void;
-  onPush?: () => void;
-  onCancel?: () => void;
-  onCreate?: () => void;
-  isEditMode?: boolean;
-  isHero?: boolean;
-  id?: string;
+  songCount: number;
+  duration: string;
+  onPlay: () => void;
+  onPush: () => void;
 }
 
 export function PlaylistHeader({
@@ -27,94 +20,19 @@ export function PlaylistHeader({
   name,
   genreName = "Various",
   moodName = "Various",
-  songCount = 0,
+  songCount,
   duration,
   onPlay,
   onPush,
-  onCancel,
-  onCreate,
-  isEditMode,
-  isHero = false,
-  id
 }: PlaylistHeaderProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isHeroLocal, setIsHeroLocal] = useState(isHero);
-
-  const handleHeroToggle = async () => {
-    if (!id) return;
-    
-    try {
-      setIsUpdating(true);
-      const { error } = await supabase
-        .from('playlists')
-        .update({ is_hero: !isHeroLocal })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Create notification for all managers
-      const { data: managers, error: managersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('role', 'manager');
-
-      if (!managersError && managers) {
-        for (const manager of managers) {
-          await supabase.from('notifications').insert({
-            recipient_id: manager.id,
-            title: 'New Hero Playlist',
-            message: `${name} has been ${!isHeroLocal ? 'set as' : 'removed from'} the hero playlist`,
-            type: 'playlist_hero',
-            status: 'unread',
-            priority: 'normal',
-            metadata: {
-              playlist_id: id,
-              artwork_url: artworkUrl
-            }
-          });
-        }
-      }
-
-      setIsHeroLocal(!isHeroLocal);
-      toast(!isHeroLocal 
-        ? "Playlist set as hero"
-        : "Playlist removed from hero section"
-      );
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // If we're in create/edit mode
-  if (onCancel && onCreate) {
-    return (
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">
-          {isEditMode ? "Edit Playlist" : "Create New Playlist"}
-        </h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button onClick={onCreate}>
-            {isEditMode ? "Save Changes" : "Create Playlist"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Default view mode
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 text-gray-500">
         <button 
           onClick={onBack}
-          className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm"
+          className="flex items-center gap-2 hover:text-gray-900 transition-colors text-sm group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Media Library
         </button>
       </div>
@@ -124,55 +42,40 @@ export function PlaylistHeader({
           <img 
             src={artworkUrl || "/placeholder.svg"} 
             alt={name}
-            className="w-32 h-32 rounded-lg object-cover"
+            className="w-48 h-48 rounded-lg object-cover shadow-lg group-hover:shadow-xl transition-all duration-300"
           />
-          {onPlay && (
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
-              <button
-                onClick={onPlay}
-                className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
-              >
-                <Play className="w-6 h-6" />
-              </button>
-            </div>
-          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onPlay}
+              className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300"
+            >
+              <Play className="w-6 h-6" />
+            </Button>
+          </div>
         </div>
-        <div className="space-y-3">
-          <h1 className="text-2xl font-semibold text-gray-900">{name}</h1>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>{genreName}</span>
-            <span>•</span>
-            <span>{moodName}</span>
-            <span>•</span>
-            <span>{songCount} songs</span>
-            {duration && (
-              <>
-                <span>•</span>
-                <span>{duration}</span>
-              </>
-            )}
+
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <span>{genreName}</span>
+              <span>•</span>
+              <span>{moodName}</span>
+              <span>•</span>
+              <span>{songCount} songs</span>
+              <span>•</span>
+              <span>{duration}</span>
+            </div>
           </div>
-          <div className="flex gap-2">
-            {id && (
-              <Button
-                onClick={handleHeroToggle}
-                variant={isHeroLocal ? "default" : "outline"}
-                className="rounded-full px-8 flex items-center gap-2"
-                disabled={isUpdating}
-              >
-                <Star className={`w-4 h-4 ${isHeroLocal ? 'fill-white' : ''}`} />
-                {isHeroLocal ? "Featured Playlist" : "Set as Featured"}
-              </Button>
-            )}
-            {onPush && (
-              <Button 
-                onClick={onPush}
-                className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
-              >
-                Push
-              </Button>
-            )}
-          </div>
+
+          <Button 
+            onClick={onPush}
+            className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-8"
+          >
+            Push
+          </Button>
         </div>
       </div>
     </div>

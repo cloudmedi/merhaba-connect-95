@@ -1,6 +1,6 @@
 import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock, Music2 } from "lucide-react";
 
 export function PlaylistDetailLoader() {
   return (
