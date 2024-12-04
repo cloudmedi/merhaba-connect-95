@@ -2,12 +2,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import type { Device } from "./types";
+import type { Device, DeviceCategory } from "./types";
 
 export const useDevices = () => {
   const queryClient = useQueryClient();
   const presenceChannel = supabase.channel('device_status');
   const broadcastChannel = supabase.channel('device_broadcast');
+
+  // Helper function to validate device category
+  const validateDeviceCategory = (category: string): DeviceCategory => {
+    const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
+    return validCategories.includes(category as DeviceCategory) 
+      ? (category as DeviceCategory) 
+      : 'player'; // Default to 'player' if invalid category
+  };
 
   // Set up realtime subscription
   useEffect(() => {
@@ -85,17 +93,14 @@ export const useDevices = () => {
       // Get presence state to determine online status
       const presenceState = presenceChannel.presenceState();
       
-      // Update device status based on presence
-      const devicesWithStatus = data.map(device => {
-        const presence = Object.values(presenceState)
+      // Update device status based on presence and ensure category is of correct type
+      const devicesWithStatus = data.map(device => ({
+        ...device,
+        status: Object.values(presenceState)
           .flat()
-          .find((p: any) => p.token === device.token);
-          
-        return {
-          ...device,
-          status: presence ? 'online' : 'offline'
-        };
-      });
+          .some((p: any) => p.token === device.token) ? 'online' : 'offline',
+        category: validateDeviceCategory(device.category)
+      })) as Device[];
       
       return devicesWithStatus;
     },
