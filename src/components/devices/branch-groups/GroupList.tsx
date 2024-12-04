@@ -57,13 +57,18 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
 
     setIsDeleting(true);
     try {
+      console.log('Deleting group:', selectedGroup.id);
+      
       // First delete all assignments
       const { error: assignmentError } = await supabase
         .from('branch_group_assignments')
         .delete()
         .eq('group_id', selectedGroup.id);
 
-      if (assignmentError) throw assignmentError;
+      if (assignmentError) {
+        console.error('Error deleting assignments:', assignmentError);
+        throw assignmentError;
+      }
 
       // Then delete the group
       const { error: groupError } = await supabase
@@ -71,12 +76,15 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
         .delete()
         .eq('id', selectedGroup.id);
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Error deleting group:', groupError);
+        throw groupError;
+      }
 
       toast.success("Grup başarıyla silindi");
       onRefresh();
     } catch (error) {
-      console.error('Error deleting group:', error);
+      console.error('Error in delete operation:', error);
       toast.error("Grup silinirken bir hata oluştu");
     } finally {
       setIsDeleting(false);
@@ -205,7 +213,7 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
