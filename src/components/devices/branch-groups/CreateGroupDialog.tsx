@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Branch } from "@/pages/Manager/Announcements/types";
 import { GroupForm } from "./GroupForm";
-import { DeviceSelection } from "./DeviceSelection";
+import { BranchSelection } from "./BranchSelection";
 
 interface CreateGroupDialogProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ interface CreateGroupDialogProps {
 export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: CreateGroupDialogProps) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleCreateGroup = async () => {
@@ -26,8 +26,8 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
       return;
     }
 
-    if (selectedDevices.length === 0) {
-      toast.error("Lütfen en az bir cihaz seçin");
+    if (selectedBranches.length === 0) {
+      toast.error("Lütfen en az bir şube seçin");
       return;
     }
 
@@ -59,32 +59,17 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
 
       if (groupError) throw groupError;
 
-      // Get branch IDs for selected devices
-      const { data: deviceData, error: deviceError } = await supabase
-        .from('devices')
-        .select('branch_id')
-        .in('id', selectedDevices)
-        .not('branch_id', 'is', null);
-
-      if (deviceError) throw deviceError;
-
       // Create branch group assignments
-      const branchIds = deviceData
-        .map(d => d.branch_id)
-        .filter((id): id is string => id !== null);
+      const { error: assignError } = await supabase
+        .from('branch_group_assignments')
+        .insert(
+          selectedBranches.map(branchId => ({
+            branch_id: branchId,
+            group_id: group.id
+          }))
+        );
 
-      if (branchIds.length > 0) {
-        const { error: assignError } = await supabase
-          .from('branch_group_assignments')
-          .insert(
-            branchIds.map(branchId => ({
-              branch_id: branchId,
-              group_id: group.id
-            }))
-          );
-
-        if (assignError) throw assignError;
-      }
+      if (assignError) throw assignError;
 
       toast.success("Grup başarıyla oluşturuldu");
       onSuccess?.();
@@ -99,7 +84,7 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
   const resetForm = () => {
     setGroupName("");
     setDescription("");
-    setSelectedDevices([]);
+    setSelectedBranches([]);
     setSearchQuery("");
   };
 
@@ -118,17 +103,17 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
             setDescription={setDescription}
           />
 
-          <DeviceSelection
-            devices={branches}
-            selectedDevices={selectedDevices}
+          <BranchSelection
+            branches={branches}
+            selectedBranches={selectedBranches}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            setSelectedDevices={setSelectedDevices}
+            setSelectedBranches={setSelectedBranches}
           />
 
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-500">
-              {selectedDevices.length} cihaz seçildi
+              {selectedBranches.length} şube seçildi
             </p>
             <div className="space-x-2">
               <Button variant="outline" onClick={onClose}>
