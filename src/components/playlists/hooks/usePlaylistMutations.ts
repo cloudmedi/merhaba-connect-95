@@ -90,9 +90,9 @@ export function usePlaylistMutations() {
         if (playlistData.selectedSongs.length > 0) {
           const { error: updateError } = await supabase.rpc('update_playlist_songs', {
             p_playlist_id: playlist.id,
-            p_song_ids: playlistData.selectedSongs.map((song: any) => ({ 
+            p_song_ids: playlistData.selectedSongs.map((song: any, index: number) => ({ 
               song_id: song.id, 
-              position: playlistData.selectedSongs.indexOf(song)
+              position: index
             }))
           });
 
