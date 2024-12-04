@@ -9,15 +9,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   getEnvVars: () => new Promise((resolve) => {
     ipcRenderer.once('env-vars', (_event, vars) => resolve(vars))
-  }),
-  // Add new download-related methods
-  startPlaylistDownload: (playlistId: string) => 
-    ipcRenderer.invoke('start-playlist-download', playlistId),
-  getDownloadStatus: (playlistId: string) => 
-    ipcRenderer.invoke('get-download-status', playlistId),
-  checkSongDownloaded: (songId: string) => 
-    ipcRenderer.invoke('check-song-downloaded', songId),
-  onDownloadProgress: (callback: (data: any) => void) => {
-    ipcRenderer.on('download-progress', (_event, value) => callback(value))
-  }
+  })
 })
