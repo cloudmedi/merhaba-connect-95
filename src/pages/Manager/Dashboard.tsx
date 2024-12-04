@@ -7,12 +7,17 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { toast } from "sonner";
+import { usePlaylistControl } from "@/components/dashboard/hooks/usePlaylistControl";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const {
+    currentPlaylist,
+    isPlaying,
+    handlePlayPlaylist,
+    handlePlayStateChange,
+    handleClose
+  } = usePlaylistControl();
 
   usePlaylistSubscription();
 
@@ -85,65 +90,6 @@ export default function ManagerDashboard() {
     }
   });
 
-  const handlePlayPlaylist = async (playlist: any) => {
-    try {
-      // If clicking the currently playing playlist, toggle play/pause
-      if (currentPlaylist?.id === playlist.id) {
-        setIsPlaying(!isPlaying);
-        return;
-      }
-
-      // Fetch songs for the selected playlist
-      const { data: playlistSongs, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url,
-            bunny_id
-          )
-        `)
-        .eq('playlist_id', playlist.id)
-        .order('position');
-
-      if (error) throw error;
-
-      if (!playlistSongs || playlistSongs.length === 0) {
-        toast.error("No songs found in this playlist");
-        return;
-      }
-
-      const formattedPlaylist = {
-        id: playlist.id,
-        title: playlist.name,
-        artwork: playlist.artwork_url,
-        songs: playlistSongs.map(ps => ({
-          id: ps.songs.id,
-          title: ps.songs.title,
-          artist: ps.songs.artist || "Unknown Artist",
-          duration: ps.songs.duration?.toString() || "0:00",
-          file_url: ps.songs.file_url,
-          bunny_id: ps.songs.bunny_id
-        }))
-      };
-
-      setCurrentPlaylist(formattedPlaylist);
-      setIsPlaying(true);
-    } catch (error) {
-      console.error('Error fetching playlist songs:', error);
-      toast.error("Failed to load playlist");
-    }
-  };
-
-  const handlePlayStateChange = (playing: boolean) => {
-    console.log('Play state changed:', playing); // Debug log
-    setIsPlaying(playing);
-  };
-
   const filteredCategories = categories?.filter(category =>
     category.playlists.length > 0
   ) || [];
@@ -193,11 +139,12 @@ export default function ManagerDashboard() {
       {currentPlaylist && (
         <MusicPlayer
           key={currentPlaylist.id}
-          playlist={currentPlaylist}
-          onClose={() => {
-            setCurrentPlaylist(null);
-            setIsPlaying(false);
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork,
+            songs: currentPlaylist.songs
           }}
+          onClose={handleClose}
           onPlayStateChange={handlePlayStateChange}
           autoPlay={true}
         />
