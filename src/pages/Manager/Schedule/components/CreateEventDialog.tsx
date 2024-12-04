@@ -1,10 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { EventDetailsStep } from "./EventDetailsStep";
-import { BranchSelectionStep } from "./BranchSelectionStep";
 import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
+import { DeviceSelectionStep } from "./DeviceSelectionStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
 import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
@@ -28,7 +28,7 @@ interface EventFormData {
   endDate: string;
   endTime: string;
   category: EventCategory;
-  branches: string[];
+  devices: string[];
   notifications: EventNotification[];
   recurrence?: EventRecurrence;
 }
@@ -36,13 +36,6 @@ interface EventFormData {
 export function CreateEventDialog({ open, onOpenChange, existingEvents, initialTimeRange }: CreateEventDialogProps) {
   const [currentTab, setCurrentTab] = useState("details");
   const [formData, setFormData] = useState<EventFormData>(() => getInitialFormData(initialTimeRange));
-
-  // Form verilerini initialTimeRange değiştiğinde güncelle
-  useEffect(() => {
-    if (initialTimeRange) {
-      setFormData(getInitialFormData(initialTimeRange));
-    }
-  }, [initialTimeRange]);
 
   function getInitialFormData(timeRange: { start: string; end: string; } | null | undefined): EventFormData {
     if (timeRange) {
@@ -61,15 +54,6 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
         });
       };
 
-      console.log("Creating form data with:", {
-        startDateTime,
-        endDateTime,
-        formattedStartDate: formatDate(startDateTime),
-        formattedStartTime: formatTime(startDateTime),
-        formattedEndDate: formatDate(endDateTime),
-        formattedEndTime: formatTime(endDateTime)
-      });
-
       return {
         title: "",
         playlistId: "",
@@ -78,7 +62,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
         endDate: formatDate(endDateTime),
         endTime: formatTime(endDateTime),
         category: "Regular Playlist",
-        branches: [],
+        devices: [],
         notifications: [],
       };
     }
@@ -91,7 +75,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       endDate: "",
       endTime: "",
       category: "Regular Playlist",
-      branches: [],
+      devices: [],
       notifications: [],
     };
   }
@@ -110,17 +94,18 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       color: getEventColor(formData.category),
       notifications: formData.notifications,
       recurrence: formData.recurrence,
+      devices: formData.devices.map(deviceId => ({ device_id: deviceId }))
     };
 
     const conflicts = checkEventConflicts(eventData, existingEvents);
     if (conflicts.length > 0) {
-      toast.error("Event conflicts detected", {
-        description: "This event overlaps with existing events",
+      toast.error("Çakışan etkinlikler var", {
+        description: "Bu zaman aralığında başka etkinlikler mevcut",
       });
       return;
     }
 
-    toast.success("Event created successfully");
+    toast.success("Etkinlik başarıyla oluşturuldu");
     onOpenChange(false);
     resetForm();
   };
@@ -134,7 +119,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       endDate: "",
       endTime: "",
       category: "Regular Playlist",
-      branches: [],
+      devices: [],
       notifications: [],
     });
     setCurrentTab("details");
@@ -155,16 +140,16 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Create Schedule Event</DialogTitle>
+          <DialogTitle>Etkinlik Oluştur</DialogTitle>
         </DialogHeader>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
           <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="recurrence">Recurrence</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="branches">Branches</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="details">Detaylar</TabsTrigger>
+            <TabsTrigger value="recurrence">Tekrar</TabsTrigger>
+            <TabsTrigger value="notifications">Bildirimler</TabsTrigger>
+            <TabsTrigger value="devices">Cihazlar</TabsTrigger>
+            <TabsTrigger value="preview">Önizleme</TabsTrigger>
           </TabsList>
 
           <div className="mt-4">
@@ -190,25 +175,24 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
               <NotificationStep
                 formData={formData}
                 onFormDataChange={(data) => setFormData({ ...formData, ...data })}
-                onNext={() => setCurrentTab("branches")}
+                onNext={() => setCurrentTab("devices")}
                 onBack={() => setCurrentTab("recurrence")}
               />
             </TabsContent>
 
-            <TabsContent value="branches">
-              <BranchSelectionStep
-                selectedBranches={formData.branches}
-                onBranchesChange={(branches) => setFormData({ ...formData, branches })}
+            <TabsContent value="devices">
+              <DeviceSelectionStep
+                selectedDevices={formData.devices}
+                onDevicesChange={(devices) => setFormData({ ...formData, devices })}
                 onNext={() => setCurrentTab("preview")}
                 onBack={() => setCurrentTab("notifications")}
-                onCreate={handleCreate}
               />
             </TabsContent>
 
             <TabsContent value="preview">
               <PreviewStep
                 formData={formData}
-                onBack={() => setCurrentTab("branches")}
+                onBack={() => setCurrentTab("devices")}
                 onCreate={handleCreate}
               />
             </TabsContent>

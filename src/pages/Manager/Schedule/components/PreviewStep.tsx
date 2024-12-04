@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Monitor } from "lucide-react";
 import { EventCategory } from "../types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PreviewStepProps {
   formData: {
@@ -11,7 +13,7 @@ interface PreviewStepProps {
     startTime: string;
     endDate: string;
     endTime: string;
-    branches: string[];
+    devices: string[];
     notifications: { type: 'email' | 'system' | 'both'; timing: number; }[];
     recurrence?: {
       frequency: 'daily' | 'weekly' | 'monthly';
@@ -24,6 +26,21 @@ interface PreviewStepProps {
 }
 
 export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
+  const { data: devices = [] } = useQuery({
+    queryKey: ['selected-devices', formData.devices],
+    queryFn: async () => {
+      if (formData.devices.length === 0) return [];
+      
+      const { data, error } = await supabase
+        .from('devices')
+        .select('name')
+        .in('id', formData.devices);
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const getEventColor = (category: EventCategory) => {
     const colors = {
       'Marketing': '#F97316',
@@ -48,17 +65,17 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
 
         <div className="grid gap-4 text-sm">
           <div>
-            <p className="text-gray-500">Category</p>
+            <p className="text-gray-500">Kategori</p>
             <p>{formData.category}</p>
           </div>
           
           <div>
-            <p className="text-gray-500">Schedule</p>
+            <p className="text-gray-500">Zamanlama</p>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-gray-500" />
                 <p>
-                  {new Date(formData.startDate).toLocaleDateString()} - {new Date(formData.endDate).toLocaleDateString()}
+                  {new Date(formData.startDate).toLocaleDateString('tr-TR')} - {new Date(formData.endDate).toLocaleDateString('tr-TR')}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -72,43 +89,56 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
 
           {formData.recurrence && (
             <div>
-              <p className="text-gray-500">Recurrence</p>
+              <p className="text-gray-500">Tekrar</p>
               <p>
-                Every {formData.recurrence.interval}{" "}
-                {formData.recurrence.frequency}
+                Her {formData.recurrence.interval}{" "}
+                {formData.recurrence.frequency === 'daily' ? 'gün' : 
+                 formData.recurrence.frequency === 'weekly' ? 'hafta' : 'ay'}
                 {formData.recurrence.endDate &&
-                  ` until ${new Date(formData.recurrence.endDate).toLocaleDateString()}`}
+                  ` (${new Date(formData.recurrence.endDate).toLocaleDateString('tr-TR')} tarihine kadar)`}
               </p>
             </div>
           )}
 
           <div>
-            <p className="text-gray-500">Notifications</p>
+            <p className="text-gray-500">Bildirimler</p>
             <ul className="list-disc list-inside">
               {formData.notifications.map((notification, index) => (
                 <li key={index}>
-                  {notification.type} - {notification.timing} minutes before
+                  {notification.type === 'email' ? 'E-posta' : 
+                   notification.type === 'system' ? 'Sistem' : 'E-posta ve Sistem'} 
+                  - {notification.timing} dakika önce
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <p className="text-gray-500">Selected Branches</p>
-            <p>{formData.branches.length} branches selected</p>
+            <p className="text-gray-500">Seçili Cihazlar</p>
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-gray-500" />
+              <p>{devices.length} cihaz seçildi</p>
+            </div>
+            <div className="mt-2 space-y-1">
+              {devices.map((device, index) => (
+                <p key={index} className="text-sm text-gray-600 ml-6">
+                  • {device.name}
+                </p>
+              ))}
+            </div>
           </div>
         </div>
       </Card>
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
-          Back
+          Geri
         </Button>
         <Button 
           onClick={onCreate} 
           className="bg-[#6E59A5] hover:bg-[#5a478a] text-white"
         >
-          Create Event
+          Etkinlik Oluştur
         </Button>
       </div>
     </div>
