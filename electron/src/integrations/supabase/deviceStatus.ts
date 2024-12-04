@@ -23,11 +23,6 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       throw new Error('Token not found');
     }
 
-    if (tokenData.status !== 'active') {
-      console.error('Token is not active:', tokenData.status);
-      throw new Error(`Token is not active: ${tokenData.status}`);
-    }
-
     // Check if token is expired
     const expirationDate = new Date(tokenData.expires_at);
     if (expirationDate < new Date()) {
