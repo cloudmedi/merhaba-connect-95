@@ -26,11 +26,11 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [token, setToken] = useState("");
   const [ipAddress, setIpAddress] = useState("");
   const { createDevice } = useDevices();
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const verifyTokenAndGetDeviceInfo = async (token: string) => {
     try {
+      setIsVerifying(true);
       // First verify the token
       const { data: tokenData, error: tokenError } = await supabase
         .from('device_tokens')
@@ -40,9 +40,53 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         .single();
 
       if (tokenError || !tokenData) {
-        toast.error('Invalid or expired token');
+        toast.error('Geçersiz veya süresi dolmuş token');
         return;
       }
+
+      // Check if token is expired
+      if (new Date(tokenData.expires_at) < new Date()) {
+        toast.error('Token süresi dolmuş');
+        return;
+      }
+
+      // Get device info if exists
+      const { data: existingDevice } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+
+      if (existingDevice) {
+        setName(existingDevice.name || '');
+        setCategory((existingDevice.category as "player" | "display" | "controller") || 'player');
+        setLocation(existingDevice.location || '');
+        setIpAddress(existingDevice.ip_address || '');
+        toast.success('Cihaz bilgileri getirildi');
+      }
+
+      // Get current system info
+      const systemInfo = await window.electronAPI.getSystemInfo();
+      
+      return {
+        tokenData,
+        existingDevice,
+        systemInfo
+      };
+
+    } catch (error: any) {
+      toast.error('Token doğrulama hatası: ' + error.message);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const deviceInfo = await verifyTokenAndGetDeviceInfo(token);
+      if (!deviceInfo) return;
 
       // Create the device
       await createDevice.mutateAsync({
@@ -53,7 +97,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         ip_address: ipAddress,
         status: 'offline',
         schedule: {},
-        system_info: {},
+        system_info: deviceInfo.systemInfo,
         branch_id: null
       });
 
@@ -63,11 +107,20 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         .update({ status: 'used' })
         .eq('token', token);
 
-      toast.success('Device added successfully');
+      toast.success('Cihaz başarıyla eklendi');
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add device');
+      toast.error(error.message || 'Cihaz eklenirken bir hata oluştu');
+    }
+  };
+
+  const handleTokenChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newToken = e.target.value;
+    setToken(newToken);
+    
+    if (newToken.length === 6) { // Token uzunluğu 6 karakter olduğunda
+      await verifyTokenAndGetDeviceInfo(newToken);
     }
   };
 
@@ -86,6 +139,17 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
           <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="token">Device Token</Label>
+            <Input
+              id="token"
+              value={token}
+              onChange={handleTokenChange}
+              placeholder="Enter device token"
+              required
+              disabled={isVerifying}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="name">Device Name</Label>
             <Input
@@ -127,18 +191,8 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
               placeholder="Enter IP address"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="token">Device Token</Label>
-            <Input
-              id="token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Enter device token"
-              required
-            />
-          </div>
           <DialogFooter>
-            <Button type="submit" disabled={createDevice.isPending}>
+            <Button type="submit" disabled={createDevice.isPending || isVerifying}>
               {createDevice.isPending ? "Adding..." : "Add Device"}
             </Button>
           </DialogFooter>
