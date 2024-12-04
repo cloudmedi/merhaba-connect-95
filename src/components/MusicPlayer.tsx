@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, Volume2, VolumeX } from "lucide-react";
+import { X, Volume2, VolumeX, Wifi, WifiOff } from "lucide-react";
 import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
 import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
+import { DownloadIndicator } from "./music/DownloadIndicator";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MusicPlayerProps {
   playlist: {
@@ -39,7 +42,29 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isOffline, setIsOffline] = useState(false);
   
+  // Query download status for current song
+  const { data: downloadStatus } = useQuery({
+    queryKey: ['song-download-status', currentSongId],
+    queryFn: async () => {
+      if (!currentSongId) return null;
+      return window.electronAPI.checkSongDownloaded(currentSongId.toString());
+    },
+    enabled: !!currentSongId
+  });
+
+  // Query download queue status for playlist
+  const { data: queueStatus } = useQuery({
+    queryKey: ['playlist-download-status', playlist?.id],
+    queryFn: async () => {
+      if (!playlist?.id) return null;
+      return window.electronAPI.getDownloadStatus(playlist.id);
+    },
+    enabled: !!playlist?.id,
+    refetchInterval: 1000 // Poll every second for updates
+  });
+
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -57,6 +82,22 @@ export function MusicPlayer({
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
+  useEffect(() => {
+    // Check online status
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    setIsOffline(!navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
     onClose();
@@ -64,6 +105,7 @@ export function MusicPlayer({
   }
 
   const currentSong = playlist.songs[currentSongIndex];
+  const currentSongDownloadStatus = queueStatus?.songs?.find(s => s.id === currentSong.id);
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
@@ -101,6 +143,12 @@ export function MusicPlayer({
   };
 
   const getAudioUrl = (song: any) => {
+    // If song is downloaded, use local path
+    if (downloadStatus?.downloaded && downloadStatus.path) {
+      return `file://${downloadStatus.path}`;
+    }
+    
+    // Otherwise use Bunny CDN URL
     if (!song.file_url) {
       console.error('No file_url provided for song:', song);
       return '';
@@ -136,18 +184,36 @@ export function MusicPlayer({
       {/* Content */}
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
-          <img 
-            src={getOptimizedImageUrl(playlist.artwork)} 
-            alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg"
-          />
+          <div className="relative">
+            <img 
+              src={getOptimizedImageUrl(playlist.artwork)} 
+              alt={currentSong?.title}
+              className="w-14 h-14 rounded-md object-cover shadow-lg"
+            />
+            {/* Offline/Online indicator */}
+            <div className="absolute -top-2 -right-2">
+              {isOffline ? (
+                <WifiOff className="w-4 h-4 text-red-500" />
+              ) : (
+                <Wifi className="w-4 h-4 text-green-500" />
+              )}
+            </div>
+          </div>
           <div className="min-w-0">
             <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
               {currentSong?.title}
             </h3>
-            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
-              {currentSong?.artist}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
+                {currentSong?.artist}
+              </p>
+              {currentSongDownloadStatus && (
+                <DownloadIndicator 
+                  status={currentSongDownloadStatus.status}
+                  progress={currentSongDownloadStatus.progress}
+                />
+              )}
+            </div>
           </div>
         </div>
 
