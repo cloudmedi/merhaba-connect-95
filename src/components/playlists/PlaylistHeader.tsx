@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Play } from "lucide-react";
 
 export interface PlaylistHeaderProps {
   // Common props
@@ -90,7 +90,7 @@ export function PlaylistHeader({
                 onClick={onPlay}
                 className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300"
               >
-                <ArrowLeft className="w-6 h-6" />
+                <Play className="w-6 h-6 ml-1" />
               </Button>
             </div>
           )}
