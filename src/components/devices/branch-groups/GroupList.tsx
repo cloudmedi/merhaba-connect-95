@@ -1,5 +1,4 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -8,7 +7,7 @@ import { useState } from "react";
 import { DeleteGroupDialog } from "./DeleteGroupDialog";
 import { EditGroupDialog } from "./EditGroupDialog";
 
-interface BranchGroup {
+interface Group {
   id: string;
   name: string;
   description?: string;
@@ -16,14 +15,30 @@ interface BranchGroup {
 }
 
 interface GroupListProps {
-  groups: BranchGroup[];
+  groups: Group[];
   onRefresh: () => Promise<void>;
 }
 
 export function GroupList({ groups, onRefresh }: GroupListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<BranchGroup | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+
+  const handleDeleteClick = (group: Group) => {
+    setSelectedGroup(group);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleEditClick = (group: Group) => {
+    setSelectedGroup(group);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteComplete = async () => {
+    await onRefresh();
+    setDeleteDialogOpen(false);
+    setSelectedGroup(null);
+  };
 
   return (
     <ScrollArea className="h-[400px]">
@@ -54,10 +69,7 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setSelectedGroup(group);
-                      setEditDialogOpen(true);
-                    }}
+                    onClick={() => handleEditClick(group)}
                     className="text-gray-500 hover:text-gray-900"
                   >
                     <Edit className="w-4 h-4" />
@@ -65,10 +77,7 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setSelectedGroup(group);
-                      setDeleteDialogOpen(true);
-                    }}
+                    onClick={() => handleDeleteClick(group)}
                     className="text-gray-500 hover:text-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -87,7 +96,7 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
           setSelectedGroup(null);
         }}
         groupId={selectedGroup?.id || null}
-        onDeleted={onRefresh}
+        onDeleted={handleDeleteComplete}
       />
 
       <EditGroupDialog

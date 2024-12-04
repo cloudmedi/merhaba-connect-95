@@ -20,12 +20,8 @@ export function BranchGroupsTab() {
     try {
       const { data: groupsData, error: groupsError } = await supabase
         .from('branch_groups')
-        .select(`
-          id,
-          name,
-          description,
-          created_at
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (groupsError) {
         console.error('Error fetching groups:', groupsError);
