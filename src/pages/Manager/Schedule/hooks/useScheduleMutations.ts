@@ -28,12 +28,7 @@ export function useScheduleMutations() {
 
       const { data, error } = await supabase
         .from('schedule_events')
-        .insert({
-          ...eventData,
-          title: event.title,
-          start_time: event.start_time,
-          end_time: event.end_time,
-        })
+        .insert(eventData)
         .select()
         .single();
 
@@ -80,12 +75,7 @@ export function useScheduleMutations() {
 
       const { error: updateError } = await supabase
         .from('schedule_events')
-        .update({
-          ...eventData,
-          title: event.title,
-          start_time: event.start_time,
-          end_time: event.end_time,
-        })
+        .update(eventData)
         .eq('id', event.id);
 
       if (updateError) {

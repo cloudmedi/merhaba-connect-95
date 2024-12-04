@@ -9,8 +9,8 @@ export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): Sche
     playlist_id: dbEvent.playlist_id,
     start_time: dbEvent.start_time,
     end_time: dbEvent.end_time,
-    recurrence: dbEvent.recurrence ? (JSON.parse(dbEvent.recurrence as string) as EventRecurrence) : undefined,
-    notifications: dbEvent.notifications ? (JSON.parse(dbEvent.notifications as string) as EventNotification[]) : undefined,
+    recurrence: dbEvent.recurrence ? JSON.parse(dbEvent.recurrence as string) as EventRecurrence : undefined,
+    notifications: dbEvent.notifications ? JSON.parse(dbEvent.notifications as string) as EventNotification[] : undefined,
     created_by: dbEvent.created_by,
     company_id: dbEvent.company_id,
     created_at: dbEvent.created_at,
@@ -24,11 +24,14 @@ export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): Sche
 export const mapEventToDatabase = (event: Partial<ScheduleEvent>): Omit<DatabaseScheduleEvent, 'playlists' | 'devices'> => {
   const { color, devices, playlist, ...rest } = event;
   
-  const dbEvent: Partial<DatabaseScheduleEvent> = {
+  const dbEvent = {
     ...rest,
+    title: event.title || '',
+    start_time: event.start_time || new Date().toISOString(),
+    end_time: event.end_time || new Date().toISOString(),
     notifications: event.notifications ? JSON.stringify(event.notifications) as Json : undefined,
     recurrence: event.recurrence ? JSON.stringify(event.recurrence) as Json : undefined,
   };
 
-  return dbEvent as Omit<DatabaseScheduleEvent, 'playlists' | 'devices'>;
+  return dbEvent;
 };
