@@ -32,9 +32,10 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
   });
   
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch devices for the company
-  const { data: devices = [], isLoading: isLoadingDevices } = useQuery<Device[]>({
+  const { data: devices = [], isLoading: isLoadingDevices } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
       const { data: userProfile } = await supabase
@@ -56,7 +57,7 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         `)
         .eq('branches.company_id', userProfile.company_id);
 
-      return data as Device[] || [];
+      return (data || []) as Device[];
     },
     enabled: !!user
   });
@@ -84,7 +85,8 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
               name,
               devices (
                 id,
-                name
+                name,
+                status
               )
             )
           )
@@ -154,36 +156,49 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         if (uploadError) throw uploadError;
       }
 
-      // Create device associations using announcement_branches
-      if (formData.devices.length > 0) {
-        const deviceBranches = devices
-          .filter(d => formData.devices.includes(d.id))
-          .map(d => d.branch_id)
-          .filter((id): id is string => id !== null);
+      // Get unique branch IDs from selected devices
+      const selectedDevices = devices.filter(d => formData.devices.includes(d.id));
+      const branchIds = [...new Set(selectedDevices
+        .map(d => d.branch_id)
+        .filter((id): id is string => id !== null)
+      )];
 
-        if (deviceBranches.length > 0) {
-          const { error: branchError } = await supabase
-            .from('announcement_branches')
-            .insert(
-              deviceBranches.map(branchId => ({
-                announcement_id: announcement.id,
-                branch_id: branchId
-              }))
-            );
+      // Create announcement-branch associations
+      if (branchIds.length > 0) {
+        const { error: branchError } = await supabase
+          .from('announcement_branches')
+          .insert(
+            branchIds.map(branchId => ({
+              announcement_id: announcement.id,
+              branch_id: branchId
+            }))
+          );
 
-          if (branchError) throw branchError;
-        }
+        if (branchError) throw branchError;
       }
 
       toast.success("Kampanya başarıyla oluşturuldu");
       onOpenChange(false);
+      resetForm();
     } catch (error: any) {
       console.error('Error creating campaign:', error);
       toast.error(error.message || "Kampanya oluşturulurken bir hata oluştu");
     }
   };
 
-  const [deviceSearchQuery, setDeviceSearchQuery] = useState("");
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      files: [],
+      startDate: "",
+      endDate: "",
+      repeatType: "once",
+      repeatInterval: 1,
+      devices: []
+    });
+    setSearchQuery("");
+  };
 
   const handleSelectGroup = (groupId: string, isSelected: boolean) => {
     const groupDevices = groups
@@ -231,8 +246,8 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
                   devices={devices}
                   groups={groups}
                   selectedDevices={formData.devices}
-                  searchQuery={deviceSearchQuery}
-                  setSearchQuery={setDeviceSearchQuery}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
                   setSelectedDevices={(devices) => handleFormDataChange({ devices })}
                   onSelectGroup={handleSelectGroup}
                   isLoading={isLoadingDevices || isLoadingGroups}

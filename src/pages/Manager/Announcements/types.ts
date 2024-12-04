@@ -28,7 +28,7 @@ export interface CampaignFile {
   file_url: string;
   duration?: number;
   name?: string;
-  size?: string;
+  size?: number;
 }
 
 export interface FileWithPreview {
