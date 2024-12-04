@@ -1,4 +1,4 @@
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 
 export interface SystemInfo {
   cpu?: string;
@@ -17,4 +17,10 @@ export interface PresenceState {
 export interface PresenceConfig {
   heartbeatInterval?: number;
   reconnectDelay?: number;
+}
+
+export interface DeviceStatus {
+  status: 'online' | 'offline';
+  systemInfo?: any;
+  lastSeen: string;
 }
