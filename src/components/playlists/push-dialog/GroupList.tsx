@@ -1,78 +1,62 @@
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Group {
   id: string;
   name: string;
-  description: string;
-  branchCount: number;
+  description?: string;
+  branch_group_assignments?: Array<{
+    branches?: {
+      devices?: Array<{
+        id: string;
+        name: string;
+        status: 'online' | 'offline';
+      }>;
+    };
+  }>;
 }
 
 interface GroupListProps {
   groups: Group[];
-  selectedGroups: string[];
-  onGroupToggle: (groupId: string) => void;
-  onSelectAll: (checked: boolean) => void;
+  selectedDevices: string[];
+  onSelectGroup: (groupId: string, isSelected: boolean) => void;
 }
 
-export function GroupList({ groups, selectedGroups, onGroupToggle, onSelectAll }: GroupListProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredGroups = groups.filter(group =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const areAllSelected = filteredGroups.length > 0 && 
-    filteredGroups.every(group => selectedGroups.includes(group.id));
-
+export function GroupList({ groups, selectedDevices, onSelectGroup }: GroupListProps) {
   return (
-    <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-          placeholder="Search groups..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+    <ScrollArea className="h-[400px]">
+      <div className="space-y-2">
+        {groups.map((group) => {
+          const deviceIds = group.branch_group_assignments?.flatMap(
+            (assignment) => assignment.branches?.devices?.map(d => d.id) || []
+          ) || [];
+          const isFullySelected = deviceIds.length > 0 && deviceIds.every(id => selectedDevices.includes(id));
+          const isPartiallySelected = deviceIds.some(id => selectedDevices.includes(id));
 
-      <div className="flex items-center space-x-2 px-1">
-        <Checkbox
-          checked={areAllSelected}
-          onCheckedChange={onSelectAll}
-          id="select-all-groups"
-        />
-        <label htmlFor="select-all-groups" className="text-sm font-medium">
-          Select All
-        </label>
-      </div>
-
-      <ScrollArea className="h-[300px]">
-        <div className="grid grid-cols-2 gap-3 p-1">
-          {filteredGroups.map((group) => (
+          return (
             <div
               key={group.id}
-              className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
-              onClick={() => onGroupToggle(group.id)}
+              className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent/50 cursor-pointer"
+              onClick={() => onSelectGroup(group.id, !isFullySelected)}
             >
               <Checkbox
-                checked={selectedGroups.includes(group.id)}
-                onCheckedChange={() => onGroupToggle(group.id)}
+                checked={isFullySelected}
+                className={isPartiallySelected && !isFullySelected ? "opacity-50" : ""}
+                onCheckedChange={() => onSelectGroup(group.id, !isFullySelected)}
               />
               <div>
-                <h4 className="text-sm font-medium">{group.name}</h4>
-                <p className="text-sm text-gray-500">{group.description}</p>
-                <p className="text-xs text-gray-400 mt-1">{group.branchCount} branches</p>
+                <p className="font-medium">{group.name}</p>
+                <p className="text-sm text-gray-500">
+                  {deviceIds.length} cihaz
+                </p>
+                {group.description && (
+                  <p className="text-sm text-gray-500 mt-1">{group.description}</p>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
-    </div>
+          );
+        })}
+      </div>
+    </ScrollArea>
   );
 }

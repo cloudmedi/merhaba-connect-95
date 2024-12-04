@@ -8,7 +8,7 @@ interface DialogFooterProps {
 
 export function DialogFooter({ selectedCount, onCancel, onPush }: DialogFooterProps) {
   return (
-    <div className="flex items-center justify-between border-t pt-4 mt-6">
+    <div className="flex items-center justify-between border-t pt-4">
       <p className="text-sm text-gray-500">
         {selectedCount} cihaz seçildi
       </p>
