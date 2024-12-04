@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DatabaseScheduleEvent, ScheduleEvent } from "../types/scheduleTypes";
-import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "../utils/eventMappers";
+import { DatabaseScheduleEvent, ScheduleEvent } from "@/pages/Manager/Schedule/types/scheduleTypes";
+import { mapDatabaseToScheduleEvent, mapEventToDatabase } from "@/pages/Manager/Schedule/utils/eventMappers";
 
 export function useScheduleEvents() {
   const queryClient = useQueryClient();

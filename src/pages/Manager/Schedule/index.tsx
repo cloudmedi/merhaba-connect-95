@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { CreateEventDialog } from "./components/CreateEventDialog";
-import { ScheduleEvent } from "./types/scheduleTypes";
-import { exportEvents } from "./utils/eventUtils";
 import { useScheduleEvents } from "@/hooks/useScheduleEvents";
 import { toast } from "sonner";
 import { CalendarHeader } from "./components/CalendarHeader";
 import { CalendarView } from "./components/CalendarView";
+import { ScheduleEvent } from "./types/scheduleTypes";
 
 export default function Schedule() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -79,7 +77,7 @@ export default function Schedule() {
     <div className="p-6 space-y-6">
       <CalendarHeader 
         onCreateEvent={() => setIsCreateEventOpen(true)}
-        onExport={exportEvents}
+        onExport={() => {}}
         events={events}
       />
 
