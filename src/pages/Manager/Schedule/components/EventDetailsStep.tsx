@@ -32,26 +32,29 @@ export function EventDetailsStep({
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
 
-  // Set initial values when component mounts or initialTimeRange changes
   useEffect(() => {
     if (initialTimeRange) {
       const startDateTime = new Date(initialTimeRange.start);
       const endDateTime = new Date(initialTimeRange.end);
 
-      onFormDataChange({
-        startDate: startDateTime.toISOString().split('T')[0],
-        startTime: startDateTime.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }),
-        endDate: endDateTime.toISOString().split('T')[0],
-        endTime: endDateTime.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        })
-      });
+      const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+
+      const formatTime = (date: Date) => {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
+
+      const updates = {
+        startDate: formatDate(startDateTime),
+        startTime: formatTime(startDateTime),
+        endDate: formatDate(endDateTime),
+        endTime: formatTime(endDateTime),
+      };
+
+      onFormDataChange(updates);
     }
   }, [initialTimeRange, onFormDataChange]);
 
