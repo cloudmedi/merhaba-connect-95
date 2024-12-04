@@ -18,6 +18,7 @@ export function BranchGroupsTab() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchGroups = async () => {
+    console.log('Fetching groups...');
     const { data: groupsData, error: groupsError } = await supabase
       .from('branch_groups')
       .select(`
@@ -35,10 +36,12 @@ export function BranchGroupsTab() {
       `);
 
     if (groupsError) {
+      console.error('Error fetching groups:', groupsError);
       toast.error("Gruplar yüklenirken bir hata oluştu");
       return;
     }
 
+    console.log('Fetched groups:', groupsData);
     setGroups(groupsData || []);
     setIsLoading(false);
   };
@@ -49,6 +52,7 @@ export function BranchGroupsTab() {
       .select('id, name, location');
 
     if (error) {
+      console.error('Error fetching branches:', error);
       toast.error("Şubeler yüklenirken bir hata oluştu");
       return;
     }

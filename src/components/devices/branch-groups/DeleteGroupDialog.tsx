@@ -27,7 +27,7 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
 
     setIsDeleting(true);
     try {
-      console.log('Deleting group:', groupId);
+      console.log('Starting deletion process for group:', groupId);
       
       // First delete all assignments
       const { error: assignmentError } = await supabase
@@ -37,8 +37,10 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
 
       if (assignmentError) {
         console.error('Error deleting assignments:', assignmentError);
-        throw assignmentError;
+        throw new Error('Grup bağlantıları silinirken bir hata oluştu');
       }
+
+      console.log('Successfully deleted group assignments');
 
       // Then delete the group
       const { error: groupError } = await supabase
@@ -48,15 +50,18 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
 
       if (groupError) {
         console.error('Error deleting group:', groupError);
-        throw groupError;
+        throw new Error('Grup silinirken bir hata oluştu');
       }
 
+      console.log('Successfully deleted group');
+      
+      // Only show success message and refresh after both operations complete
       toast.success("Grup başarıyla silindi");
-      await onDeleted();
-      onClose();
+      await onDeleted(); // Wait for the refresh to complete
+      onClose(); // Close the dialog only after successful deletion and refresh
     } catch (error) {
       console.error('Error in delete operation:', error);
-      toast.error("Grup silinirken bir hata oluştu");
+      toast.error(error instanceof Error ? error.message : "Grup silinirken bir hata oluştu");
     } finally {
       setIsDeleting(false);
     }
