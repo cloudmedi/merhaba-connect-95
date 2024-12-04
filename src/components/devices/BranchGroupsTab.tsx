@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
 import type { Branch } from "@/pages/Manager/Announcements/types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function BranchGroupsTab() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -67,13 +68,13 @@ export function BranchGroupsTab() {
         alt="No groups" 
         className="w-32 h-32 mb-4 opacity-50"
       />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No groups found</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Grup bulunamadı</h3>
       <p className="text-sm text-gray-500 mb-4 max-w-sm">
-        Create your first branch group to organize and manage your branches more efficiently.
+        İlk grubunuzu oluşturarak başlayın. Tüm gruplarınızı buradan yönetebilirsiniz.
       </p>
       <Button onClick={() => setIsCreateDialogOpen(true)}>
         <Plus className="w-4 h-4 mr-2" />
-        Create New Group
+        Yeni Grup Oluştur
       </Button>
     </div>
   );
@@ -85,7 +86,7 @@ export function BranchGroupsTab() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search groups..."
+              placeholder="Grup ara..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -96,19 +97,25 @@ export function BranchGroupsTab() {
             className="ml-4"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create Group
+            Grup Oluştur
           </Button>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <DataTableLoader />
-          </div>
-        ) : groups.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <GroupList groups={groups} />
-        )}
+        <Tabs defaultValue="groups" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="groups">Gruplar</TabsTrigger>
+          </TabsList>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <DataTableLoader />
+            </div>
+          ) : groups.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <GroupList groups={groups} />
+          )}
+        </Tabs>
 
         <CreateGroupDialog
           isOpen={isCreateDialogOpen}

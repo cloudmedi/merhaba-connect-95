@@ -1,51 +1,83 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Branch } from "@/pages/Manager/Announcements/types";
+import { GroupForm } from "./GroupForm";
+import { DeviceSelection } from "./DeviceSelection";
 
 interface CreateGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   branches: Branch[];
 }
 
 export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: CreateGroupDialogProps) {
-  const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupDescription, setNewGroupDescription] = useState("");
-  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
+  const [groupName, setGroupName] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCreateGroup = async () => {
-    if (!newGroupName) {
-      toast.error("Please enter a group name");
+    if (!groupName.trim()) {
+      toast.error("Lütfen grup adı girin");
+      return;
+    }
+
+    if (selectedDevices.length === 0) {
+      toast.error("Lütfen en az bir cihaz seçin");
       return;
     }
 
     try {
-      // Create group
+      // Get user's profile for company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (!userProfile?.company_id) {
+        toast.error("Şirket bilgisi bulunamadı");
+        return;
+      }
+
+      // Create the group
       const { data: group, error: groupError } = await supabase
         .from('branch_groups')
         .insert({
-          name: newGroupName,
-          description: newGroupDescription
+          name: groupName,
+          description,
+          company_id: userProfile.company_id,
+          created_by: user?.id
         })
         .select()
         .single();
 
       if (groupError) throw groupError;
 
-      // Assign branches to group
-      if (selectedBranches.length > 0) {
+      // Get branch IDs for selected devices
+      const { data: deviceData, error: deviceError } = await supabase
+        .from('devices')
+        .select('branch_id')
+        .in('id', selectedDevices)
+        .not('branch_id', 'is', null);
+
+      if (deviceError) throw deviceError;
+
+      // Create branch group assignments
+      const branchIds = deviceData
+        .map(d => d.branch_id)
+        .filter((id): id is string => id !== null);
+
+      if (branchIds.length > 0) {
         const { error: assignError } = await supabase
           .from('branch_group_assignments')
           .insert(
-            selectedBranches.map(branchId => ({
+            branchIds.map(branchId => ({
               branch_id: branchId,
               group_id: group.id
             }))
@@ -54,86 +86,58 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
         if (assignError) throw assignError;
       }
 
-      toast.success("Group created successfully");
+      toast.success("Grup başarıyla oluşturuldu");
+      onSuccess?.();
       onClose();
-      onSuccess();
       resetForm();
     } catch (error) {
-      toast.error("Failed to create group");
+      console.error('Error creating group:', error);
+      toast.error("Grup oluşturulurken bir hata oluştu");
     }
   };
 
   const resetForm = () => {
-    setNewGroupName("");
-    setNewGroupDescription("");
-    setSelectedBranches([]);
+    setGroupName("");
+    setDescription("");
+    setSelectedDevices([]);
+    setSearchQuery("");
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Branch Group</DialogTitle>
+          <DialogTitle>Yeni Grup Oluştur</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div>
-            <Label>Group Name</Label>
-            <Input
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              placeholder="Enter group name"
-            />
-          </div>
+        <div className="space-y-6">
+          <GroupForm
+            groupName={groupName}
+            description={description}
+            setGroupName={setGroupName}
+            setDescription={setDescription}
+          />
 
-          <div>
-            <Label>Description</Label>
-            <Input
-              value={newGroupDescription}
-              onChange={(e) => setNewGroupDescription(e.target.value)}
-              placeholder="Enter description"
-            />
-          </div>
+          <DeviceSelection
+            devices={branches}
+            selectedDevices={selectedDevices}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            setSelectedDevices={setSelectedDevices}
+          />
 
-          <div>
-            <Label>Select Branches</Label>
-            <ScrollArea className="h-[200px] border rounded-md p-4 mt-2">
-              {branches.map((branch) => (
-                <div
-                  key={branch.id}
-                  className="flex items-center space-x-2 py-2"
-                >
-                  <Checkbox
-                    checked={selectedBranches.includes(branch.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedBranches([...selectedBranches, branch.id]);
-                      } else {
-                        setSelectedBranches(
-                          selectedBranches.filter(id => id !== branch.id)
-                        );
-                      }
-                    }}
-                  />
-                  <div>
-                    <p className="text-sm font-medium">{branch.name}</p>
-                    <p className="text-xs text-gray-500">{branch.location}</p>
-                  </div>
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateGroup}>
-              Create Group
-            </Button>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              {selectedDevices.length} cihaz seçildi
+            </p>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                İptal
+              </Button>
+              <Button onClick={handleCreateGroup}>
+                Grup Oluştur
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
