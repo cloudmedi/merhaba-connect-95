@@ -49,7 +49,7 @@ export function SongList({
         <div className="col-span-2 text-right">DURATION</div>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-400px)]">
+      <ScrollArea className="h-[calc(100vh-400px)] pr-4" type="always">
         {songs.map((song, index) => (
           <div 
             key={song.id}
