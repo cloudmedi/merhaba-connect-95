@@ -33,6 +33,14 @@ export function DeviceSelection({
     }
   };
 
+  const toggleDevice = (deviceId: string) => {
+    setSelectedDevices(
+      selectedDevices.includes(deviceId)
+        ? selectedDevices.filter(id => id !== deviceId)
+        : [...selectedDevices, deviceId]
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -60,23 +68,11 @@ export function DeviceSelection({
             <div
               key={device.id}
               className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
-              onClick={() => {
-                setSelectedDevices(prev => 
-                  prev.includes(device.id) 
-                    ? prev.filter(id => id !== device.id)
-                    : [...prev, device.id]
-                );
-              }}
+              onClick={() => toggleDevice(device.id)}
             >
               <Checkbox
                 checked={selectedDevices.includes(device.id)}
-                onCheckedChange={() => {
-                  setSelectedDevices(prev => 
-                    prev.includes(device.id) 
-                      ? prev.filter(id => id !== device.id)
-                      : [...prev, device.id]
-                  );
-                }}
+                onCheckedChange={() => toggleDevice(device.id)}
               />
               <div>
                 <p className="font-medium text-sm">{device.name}</p>
