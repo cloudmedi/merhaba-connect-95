@@ -16,23 +16,17 @@ export function BranchGroupsTab() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchGroups = async () => {
-    console.log('Fetching groups...');
     try {
-      const { data: groupsData, error: groupsError } = await supabase
+      const { data, error } = await supabase
         .from('branch_groups')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (groupsError) {
-        console.error('Error fetching groups:', groupsError);
-        toast.error("Gruplar yüklenirken bir hata oluştu");
-        return;
-      }
-
-      console.log('Fetched groups:', groupsData);
-      setGroups(groupsData || []);
+      if (error) throw error;
+      
+      setGroups(data || []);
     } catch (error) {
-      console.error('Unexpected error fetching groups:', error);
+      console.error('Error fetching groups:', error);
       toast.error("Gruplar yüklenirken bir hata oluştu");
     } finally {
       setIsLoading(false);
@@ -54,7 +48,6 @@ export function BranchGroupsTab() {
   };
 
   const handleDeleteSuccess = async () => {
-    console.log('Handling delete success, refreshing groups...');
     await fetchGroups();
   };
 

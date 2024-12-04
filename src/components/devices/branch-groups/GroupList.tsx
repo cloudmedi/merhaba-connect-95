@@ -34,12 +34,6 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
     setEditDialogOpen(true);
   };
 
-  const handleDeleteComplete = async () => {
-    await onRefresh();
-    setDeleteDialogOpen(false);
-    setSelectedGroup(null);
-  };
-
   return (
     <ScrollArea className="h-[400px]">
       <div className="space-y-4">
@@ -96,7 +90,7 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
           setSelectedGroup(null);
         }}
         groupId={selectedGroup?.id || null}
-        onDeleted={handleDeleteComplete}
+        onDeleted={onRefresh}
       />
 
       <EditGroupDialog
