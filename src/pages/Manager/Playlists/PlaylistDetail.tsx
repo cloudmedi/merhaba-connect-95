@@ -6,6 +6,7 @@ import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PushPlaylistDialog } from "./PushPlaylistDialog";
 import { PlaylistDetailHeader } from "@/components/playlists/PlaylistDetailHeader";
+import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -56,7 +57,7 @@ export function PlaylistDetail() {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <PlaylistDetailLoader />;
   }
 
   if (!playlist) {
