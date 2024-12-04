@@ -114,10 +114,29 @@ export const useDevices = () => {
     },
   });
 
+  const deleteDevice = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('devices')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      toast.success('Cihaz başarıyla silindi');
+    },
+    onError: (error: Error) => {
+      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
+    },
+  });
+
   return {
     devices,
     isLoading,
     error,
-    createDevice
+    createDevice,
+    deleteDevice
   };
 };
