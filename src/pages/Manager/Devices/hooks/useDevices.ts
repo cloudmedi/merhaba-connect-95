@@ -7,6 +7,7 @@ import type { Device, DeviceCategory } from "./types";
 export const useDevices = () => {
   const queryClient = useQueryClient();
   const presenceChannel = supabase.channel('device_status');
+  const broadcastChannel = supabase.channel('device_broadcast');
 
   useEffect(() => {
     // Subscribe to device presence channel
@@ -93,7 +94,7 @@ export const useDevices = () => {
       console.log('Devices with status:', devicesWithStatus);
       return devicesWithStatus;
     },
-    refetchInterval: 5000, // Her 5 saniyede bir yenile
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   const createDevice = useMutation({
