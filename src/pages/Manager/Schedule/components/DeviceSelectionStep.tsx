@@ -41,23 +41,37 @@ export function DeviceSelectionStep({
   const { data: groups = [], isLoading: isLoadingGroups } = useQuery({
     queryKey: ['branch-groups'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: groupsData, error: groupsError } = await supabase
         .from('branch_groups')
         .select(`
           id,
           name,
           description,
           branch_group_assignments (
-            devices (
-              id,
-              name,
-              status
-            )
+            branch_id
           )
         `);
       
-      if (error) throw error;
-      return data;
+      if (groupsError) throw groupsError;
+
+      // Şimdi her grup için cihazları alalım
+      const groupsWithDevices = await Promise.all(groupsData.map(async (group) => {
+        const branchIds = group.branch_group_assignments.map((a: any) => a.branch_id);
+        
+        const { data: devices, error: devicesError } = await supabase
+          .from('devices')
+          .select('id, name, status')
+          .in('branch_id', branchIds);
+        
+        if (devicesError) throw devicesError;
+        
+        return {
+          ...group,
+          devices: devices || []
+        };
+      }));
+
+      return groupsWithDevices;
     }
   });
 
@@ -88,9 +102,7 @@ export function DeviceSelectionStep({
   };
 
   const handleSelectGroup = (group: any) => {
-    const deviceIds = group.branch_group_assignments
-      .map((assignment: any) => assignment.devices.id);
-    
+    const deviceIds = group.devices.map((device: any) => device.id);
     const allSelected = deviceIds.every(id => selectedDevices.includes(id));
     
     if (allSelected) {
@@ -174,14 +186,9 @@ export function DeviceSelectionStep({
           <ScrollArea className="h-[300px]">
             <div className="space-y-3">
               {filteredGroups.map((group) => {
-                const groupDeviceIds = group.branch_group_assignments
-                  .map((assignment: any) => assignment.devices.id);
-                const allSelected = groupDeviceIds.every(id => 
-                  selectedDevices.includes(id)
-                );
-                const someSelected = groupDeviceIds.some(id => 
-                  selectedDevices.includes(id)
-                );
+                const deviceIds = group.devices.map((device: any) => device.id);
+                const allSelected = deviceIds.every(id => selectedDevices.includes(id));
+                const someSelected = deviceIds.some(id => selectedDevices.includes(id));
 
                 return (
                   <div
@@ -200,7 +207,7 @@ export function DeviceSelectionStep({
                         <h4 className="text-sm font-medium">{group.name}</h4>
                       </div>
                       <p className="text-sm text-gray-500">
-                        {group.branch_group_assignments.length} cihaz
+                        {group.devices.length} cihaz
                       </p>
                     </div>
                   </div>
