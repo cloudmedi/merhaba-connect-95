@@ -65,6 +65,7 @@ export function usePlaylistMutations() {
 
       let playlist;
       if (isEditMode && existingPlaylist) {
+        // Update playlist
         const { data, error } = await supabase
           .from('playlists')
           .update(playlistPayload)
@@ -74,7 +75,16 @@ export function usePlaylistMutations() {
 
         if (error) throw error;
         playlist = data;
+
+        // Delete existing category relationships
+        const { error: deleteError } = await supabase
+          .from('playlist_categories')
+          .delete()
+          .eq('playlist_id', playlist.id);
+
+        if (deleteError) throw deleteError;
       } else {
+        // Create new playlist
         const { data, error } = await supabase
           .from('playlists')
           .insert([playlistPayload])
@@ -87,13 +97,6 @@ export function usePlaylistMutations() {
 
       // Handle playlist categories
       if (playlistData.selectedCategories.length > 0) {
-        if (isEditMode) {
-          await supabase
-            .from('playlist_categories')
-            .delete()
-            .eq('playlist_id', playlist.id);
-        }
-
         const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
           category_id: category.id
@@ -109,6 +112,7 @@ export function usePlaylistMutations() {
       // Handle playlist songs
       if (playlistData.selectedSongs.length > 0) {
         if (isEditMode) {
+          // Delete existing song relationships
           await supabase
             .from('playlist_songs')
             .delete()
