@@ -38,6 +38,11 @@ export default function Schedule() {
   };
 
   const handleSelect = (selectInfo: any) => {
+    console.log("Selected time range:", {
+      start: selectInfo.start.toISOString(),
+      end: selectInfo.end.toISOString()
+    });
+    
     setSelectedTimeRange({
       start: selectInfo.start.toISOString(),
       end: selectInfo.end.toISOString()

@@ -32,8 +32,12 @@ export function EventDetailsStep({
   const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
 
+  console.log("EventDetailsStep - formData:", formData);
+  console.log("EventDetailsStep - initialTimeRange:", initialTimeRange);
+
   useEffect(() => {
     if (initialTimeRange) {
+      console.log("Setting initial time range values");
       const startDateTime = new Date(initialTimeRange.start);
       const endDateTime = new Date(initialTimeRange.end);
 
@@ -54,6 +58,7 @@ export function EventDetailsStep({
         endTime: formatTime(endDateTime),
       };
 
+      console.log("Updating form with:", updates);
       onFormDataChange(updates);
     }
   }, [initialTimeRange, onFormDataChange]);

@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EventDetailsStep } from "./EventDetailsStep";
 import { RecurrenceStep } from "./RecurrenceStep";
 import { NotificationStep } from "./NotificationStep";
@@ -36,7 +36,12 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
   const [currentTab, setCurrentTab] = useState("details");
   const [formData, setFormData] = useState<EventFormData>(() => getInitialFormData(initialTimeRange));
 
+  console.log("CreateEventDialog - initialTimeRange:", initialTimeRange);
+  console.log("CreateEventDialog - initial formData:", formData);
+
   function getInitialFormData(timeRange: { start: string; end: string; } | null | undefined): EventFormData {
+    console.log("getInitialFormData called with timeRange:", timeRange);
+    
     if (timeRange) {
       const startDateTime = new Date(timeRange.start);
       const endDateTime = new Date(timeRange.end);
@@ -76,6 +81,16 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       notifications: [],
     };
   }
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFormData(getInitialFormData(null));
+      setCurrentTab("details");
+    } else if (initialTimeRange) {
+      setFormData(getInitialFormData(initialTimeRange));
+    }
+  }, [open, initialTimeRange]);
 
   const handleCreate = async () => {
     const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
