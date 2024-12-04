@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { PushPlaylistDialog } from "./PushPlaylistDialog";
-import { PlaylistDetailHeader } from "@/components/playlists/detail/PlaylistDetailHeader";
-import { PlaylistSongList } from "@/components/playlists/detail/PlaylistSongList";
+import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
+import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
+import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
+import { toast } from "sonner";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -18,7 +19,6 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      console.log('Fetching playlist data...');
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -29,12 +29,8 @@ export function PlaylistDetail() {
         .eq('id', id)
         .single();
 
-      if (playlistError) {
-        console.error('Error fetching playlist:', playlistError);
-        throw playlistError;
-      }
+      if (playlistError) throw playlistError;
 
-      console.log('Fetching playlist songs...');
       const { data: playlistSongs, error: songsError } = await supabase
         .from('playlist_songs')
         .select(`
@@ -47,19 +43,13 @@ export function PlaylistDetail() {
             duration,
             artwork_url,
             file_url,
-            genre,
-            bunny_id
+            genre
           )
         `)
         .eq('playlist_id', id)
         .order('position');
 
-      if (songsError) {
-        console.error('Error fetching songs:', songsError);
-        throw songsError;
-      }
-
-      console.log(`Found ${playlistSongs.length} songs`);
+      if (songsError) throw songsError;
 
       return {
         ...playlist,
@@ -69,14 +59,7 @@ export function PlaylistDetail() {
   });
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600">Loading playlist...</p>
-        </div>
-      </div>
-    );
+    return <PlaylistDetailLoader />;
   }
 
   if (!playlist) {
@@ -100,7 +83,6 @@ export function PlaylistDetail() {
     if (index !== -1) {
       setCurrentSongIndex(index);
       setIsPlaying(true);
-      toast.success("Playing selected song");
     }
   };
 
@@ -130,22 +112,20 @@ export function PlaylistDetail() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="p-6 space-y-8">
-        <PlaylistDetailHeader
+      <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
+        <PlaylistHeader
           onBack={() => navigate("/manager")}
-          artwork_url={playlist.artwork_url}
+          artworkUrl={playlist.artwork_url}
           name={playlist.name}
           genreName={playlist.genres?.name}
           moodName={playlist.moods?.name}
-          songCount={playlist.songs?.length}
+          songCount={playlist.songs?.length || 0}
           duration={calculateTotalDuration()}
           onPlay={handlePlayClick}
           onPush={() => setIsPushDialogOpen(true)}
-          isHero={playlist.is_hero}
-          id={playlist.id}
         />
 
-        <PlaylistSongList 
+        <SongList 
           songs={playlist.songs}
           onSongSelect={handleSongSelect}
           currentSongIndex={isPlaying ? currentSongIndex : undefined}
@@ -163,8 +143,7 @@ export function PlaylistDetail() {
                 title: song.title,
                 artist: song.artist || "Unknown Artist",
                 duration: song.duration?.toString() || "0:00",
-                file_url: song.file_url,
-                bunny_id: song.bunny_id
+                file_url: song.file_url
               }))
             }}
             onClose={() => setIsPlaying(false)}
