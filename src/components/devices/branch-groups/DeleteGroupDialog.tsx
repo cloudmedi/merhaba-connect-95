@@ -27,28 +27,34 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
 
     setIsDeleting(true);
     try {
-      // Önce grup atamalarını sil
+      // Delete group assignments first
       const { error: assignmentsError } = await supabase
         .from('branch_group_assignments')
         .delete()
         .eq('group_id', groupId);
 
-      if (assignmentsError) throw assignmentsError;
+      if (assignmentsError) {
+        console.error('Error deleting assignments:', assignmentsError);
+        throw new Error('Grup atamaları silinirken bir hata oluştu');
+      }
 
-      // Sonra grubu sil
+      // Then delete the group
       const { error: groupError } = await supabase
         .from('branch_groups')
         .delete()
         .eq('id', groupId);
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error('Error deleting group:', groupError);
+        throw new Error('Grup silinirken bir hata oluştu');
+      }
 
-      toast.success("Grup başarıyla silindi");
       await onDeleted();
+      toast.success("Grup başarıyla silindi");
       onClose();
     } catch (error) {
       console.error('Error in delete operation:', error);
-      toast.error("Grup silinirken bir hata oluştu");
+      toast.error(error instanceof Error ? error.message : "Grup silinirken bir hata oluştu");
     } finally {
       setIsDeleting(false);
     }

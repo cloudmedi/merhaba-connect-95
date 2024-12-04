@@ -23,7 +23,6 @@ export function BranchGroupsTab() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
       setGroups(data || []);
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -40,33 +39,6 @@ export function BranchGroupsTab() {
   const filteredGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     group.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCreateSuccess = async () => {
-    await fetchGroups();
-    setIsCreateDialogOpen(false);
-  };
-
-  const handleDeleteSuccess = async () => {
-    await fetchGroups();
-  };
-
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50 rounded-lg border-2 border-dashed">
-      <img 
-        src="/placeholder.svg" 
-        alt="No groups" 
-        className="w-32 h-32 mb-4 opacity-50"
-      />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">Grup bulunamadı</h3>
-      <p className="text-sm text-gray-500 mb-4 max-w-sm">
-        İlk grubunuzu oluşturarak başlayın. Tüm gruplarınızı buradan yönetebilirsiniz.
-      </p>
-      <Button onClick={() => setIsCreateDialogOpen(true)}>
-        <Plus className="w-4 h-4 mr-2" />
-        Yeni Grup Oluştur
-      </Button>
-    </div>
   );
 
   return (
@@ -96,18 +68,32 @@ export function BranchGroupsTab() {
             <DataTableLoader />
           </div>
         ) : filteredGroups.length === 0 ? (
-          <EmptyState />
+          <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50 rounded-lg border-2 border-dashed">
+            <img 
+              src="/placeholder.svg" 
+              alt="No groups" 
+              className="w-32 h-32 mb-4 opacity-50"
+            />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Grup bulunamadı</h3>
+            <p className="text-sm text-gray-500 mb-4 max-w-sm">
+              İlk grubunuzu oluşturarak başlayın. Tüm gruplarınızı buradan yönetebilirsiniz.
+            </p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Yeni Grup Oluştur
+            </Button>
+          </div>
         ) : (
           <GroupList 
             groups={filteredGroups} 
-            onRefresh={handleDeleteSuccess}
+            onRefresh={fetchGroups}
           />
         )}
 
         <CreateGroupDialog
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
-          onSuccess={handleCreateSuccess}
+          onSuccess={fetchGroups}
         />
       </div>
     </Card>
