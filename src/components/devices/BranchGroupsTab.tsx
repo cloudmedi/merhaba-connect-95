@@ -19,31 +19,37 @@ export function BranchGroupsTab() {
 
   const fetchGroups = async () => {
     console.log('Fetching groups...');
-    const { data: groupsData, error: groupsError } = await supabase
-      .from('branch_groups')
-      .select(`
-        id,
-        name,
-        description,
-        created_at,
-        branch_group_assignments (
-          branches (
-            id,
-            name,
-            location
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('branch_groups')
+        .select(`
+          id,
+          name,
+          description,
+          created_at,
+          branch_group_assignments (
+            branches (
+              id,
+              name,
+              location
+            )
           )
-        )
-      `);
+        `);
 
-    if (groupsError) {
-      console.error('Error fetching groups:', groupsError);
+      if (groupsError) {
+        console.error('Error fetching groups:', groupsError);
+        toast.error("Gruplar yüklenirken bir hata oluştu");
+        return;
+      }
+
+      console.log('Fetched groups:', groupsData);
+      setGroups(groupsData || []);
+    } catch (error) {
+      console.error('Unexpected error fetching groups:', error);
       toast.error("Gruplar yüklenirken bir hata oluştu");
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    console.log('Fetched groups:', groupsData);
-    setGroups(groupsData || []);
-    setIsLoading(false);
   };
 
   const fetchBranches = async () => {
@@ -71,8 +77,13 @@ export function BranchGroupsTab() {
   );
 
   const handleCreateSuccess = async () => {
-    await fetchGroups(); // Refresh groups after creation
+    await fetchGroups();
     setIsCreateDialogOpen(false);
+  };
+
+  const handleDeleteSuccess = async () => {
+    console.log('Handling delete success, refreshing groups...');
+    await fetchGroups();
   };
 
   const EmptyState = () => (
@@ -124,7 +135,7 @@ export function BranchGroupsTab() {
         ) : (
           <GroupList 
             groups={filteredGroups} 
-            onRefresh={fetchGroups}
+            onRefresh={handleDeleteSuccess}
             branches={branches}
           />
         )}
