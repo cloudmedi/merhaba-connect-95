@@ -21,16 +21,14 @@ export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): Sche
   };
 };
 
-export const mapEventToDatabase = (event: Partial<ScheduleEvent>): Partial<DatabaseScheduleEvent> => {
-  const { color, devices, playlist, ...eventData } = event;
+export const mapEventToDatabase = (event: Partial<ScheduleEvent>): Omit<DatabaseScheduleEvent, 'playlists' | 'devices'> => {
+  const { color, devices, playlist, ...rest } = event;
   
-  // Convert notifications and recurrence to JSON strings if they exist
-  if (eventData.notifications) {
-    eventData.notifications = JSON.stringify(eventData.notifications) as Json;
-  }
-  if (eventData.recurrence) {
-    eventData.recurrence = JSON.stringify(eventData.recurrence) as Json;
-  }
-  
-  return eventData;
+  const dbEvent: Partial<DatabaseScheduleEvent> = {
+    ...rest,
+    notifications: event.notifications ? JSON.stringify(event.notifications) as Json : undefined,
+    recurrence: event.recurrence ? JSON.stringify(event.recurrence) as Json : undefined,
+  };
+
+  return dbEvent as Omit<DatabaseScheduleEvent, 'playlists' | 'devices'>;
 };

@@ -28,7 +28,12 @@ export function useScheduleMutations() {
 
       const { data, error } = await supabase
         .from('schedule_events')
-        .insert(eventData)
+        .insert({
+          ...eventData,
+          title: event.title,
+          start_time: event.start_time,
+          end_time: event.end_time,
+        })
         .select()
         .single();
 
@@ -75,10 +80,18 @@ export function useScheduleMutations() {
 
       const { error: updateError } = await supabase
         .from('schedule_events')
-        .update(eventData)
+        .update({
+          ...eventData,
+          title: event.title,
+          start_time: event.start_time,
+          end_time: event.end_time,
+        })
         .eq('id', event.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating event:', updateError);
+        throw updateError;
+      }
 
       if (event.devices) {
         const { error: deleteError } = await supabase
@@ -86,7 +99,10 @@ export function useScheduleMutations() {
           .delete()
           .eq('schedule_id', event.id);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('Error deleting device assignments:', deleteError);
+          throw deleteError;
+        }
 
         if (event.devices.length > 0) {
           const { error: assignmentError } = await supabase
@@ -98,7 +114,10 @@ export function useScheduleMutations() {
               }))
             );
 
-          if (assignmentError) throw assignmentError;
+          if (assignmentError) {
+            console.error('Error updating device assignments:', assignmentError);
+            throw assignmentError;
+          }
         }
       }
     },
@@ -114,12 +133,16 @@ export function useScheduleMutations() {
 
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting event:', id);
       const { error } = await supabase
         .from('schedule_events')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting event:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-events'] });
