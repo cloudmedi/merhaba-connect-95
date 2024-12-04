@@ -7,6 +7,7 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { toast } from "sonner";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,11 +39,11 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
-      // Önce mevcut kullanıcının ID'sini al
+      // Get current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Kategorileri getir
+      // Get categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
@@ -51,7 +52,6 @@ export default function ManagerDashboard() {
 
       const categoriesWithPlaylists = await Promise.all(
         categoriesData.map(async (category) => {
-          // Playlist sorgusu - hem public hem de atanmış playlistleri getir
           const { data: playlistsData, error: playlistsError } = await supabase
             .from('playlists')
             .select(`
@@ -68,13 +68,11 @@ export default function ManagerDashboard() {
 
           if (playlistsError) throw playlistsError;
 
-          // Kategori-playlist ilişkisini kontrol et
           const { data: categoryPlaylists } = await supabase
             .from('playlist_categories')
             .select('playlist_id')
             .eq('category_id', category.id);
 
-          // Sadece bu kategoriye ait playlistleri filtrele
           const categoryPlaylistIds = categoryPlaylists?.map(cp => cp.playlist_id) || [];
           const filteredPlaylists = playlistsData.filter(p => categoryPlaylistIds.includes(p.id));
 
@@ -89,12 +87,57 @@ export default function ManagerDashboard() {
     }
   });
 
-  const handlePlayPlaylist = (playlist: any) => {
-    if (currentPlaylist?.id === playlist.id) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setCurrentPlaylist(playlist);
-      setIsPlaying(true);
+  const handlePlayPlaylist = async (playlist: any) => {
+    try {
+      // Fetch songs for the selected playlist
+      const { data: playlistSongs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url,
+            bunny_id
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
+
+      if (error) throw error;
+
+      if (!playlistSongs || playlistSongs.length === 0) {
+        toast.error("No songs found in this playlist");
+        return;
+      }
+
+      const formattedPlaylist = {
+        id: playlist.id,
+        title: playlist.name,
+        artwork: playlist.artwork_url,
+        songs: playlistSongs.map(ps => ({
+          id: ps.songs.id,
+          title: ps.songs.title,
+          artist: ps.songs.artist || "Unknown Artist",
+          duration: ps.songs.duration?.toString() || "0:00",
+          file_url: ps.songs.file_url,
+          bunny_id: ps.songs.bunny_id
+        }))
+      };
+
+      // If clicking the same playlist that's currently playing
+      if (currentPlaylist?.id === playlist.id) {
+        setIsPlaying(!isPlaying);
+      } else {
+        // If clicking a different playlist
+        setCurrentPlaylist(formattedPlaylist);
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      toast.error("Failed to load playlist");
     }
   };
 
@@ -150,11 +193,8 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: currentPlaylist.songs
-          }}
+          key={currentPlaylist.id} // Add key prop to force re-render when playlist changes
+          playlist={currentPlaylist}
           onClose={() => {
             setCurrentPlaylist(null);
             setIsPlaying(false);
