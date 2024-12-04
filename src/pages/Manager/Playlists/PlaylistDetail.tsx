@@ -133,7 +133,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8">
         <PlaylistDetailHeader
           onBack={() => navigate("/manager")}
-          artworkUrl={playlist.artwork_url}
+          artwork_url={playlist.artwork_url}
           name={playlist.name}
           genreName={playlist.genres?.name}
           moodName={playlist.moods?.name}

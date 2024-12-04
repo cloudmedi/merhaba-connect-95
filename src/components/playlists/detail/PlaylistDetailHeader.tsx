@@ -1,25 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Play } from "lucide-react";
-import { calculateTotalDuration } from "../utils/playlistUtils";
 
 interface PlaylistDetailHeaderProps {
-  playlist: {
-    artwork_url?: string;
-    name: string;
-    genres?: { name: string };
-    moods?: { name: string };
-    songs: any[];
-  };
+  artwork_url?: string;
+  name: string;
+  genreName?: string;
+  moodName?: string;
+  songCount: number;
+  duration: string;
   onBack: () => void;
-  onPlayClick: () => void;
-  onPushClick: () => void;
+  onPlay: () => void;
+  onPush: () => void;
+  isHero?: boolean;
+  id?: string;
 }
 
 export function PlaylistDetailHeader({
-  playlist,
+  artwork_url,
+  name,
+  genreName = "Various",
+  moodName = "Various",
+  songCount,
+  duration,
   onBack,
-  onPlayClick,
-  onPushClick,
+  onPlay,
+  onPush,
+  isHero,
 }: PlaylistDetailHeaderProps) {
   return (
     <>
@@ -36,13 +42,13 @@ export function PlaylistDetailHeader({
       <div className="flex items-start gap-8">
         <div className="relative group">
           <img 
-            src={playlist.artwork_url || "/placeholder.svg"} 
-            alt={playlist.name}
+            src={artwork_url || "/placeholder.svg"} 
+            alt={name}
             className="w-32 h-32 rounded-lg object-cover"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg flex items-center justify-center">
             <button
-              onClick={onPlayClick}
+              onClick={onPlay}
               className="opacity-0 group-hover:opacity-100 transition-all duration-300 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:scale-110 transform"
             >
               <Play className="w-6 h-6" />
@@ -50,18 +56,24 @@ export function PlaylistDetailHeader({
           </div>
         </div>
         <div className="space-y-3">
-          <h1 className="text-2xl font-semibold text-gray-900">{playlist.name}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{name}</h1>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>{playlist.genres?.name}</span>
+            <span>{genreName}</span>
             <span>•</span>
-            <span>{playlist.moods?.name}</span>
+            <span>{moodName}</span>
             <span>•</span>
-            <span>{playlist.songs.length} songs</span>
+            <span>{songCount} songs</span>
             <span>•</span>
-            <span>{calculateTotalDuration(playlist.songs)}</span>
+            <span>{duration}</span>
+            {isHero && (
+              <>
+                <span>•</span>
+                <span className="text-purple-600">Featured</span>
+              </>
+            )}
           </div>
           <Button 
-            onClick={onPushClick}
+            onClick={onPush}
             className="bg-[#6366F1] text-white hover:bg-[#5558DD] rounded-full px-8"
           >
             Push
