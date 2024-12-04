@@ -29,33 +29,37 @@ interface CampaignTargetingProps {
 export function CampaignTargeting({ formData, onFormDataChange }: CampaignTargetingProps) {
   const [open, setOpen] = useState(false);
 
-  const { data: branches, isLoading } = useQuery({
-    queryKey: ['branches'],
+  const { data: devices, isLoading } = useQuery({
+    queryKey: ['devices'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('branches')
+        .from('devices')
         .select(`
           id,
           name,
-          location
+          status,
+          branches (
+            id,
+            name
+          )
         `)
         .order('name');
 
       if (error) throw error;
-      return data as Branch[];
+      return data;
     }
   });
 
-  const handleBranchSelect = (branchId: string) => {
-    const newBranches = formData.branches.includes(branchId)
-      ? formData.branches.filter(id => id !== branchId)
-      : [...formData.branches, branchId];
+  const handleDeviceSelect = (deviceId: string) => {
+    const newDevices = formData.devices.includes(deviceId)
+      ? formData.devices.filter(id => id !== deviceId)
+      : [...formData.devices, deviceId];
     
-    onFormDataChange({ branches: newBranches });
+    onFormDataChange({ devices: newDevices });
     toast.success(
-      formData.branches.includes(branchId) 
-        ? "Şube kaldırıldı" 
-        : "Şube eklendi"
+      formData.devices.includes(deviceId) 
+        ? "Cihaz kaldırıldı" 
+        : "Cihaz eklendi"
     );
   };
 
@@ -72,9 +76,9 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
   return (
     <div className="space-y-6">
       <div>
-        <Label>Şubeler</Label>
+        <Label>Cihazlar</Label>
         <p className="text-sm text-gray-500 mb-2">
-          Kampanyanın oynatılacağı şubeleri seçin
+          Kampanyanın oynatılacağı cihazları seçin
         </p>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -84,30 +88,38 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
               aria-expanded={open}
               className="w-full justify-between"
             >
-              {formData.branches.length > 0
-                ? `${formData.branches.length} şube seçildi`
-                : "Şube seçin..."}
+              {formData.devices.length > 0
+                ? `${formData.devices.length} cihaz seçildi`
+                : "Cihaz seçin..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0">
             <Command>
-              <CommandInput placeholder="Şube ara..." />
-              <CommandEmpty>Şube bulunamadı.</CommandEmpty>
+              <CommandInput placeholder="Cihaz ara..." />
+              <CommandEmpty>Cihaz bulunamadı.</CommandEmpty>
               <CommandGroup>
-                {branches?.map((branch) => (
+                {devices?.map((device) => (
                   <CommandItem
-                    key={branch.id}
-                    value={branch.id}
-                    onSelect={() => handleBranchSelect(branch.id)}
+                    key={device.id}
+                    value={device.id}
+                    onSelect={() => handleDeviceSelect(device.id)}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        formData.branches.includes(branch.id) ? "opacity-100" : "opacity-0"
+                        formData.devices.includes(device.id) ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {branch.name}
+                    <div className="flex flex-col">
+                      <span>{device.name}</span>
+                      {device.branches?.name && (
+                        <span className="text-xs text-gray-500">{device.branches.name}</span>
+                      )}
+                      <span className={`text-xs ${device.status === 'online' ? 'text-green-500' : 'text-gray-400'}`}>
+                        ● {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+                      </span>
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -116,19 +128,24 @@ export function CampaignTargeting({ formData, onFormDataChange }: CampaignTarget
         </Popover>
       </div>
 
-      {formData.branches.length > 0 && (
+      {formData.devices.length > 0 && (
         <div className="rounded-lg border p-4 bg-gray-50">
-          <h4 className="text-sm font-medium mb-2">Seçili Şubeler</h4>
+          <h4 className="text-sm font-medium mb-2">Seçili Cihazlar</h4>
           <div className="space-y-2">
-            {formData.branches.map(branchId => {
-              const branch = branches?.find(b => b.id === branchId);
+            {formData.devices.map(deviceId => {
+              const device = devices?.find(d => d.id === deviceId);
               return (
-                <div key={branchId} className="flex items-center justify-between">
-                  <span className="text-sm">{branch?.name}</span>
+                <div key={deviceId} className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-sm">{device?.name}</span>
+                    {device?.branches?.name && (
+                      <span className="text-xs text-gray-500">{device.branches.name}</span>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleBranchSelect(branchId)}
+                    onClick={() => handleDeviceSelect(deviceId)}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     Kaldır
