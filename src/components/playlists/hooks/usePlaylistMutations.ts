@@ -60,8 +60,7 @@ export function usePlaylistMutations() {
         mood_id: playlistData.selectedMoods[0]?.id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
-        is_hero: playlistData.isHero || false,
-        assigned_to: playlistData.assignedManagers?.map((manager: any) => manager.id) || []
+        is_hero: playlistData.isHero || false
       };
 
       let playlist;
@@ -75,19 +74,6 @@ export function usePlaylistMutations() {
 
         if (error) throw error;
         playlist = data;
-
-        // Mevcut kategorileri temizle
-        await supabase
-          .from('playlist_categories')
-          .delete()
-          .eq('playlist_id', existingPlaylist.id);
-
-        // Mevcut atanmış yöneticileri temizle
-        await supabase
-          .from('playlist_assignments')
-          .delete()
-          .eq('playlist_id', existingPlaylist.id);
-
       } else {
         const { data, error } = await supabase
           .from('playlists')
@@ -99,8 +85,15 @@ export function usePlaylistMutations() {
         playlist = data;
       }
 
-      // Kategori atamalarını yap
+      // Handle playlist categories
       if (playlistData.selectedCategories.length > 0) {
+        if (isEditMode) {
+          await supabase
+            .from('playlist_categories')
+            .delete()
+            .eq('playlist_id', playlist.id);
+        }
+
         const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
           playlist_id: playlist.id,
           category_id: category.id
@@ -113,23 +106,7 @@ export function usePlaylistMutations() {
         if (categoryError) throw categoryError;
       }
 
-      // Yönetici atamalarını yap
-      if (playlistData.assignedManagers?.length > 0) {
-        const managerAssignments = playlistData.assignedManagers.map((manager: any) => ({
-          user_id: manager.id,
-          playlist_id: playlist.id,
-          scheduled_at: new Date().toISOString(),
-          notification_sent: false
-        }));
-
-        const { error: assignmentError } = await supabase
-          .from('playlist_assignments')
-          .insert(managerAssignments);
-
-        if (assignmentError) throw assignmentError;
-      }
-
-      // Şarkı atamalarını yap
+      // Handle playlist songs
       if (playlistData.selectedSongs.length > 0) {
         if (isEditMode) {
           await supabase
