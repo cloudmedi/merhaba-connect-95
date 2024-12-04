@@ -59,11 +59,13 @@ export default function Schedule() {
     title: event.title,
     start: new Date(event.start_time),
     end: new Date(event.end_time),
-    backgroundColor: event.color.primary,
-    borderColor: event.color.primary,
-    textColor: event.color.text,
+    backgroundColor: '#6E59A5',
+    borderColor: '#6E59A5',
+    textColor: '#ffffff',
     extendedProps: event
   }));
+
+  console.log("Formatted events:", formattedEvents);
 
   return (
     <div className="p-6 space-y-6">

@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ScheduleEvent, EventNotification, EventColor } from "../types";
-import type { Json } from "@/integrations/supabase/types";
+import { ScheduleEvent } from "../types";
 
 export const useScheduleEvents = () => {
   const queryClient = useQueryClient();
@@ -10,6 +9,13 @@ export const useScheduleEvents = () => {
   const { data: events = [], isLoading, error } = useQuery({
     queryKey: ['schedule-events'],
     queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', userData.user?.id)
+        .single();
+
       const { data, error } = await supabase
         .from('schedule_events')
         .select(`
@@ -23,27 +29,27 @@ export const useScheduleEvents = () => {
             device_id
           )
         `)
+        .eq('company_id', userProfile?.company_id)
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data.map((event: any) => ({
-        ...event,
-        color: event.color as EventColor,
-        notifications: event.notifications as EventNotification[],
-      })) as ScheduleEvent[];
+      return data as ScheduleEvent[];
     },
   });
 
   const createEvent = useMutation({
     mutationFn: async (event: Omit<ScheduleEvent, 'id'>) => {
       const { data: userData } = await supabase.auth.getUser();
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', userData.user?.id)
+        .single();
       
       const eventData = {
         ...event,
         created_by: userData.user?.id,
-        color: event.color as unknown as Json,
-        notifications: event.notifications as unknown as Json,
-        recurrence: event.recurrence as unknown as Json,
+        company_id: userProfile?.company_id,
       };
 
       const { data, error } = await supabase
@@ -87,9 +93,8 @@ export const useScheduleEvents = () => {
         playlist_id: event.playlist_id,
         start_time: event.start_time,
         end_time: event.end_time,
-        color: event.color as unknown as Json,
-        recurrence: event.recurrence as unknown as Json,
-        notifications: event.notifications as unknown as Json,
+        recurrence: event.recurrence,
+        notifications: event.notifications,
       };
 
       const { error: updateError } = await supabase
