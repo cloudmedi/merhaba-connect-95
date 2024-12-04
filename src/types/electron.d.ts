@@ -9,6 +9,30 @@ export interface ElectronAPI {
   getCurrentTime: () => Promise<number>;
   setCurrentTime: (time: number) => Promise<void>;
   onPlaybackStatusChange: (callback: (status: any) => void) => void;
+  getSystemInfo: () => Promise<{
+    cpu: {
+      manufacturer: string;
+      brand: string;
+      speed: number;
+      cores: number;
+    };
+    memory: {
+      total: number;
+      free: number;
+      used: number;
+    };
+    os: {
+      platform: string;
+      distro: string;
+      release: string;
+      arch: string;
+    };
+    network: Array<{
+      iface: string;
+      ip4: string;
+      mac: string;
+    }>;
+  }>;
 }
 
 declare global {
