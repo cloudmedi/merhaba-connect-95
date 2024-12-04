@@ -116,6 +116,7 @@ export function BranchGroupsTab() {
           <GroupList 
             groups={filteredGroups} 
             onRefresh={fetchGroups}
+            branches={branches}
           />
         )}
 
