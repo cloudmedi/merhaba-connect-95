@@ -76,13 +76,28 @@ export function usePlaylistMutations() {
         if (error) throw error;
         playlist = data;
 
-        // Delete existing category relationships
-        const { error: deleteError } = await supabase
-          .from('playlist_categories')
-          .delete()
-          .eq('playlist_id', playlist.id);
+        // Update playlist categories
+        if (playlistData.selectedCategories.length > 0) {
+          const { error: updateError } = await supabase.rpc('update_playlist_categories', {
+            p_playlist_id: playlist.id,
+            p_category_ids: playlistData.selectedCategories.map((cat: any) => cat.id)
+          });
 
-        if (deleteError) throw deleteError;
+          if (updateError) throw updateError;
+        }
+
+        // Update playlist songs
+        if (playlistData.selectedSongs.length > 0) {
+          const { error: updateError } = await supabase.rpc('update_playlist_songs', {
+            p_playlist_id: playlist.id,
+            p_song_ids: playlistData.selectedSongs.map((song: any) => ({ 
+              song_id: song.id, 
+              position: playlistData.selectedSongs.indexOf(song)
+            }))
+          });
+
+          if (updateError) throw updateError;
+        }
       } else {
         // Create new playlist
         const { data, error } = await supabase
@@ -93,43 +108,35 @@ export function usePlaylistMutations() {
 
         if (error) throw error;
         playlist = data;
-      }
 
-      // Handle playlist categories
-      if (playlistData.selectedCategories.length > 0) {
-        const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
-          playlist_id: playlist.id,
-          category_id: category.id
-        }));
+        // Handle playlist categories
+        if (playlistData.selectedCategories.length > 0) {
+          const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
+            playlist_id: playlist.id,
+            category_id: category.id
+          }));
 
-        const { error: categoryError } = await supabase
-          .from('playlist_categories')
-          .insert(categoryAssignments);
+          const { error: categoryError } = await supabase
+            .from('playlist_categories')
+            .insert(categoryAssignments);
 
-        if (categoryError) throw categoryError;
-      }
-
-      // Handle playlist songs
-      if (playlistData.selectedSongs.length > 0) {
-        if (isEditMode) {
-          // Delete existing song relationships
-          await supabase
-            .from('playlist_songs')
-            .delete()
-            .eq('playlist_id', playlist.id);
+          if (categoryError) throw categoryError;
         }
 
-        const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
-          playlist_id: playlist.id,
-          song_id: song.id,
-          position: index
-        }));
+        // Handle playlist songs
+        if (playlistData.selectedSongs.length > 0) {
+          const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
+            playlist_id: playlist.id,
+            song_id: song.id,
+            position: index
+          }));
 
-        const { error: songError } = await supabase
-          .from('playlist_songs')
-          .insert(songAssignments);
+          const { error: songError } = await supabase
+            .from('playlist_songs')
+            .insert(songAssignments);
 
-        if (songError) throw songError;
+          if (songError) throw songError;
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
