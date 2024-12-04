@@ -50,10 +50,12 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
   const [description, setDescription] = useState("");
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!selectedGroup) return;
+    if (!selectedGroup || isDeleting) return;
 
+    setIsDeleting(true);
     try {
       // First delete all assignments
       const { error: assignmentError } = await supabase
@@ -77,6 +79,7 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
       console.error('Error deleting group:', error);
       toast.error("Grup silinirken bir hata oluştu");
     } finally {
+      setIsDeleting(false);
       setDeleteDialogOpen(false);
       setSelectedGroup(null);
     }
@@ -206,8 +209,9 @@ export function GroupList({ groups, onRefresh, branches }: GroupListProps) {
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
             >
-              Sil
+              {isDeleting ? 'Siliniyor...' : 'Sil'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
