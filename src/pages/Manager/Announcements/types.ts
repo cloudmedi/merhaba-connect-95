@@ -46,7 +46,7 @@ export interface CampaignFormData {
   endDate: string;
   repeatType: string;
   repeatInterval: number;
-  branches: string[];
+  devices: string[];
 }
 
 export interface Branch {

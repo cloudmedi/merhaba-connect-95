@@ -10,6 +10,8 @@ import { DeviceSelection } from "@/components/devices/branch-groups/DeviceSelect
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import type { Device } from "@/pages/Manager/Devices/hooks/types";
+import type { CampaignFormData } from "../types";
 
 interface CreateCampaignDialogProps {
   open: boolean;
@@ -18,21 +20,21 @@ interface CreateCampaignDialogProps {
 
 export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialogProps) {
   const [activeTab, setActiveTab] = useState("basic");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
     description: "",
-    files: [] as File[],
+    files: [],
     startDate: "",
     endDate: "",
     repeatType: "once",
     repeatInterval: 1,
-    devices: [] as string[]
+    devices: []
   });
   
   const { user } = useAuth();
 
   // Fetch devices for the company
-  const { data: devices = [] } = useQuery({
+  const { data: devices = [] } = useQuery<Device[]>({
     queryKey: ['devices'],
     queryFn: async () => {
       const { data: userProfile } = await supabase
@@ -48,12 +50,12 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         .select('*')
         .eq('branches.company_id', userProfile.company_id);
 
-      return data || [];
+      return data as Device[] || [];
     },
     enabled: !!user
   });
 
-  const handleFormDataChange = (data: Partial<typeof formData>) => {
+  const handleFormDataChange = (data: Partial<CampaignFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
   };
 
@@ -96,14 +98,14 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         if (uploadError) throw uploadError;
       }
 
-      // Create device associations
+      // Create device associations using announcement_branches
       if (formData.devices.length > 0) {
         const { error: deviceError } = await supabase
-          .from('announcement_devices')
+          .from('announcement_branches')
           .insert(
             formData.devices.map(deviceId => ({
               announcement_id: announcement.id,
-              device_id: deviceId
+              branch_id: devices.find(d => d.id === deviceId)?.branch_id || ''
             }))
           );
 
