@@ -25,13 +25,13 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
     }
 
     // Check if device exists before updating status
-    const { data: device } = await supabase
+    const { data: device, error: deviceError } = await supabase
       .from('devices')
       .select('*')
       .eq('token', deviceToken)
       .single();
 
-    if (!device) {
+    if (deviceError || !device) {
       console.log('Device not found, skipping status update');
       return null;
     }
