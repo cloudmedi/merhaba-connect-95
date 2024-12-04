@@ -12,13 +12,21 @@ interface CalendarViewProps {
 
 export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    console.log("Calendar mounted with events:", events);
-  }, [events]);
+    console.log("Calendar container mounted:", containerRef.current);
+    console.log("Calendar events:", events);
+  }, []);
+
+  useEffect(() => {
+    if (calendarRef.current) {
+      console.log("Calendar instance:", calendarRef.current.getApi());
+    }
+  }, [calendarRef.current]);
 
   return (
-    <div className="calendar-container">
+    <div ref={containerRef} className="calendar-container h-[600px]">
       <style>
         {`
           .fc {
@@ -33,6 +41,7 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
             --fc-button-active-text-color: #fff;
             --fc-today-bg-color: #f3f4f6;
             --fc-now-indicator-color: #6E59A5;
+            height: 100%;
           }
           
           .fc .fc-button {
@@ -86,6 +95,12 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
           .fc .fc-view-harness {
             background-color: #fff;
           }
+
+          .calendar-container {
+            width: 100%;
+            min-height: 600px;
+            position: relative;
+          }
         `}
       </style>
       
@@ -101,7 +116,7 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
         slotMinTime="00:00:00"
         slotMaxTime="24:00:00"
         expandRows={true}
-        height="auto"
+        height="100%"
         allDaySlot={false}
         slotDuration="01:00:00"
         editable={true}
