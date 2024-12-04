@@ -6,6 +6,7 @@ let supabase: ReturnType<typeof createClient>;
 let presenceChannel: ReturnType<typeof createClient>['channel'];
 let heartbeatInterval: NodeJS.Timeout;
 let isInitialized = false;
+let currentDeviceToken: string | null = null;
 
 async function initSupabase() {
   if (isInitialized) return supabase;
@@ -34,25 +35,39 @@ async function initSupabase() {
         }
       }
     );
-    
+
+    // Clear existing intervals and channels
+    await cleanup();
+
     const macAddress = await (window as any).electronAPI.getMacAddress();
     if (!macAddress) {
-      throw new Error('Could not get MAC address');
+      console.log('No MAC address found, skipping device token creation');
+      return supabase;
     }
 
     console.log('Creating device token with MAC address:', macAddress);
     const tokenData = await createDeviceToken(macAddress);
     if (!tokenData) {
-      throw new Error('Failed to get or create device token');
+      console.log('No device token created/found, skipping presence setup');
+      return supabase;
     }
 
     console.log('Device token created/retrieved:', tokenData);
-    const deviceToken = tokenData.token;
+    currentDeviceToken = tokenData.token;
 
-    // Clear existing intervals and channels
-    await cleanup();
+    // First verify if this device exists in the devices table
+    const { data: device } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('token', currentDeviceToken)
+      .single();
 
-    // Set up device presence channel
+    if (!device) {
+      console.log('Device not registered in devices table, skipping presence setup');
+      return supabase;
+    }
+
+    // Set up device presence channel only if device exists
     presenceChannel = supabase.channel('device_status')
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
@@ -67,13 +82,15 @@ async function initSupabase() {
 
     // Subscribe to presence channel and start heartbeat
     await presenceChannel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
+      if (status === 'SUBSCRIBED' && currentDeviceToken) {
         // Initial presence update
-        await updatePresenceAndStatus(deviceToken);
+        await updatePresenceAndStatus(currentDeviceToken);
         
         // Set up heartbeat interval
         heartbeatInterval = setInterval(async () => {
-          await updatePresenceAndStatus(deviceToken);
+          if (currentDeviceToken) {
+            await updatePresenceAndStatus(currentDeviceToken);
+          }
         }, 10000); // Send heartbeat every 10 seconds
       }
     });
@@ -93,8 +110,6 @@ async function initSupabase() {
 
 async function updatePresenceAndStatus(deviceToken: string) {
   try {
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    
     // Check if device exists before updating presence
     const { data: device } = await supabase
       .from('devices')
@@ -107,7 +122,9 @@ async function updatePresenceAndStatus(deviceToken: string) {
       return;
     }
 
-    // Update presence
+    const systemInfo = await (window as any).electronAPI.getSystemInfo();
+
+    // Update presence only if device exists
     await presenceChannel.track({
       token: deviceToken,
       status: 'online',
@@ -128,22 +145,17 @@ async function cleanup() {
     clearInterval(heartbeatInterval);
   }
   
-  if (presenceChannel) {
+  if (presenceChannel && currentDeviceToken) {
     try {
-      const macAddress = await (window as any).electronAPI.getMacAddress();
-      const tokenData = await createDeviceToken(macAddress);
+      // Update device status to offline
+      await updateDeviceStatus(currentDeviceToken, 'offline', null);
       
-      if (tokenData?.token) {
-        // Update device status to offline
-        await updateDeviceStatus(tokenData.token, 'offline', null);
-        
-        // Track offline status in presence channel
-        await presenceChannel.track({
-          token: tokenData.token,
-          status: 'offline',
-          lastSeen: new Date().toISOString(),
-        });
-      }
+      // Track offline status in presence channel
+      await presenceChannel.track({
+        token: currentDeviceToken,
+        status: 'offline',
+        lastSeen: new Date().toISOString(),
+      });
       
       await supabase.removeChannel(presenceChannel);
     } catch (error) {
@@ -151,6 +163,7 @@ async function cleanup() {
     }
   }
 
+  currentDeviceToken = null;
   isInitialized = false;
 }
 

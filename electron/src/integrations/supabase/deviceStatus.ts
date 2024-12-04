@@ -14,19 +14,19 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
 
     if (tokenError) {
       console.error('Token verification failed:', tokenError);
-      throw new Error(`Token verification failed: ${tokenError.message}`);
+      return null;
     }
 
     if (!tokenData) {
       console.error('Token not found or not active');
-      throw new Error('Token not found or not active');
+      return null;
     }
 
     // Check if token is expired
     const expirationDate = new Date(tokenData.expires_at);
     if (expirationDate < new Date()) {
       console.error('Token has expired:', expirationDate);
-      throw new Error('Token has expired');
+      return null;
     }
 
     // First check if device exists
@@ -41,12 +41,12 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       return null;
     }
 
-    // Update device status
+    // Update device status only if device exists
     const { data: updateData, error: updateError } = await supabase
       .from('devices')
       .update({
         status,
-        system_info: systemInfo || {},
+        system_info: systemInfo || existingDevice.system_info,
         last_seen: new Date().toISOString(),
       })
       .eq('token', deviceToken)
@@ -54,7 +54,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
 
     if (updateError) {
       console.error('Error updating device:', updateError);
-      throw updateError;
+      return null;
     }
 
     console.log('Device status successfully updated to:', status);
@@ -62,6 +62,6 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
 
   } catch (error) {
     console.error('Error in updateDeviceStatus:', error);
-    throw error;
+    return null;
   }
 }
