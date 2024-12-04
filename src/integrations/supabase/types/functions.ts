@@ -31,4 +31,21 @@ export type DatabaseFunctions = {
     }
     Returns: undefined
   }
+  update_playlist_categories: {
+    Args: {
+      p_playlist_id: string
+      p_category_ids: string[]
+    }
+    Returns: undefined
+  }
+  update_playlist_songs: {
+    Args: {
+      p_playlist_id: string
+      p_song_ids: Array<{
+        song_id: string
+        position: number
+      }>
+    }
+    Returns: undefined
+  }
 }
