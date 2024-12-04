@@ -1,6 +1,7 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Suspense, lazy } from "react";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import Devices from "./pages/Manager/Devices";
@@ -11,8 +12,12 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
-import { PlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
 import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
+
+// Lazy load the PlaylistDetail component
+const PlaylistDetail = lazy(() => import("./pages/Manager/Playlists/PlaylistDetail").then(module => ({
+  default: module.PlaylistDetail
+})));
 
 const queryClient = new QueryClient();
 
@@ -59,7 +64,11 @@ const router = createBrowserRouter([
       },
       {
         path: "playlists/:id",
-        element: <PlaylistDetail />,
+        element: (
+          <Suspense fallback={<div className="p-8">Loading playlist...</div>}>
+            <PlaylistDetail />
+          </Suspense>
+        ),
       },
       {
         path: "playlists/category/:categoryId",
