@@ -89,55 +89,23 @@ export default function ManagerDashboard() {
 
   const handlePlayPlaylist = async (playlist: any) => {
     try {
-      // Fetch songs for the selected playlist
-      const { data: playlistSongs, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url,
-            bunny_id
-          )
-        `)
-        .eq('playlist_id', playlist.id)
-        .order('position');
-
-      if (error) throw error;
-
-      if (!playlistSongs || playlistSongs.length === 0) {
-        toast.error("No songs found in this playlist");
-        return;
-      }
-
-      const formattedPlaylist = {
-        id: playlist.id,
-        title: playlist.name,
-        artwork: playlist.artwork_url,
-        songs: playlistSongs.map(ps => ({
-          id: ps.songs.id,
-          title: ps.songs.title,
-          artist: ps.songs.artist || "Unknown Artist",
-          duration: ps.songs.duration?.toString() || "0:00",
-          file_url: ps.songs.file_url,
-          bunny_id: ps.songs.bunny_id
-        }))
-      };
-
       // If clicking the same playlist that's currently playing
       if (currentPlaylist?.id === playlist.id) {
         setIsPlaying(!isPlaying);
-      } else {
-        // If clicking a different playlist
-        setCurrentPlaylist(formattedPlaylist);
-        setIsPlaying(true);
+        return;
       }
+
+      // If clicking a different playlist
+      setCurrentPlaylist({
+        id: playlist.id,
+        title: playlist.title || playlist.name,
+        artwork: playlist.artwork_url,
+        songs: playlist.songs
+      });
+      setIsPlaying(true);
     } catch (error) {
-      console.error('Error fetching playlist songs:', error);
-      toast.error("Failed to load playlist");
+      console.error('Error playing playlist:', error);
+      toast.error("Failed to play playlist");
     }
   };
 
@@ -193,7 +161,7 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id} // Add key prop to force re-render when playlist changes
+          key={currentPlaylist.id}
           playlist={currentPlaylist}
           onClose={() => {
             setCurrentPlaylist(null);

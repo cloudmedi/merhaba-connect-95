@@ -6,6 +6,7 @@ import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { PlaylistCard } from "./components/PlaylistCard";
 import { PlaylistGridHeader } from "./components/PlaylistGridHeader";
+import { toast } from "sonner";
 
 interface PlaylistGridProps {
   title: string;
@@ -24,8 +25,8 @@ const TitleLoader = () => (
     width={300}
     height={80}
     viewBox="0 0 300 80"
-    backgroundColor="#f3f4f6"
-    foregroundColor="#e5e7eb"
+    backgroundColor="#f5f5f5"
+    foregroundColor="#eeeeee"
   >
     <rect x="0" y="0" rx="4" ry="4" width="200" height="24" />
     <rect x="0" y="35" rx="3" ry="3" width="150" height="16" />
@@ -75,9 +76,9 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (playlist: GridPlaylist) => {
-    const playlistWithSongs = {
-      ...playlist,
-      songs: playlistSongs
+    try {
+      // Get songs for this specific playlist
+      const playlistSongsFiltered = playlistSongs
         ?.filter(ps => ps.playlist_id === playlist.id)
         ?.map(ps => ({
           id: ps.songs.id,
@@ -86,10 +87,23 @@ export function PlaylistGrid({
           duration: ps.songs.duration?.toString() || "0:00",
           file_url: ps.songs.file_url,
           bunny_id: ps.songs.bunny_id
-        })) || []
-    };
+        })) || [];
 
-    onPlay?.(playlistWithSongs);
+      if (playlistSongsFiltered.length === 0) {
+        toast.error("No songs found in this playlist");
+        return;
+      }
+
+      const playlistWithSongs = {
+        ...playlist,
+        songs: playlistSongsFiltered
+      };
+
+      onPlay?.(playlistWithSongs);
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      toast.error("Failed to load playlist");
+    }
   };
 
   const handleCardClick = (playlist: GridPlaylist) => {
