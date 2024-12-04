@@ -8,6 +8,7 @@ import { PushPlaylistHeader } from "./push-dialog/PushPlaylistHeader";
 import { SearchBar } from "./push-dialog/SearchBar";
 import { DeviceItem } from "./push-dialog/DeviceItem";
 import { DialogFooter } from "./push-dialog/DialogFooter";
+import type { Device, DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -42,9 +43,23 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data;
+
+      // Validate and transform the category field to ensure it matches DeviceCategory
+      return data.map(device => ({
+        ...device,
+        category: validateDeviceCategory(device.category),
+        status: device.status as Device['status']
+      })) as Device[];
     },
   });
+
+  // Helper function to validate device category
+  const validateDeviceCategory = (category: string): DeviceCategory => {
+    const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
+    return validCategories.includes(category as DeviceCategory) 
+      ? (category as DeviceCategory) 
+      : 'player'; // Default to 'player' if invalid category
+  };
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
