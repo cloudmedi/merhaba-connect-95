@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, Clock, Monitor } from "lucide-react";
-import { EventCategory } from "../types";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PreviewStepProps {
   formData: {
     title: string;
-    category: EventCategory;
     startDate: string;
     startTime: string;
     endDate: string;
@@ -41,34 +39,17 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
     }
   });
 
-  const getEventColor = (category: EventCategory) => {
-    const colors = {
-      'Marketing': '#F97316',
-      'Special Promotion': '#D946EF',
-      'Holiday Music': '#0EA5E9',
-      'Regular Playlist': '#9b87f5',
-      'Background Music': '#8E9196'
-    };
-    return colors[category];
-  };
-
   return (
     <div className="space-y-6">
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-2">
           <div
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: getEventColor(formData.category) }}
+            className="w-4 h-4 rounded-full bg-[#9b87f5]"
           />
           <h3 className="text-lg font-semibold">{formData.title}</h3>
         </div>
 
         <div className="grid gap-4 text-sm">
-          <div>
-            <p className="text-gray-500">Kategori</p>
-            <p>{formData.category}</p>
-          </div>
-          
           <div>
             <p className="text-gray-500">Zamanlama</p>
             <div className="space-y-2">

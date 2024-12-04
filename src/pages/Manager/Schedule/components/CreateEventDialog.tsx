@@ -7,7 +7,7 @@ import { NotificationStep } from "./NotificationStep";
 import { DeviceSelectionStep } from "./DeviceSelectionStep";
 import { PreviewStep } from "./PreviewStep";
 import { toast } from "sonner";
-import { ScheduleEvent, EventCategory, EventNotification, EventRecurrence, EventColor } from "../types";
+import { ScheduleEvent, EventNotification, EventRecurrence } from "../types";
 import { checkEventConflicts } from "../utils/eventUtils";
 
 interface CreateEventDialogProps {
@@ -27,7 +27,6 @@ interface EventFormData {
   startTime: string;
   endDate: string;
   endTime: string;
-  category: EventCategory;
   devices: string[];
   notifications: EventNotification[];
   recurrence?: EventRecurrence;
@@ -61,7 +60,6 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
         startTime: formatTime(startDateTime),
         endDate: formatDate(endDateTime),
         endTime: formatTime(endDateTime),
-        category: "Regular Playlist",
         devices: [],
         notifications: [],
       };
@@ -74,7 +72,6 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       startTime: "",
       endDate: "",
       endTime: "",
-      category: "Regular Playlist",
       devices: [],
       notifications: [],
     };
@@ -90,8 +87,7 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       playlist_id: formData.playlistId,
-      category: formData.category,
-      color: getEventColor(formData.category),
+      color: { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' },
       notifications: formData.notifications,
       recurrence: formData.recurrence,
       devices: formData.devices.map(deviceId => ({ device_id: deviceId }))
@@ -118,22 +114,10 @@ export function CreateEventDialog({ open, onOpenChange, existingEvents, initialT
       startTime: "",
       endDate: "",
       endTime: "",
-      category: "Regular Playlist",
       devices: [],
       notifications: [],
     });
     setCurrentTab("details");
-  };
-
-  const getEventColor = (category: EventCategory): EventColor => {
-    const colors: Record<EventCategory, EventColor> = {
-      'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
-      'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },
-      'Holiday Music': { primary: '#0EA5E9', secondary: '#D3E4FD', text: '#1A1F2C' },
-      'Regular Playlist': { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' },
-      'Background Music': { primary: '#8E9196', secondary: '#F1F0FB', text: '#1A1F2C' }
-    };
-    return colors[category];
   };
 
   return (

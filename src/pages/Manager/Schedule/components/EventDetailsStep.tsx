@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EventCategory } from "../types";
 import { PlaylistSelectionDialog } from "./PlaylistSelectionDialog";
 
 interface EventDetailsStepProps {
@@ -14,7 +12,6 @@ interface EventDetailsStepProps {
     startTime: string;
     endDate: string;
     endTime: string;
-    category: EventCategory;
   };
   onFormDataChange: (data: Partial<EventDetailsStepProps['formData']>) => void;
   onNext: () => void;
@@ -39,25 +36,6 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
           value={formData.title}
           onChange={(e) => onFormDataChange({ title: e.target.value })}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Event Category</Label>
-        <Select
-          value={formData.category}
-          onValueChange={(value: EventCategory) => onFormDataChange({ category: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Marketing">Marketing</SelectItem>
-            <SelectItem value="Special Promotion">Special Promotion</SelectItem>
-            <SelectItem value="Holiday Music">Holiday Music</SelectItem>
-            <SelectItem value="Regular Playlist">Regular Playlist</SelectItem>
-            <SelectItem value="Background Music">Background Music</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">
