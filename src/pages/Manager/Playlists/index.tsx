@@ -1,16 +1,17 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { GridPlaylist } from "@/components/dashboard/types";
+import type { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { toast } from "sonner";
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: playlists, isLoading } = useQuery({
@@ -53,6 +54,8 @@ export default function Playlists() {
         return;
       }
 
+      console.log("Fetching songs for playlist:", playlist.id);
+
       // Fetch songs for this playlist
       const { data: playlistSongs, error } = await supabase
         .from('playlist_songs')
@@ -70,16 +73,19 @@ export default function Playlists() {
         .eq('playlist_id', playlist.id)
         .order('position');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching playlist songs:', error);
+        throw error;
+      }
+
+      console.log("Fetched playlist songs:", playlistSongs);
 
       if (!playlistSongs || playlistSongs.length === 0) {
         toast.error("No songs found in this playlist");
         return;
       }
 
-      // Transform the playlist data
-      const playlistWithSongs = {
-        id: playlist.id,
+      const transformedPlaylist = {
         title: playlist.title,
         artwork: playlist.artwork_url,
         songs: playlistSongs.map(ps => ({
@@ -92,7 +98,8 @@ export default function Playlists() {
         }))
       };
 
-      setCurrentPlaylist(playlistWithSongs);
+      console.log("Setting current playlist:", transformedPlaylist);
+      setCurrentPlaylist(transformedPlaylist);
       setIsPlaying(true);
     } catch (error) {
       console.error('Error playing playlist:', error);
@@ -142,7 +149,6 @@ export default function Playlists() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id}
           playlist={currentPlaylist}
           onClose={() => {
             setCurrentPlaylist(null);
