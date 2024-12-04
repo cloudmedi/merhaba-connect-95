@@ -17,16 +17,8 @@ export const checkEventConflicts = (
   });
 };
 
-export const generateEventColor = (category: string): { primary: string; secondary: string; text: string } => {
-  const colors = {
-    'Marketing': { primary: '#F97316', secondary: '#FEC6A1', text: '#1A1F2C' },
-    'Special Promotion': { primary: '#D946EF', secondary: '#FFDEE2', text: '#1A1F2C' },
-    'Holiday Music': { primary: '#0EA5E9', secondary: '#D3E4FD', text: '#1A1F2C' },
-    'Regular Playlist': { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' },
-    'Background Music': { primary: '#8E9196', secondary: '#F1F0FB', text: '#1A1F2C' }
-  };
-
-  return colors[category as keyof typeof colors] || colors['Regular Playlist'];
+export const generateEventColor = (): { primary: string; secondary: string; text: string } => {
+  return { primary: '#9b87f5', secondary: '#E5DEFF', text: '#1A1F2C' };
 };
 
 export const exportEvents = (events: ScheduleEvent[], format: 'ics' | 'csv') => {
@@ -36,7 +28,7 @@ BEGIN:VEVENT
 SUMMARY:${event.title}
 DTSTART:${new Date(event.start_time).toISOString()}
 DTEND:${new Date(event.end_time).toISOString()}
-DESCRIPTION:Category: ${event.category}
+DESCRIPTION:${event.description || ''}
 END:VEVENT
     `).join('\n');
 
@@ -48,12 +40,12 @@ END:VEVENT
     link.click();
   } else {
     const csvContent = [
-      ['Title', 'Start', 'End', 'Category', 'Devices'].join(','),
+      ['Title', 'Start', 'End', 'Description', 'Devices'].join(','),
       ...events.map(event => [
         event.title,
         event.start_time,
         event.end_time,
-        event.category,
+        event.description || '',
         event.devices?.map(d => d.device_id).join(';')
       ].join(','))
     ].join('\n');

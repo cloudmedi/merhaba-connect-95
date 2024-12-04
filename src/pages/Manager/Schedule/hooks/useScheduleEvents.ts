@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScheduleEvent, EventNotification, EventColor } from "../types";
-import type { Json } from "@/integrations/supabase/types/json";
+import type { Json } from "@/integrations/supabase/types";
 
 export const useScheduleEvents = () => {
   const queryClient = useQueryClient();
@@ -87,7 +87,6 @@ export const useScheduleEvents = () => {
         playlist_id: event.playlist_id,
         start_time: event.start_time,
         end_time: event.end_time,
-        category: event.category,
         color: event.color as unknown as Json,
         recurrence: event.recurrence as unknown as Json,
         notifications: event.notifications as unknown as Json,
