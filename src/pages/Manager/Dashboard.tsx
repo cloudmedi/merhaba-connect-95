@@ -39,11 +39,9 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
-      // Get current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No authenticated user');
 
-      // Get categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
@@ -89,6 +87,12 @@ export default function ManagerDashboard() {
 
   const handlePlayPlaylist = async (playlist: any) => {
     try {
+      // If clicking the currently playing playlist, toggle play/pause
+      if (currentPlaylist?.id === playlist.id) {
+        setIsPlaying(!isPlaying);
+        return;
+      }
+
       // Fetch songs for the selected playlist
       const { data: playlistSongs, error } = await supabase
         .from('playlist_songs')
@@ -127,14 +131,8 @@ export default function ManagerDashboard() {
         }))
       };
 
-      // If clicking the same playlist that's currently playing
-      if (currentPlaylist?.id === playlist.id) {
-        setIsPlaying(!isPlaying);
-      } else {
-        // If clicking a different playlist
-        setCurrentPlaylist(formattedPlaylist);
-        setIsPlaying(true);
-      }
+      setCurrentPlaylist(formattedPlaylist);
+      setIsPlaying(true);
     } catch (error) {
       console.error('Error fetching playlist songs:', error);
       toast.error("Failed to load playlist");
@@ -142,6 +140,7 @@ export default function ManagerDashboard() {
   };
 
   const handlePlayStateChange = (playing: boolean) => {
+    console.log('Play state changed:', playing); // Debug log
     setIsPlaying(playing);
   };
 
@@ -193,7 +192,7 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id} // Add key prop to force re-render when playlist changes
+          key={currentPlaylist.id}
           playlist={currentPlaylist}
           onClose={() => {
             setCurrentPlaylist(null);
