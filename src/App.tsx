@@ -13,6 +13,7 @@ import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
 import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
+import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 
 // Lazy load the PlaylistDetail component
 const PlaylistDetail = lazy(() => import("./pages/Manager/Playlists/PlaylistDetail").then(module => ({
@@ -65,7 +66,7 @@ const router = createBrowserRouter([
       {
         path: "playlists/:id",
         element: (
-          <Suspense fallback={<div className="p-8">Loading playlist...</div>}>
+          <Suspense fallback={<PlaylistDetailLoader />}>
             <PlaylistDetail />
           </Suspense>
         ),
