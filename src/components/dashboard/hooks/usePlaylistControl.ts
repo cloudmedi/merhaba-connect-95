@@ -5,7 +5,7 @@ import { toast } from "sonner";
 export interface PlaylistWithSongs {
   id: string;
   title: string;
-  artwork: string;
+  artwork_url: string;
   songs: Array<{
     id: string;
     title: string;
@@ -24,11 +24,26 @@ export function usePlaylistControl() {
     try {
       // If clicking the currently playing playlist, only toggle play state
       if (currentPlaylist?.id === playlist.id) {
+        console.log('Toggling play state for current playlist');
         setIsPlaying(!isPlaying);
         return;
       }
 
-      // Fetch songs for the selected playlist
+      // If songs are already included in the playlist object, use them
+      if (playlist.songs && playlist.songs.length > 0) {
+        console.log('Using existing songs from playlist');
+        setCurrentPlaylist({
+          id: playlist.id,
+          title: playlist.title,
+          artwork_url: playlist.artwork_url,
+          songs: playlist.songs
+        });
+        setIsPlaying(true);
+        return;
+      }
+
+      // Otherwise, fetch songs for the selected playlist
+      console.log('Fetching songs for playlist:', playlist.id);
       const { data: playlistSongs, error } = await supabase
         .from('playlist_songs')
         .select(`
@@ -54,8 +69,8 @@ export function usePlaylistControl() {
 
       const formattedPlaylist = {
         id: playlist.id,
-        title: playlist.name,
-        artwork: playlist.artwork_url,
+        title: playlist.title,
+        artwork_url: playlist.artwork_url,
         songs: playlistSongs.map(ps => ({
           id: ps.songs.id,
           title: ps.songs.title,
@@ -66,10 +81,11 @@ export function usePlaylistControl() {
         }))
       };
 
+      console.log('Setting new playlist:', formattedPlaylist);
       setCurrentPlaylist(formattedPlaylist);
       setIsPlaying(true);
     } catch (error) {
-      console.error('Error fetching playlist songs:', error);
+      console.error('Error handling playlist:', error);
       toast.error("Failed to load playlist");
     }
   };
