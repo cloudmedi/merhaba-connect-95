@@ -151,4 +151,4 @@ async function cleanup() {
   }
 }
 
-export { supabase, initSupabase, createDeviceToken };
+export { supabase, initSupabase };

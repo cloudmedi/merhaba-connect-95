@@ -49,28 +49,15 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         location,
         token,
         ip_address: ipAddress,
-        status: 'offline' as const, // Explicitly type as 'offline'
+        status: 'offline' as const,
         schedule: {},
         system_info: deviceInfo.systemInfo as DeviceSystemInfo,
         branch_id: null
       };
 
       console.log('Creating device with data:', newDevice);
-
       await createDevice.mutateAsync(newDevice);
-
-      // Update token status to used
-      const { error: updateError } = await supabase
-        .from('device_tokens')
-        .update({ status: 'used' })
-        .eq('token', token);
-
-      if (updateError) {
-        console.error('Error updating token status:', updateError);
-        toast.error('Token durumu güncellenirken hata oluştu');
-        return;
-      }
-
+      
       toast.success('Cihaz başarıyla eklendi');
       onOpenChange(false);
       resetForm();
@@ -81,20 +68,15 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   };
 
   const handleTokenChange = async (newToken: string) => {
-    try {
-      console.log('Token changed:', newToken);
+    setToken(newToken);
+    if (newToken.length === 6) {
       const deviceInfo = await verifyTokenAndGetDeviceInfo(newToken);
-      
       if (deviceInfo?.existingDevice) {
-        console.log('Existing device found:', deviceInfo.existingDevice);
         setName(deviceInfo.existingDevice.name || '');
         setCategory((deviceInfo.existingDevice.category as "player" | "display" | "controller") || 'player');
         setLocation(deviceInfo.existingDevice.location || '');
         setIpAddress(deviceInfo.existingDevice.ip_address || '');
-        toast.success('Cihaz bilgileri getirildi');
       }
-    } catch (error) {
-      console.error('Error handling token change:', error);
     }
   };
 
@@ -121,7 +103,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
             location={location}
             setLocation={setLocation}
             token={token}
-            setToken={setToken}
+            setToken={handleTokenChange}
             ipAddress={ipAddress}
             setIpAddress={setIpAddress}
             isVerifying={isVerifying}
