@@ -33,14 +33,19 @@ async function initSupabase() {
     );
     
     const macAddress = await (window as any).electronAPI.getMacAddress();
-    if (!macAddress) throw new Error('Could not get MAC address');
+    if (!macAddress) {
+      throw new Error('Could not get MAC address');
+    }
+
+    console.log('Creating device token with MAC address:', macAddress);
 
     // Get or create device token
-    const { data: tokenData, error: tokenError } = await createDeviceToken(macAddress);
+    const tokenData = await createDeviceToken(macAddress);
+    if (!tokenData) {
+      throw new Error('Failed to get or create device token');
+    }
 
-    if (tokenError) throw tokenError;
-    if (!tokenData) throw new Error('Failed to get or create device token');
-
+    console.log('Device token created/retrieved:', tokenData);
     const deviceToken = tokenData.token;
 
     // Set up periodic system info updates
