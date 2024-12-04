@@ -15,7 +15,7 @@ export default function Schedule() {
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
   useEffect(() => {
-    console.log('📅 Schedule mounted - Events:', events);
+    console.log('📅 Schedule mounted - Raw Events:', events);
   }, [events]);
 
   const handleEventDrop = async (info: any) => {
@@ -55,20 +55,24 @@ export default function Schedule() {
     return <div className="p-6">Loading...</div>;
   }
 
+  // Format events for FullCalendar
   const formattedEvents = events.map(event => {
-    console.log('🔄 Formatting event:', event);
-    const formattedEvent = {
+    console.log('🎨 Formatting event with color:', event.color);
+    return {
       id: event.id,
       title: event.title,
-      start: new Date(event.start_time),
-      end: new Date(event.end_time),
+      start: event.start_time,
+      end: event.end_time,
       backgroundColor: event.color?.primary || '#6E59A5',
       borderColor: event.color?.primary || '#6E59A5',
       textColor: event.color?.text || '#ffffff',
-      extendedProps: event
+      extendedProps: {
+        ...event,
+        description: event.description || '',
+        playlist: event.playlist || null,
+        devices: event.devices || []
+      }
     };
-    console.log('✨ Formatted event:', formattedEvent);
-    return formattedEvent;
   });
 
   console.log("📊 Final formatted events for calendar:", formattedEvents);
