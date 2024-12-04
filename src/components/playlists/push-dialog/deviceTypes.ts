@@ -3,9 +3,9 @@ import type { Device as BaseDevice, DeviceSystemInfo as BaseDeviceSystemInfo } f
 export interface PushDialogDevice extends Omit<BaseDevice, 'system_info'> {
   system_info: BaseDeviceSystemInfo;
   branches?: {
-    id: string;
-    name: string;
-    company_id: string | null;
+    id?: string;
+    name?: string;
+    company_id?: string | null;
   } | null;
 }
 
