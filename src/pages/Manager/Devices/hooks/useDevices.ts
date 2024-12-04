@@ -7,7 +7,6 @@ import type { Device, DeviceCategory } from "./types";
 export const useDevices = () => {
   const queryClient = useQueryClient();
   const presenceChannel = supabase.channel('device_status');
-  const broadcastChannel = supabase.channel('device_broadcast');
 
   useEffect(() => {
     // Subscribe to device presence channel
@@ -37,11 +36,23 @@ export const useDevices = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'devices'
+          table: 'devices',
+          filter: `status=in.(online,offline)`
         },
         (payload) => {
           console.log('Device change received:', payload);
           queryClient.invalidateQueries({ queryKey: ['devices'] });
+          
+          if (payload.eventType === 'UPDATE') {
+            const newStatus = payload.new.status;
+            const deviceName = payload.new.name;
+            
+            if (newStatus === 'online') {
+              toast.success(`${deviceName} is now online`);
+            } else if (newStatus === 'offline') {
+              toast.warning(`${deviceName} is now offline`);
+            }
+          }
         }
       )
       .subscribe();
@@ -83,12 +94,12 @@ export const useDevices = () => {
       const presenceState = presenceChannel.presenceState();
       console.log('Current presence state:', presenceState);
       
-      // Update device status based on presence
+      // Update device status based on presence and database status
       const devicesWithStatus = data.map(device => ({
         ...device,
         status: Object.values(presenceState)
           .flat()
-          .some((p: any) => p.token === device.token) ? 'online' : 'offline',
+          .some((p: any) => p.token === device.token) ? 'online' : device.status
       })) as Device[];
       
       console.log('Devices with status:', devicesWithStatus);
