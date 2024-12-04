@@ -5,9 +5,10 @@ import { updateDeviceStatus } from './deviceStatus';
 let supabase: ReturnType<typeof createClient>;
 let presenceChannel: ReturnType<typeof createClient>['channel'];
 let heartbeatInterval: NodeJS.Timeout;
+let isInitialized = false;
 
 async function initSupabase() {
-  if (supabase) return supabase;
+  if (isInitialized) return supabase;
 
   try {
     console.log('Initializing Supabase...');
@@ -81,7 +82,8 @@ async function initSupabase() {
     window.addEventListener('beforeunload', async () => {
       await cleanup();
     });
-    
+
+    isInitialized = true;
     return supabase;
   } catch (error) {
     console.error('Supabase initialization error:', error);
@@ -93,6 +95,18 @@ async function updatePresenceAndStatus(deviceToken: string) {
   try {
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
     
+    // Check if device exists before updating presence
+    const { data: device } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('token', deviceToken)
+      .single();
+
+    if (!device) {
+      console.log('Device not found, skipping presence update');
+      return;
+    }
+
     // Update presence
     await presenceChannel.track({
       token: deviceToken,
@@ -115,23 +129,29 @@ async function cleanup() {
   }
   
   if (presenceChannel) {
-    const macAddress = await (window as any).electronAPI.getMacAddress();
-    const tokenData = await createDeviceToken(macAddress);
-    
-    if (tokenData?.token) {
-      // Update device status to offline
-      await updateDeviceStatus(tokenData.token, 'offline', null);
+    try {
+      const macAddress = await (window as any).electronAPI.getMacAddress();
+      const tokenData = await createDeviceToken(macAddress);
       
-      // Track offline status in presence channel
-      await presenceChannel.track({
-        token: tokenData.token,
-        status: 'offline',
-        lastSeen: new Date().toISOString(),
-      });
+      if (tokenData?.token) {
+        // Update device status to offline
+        await updateDeviceStatus(tokenData.token, 'offline', null);
+        
+        // Track offline status in presence channel
+        await presenceChannel.track({
+          token: tokenData.token,
+          status: 'offline',
+          lastSeen: new Date().toISOString(),
+        });
+      }
+      
+      await supabase.removeChannel(presenceChannel);
+    } catch (error) {
+      console.error('Error during cleanup:', error);
     }
-    
-    await supabase.removeChannel(presenceChannel);
   }
+
+  isInitialized = false;
 }
 
 export { supabase, initSupabase };

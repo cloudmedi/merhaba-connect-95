@@ -9,6 +9,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       .from('device_tokens')
       .select('*')
       .eq('token', deviceToken)
+      .eq('status', 'active')
       .single();
 
     if (tokenError) {
@@ -17,8 +18,8 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
     }
 
     if (!tokenData) {
-      console.error('Token not found');
-      throw new Error('Token not found');
+      console.error('Token not found or not active');
+      throw new Error('Token not found or not active');
     }
 
     // Check if token is expired
@@ -26,6 +27,18 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
     if (expirationDate < new Date()) {
       console.error('Token has expired:', expirationDate);
       throw new Error('Token has expired');
+    }
+
+    // First check if device exists
+    const { data: existingDevice } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('token', deviceToken)
+      .single();
+
+    if (!existingDevice) {
+      console.log('Device not found for token:', deviceToken);
+      return null;
     }
 
     // Update device status
