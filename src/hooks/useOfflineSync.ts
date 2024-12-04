@@ -29,6 +29,9 @@ export function useOfflineSync(deviceId: string | null) {
 
         if (songsError) throw songsError;
 
+        // Start download through Electron IPC
+        await window.electronAPI.startPlaylistDownload(playlist.playlist_id);
+
         // Update offline_songs table
         for (const song of songs || []) {
           await supabase
