@@ -85,7 +85,7 @@ export default function Schedule() {
         events={events}
       />
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
         <div className="calendar-container p-4">
           <CalendarView
             events={formattedEvents}

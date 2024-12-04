@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,8 +11,14 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProps) {
+  const calendarRef = useRef<FullCalendar | null>(null);
+
+  useEffect(() => {
+    console.log("Calendar mounted with events:", events);
+  }, [events]);
+
   return (
-    <>
+    <div className="calendar-container">
       <style>
         {`
           .fc {
@@ -83,6 +90,7 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
       </style>
       
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         headerToolbar={{
@@ -106,7 +114,10 @@ export function CalendarView({ events, onEventDrop, onSelect }: CalendarViewProp
         nowIndicator={true}
         events={events}
         select={onSelect}
+        eventDidMount={(info) => {
+          console.log("Event mounted:", info.event.title);
+        }}
       />
-    </>
+    </div>
   );
 }
