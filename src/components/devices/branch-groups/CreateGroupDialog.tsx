@@ -19,6 +19,7 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
   const [description, setDescription] = useState("");
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -30,6 +31,8 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
       toast.error("Lütfen en az bir şube seçin");
       return;
     }
+
+    setIsCreating(true);
 
     try {
       // Get user's profile for company_id
@@ -73,11 +76,12 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
 
       toast.success("Grup başarıyla oluşturuldu");
       onSuccess?.();
-      onClose();
       resetForm();
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error("Grup oluşturulurken bir hata oluştu");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -119,8 +123,11 @@ export function CreateGroupDialog({ isOpen, onClose, onSuccess, branches }: Crea
               <Button variant="outline" onClick={onClose}>
                 İptal
               </Button>
-              <Button onClick={handleCreateGroup}>
-                Grup Oluştur
+              <Button 
+                onClick={handleCreateGroup}
+                disabled={isCreating}
+              >
+                {isCreating ? 'Oluşturuluyor...' : 'Grup Oluştur'}
               </Button>
             </div>
           </div>

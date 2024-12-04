@@ -66,6 +66,11 @@ export function BranchGroupsTab() {
     group.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleCreateSuccess = async () => {
+    await fetchGroups(); // Refresh groups after creation
+    setIsCreateDialogOpen(false);
+  };
+
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center p-8 text-center min-h-[400px] bg-gray-50 rounded-lg border-2 border-dashed">
       <img 
@@ -123,7 +128,7 @@ export function BranchGroupsTab() {
         <CreateGroupDialog
           isOpen={isCreateDialogOpen}
           onClose={() => setIsCreateDialogOpen(false)}
-          onSuccess={fetchGroups}
+          onSuccess={handleCreateSuccess}
           branches={branches}
         />
       </div>
