@@ -13,6 +13,9 @@ export function HeroLoader() {
         foregroundColor="#eeeeee"
         className="w-full h-full"
       >
+        {/* Background gradient */}
+        <rect x="0" y="0" rx="8" ry="8" width="1200" height="300" />
+        
         {/* Featured Playlist Text */}
         <rect x="40" y="80" rx="4" ry="4" width="300" height="36" />
         
