@@ -7,16 +7,9 @@ import type { Device, DeviceCategory } from "./types";
 export const useDevices = () => {
   const queryClient = useQueryClient();
   const presenceChannel = supabase.channel('device_status');
-  const broadcastChannel = supabase.channel('device_broadcast');
-
-  const validateDeviceCategory = (category: string): DeviceCategory => {
-    const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
-    return validCategories.includes(category as DeviceCategory) 
-      ? (category as DeviceCategory) 
-      : 'player';
-  };
 
   useEffect(() => {
+    // Subscribe to device presence channel
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const presenceState = presenceChannel.presenceState();
@@ -24,21 +17,37 @@ export const useDevices = () => {
         queryClient.invalidateQueries({ queryKey: ['devices'] });
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        const device = newPresences[0];
-        console.log('Device joined:', device);
-        toast.success(`Device ${device.token} is now online`);
+        console.log('Device joined:', key, newPresences);
         queryClient.invalidateQueries({ queryKey: ['devices'] });
+        toast.success(`Device ${newPresences[0]?.token} is now online`);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        const device = leftPresences[0];
-        console.log('Device left:', device);
-        toast.warning(`Device ${device.token} is now offline`);
+        console.log('Device left:', key, leftPresences);
         queryClient.invalidateQueries({ queryKey: ['devices'] });
+        toast.warning(`Device ${leftPresences[0]?.token} is now offline`);
       })
+      .subscribe();
+
+    // Also subscribe to direct database changes
+    const channel = supabase
+      .channel('device_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'devices'
+        },
+        (payload) => {
+          console.log('Device change received:', payload);
+          queryClient.invalidateQueries({ queryKey: ['devices'] });
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
@@ -69,14 +78,15 @@ export const useDevices = () => {
 
       if (error) throw error;
       
+      // Get presence state to determine online status
       const presenceState = presenceChannel.presenceState();
       
+      // Update device status based on presence
       const devicesWithStatus = data.map(device => ({
         ...device,
         status: Object.values(presenceState)
           .flat()
           .some((p: any) => p.token === device.token) ? 'online' : 'offline',
-        category: validateDeviceCategory(device.category)
       })) as Device[];
       
       return devicesWithStatus;
@@ -85,7 +95,6 @@ export const useDevices = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      // First create the device
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -96,20 +105,6 @@ export const useDevices = () => {
         .single();
 
       if (error) throw error;
-
-      // Then broadcast to all clients that a new device is added
-      await broadcastChannel.send({
-        type: 'broadcast',
-        event: 'device_added',
-        payload: { token: device.token }
-      });
-
-      // Also update the device token status to used
-      await supabase
-        .from('device_tokens')
-        .update({ status: 'used', used_at: new Date().toISOString() })
-        .eq('token', device.token);
-
       return data;
     },
     onSuccess: () => {
@@ -132,10 +127,10 @@ export const useDevices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Cihaz başarıyla silindi');
+      toast.success('Device deleted successfully');
     },
     onError: (error: Error) => {
-      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
+      toast.error('Failed to delete device: ' + error.message);
     },
   });
 

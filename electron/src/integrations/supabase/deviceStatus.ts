@@ -11,8 +11,6 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       .eq('token', deviceToken)
       .single();
 
-    console.log('Token verification result:', { tokenData, tokenError });
-
     if (tokenError) {
       console.error('Token verification failed:', tokenError);
       throw new Error(`Token verification failed: ${tokenError.message}`);
@@ -30,45 +28,25 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       throw new Error('Token has expired');
     }
 
-    // Check for existing device
-    const { data: existingDevice, error: checkError } = await supabase
+    // Update device status
+    const { data: updateData, error: updateError } = await supabase
       .from('devices')
-      .select('id, name, status')
+      .update({
+        status,
+        system_info: systemInfo || {},
+        last_seen: new Date().toISOString(),
+      })
       .eq('token', deviceToken)
-      .maybeSingle();
+      .select();
 
-    console.log('Device check result:', { existingDevice, checkError });
-
-    if (checkError) {
-      console.error('Error checking device:', checkError);
-      throw checkError;
+    if (updateError) {
+      console.error('Error updating device:', updateError);
+      throw updateError;
     }
 
-    // Update device status if it exists
-    if (existingDevice) {
-      console.log('Updating device status to:', status);
-      
-      const { data: updateData, error: updateError } = await supabase
-        .from('devices')
-        .update({
-          status,
-          system_info: systemInfo || {},
-          last_seen: new Date().toISOString(),
-        })
-        .eq('token', deviceToken)
-        .select();
+    console.log('Device status successfully updated to:', status);
+    return updateData;
 
-      console.log('Update result:', { updateData, updateError });
-
-      if (updateError) {
-        console.error('Error updating device:', updateError);
-        throw updateError;
-      }
-      
-      console.log('Device status successfully updated to:', status);
-    } else {
-      console.log('No device found with token:', deviceToken);
-    }
   } catch (error) {
     console.error('Error in updateDeviceStatus:', error);
     throw error;

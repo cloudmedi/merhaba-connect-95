@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { createDeviceToken } from './deviceToken';
+import { updateDeviceStatus } from './deviceStatus';
 
 let supabase: ReturnType<typeof createClient>;
 let presenceChannel: ReturnType<typeof createClient>['channel'];
 let heartbeatInterval: NodeJS.Timeout;
-let isTrackingPresence = false;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -49,7 +49,7 @@ async function initSupabase() {
     const deviceToken = tokenData.token;
 
     // Clear existing intervals and channels
-    cleanup();
+    await cleanup();
 
     // Set up device presence channel
     presenceChannel = supabase.channel('device_status')
@@ -64,23 +64,15 @@ async function initSupabase() {
         console.log('Device left:', key, leftPresences);
       });
 
-    // Subscribe to broadcast channel for device status requests
-    const broadcastChannel = supabase.channel('device_broadcast')
-      .on('broadcast', { event: 'device_added' }, async (payload) => {
-        if (payload.token === deviceToken) {
-          await updatePresence(deviceToken);
-        }
-      })
-      .subscribe();
-
-    // Start presence heartbeat
+    // Subscribe to presence channel and start heartbeat
     await presenceChannel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await updatePresence(deviceToken);
+        // Initial presence update
+        await updatePresenceAndStatus(deviceToken);
         
         // Set up heartbeat interval
         heartbeatInterval = setInterval(async () => {
-          await updatePresence(deviceToken);
+          await updatePresenceAndStatus(deviceToken);
         }, 10000); // Send heartbeat every 10 seconds
       }
     });
@@ -97,10 +89,11 @@ async function initSupabase() {
   }
 }
 
-async function updatePresence(deviceToken: string) {
+async function updatePresenceAndStatus(deviceToken: string) {
   try {
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    isTrackingPresence = true;
+    
+    // Update presence
     await presenceChannel.track({
       token: deviceToken,
       status: 'online',
@@ -108,46 +101,36 @@ async function updatePresence(deviceToken: string) {
       lastSeen: new Date().toISOString(),
     });
 
-    // Also update the device record in the database
-    await supabase
-      .from('devices')
-      .update({
-        status: 'online',
-        system_info: systemInfo,
-        last_seen: new Date().toISOString()
-      })
-      .eq('token', deviceToken);
+    // Update device status in database
+    await updateDeviceStatus(deviceToken, 'online', systemInfo);
 
   } catch (error) {
-    console.error('Error updating presence:', error);
+    console.error('Error updating presence and status:', error);
   }
 }
 
 async function cleanup() {
-  isTrackingPresence = false;
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
   }
+  
   if (presenceChannel) {
-    const deviceToken = (await createDeviceToken(await (window as any).electronAPI.getMacAddress()))?.token;
-    if (deviceToken) {
-      // Update device status to offline in the database
-      await supabase
-        .from('devices')
-        .update({
-          status: 'offline',
-          last_seen: new Date().toISOString()
-        })
-        .eq('token', deviceToken);
-
+    const macAddress = await (window as any).electronAPI.getMacAddress();
+    const tokenData = await createDeviceToken(macAddress);
+    
+    if (tokenData?.token) {
+      // Update device status to offline
+      await updateDeviceStatus(tokenData.token, 'offline', null);
+      
       // Track offline status in presence channel
       await presenceChannel.track({
-        token: deviceToken,
+        token: tokenData.token,
         status: 'offline',
         lastSeen: new Date().toISOString(),
       });
     }
-    supabase.removeChannel(presenceChannel);
+    
+    await supabase.removeChannel(presenceChannel);
   }
 }
 
