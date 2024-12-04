@@ -5,11 +5,11 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { CreateEventDialog } from "./components/CreateEventDialog";
-import { ScheduleEvent } from "./types";
+import { ScheduleEvent } from "./types/scheduleTypes";
 import { exportEvents } from "./utils/eventUtils";
 import { Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useScheduleEvents } from "./hooks/useScheduleEvents";
+import { useScheduleEvents } from "@/hooks/useScheduleEvents";
 import { toast } from "sonner";
 
 export default function Schedule() {
@@ -19,6 +19,8 @@ export default function Schedule() {
     end: string;
   } | null>(null);
   const { events, isLoading, updateEvent } = useScheduleEvents();
+
+  console.log('Schedule component - events:', events);
 
   const handleEventDrop = async (info: any) => {
     const updatedEvent: ScheduleEvent = {
@@ -54,18 +56,21 @@ export default function Schedule() {
     return <div>Loading...</div>;
   }
 
-  const formattedEvents = events.map(event => ({
-    id: event.id,
-    title: event.title,
-    start: new Date(event.start_time),
-    end: new Date(event.end_time),
-    backgroundColor: '#6E59A5',
-    borderColor: '#6E59A5',
-    textColor: '#ffffff',
-    extendedProps: event
-  }));
+  const formattedEvents = events.map(event => {
+    console.log('Formatting event:', event);
+    return {
+      id: event.id,
+      title: event.title,
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      backgroundColor: event.color?.primary || '#6E59A5',
+      borderColor: event.color?.primary || '#6E59A5',
+      textColor: event.color?.text || '#ffffff',
+      extendedProps: event
+    };
+  });
 
-  console.log("Formatted events:", formattedEvents);
+  console.log("Formatted events for calendar:", formattedEvents);
 
   return (
     <div className="p-6 space-y-6">

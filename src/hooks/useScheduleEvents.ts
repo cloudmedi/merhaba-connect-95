@@ -17,6 +17,8 @@ export function useScheduleEvents() {
         .eq('id', userData.user?.id)
         .single();
 
+      console.log('Fetching events for company:', userProfile?.company_id);
+
       const { data, error } = await supabase
         .from('schedule_events')
         .select(`
@@ -33,9 +35,15 @@ export function useScheduleEvents() {
         .eq('company_id', userProfile?.company_id)
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
-      
-      return (data as DatabaseScheduleEvent[]).map(mapDatabaseToScheduleEvent);
+      if (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+      }
+
+      console.log('Raw events from database:', data);
+      const mappedEvents = (data as DatabaseScheduleEvent[]).map(mapDatabaseToScheduleEvent);
+      console.log('Mapped events:', mappedEvents);
+      return mappedEvents;
     },
   });
 
@@ -54,28 +62,40 @@ export function useScheduleEvents() {
         company_id: userProfile?.company_id,
       };
 
+      console.log('Creating event with data:', eventData);
+
       const { data, error } = await supabase
         .from('schedule_events')
         .insert(eventData)
         .select()
         .single();
 
-      if (error) throw error;
-
-      if (event.devices?.length) {
-        const { error: assignmentError } = await supabase
-          .from('schedule_device_assignments')
-          .insert(
-            event.devices.map(device => ({
-              schedule_id: data.id,
-              device_id: device.device_id
-            }))
-          );
-
-        if (assignmentError) throw assignmentError;
+      if (error) {
+        console.error('Error creating event:', error);
+        throw error;
       }
 
-      return mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
+      if (event.devices?.length) {
+        const deviceAssignments = event.devices.map(device => ({
+          schedule_id: data.id,
+          device_id: device.device_id
+        }));
+
+        console.log('Creating device assignments:', deviceAssignments);
+
+        const { error: assignmentError } = await supabase
+          .from('schedule_device_assignments')
+          .insert(deviceAssignments);
+
+        if (assignmentError) {
+          console.error('Error creating device assignments:', assignmentError);
+          throw assignmentError;
+        }
+      }
+
+      const createdEvent = mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
+      console.log('Created event:', createdEvent);
+      return createdEvent;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-events'] });
@@ -89,6 +109,7 @@ export function useScheduleEvents() {
 
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
+      console.log('Updating event:', event);
       const eventData = mapEventToDatabase(event);
 
       const { error: updateError } = await supabase
@@ -96,7 +117,10 @@ export function useScheduleEvents() {
         .update(eventData)
         .eq('id', event.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating event:', updateError);
+        throw updateError;
+      }
 
       if (event.devices) {
         const { error: deleteError } = await supabase
@@ -104,19 +128,27 @@ export function useScheduleEvents() {
           .delete()
           .eq('schedule_id', event.id);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('Error deleting device assignments:', deleteError);
+          throw deleteError;
+        }
 
         if (event.devices.length > 0) {
+          const deviceAssignments = event.devices.map(device => ({
+            schedule_id: event.id,
+            device_id: device.device_id
+          }));
+
+          console.log('Updating device assignments:', deviceAssignments);
+
           const { error: assignmentError } = await supabase
             .from('schedule_device_assignments')
-            .insert(
-              event.devices.map(device => ({
-                schedule_id: event.id,
-                device_id: device.device_id
-              }))
-            );
+            .insert(deviceAssignments);
 
-          if (assignmentError) throw assignmentError;
+          if (assignmentError) {
+            console.error('Error updating device assignments:', assignmentError);
+            throw assignmentError;
+          }
         }
       }
     },
@@ -132,12 +164,16 @@ export function useScheduleEvents() {
 
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting event:', id);
       const { error } = await supabase
         .from('schedule_events')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting event:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-events'] });
