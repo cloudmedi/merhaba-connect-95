@@ -1,25 +1,27 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { useDevices } from "../hooks/useDevices";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Search } from "lucide-react";
+import type { Device } from "../hooks/types";
 
 interface CreateGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+  devices: Device[];
 }
 
-export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps) {
+export function CreateGroupDialog({ open, onOpenChange, onSuccess, devices }: CreateGroupDialogProps) {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { devices } = useDevices();
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,11 +48,12 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
     }
 
     try {
-      // Get user's company_id
+      // Get user's profile for company_id
+      const { data: { user } } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('id', user?.id)
         .single();
 
       if (!userProfile?.company_id) {
@@ -65,55 +68,83 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
           name: groupName,
           description,
           company_id: userProfile.company_id,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: user?.id
         })
         .select()
         .single();
 
       if (groupError) throw groupError;
 
-      // Add devices to the group
-      const { error: assignmentError } = await supabase
-        .from('branch_group_assignments')
-        .insert(
-          selectedDevices.map(deviceId => ({
-            branch_id: devices.find(d => d.id === deviceId)?.branch_id,
-            group_id: group.id
-          }))
-        );
+      // Get branch IDs for selected devices
+      const { data: deviceData, error: deviceError } = await supabase
+        .from('devices')
+        .select('branch_id')
+        .in('id', selectedDevices)
+        .not('branch_id', 'is', null);
 
-      if (assignmentError) throw assignmentError;
+      if (deviceError) throw deviceError;
+
+      // Create branch group assignments
+      const branchIds = deviceData
+        .map(d => d.branch_id)
+        .filter((id): id is string => id !== null);
+
+      if (branchIds.length > 0) {
+        const { error: assignError } = await supabase
+          .from('branch_group_assignments')
+          .insert(
+            branchIds.map(branchId => ({
+              branch_id: branchId,
+              group_id: group.id
+            }))
+          );
+
+        if (assignError) throw assignError;
+      }
 
       toast.success("Grup başarıyla oluşturuldu");
+      onSuccess?.();
       onOpenChange(false);
-      setGroupName("");
-      setDescription("");
-      setSelectedDevices([]);
+      resetForm();
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error("Grup oluşturulurken bir hata oluştu");
     }
   };
 
+  const resetForm = () => {
+    setGroupName("");
+    setDescription("");
+    setSelectedDevices([]);
+    setSearchQuery("");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Yeni Grup Oluştur</DialogTitle>
         </DialogHeader>
-
+        
         <div className="space-y-6">
           <div className="space-y-4">
-            <Input
-              placeholder="Grup adı"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-            />
-            <Input
-              placeholder="Açıklama"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            <div>
+              <Label>Grup Adı</Label>
+              <Input
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="Grup adı girin"
+              />
+            </div>
+
+            <div>
+              <Label>Açıklama</Label>
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Açıklama girin"
+              />
+            </div>
           </div>
 
           <div className="space-y-4">
