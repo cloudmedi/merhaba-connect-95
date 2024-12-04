@@ -49,7 +49,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         location,
         token,
         ip_address: ipAddress,
-        status: 'offline',
+        status: 'offline' as const, // Explicitly type as 'offline'
         schedule: {},
         system_info: deviceInfo.systemInfo as DeviceSystemInfo,
         branch_id: null
