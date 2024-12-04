@@ -34,7 +34,7 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
   const { user } = useAuth();
 
   // Fetch devices for the company
-  const { data: devices = [] } = useQuery<Device[]>({
+  const { data: devices = [], isLoading: isLoadingDevices } = useQuery<Device[]>({
     queryKey: ['devices'],
     queryFn: async () => {
       const { data: userProfile } = await supabase
@@ -47,10 +47,51 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
 
       const { data } = await supabase
         .from('devices')
-        .select('*')
+        .select(`
+          *,
+          branches (
+            id,
+            name
+          )
+        `)
         .eq('branches.company_id', userProfile.company_id);
 
       return data as Device[] || [];
+    },
+    enabled: !!user
+  });
+
+  // Fetch branch groups
+  const { data: groups = [], isLoading: isLoadingGroups } = useQuery({
+    queryKey: ['branch-groups'],
+    queryFn: async () => {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (!userProfile?.company_id) return [];
+
+      const { data } = await supabase
+        .from('branch_groups')
+        .select(`
+          *,
+          branch_group_assignments (
+            branch_id,
+            branches (
+              id,
+              name,
+              devices (
+                id,
+                name
+              )
+            )
+          )
+        `)
+        .eq('company_id', userProfile.company_id);
+
+      return data || [];
     },
     enabled: !!user
   });
@@ -62,7 +103,22 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
   const handleCreateCampaign = async () => {
     try {
       if (!user) {
-        toast.error("You must be logged in to create a campaign");
+        toast.error("Oturum açmanız gerekiyor");
+        return;
+      }
+
+      if (!formData.title.trim()) {
+        toast.error("Lütfen kampanya başlığı girin");
+        return;
+      }
+
+      if (formData.files.length === 0) {
+        toast.error("Lütfen en az bir dosya ekleyin");
+        return;
+      }
+
+      if (formData.devices.length === 0) {
+        toast.error("Lütfen en az bir cihaz seçin");
         return;
       }
 
@@ -100,27 +156,55 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
 
       // Create device associations using announcement_branches
       if (formData.devices.length > 0) {
-        const { error: deviceError } = await supabase
-          .from('announcement_branches')
-          .insert(
-            formData.devices.map(deviceId => ({
-              announcement_id: announcement.id,
-              branch_id: devices.find(d => d.id === deviceId)?.branch_id || ''
-            }))
-          );
+        const deviceBranches = devices
+          .filter(d => formData.devices.includes(d.id))
+          .map(d => d.branch_id)
+          .filter((id): id is string => id !== null);
 
-        if (deviceError) throw deviceError;
+        if (deviceBranches.length > 0) {
+          const { error: branchError } = await supabase
+            .from('announcement_branches')
+            .insert(
+              deviceBranches.map(branchId => ({
+                announcement_id: announcement.id,
+                branch_id: branchId
+              }))
+            );
+
+          if (branchError) throw branchError;
+        }
       }
 
-      toast.success("Campaign created successfully");
+      toast.success("Kampanya başarıyla oluşturuldu");
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error creating campaign:', error);
-      toast.error(error.message || "Failed to create campaign");
+      toast.error(error.message || "Kampanya oluşturulurken bir hata oluştu");
     }
   };
 
   const [deviceSearchQuery, setDeviceSearchQuery] = useState("");
+
+  const handleSelectGroup = (groupId: string, isSelected: boolean) => {
+    const groupDevices = groups
+      .find(g => g.id === groupId)
+      ?.branch_group_assignments
+      ?.flatMap(assignment => 
+        assignment.branches?.devices?.map(device => device.id) || []
+      ) || [];
+
+    if (isSelected) {
+      // Add all devices from the group that aren't already selected
+      const newDevices = [...new Set([...formData.devices, ...groupDevices])];
+      handleFormDataChange({ devices: newDevices });
+    } else {
+      // Remove all devices that belong to this group
+      const remainingDevices = formData.devices.filter(
+        deviceId => !groupDevices.includes(deviceId)
+      );
+      handleFormDataChange({ devices: remainingDevices });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,14 +225,17 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
                 formData={formData}
                 onFormDataChange={handleFormDataChange}
               />
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-4">Cihazlar</h3>
+              <div className="mt-6 space-y-4">
+                <h3 className="text-lg font-medium">Cihazlar ve Gruplar</h3>
                 <DeviceSelection
                   devices={devices}
+                  groups={groups}
                   selectedDevices={formData.devices}
                   searchQuery={deviceSearchQuery}
                   setSearchQuery={setDeviceSearchQuery}
                   setSelectedDevices={(devices) => handleFormDataChange({ devices })}
+                  onSelectGroup={handleSelectGroup}
+                  isLoading={isLoadingDevices || isLoadingGroups}
                 />
               </div>
             </TabsContent>
