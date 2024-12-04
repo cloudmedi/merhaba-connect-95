@@ -7,7 +7,6 @@ import { ArrowLeft } from "lucide-react";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import ContentLoader from 'react-content-loader';
 
-// Title loader component
 const TitleLoader = () => (
   <ContentLoader
     speed={2}
@@ -29,7 +28,11 @@ export function CategoryPlaylists() {
   const { data, isLoading } = useQuery({
     queryKey: ['category-playlists', categoryId],
     queryFn: async () => {
-      // First get category details
+      // Önce mevcut kullanıcının ID'sini al
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      // Kategori detaylarını getir
       const { data: category, error: categoryError } = await supabase
         .from('categories')
         .select('*')
@@ -38,7 +41,7 @@ export function CategoryPlaylists() {
 
       if (categoryError) throw categoryError;
 
-      // Then get playlists for this category
+      // Bu kategorideki playlistleri getir (sadece public veya kullanıcıya atanmış olanlar)
       const { data: playlistsData, error: playlistsError } = await supabase
         .from('playlist_categories')
         .select(`
@@ -48,20 +51,27 @@ export function CategoryPlaylists() {
             name,
             artwork_url,
             genre:genres(name),
-            mood:moods(name)
+            mood:moods(name),
+            is_public,
+            assigned_to
           )
         `)
         .eq('category_id', categoryId);
 
       if (playlistsError) throw playlistsError;
 
-      const playlists = playlistsData
+      // Playlistleri filtrele - sadece public olanları veya kullanıcıya atananları göster
+      const filteredPlaylists = playlistsData
         .map(item => item.playlists)
-        .filter(playlist => playlist !== null);
+        .filter(playlist => playlist !== null)
+        .filter(playlist => 
+          playlist.is_public || 
+          (playlist.assigned_to && playlist.assigned_to.includes(user.id))
+        );
 
       return {
         category,
-        playlists
+        playlists: filteredPlaylists
       };
     }
   });
