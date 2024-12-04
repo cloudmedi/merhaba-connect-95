@@ -150,13 +150,13 @@ export function PlaylistGrid({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="w-8 h-8 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300"
+                    className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300"
                     onClick={(e) => handlePlayClick(e, playlist)}
                   >
                     {currentPlayingId === playlist.id && isPlaying ? (
-                      <Pause className="w-3.5 h-3.5 text-white" />
+                      <Pause className="w-4 h-4 text-white" />
                     ) : (
-                      <Play className="w-3.5 h-3.5 ml-0.5 text-white" />
+                      <Play className="w-4 h-4 ml-0.5 text-white" />
                     )}
                   </Button>
                 </div>
