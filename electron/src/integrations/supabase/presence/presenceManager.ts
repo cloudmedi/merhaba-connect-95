@@ -22,8 +22,22 @@ export class PresenceManager {
     this.deviceToken = deviceToken;
 
     try {
-      // Subscribe to device status changes
-      const deviceChannel = this.supabase.channel('device_status_changes')
+      // First verify the device exists and get its current status
+      const { data: device, error } = await this.supabase
+        .from('devices')
+        .select('*')
+        .eq('token', deviceToken)
+        .single();
+
+      if (error || !device) {
+        console.error('Device not found:', error);
+        return;
+      }
+
+      console.log('Found device:', device);
+
+      // Set up realtime subscription for device status changes
+      const deviceChannel = this.supabase.channel(`device_${deviceToken}`)
         .on(
           'postgres_changes',
           {
@@ -40,6 +54,10 @@ export class PresenceManager {
 
       await this.setupPresenceChannel();
       this.setupCleanup();
+
+      // Initial status update
+      const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      await this.updateDeviceStatus('online', systemInfo);
     } catch (error) {
       console.error('Error initializing presence:', error);
       throw error;
@@ -50,12 +68,11 @@ export class PresenceManager {
     if (!this.deviceToken) return;
 
     try {
-      // Remove existing channel if any
       if (this.presenceChannel) {
         await this.supabase.removeChannel(this.presenceChannel);
       }
 
-      const channelName = `device_${this.deviceToken}`;
+      const channelName = `presence_${this.deviceToken}`;
       console.log('Setting up presence channel:', channelName);
 
       this.presenceChannel = this.supabase.channel(channelName, {
@@ -86,18 +103,35 @@ export class PresenceManager {
           await this.startHeartbeat();
         }
       });
+
     } catch (error) {
       console.error('Error setting up presence channel:', error);
       setTimeout(() => this.setupPresenceChannel(), this.config.reconnectDelay);
     }
   }
 
-  private async updateDeviceStatus(status: 'online' | 'offline'): Promise<void> {
+  private async updateDeviceStatus(status: 'online' | 'offline', systemInfo?: any): Promise<void> {
     if (!this.deviceToken) return;
     
     try {
-      const systemInfo = status === 'online' ? await (window as any).electronAPI.getSystemInfo() : null;
-      await updateDeviceStatus(this.deviceToken, status, systemInfo);
+      const currentSystemInfo = systemInfo || (status === 'online' ? await (window as any).electronAPI.getSystemInfo() : null);
+      console.log(`Updating device status to ${status}`, { systemInfo: currentSystemInfo });
+      
+      const { data, error } = await this.supabase
+        .from('devices')
+        .update({
+          status,
+          system_info: currentSystemInfo || {},
+          last_seen: new Date().toISOString(),
+        })
+        .eq('token', this.deviceToken)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Device status updated successfully:', data);
     } catch (error) {
       console.error('Error updating device status:', error);
     }
@@ -152,10 +186,8 @@ export class PresenceManager {
     
     if (this.presenceChannel && this.deviceToken) {
       try {
-        // Update device status to offline
         await this.updateDeviceStatus('offline');
         
-        // Track offline status in presence channel
         await this.presenceChannel.track({
           token: this.deviceToken,
           status: 'offline',

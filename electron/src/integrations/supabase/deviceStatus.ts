@@ -24,7 +24,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       return null;
     }
 
-    // Update device status
+    // Update device status directly in the database
     const { data: updateData, error: updateError } = await supabase
       .from('devices')
       .update({
