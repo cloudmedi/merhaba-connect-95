@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { EditDeviceDialog } from "./EditDeviceDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DeviceListItemProps {
   device: Device;
@@ -37,6 +39,21 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
     if (device.status === 'online') return <Signal className="h-4 w-4 text-emerald-500" />;
     if (device.system_info?.health === 'warning') return <AlertTriangle className="h-4 w-4 text-amber-500" />;
     return <Monitor className="h-4 w-4 text-gray-400" />;
+  };
+
+  const handleSave = async (updatedDevice: Partial<Device>) => {
+    try {
+      const { error } = await supabase
+        .from('devices')
+        .update(updatedDevice)
+        .eq('id', device.id);
+
+      if (error) throw error;
+      toast.success('Cihaz başarıyla güncellendi');
+    } catch (error) {
+      console.error('Error updating device:', error);
+      toast.error('Cihaz güncellenirken bir hata oluştu');
+    }
   };
 
   return (
@@ -153,6 +170,7 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
           device={device}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
+          onSave={handleSave}
         />
       </TableCell>
     </TableRow>
