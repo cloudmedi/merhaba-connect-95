@@ -1,5 +1,7 @@
 import { Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
 
 interface Song {
   id: string | number;
@@ -16,6 +18,9 @@ interface SongListProps {
   currentSongIndex?: number;
   onCurrentSongIndexChange?: (index: number) => void;
   isPlaying?: boolean;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
 }
 
 export function SongList({ 
@@ -24,8 +29,19 @@ export function SongList({
   currentSongId,
   currentSongIndex,
   onCurrentSongIndexChange,
-  isPlaying = false
+  isPlaying = false,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage
 }: SongListProps) {
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage && fetchNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const formatDuration = (duration: string | number) => {
     if (typeof duration === 'number') {
       const minutes = Math.floor(duration / 60);
@@ -87,6 +103,15 @@ export function SongList({
             </div>
           </div>
         ))}
+
+        {/* Infinite scroll trigger */}
+        <div ref={ref} className="py-4 text-center">
+          {isFetchingNextPage ? (
+            <div className="text-sm text-gray-500">Loading more songs...</div>
+          ) : hasNextPage ? (
+            <div className="text-sm text-gray-400">Scroll for more songs</div>
+          ) : null}
+        </div>
       </ScrollArea>
     </div>
   );
