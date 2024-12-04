@@ -13,13 +13,11 @@ export default function ManagerDashboard() {
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Set up realtime subscription
   usePlaylistSubscription();
 
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
-      console.log('Fetching hero playlist');
       const { data, error } = await supabase
         .from('playlists')
         .select(`
@@ -32,21 +30,19 @@ export default function ManagerDashboard() {
         .eq('is_hero', true)
         .single();
 
-      if (error) {
-        console.error('Error fetching hero playlist:', error);
-        throw error;
-      }
-      
-      console.log('Hero playlist data:', data);
+      if (error) throw error;
       return data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    }
   });
 
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
-      console.log('Fetching categories');
+      // Önce mevcut kullanıcının ID'sini al
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user');
+
+      // Kategorileri getir
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('id, name, description');
@@ -55,47 +51,48 @@ export default function ManagerDashboard() {
 
       const categoriesWithPlaylists = await Promise.all(
         categoriesData.map(async (category) => {
+          // Playlist sorgusu - hem public hem de atanmış playlistleri getir
           const { data: playlistsData, error: playlistsError } = await supabase
-            .from('playlist_categories')
+            .from('playlists')
             .select(`
-              playlist_id,
-              playlists (
-                id,
-                name,
-                artwork_url,
-                genre_id:genres!inner(name),
-                mood_id:moods!inner(name)
-              )
+              id,
+              name,
+              artwork_url,
+              genre_id:genres!inner(name),
+              mood_id:moods!inner(name),
+              is_public,
+              assigned_to
             `)
-            .eq('category_id', category.id)
-            .eq('playlists.is_public', true)
-            .ilike('playlists.name', `%${searchQuery}%`);
+            .or(`is_public.eq.true,assigned_to.cs.{${user.id}}`)
+            .ilike('name', `%${searchQuery}%`);
 
           if (playlistsError) throw playlistsError;
 
-          const playlists = playlistsData
-            .map(item => item.playlists)
-            .filter(playlist => playlist !== null);
+          // Kategori-playlist ilişkisini kontrol et
+          const { data: categoryPlaylists } = await supabase
+            .from('playlist_categories')
+            .select('playlist_id')
+            .eq('category_id', category.id);
+
+          // Sadece bu kategoriye ait playlistleri filtrele
+          const categoryPlaylistIds = categoryPlaylists?.map(cp => cp.playlist_id) || [];
+          const filteredPlaylists = playlistsData.filter(p => categoryPlaylistIds.includes(p.id));
 
           return {
             ...category,
-            playlists: playlists
+            playlists: filteredPlaylists
           };
         })
       );
 
-      console.log('Categories with playlists:', categoriesWithPlaylists);
       return categoriesWithPlaylists;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    }
   });
 
   const handlePlayPlaylist = (playlist: any) => {
     if (currentPlaylist?.id === playlist.id) {
-      // If clicking the same playlist, toggle play state
       setIsPlaying(!isPlaying);
     } else {
-      // If clicking a different playlist, start playing it
       setCurrentPlaylist(playlist);
       setIsPlaying(true);
     }
