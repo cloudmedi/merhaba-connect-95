@@ -20,6 +20,7 @@ export class PresenceManager {
 
   async initialize(deviceToken: string) {
     try {
+      console.log('Initializing presence manager with token:', deviceToken);
       this.deviceToken = deviceToken;
       await this.setupPresenceChannel();
     } catch (error) {
@@ -29,13 +30,18 @@ export class PresenceManager {
   }
 
   private async setupPresenceChannel() {
-    if (!this.deviceToken) return;
+    if (!this.deviceToken) {
+      console.log('No device token available, skipping presence setup');
+      return;
+    }
 
     try {
       if (this.presenceChannel) {
+        console.log('Cleaning up existing presence channel');
         await this.cleanup();
       }
 
+      console.log('Setting up new presence channel');
       this.presenceChannel = this.supabase.channel(`presence_${this.deviceToken}`, {
         config: {
           presence: {
@@ -59,6 +65,7 @@ export class PresenceManager {
         });
 
       await this.presenceChannel.subscribe(async (status) => {
+        console.log('Presence channel subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('Successfully subscribed to presence channel');
           await this.startHeartbeat();
@@ -71,18 +78,20 @@ export class PresenceManager {
   }
 
   private async startHeartbeat() {
-    if (!this.deviceToken) return;
+    if (!this.deviceToken) {
+      console.log('No device token available, skipping heartbeat');
+      return;
+    }
 
     try {
-      // Initial presence update
+      console.log('Starting heartbeat');
       await this.updatePresence();
 
-      // Clear existing heartbeat
       if (this.heartbeatInterval) {
+        console.log('Clearing existing heartbeat interval');
         clearInterval(this.heartbeatInterval);
       }
 
-      // Start new heartbeat
       this.heartbeatInterval = setInterval(async () => {
         await this.updatePresence();
       }, 5000);
@@ -93,10 +102,14 @@ export class PresenceManager {
   }
 
   private async updatePresence() {
-    if (!this.deviceToken || !this.presenceChannel) return;
+    if (!this.deviceToken || !this.presenceChannel) {
+      console.log('Missing required data for presence update');
+      return;
+    }
 
     try {
       const systemInfo = await (window as any).electronAPI.getSystemInfo();
+      console.log('Updating presence with system info:', systemInfo);
       
       await this.presenceChannel.track({
         token: this.deviceToken,
