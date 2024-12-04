@@ -8,9 +8,20 @@ import { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { toast } from "sonner";
 
+interface PlaylistWithSongs extends GridPlaylist {
+  songs?: {
+    id: string;
+    title: string;
+    artist: string;
+    duration: string;
+    file_url: string;
+    bunny_id?: string;
+  }[];
+}
+
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistWithSongs | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: playlists, isLoading } = useQuery({
@@ -78,10 +89,8 @@ export default function Playlists() {
       }
 
       // Transform the playlist data
-      const playlistWithSongs = {
-        id: playlist.id,
-        title: playlist.title,
-        artwork: playlist.artwork_url,
+      const playlistWithSongs: PlaylistWithSongs = {
+        ...playlist,
         songs: playlistSongs.map(ps => ({
           id: ps.songs.id,
           title: ps.songs.title,
@@ -143,7 +152,11 @@ export default function Playlists() {
       {currentPlaylist && (
         <MusicPlayer
           key={currentPlaylist.id}
-          playlist={currentPlaylist}
+          playlist={{
+            title: currentPlaylist.title,
+            artwork: currentPlaylist.artwork_url,
+            songs: currentPlaylist.songs
+          }}
           onClose={() => {
             setCurrentPlaylist(null);
             setIsPlaying(false);
