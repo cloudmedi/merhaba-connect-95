@@ -6,7 +6,7 @@ import { FolderOpen } from "lucide-react";
 interface GroupListProps {
   groups: any[];
   selectedDevices: string[];
-  onSelectGroup: (group: any) => void;
+  onSelectGroup: (group: any, isSelected: boolean) => void;
 }
 
 export function GroupList({ groups, selectedDevices, onSelectGroup }: GroupListProps) {
@@ -22,12 +22,12 @@ export function GroupList({ groups, selectedDevices, onSelectGroup }: GroupListP
             <div
               key={group.id}
               className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
-              onClick={() => onSelectGroup(group)}
+              onClick={() => onSelectGroup(group, !allSelected)}
             >
               <Checkbox
                 checked={allSelected}
                 className={someSelected && !allSelected ? "opacity-50" : ""}
-                onCheckedChange={() => onSelectGroup(group)}
+                onCheckedChange={(checked) => onSelectGroup(group, !!checked)}
               />
               <div>
                 <div className="flex items-center gap-2">
