@@ -1,4 +1,5 @@
-import { DatabaseScheduleEvent, ScheduleEvent } from "../types/scheduleTypes";
+import { Json } from "@/integrations/supabase/types";
+import { DatabaseScheduleEvent, ScheduleEvent, EventRecurrence, EventNotification } from "../types/scheduleTypes";
 
 export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): ScheduleEvent => ({
   id: dbEvent.id,
@@ -7,8 +8,8 @@ export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): Sche
   playlist_id: dbEvent.playlist_id,
   start_time: dbEvent.start_time,
   end_time: dbEvent.end_time,
-  recurrence: dbEvent.recurrence as ScheduleEvent['recurrence'],
-  notifications: dbEvent.notifications as ScheduleEvent['notifications'],
+  recurrence: dbEvent.recurrence as EventRecurrence | undefined,
+  notifications: dbEvent.notifications as EventNotification[] | undefined,
   created_by: dbEvent.created_by,
   company_id: dbEvent.company_id,
   created_at: dbEvent.created_at,
