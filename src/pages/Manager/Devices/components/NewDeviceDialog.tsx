@@ -32,11 +32,18 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
     e.preventDefault();
     
     try {
+      console.log('Starting device creation with token:', token);
       const deviceInfo = await verifyTokenAndGetDeviceInfo(token);
-      if (!deviceInfo) return;
+      
+      if (!deviceInfo) {
+        console.error('Device info not found');
+        return;
+      }
+
+      console.log('Device info retrieved:', deviceInfo);
 
       // Create the device with properly typed system info
-      await createDevice.mutateAsync({
+      const newDevice = {
         name,
         category,
         location,
@@ -46,30 +53,48 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
         schedule: {},
         system_info: deviceInfo.systemInfo as DeviceSystemInfo,
         branch_id: null
-      });
+      };
+
+      console.log('Creating device with data:', newDevice);
+
+      await createDevice.mutateAsync(newDevice);
 
       // Update token status to used
-      await supabase
+      const { error: updateError } = await supabase
         .from('device_tokens')
         .update({ status: 'used' })
         .eq('token', token);
+
+      if (updateError) {
+        console.error('Error updating token status:', updateError);
+        toast.error('Token durumu güncellenirken hata oluştu');
+        return;
+      }
 
       toast.success('Cihaz başarıyla eklendi');
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
+      console.error('Device creation error:', error);
       toast.error(error.message || 'Cihaz eklenirken bir hata oluştu');
     }
   };
 
   const handleTokenChange = async (newToken: string) => {
-    const deviceInfo = await verifyTokenAndGetDeviceInfo(newToken);
-    if (deviceInfo?.existingDevice) {
-      setName(deviceInfo.existingDevice.name || '');
-      setCategory((deviceInfo.existingDevice.category as "player" | "display" | "controller") || 'player');
-      setLocation(deviceInfo.existingDevice.location || '');
-      setIpAddress(deviceInfo.existingDevice.ip_address || '');
-      toast.success('Cihaz bilgileri getirildi');
+    try {
+      console.log('Token changed:', newToken);
+      const deviceInfo = await verifyTokenAndGetDeviceInfo(newToken);
+      
+      if (deviceInfo?.existingDevice) {
+        console.log('Existing device found:', deviceInfo.existingDevice);
+        setName(deviceInfo.existingDevice.name || '');
+        setCategory((deviceInfo.existingDevice.category as "player" | "display" | "controller") || 'player');
+        setLocation(deviceInfo.existingDevice.location || '');
+        setIpAddress(deviceInfo.existingDevice.ip_address || '');
+        toast.success('Cihaz bilgileri getirildi');
+      }
+    } catch (error) {
+      console.error('Error handling token change:', error);
     }
   };
 
