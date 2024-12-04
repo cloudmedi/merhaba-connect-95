@@ -59,19 +59,21 @@ async function initSupabase() {
     systemInfoInterval = setInterval(async () => {
       try {
         console.log('Updating system info...');
+        const systemInfo = await (window as any).electronAPI.getSystemInfo();
         await updateDeviceSystemInfo(deviceToken);
+        console.log('System info updated:', systemInfo);
       } catch (error) {
         console.error('Error in periodic system info update:', error);
       }
     }, 30000); // Update every 30 seconds
 
-    // Set up realtime subscription for device status
+    // Set up realtime presence for device status
     realtimeChannel = supabase.channel('device_status')
       .on(
         'presence',
         { event: 'sync' },
         () => {
-          console.log('Initial presence state received');
+          console.log('Presence state synced:', realtimeChannel.presenceState());
         }
       )
       .on(
@@ -97,7 +99,16 @@ async function initSupabase() {
     await realtimeChannel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         const systemInfo = await (window as any).electronAPI.getSystemInfo();
-        await updateDeviceStatus(deviceToken, 'online', systemInfo);
+        console.log('Tracking presence with system info:', systemInfo);
+        
+        // Track presence with detailed device information
+        await realtimeChannel.track({
+          token: deviceToken,
+          status: 'online',
+          systemInfo: systemInfo,
+          lastSeen: new Date().toISOString(),
+          macAddress: macAddress
+        });
       }
     });
 
@@ -106,9 +117,15 @@ async function initSupabase() {
       event.preventDefault();
       console.log('Window closing, updating device status to offline...');
       if (systemInfoInterval) clearInterval(systemInfoInterval);
-      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await updateDeviceStatus(deviceToken, 'offline', systemInfo);
+      if (realtimeChannel) {
+        await realtimeChannel.track({
+          token: deviceToken,
+          status: 'offline',
+          lastSeen: new Date().toISOString(),
+          macAddress: macAddress
+        });
+        supabase.removeChannel(realtimeChannel);
+      }
     });
     
     return supabase;
