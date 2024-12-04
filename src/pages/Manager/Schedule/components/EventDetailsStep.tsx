@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -33,7 +33,7 @@ export function EventDetailsStep({
   const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
 
   // Set initial values when component mounts or initialTimeRange changes
-  useState(() => {
+  useEffect(() => {
     if (initialTimeRange) {
       const startDateTime = new Date(initialTimeRange.start);
       const endDateTime = new Date(initialTimeRange.end);
@@ -53,7 +53,7 @@ export function EventDetailsStep({
         })
       });
     }
-  }, [initialTimeRange]);
+  }, [initialTimeRange, onFormDataChange]);
 
   const handlePlaylistSelect = (playlist: any) => {
     setSelectedPlaylist(playlist);
