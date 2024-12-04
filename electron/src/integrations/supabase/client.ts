@@ -62,12 +62,36 @@ async function initSupabase() {
       .eq('token', currentDeviceToken)
       .single();
 
-    if (!device) {
-      console.log('Device not registered in devices table, skipping presence setup');
-      return supabase;
+    // Only set up presence if device exists
+    if (device) {
+      console.log('Device found, setting up presence channel');
+      setupPresenceChannel(currentDeviceToken);
+    } else {
+      console.log('Device not registered yet, skipping presence setup');
     }
 
-    // Set up device presence channel only if device exists
+    // Update status when window is closing
+    window.addEventListener('beforeunload', async () => {
+      await cleanup();
+    });
+
+    isInitialized = true;
+    return supabase;
+  } catch (error) {
+    console.error('Supabase initialization error:', error);
+    throw error;
+  }
+}
+
+async function setupPresenceChannel(deviceToken: string) {
+  if (!deviceToken) return;
+
+  try {
+    // Remove existing channel if any
+    if (presenceChannel) {
+      await supabase.removeChannel(presenceChannel);
+    }
+
     presenceChannel = supabase.channel('device_status')
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
@@ -82,29 +106,22 @@ async function initSupabase() {
 
     // Subscribe to presence channel and start heartbeat
     await presenceChannel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED' && currentDeviceToken) {
+      if (status === 'SUBSCRIBED') {
         // Initial presence update
-        await updatePresenceAndStatus(currentDeviceToken);
+        await updatePresenceAndStatus(deviceToken);
         
         // Set up heartbeat interval
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+        }
+        
         heartbeatInterval = setInterval(async () => {
-          if (currentDeviceToken) {
-            await updatePresenceAndStatus(currentDeviceToken);
-          }
+          await updatePresenceAndStatus(deviceToken);
         }, 10000); // Send heartbeat every 10 seconds
       }
     });
-
-    // Update status when window is closing
-    window.addEventListener('beforeunload', async () => {
-      await cleanup();
-    });
-
-    isInitialized = true;
-    return supabase;
   } catch (error) {
-    console.error('Supabase initialization error:', error);
-    throw error;
+    console.error('Error setting up presence channel:', error);
   }
 }
 
@@ -147,15 +164,24 @@ async function cleanup() {
   
   if (presenceChannel && currentDeviceToken) {
     try {
-      // Update device status to offline
-      await updateDeviceStatus(currentDeviceToken, 'offline', null);
-      
-      // Track offline status in presence channel
-      await presenceChannel.track({
-        token: currentDeviceToken,
-        status: 'offline',
-        lastSeen: new Date().toISOString(),
-      });
+      // Only update status to offline if device exists
+      const { data: device } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('token', currentDeviceToken)
+        .single();
+
+      if (device) {
+        // Update device status to offline
+        await updateDeviceStatus(currentDeviceToken, 'offline', null);
+        
+        // Track offline status in presence channel
+        await presenceChannel.track({
+          token: currentDeviceToken,
+          status: 'offline',
+          lastSeen: new Date().toISOString(),
+        });
+      }
       
       await supabase.removeChannel(presenceChannel);
     } catch (error) {
