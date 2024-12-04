@@ -10,14 +10,18 @@ export function useScheduleEvents() {
   const { data: events = [], isLoading, error } = useQuery({
     queryKey: ['schedule-events'],
     queryFn: async () => {
+      console.log('Fetching schedule events...');
+      
       const { data: userData } = await supabase.auth.getUser();
+      console.log('Current user:', userData);
+      
       const { data: userProfile } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', userData.user?.id)
         .single();
 
-      console.log('Fetching events for company:', userProfile?.company_id);
+      console.log('User profile:', userProfile);
 
       const { data, error } = await supabase
         .from('schedule_events')
@@ -49,6 +53,8 @@ export function useScheduleEvents() {
 
   const createEvent = useMutation({
     mutationFn: async (event: Omit<ScheduleEvent, 'id' | 'color'>) => {
+      console.log('Creating event with data:', event);
+      
       const { data: userData } = await supabase.auth.getUser();
       const { data: userProfile } = await supabase
         .from('profiles')
@@ -62,7 +68,7 @@ export function useScheduleEvents() {
         company_id: userProfile?.company_id,
       };
 
-      console.log('Creating event with data:', eventData);
+      console.log('Mapped event data for database:', eventData);
 
       const { data, error } = await supabase
         .from('schedule_events')
@@ -74,6 +80,8 @@ export function useScheduleEvents() {
         console.error('Error creating event:', error);
         throw error;
       }
+
+      console.log('Created event in database:', data);
 
       if (event.devices?.length) {
         const deviceAssignments = event.devices.map(device => ({
@@ -94,7 +102,7 @@ export function useScheduleEvents() {
       }
 
       const createdEvent = mapDatabaseToScheduleEvent(data as DatabaseScheduleEvent);
-      console.log('Created event:', createdEvent);
+      console.log('Final created event:', createdEvent);
       return createdEvent;
     },
     onSuccess: () => {
@@ -109,7 +117,6 @@ export function useScheduleEvents() {
 
   const updateEvent = useMutation({
     mutationFn: async (event: ScheduleEvent) => {
-      console.log('Updating event:', event);
       const eventData = mapEventToDatabase(event);
 
       const { error: updateError } = await supabase
@@ -134,16 +141,14 @@ export function useScheduleEvents() {
         }
 
         if (event.devices.length > 0) {
-          const deviceAssignments = event.devices.map(device => ({
-            schedule_id: event.id,
-            device_id: device.device_id
-          }));
-
-          console.log('Updating device assignments:', deviceAssignments);
-
           const { error: assignmentError } = await supabase
             .from('schedule_device_assignments')
-            .insert(deviceAssignments);
+            .insert(
+              event.devices.map(device => ({
+                schedule_id: event.id,
+                device_id: device.device_id
+              }))
+            );
 
           if (assignmentError) {
             console.error('Error updating device assignments:', assignmentError);

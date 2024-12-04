@@ -20,7 +20,7 @@ export default function Schedule() {
   } | null>(null);
   const { events, isLoading, updateEvent } = useScheduleEvents();
 
-  console.log('Schedule component - events:', events);
+  console.log('Schedule component - Raw events from hook:', events);
 
   const handleEventDrop = async (info: any) => {
     const updatedEvent: ScheduleEvent = {
@@ -34,6 +34,7 @@ export default function Schedule() {
     try {
       await updateEvent.mutateAsync(updatedEvent);
     } catch (error) {
+      console.error('Error updating event:', error);
       toast.error("Failed to update event");
       info.revert();
     }
@@ -57,8 +58,8 @@ export default function Schedule() {
   }
 
   const formattedEvents = events.map(event => {
-    console.log('Formatting event:', event);
-    return {
+    console.log('Formatting individual event:', event);
+    const formattedEvent = {
       id: event.id,
       title: event.title,
       start: new Date(event.start_time),
@@ -68,9 +69,11 @@ export default function Schedule() {
       textColor: event.color?.text || '#ffffff',
       extendedProps: event
     };
+    console.log('Formatted event:', formattedEvent);
+    return formattedEvent;
   });
 
-  console.log("Formatted events for calendar:", formattedEvents);
+  console.log("Final formatted events for calendar:", formattedEvents);
 
   return (
     <div className="p-6 space-y-6">
@@ -177,6 +180,7 @@ export default function Schedule() {
               }
             `}
           </style>
+          
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="timeGridWeek"
