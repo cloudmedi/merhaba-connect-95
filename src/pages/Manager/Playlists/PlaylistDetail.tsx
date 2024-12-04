@@ -222,5 +222,3 @@ export function PlaylistDetail() {
     </div>
   );
 }
-
-export default PlaylistDetail;
