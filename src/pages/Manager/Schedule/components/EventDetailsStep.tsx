@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EventCategory } from "../types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { PlaylistSelectionDialog } from "./PlaylistSelectionDialog";
 
 interface EventDetailsStepProps {
   formData: {
@@ -25,53 +22,13 @@ interface EventDetailsStepProps {
 }
 
 export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel }: EventDetailsStepProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isPlaylistDialogOpen, setIsPlaylistDialogOpen] = useState(false);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
 
-  // Fetch playlists that are either public or belong to the user's company
-  const { data: playlists = [], isLoading } = useQuery({
-    queryKey: ['available-playlists', searchQuery],
-    queryFn: async () => {
-      // First get the user's company_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile) throw new Error('No profile found');
-
-      // Then fetch playlists that are either public or belong to the user's company
-      const query = supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          artwork_url,
-          is_public,
-          company_id
-        `)
-        .ilike('name', `%${searchQuery}%`);
-
-      // Add the OR conditions separately
-      if (profile.company_id) {
-        query.or(`is_public.eq.true,company_id.eq.${profile.company_id}`);
-      } else {
-        query.or('is_public.eq.true');
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const filteredPlaylists = playlists.filter(playlist => 
-    playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handlePlaylistSelect = (playlist: any) => {
+    setSelectedPlaylist(playlist);
+    onFormDataChange({ playlistId: playlist.id });
+  };
 
   return (
     <div className="space-y-6">
@@ -105,41 +62,16 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
 
       <div className="space-y-2">
         <Label>Select Playlist</Label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search playlists..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-start text-left font-normal"
+            onClick={() => setIsPlaylistDialogOpen(true)}
+          >
+            {selectedPlaylist ? selectedPlaylist.name : "Choose a playlist..."}
+          </Button>
         </div>
-        <ScrollArea className="h-[200px] border rounded-md">
-          <div className="p-4 space-y-2">
-            {isLoading ? (
-              <div className="text-center text-gray-500">Loading playlists...</div>
-            ) : filteredPlaylists.length === 0 ? (
-              <div className="text-center text-gray-500">No playlists found</div>
-            ) : (
-              filteredPlaylists.map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                    formData.playlistId === playlist.id
-                      ? "bg-primary/10 border-primary"
-                      : "hover:bg-accent"
-                  }`}
-                  onClick={() => onFormDataChange({ playlistId: playlist.id })}
-                >
-                  <div className="font-medium">{playlist.name}</div>
-                  <div className="text-sm text-gray-500">
-                    {playlist.is_public ? "Public Playlist" : "Company Playlist"}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -192,6 +124,12 @@ export function EventDetailsStep({ formData, onFormDataChange, onNext, onCancel 
           Next
         </Button>
       </div>
+
+      <PlaylistSelectionDialog
+        open={isPlaylistDialogOpen}
+        onOpenChange={setIsPlaylistDialogOpen}
+        onPlaylistSelect={handlePlaylistSelect}
+      />
     </div>
   );
 }
