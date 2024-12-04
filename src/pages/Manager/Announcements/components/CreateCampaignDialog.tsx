@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +14,7 @@ interface CreateCampaignDialogProps {
 }
 
 export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialogProps) {
-  const [step, setStep] = useState(1);
+  const [activeTab, setActiveTab] = useState("basic");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -128,46 +129,45 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
       repeatInterval: 1,
       devices: []
     });
-    setStep(1);
-  };
-
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <CampaignBasicInfo 
-            formData={formData}
-            onFormDataChange={handleFormDataChange}
-            onNext={() => setStep(2)}
-          />
-        );
-      case 2:
-        return (
-          <DeviceSelectionStep
-            selectedDevices={formData.devices}
-            onDevicesChange={(devices) => handleFormDataChange({ devices })}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
-          />
-        );
-      case 3:
-        return (
-          <CampaignSchedule 
-            formData={formData}
-            onFormDataChange={handleFormDataChange}
-            onBack={() => setStep(2)}
-            onSubmit={handleCreateCampaign}
-          />
-        );
-      default:
-        return null;
-    }
+    setActiveTab("basic");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
-        {renderStep()}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="basic">Temel Bilgiler</TabsTrigger>
+            <TabsTrigger value="devices">Cihazlar ve Gruplar</TabsTrigger>
+            <TabsTrigger value="schedule">Zamanlama</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="mt-6">
+          {activeTab === "basic" && (
+            <CampaignBasicInfo 
+              formData={formData}
+              onFormDataChange={handleFormDataChange}
+              onNext={() => setActiveTab("devices")}
+            />
+          )}
+          {activeTab === "devices" && (
+            <DeviceSelectionStep
+              selectedDevices={formData.devices}
+              onDevicesChange={(devices) => handleFormDataChange({ devices })}
+              onNext={() => setActiveTab("schedule")}
+              onBack={() => setActiveTab("basic")}
+            />
+          )}
+          {activeTab === "schedule" && (
+            <CampaignSchedule 
+              formData={formData}
+              onFormDataChange={handleFormDataChange}
+              onSubmit={handleCreateCampaign}
+              onBack={() => setActiveTab("devices")}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

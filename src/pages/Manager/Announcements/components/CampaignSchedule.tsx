@@ -1,73 +1,85 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CampaignFormData } from "../types";
+import type { CampaignFormData } from "../types";
 
 interface CampaignScheduleProps {
   formData: CampaignFormData;
   onFormDataChange: (data: Partial<CampaignFormData>) => void;
+  onSubmit: () => Promise<void>;
+  onBack: () => void;
 }
 
-export function CampaignSchedule({ formData, onFormDataChange }: CampaignScheduleProps) {
+export function CampaignSchedule({ 
+  formData, 
+  onFormDataChange, 
+  onSubmit,
+  onBack 
+}: CampaignScheduleProps) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
-          <Label>Başlangıç Tarihi</Label>
+          <Label className="text-base font-semibold">Başlangıç Tarihi</Label>
           <Input
             type="datetime-local"
             value={formData.startDate}
             onChange={(e) => onFormDataChange({ startDate: e.target.value })}
+            className="mt-2"
           />
         </div>
+
         <div>
-          <Label>Bitiş Tarihi</Label>
+          <Label className="text-base font-semibold">Bitiş Tarihi</Label>
           <Input
             type="datetime-local"
             value={formData.endDate}
             onChange={(e) => onFormDataChange({ endDate: e.target.value })}
+            className="mt-2"
           />
         </div>
-      </div>
 
-      <div>
-        <Label>Tekrar Tipi</Label>
-        <RadioGroup
-          value={formData.repeatType}
-          onValueChange={(value) => onFormDataChange({ repeatType: value })}
-          className="flex gap-4 mt-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="once" id="once" />
-            <Label htmlFor="once">Bir Kez</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="repeat" id="repeat" />
-            <Label htmlFor="repeat">Tekrarlı</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      {formData.repeatType === "repeat" && (
         <div>
-          <Label>Tekrar Aralığı</Label>
-          <Select 
-            value={formData.repeatInterval.toString()} 
-            onValueChange={(value) => onFormDataChange({ repeatInterval: parseInt(value) })}
+          <Label className="text-base font-semibold">Tekrar Tipi</Label>
+          <Select
+            value={formData.repeatType}
+            onValueChange={(value) => onFormDataChange({ repeatType: value })}
           >
             <SelectTrigger className="mt-2">
-              <SelectValue placeholder="Tekrar aralığı seçin" />
+              <SelectValue placeholder="Tekrar tipini seçin" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">Günlük</SelectItem>
-              <SelectItem value="7">Haftalık</SelectItem>
-              <SelectItem value="30">Aylık</SelectItem>
+              <SelectItem value="once">Bir Kez</SelectItem>
+              <SelectItem value="daily">Her Gün</SelectItem>
+              <SelectItem value="weekly">Her Hafta</SelectItem>
+              <SelectItem value="monthly">Her Ay</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      )}
+
+        {formData.repeatType !== 'once' && (
+          <div>
+            <Label className="text-base font-semibold">Tekrar Aralığı (dakika)</Label>
+            <Input
+              type="number"
+              min={1}
+              value={formData.repeatInterval}
+              onChange={(e) => onFormDataChange({ repeatInterval: parseInt(e.target.value) })}
+              className="mt-2"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-between pt-4 border-t">
+        <Button variant="outline" onClick={onBack} size="lg">
+          Geri
+        </Button>
+        <Button onClick={onSubmit} size="lg">
+          Kampanya Oluştur
+        </Button>
+      </div>
     </div>
   );
 }
