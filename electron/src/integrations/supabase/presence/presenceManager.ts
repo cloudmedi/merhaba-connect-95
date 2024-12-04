@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+import { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { PresenceState, PresenceConfig, SystemInfo } from './types';
 import { updateDeviceStatus } from '../deviceStatus';
 

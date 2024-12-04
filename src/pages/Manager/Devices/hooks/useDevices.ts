@@ -80,6 +80,7 @@ export const useDevices = () => {
       
       // Get presence state to determine online status
       const presenceState = presenceChannel.presenceState();
+      console.log('Current presence state:', presenceState);
       
       // Update device status based on presence
       const devicesWithStatus = data.map(device => ({
@@ -89,6 +90,7 @@ export const useDevices = () => {
           .some((p: any) => p.token === device.token) ? 'online' : 'offline',
       })) as Device[];
       
+      console.log('Devices with status:', devicesWithStatus);
       return devicesWithStatus;
     },
   });
