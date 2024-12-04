@@ -4,6 +4,7 @@ import { updateDeviceStatus } from './deviceStatus';
 
 let supabase: ReturnType<typeof createClient>;
 let systemInfoInterval: NodeJS.Timeout;
+let deviceCheckInterval: NodeJS.Timeout;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -50,11 +51,11 @@ async function initSupabase() {
     console.log('Device token created/retrieved:', tokenData);
     const deviceToken = tokenData.token;
 
-    // Set up periodic system info updates
-    if (systemInfoInterval) {
-      clearInterval(systemInfoInterval);
-    }
+    // Clear existing intervals if any
+    if (systemInfoInterval) clearInterval(systemInfoInterval);
+    if (deviceCheckInterval) clearInterval(deviceCheckInterval);
 
+    // Set up periodic system info updates
     systemInfoInterval = setInterval(async () => {
       try {
         console.log('Updating system info...');
@@ -64,7 +65,31 @@ async function initSupabase() {
       }
     }, 30000); // Update every 30 seconds
 
-    // Get device info and set up realtime subscription
+    // Set up periodic device check
+    deviceCheckInterval = setInterval(async () => {
+      try {
+        console.log('Checking for device registration...');
+        const { data: device, error: deviceError } = await supabase
+          .from('devices')
+          .select('id')
+          .eq('token', deviceToken)
+          .maybeSingle();
+
+        console.log('Device check result:', { device, deviceError });
+
+        if (device) {
+          console.log('Device found, updating status...');
+          const systemInfo = await (window as any).electronAPI.getSystemInfo();
+          await updateDeviceStatus(deviceToken, 'online', systemInfo);
+        } else {
+          console.log('No device found with token:', deviceToken);
+        }
+      } catch (error) {
+        console.error('Error checking device registration:', error);
+      }
+    }, 10000); // Check every 10 seconds
+
+    // Initial device check
     console.log('Checking for existing device...');
     const { data: device, error: deviceError } = await supabase
       .from('devices')
@@ -88,9 +113,8 @@ async function initSupabase() {
       window.addEventListener('beforeunload', async (event) => {
         event.preventDefault();
         console.log('Window closing, updating device status to offline...');
-        if (systemInfoInterval) {
-          clearInterval(systemInfoInterval);
-        }
+        if (systemInfoInterval) clearInterval(systemInfoInterval);
+        if (deviceCheckInterval) clearInterval(deviceCheckInterval);
         await updateDeviceStatus(deviceToken, 'offline', systemInfo);
       });
     } else {
