@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import { createDeviceToken } from './deviceToken';
+import { createDeviceToken, updateDeviceSystemInfo } from './deviceToken';
 import { updateDeviceStatus } from './deviceStatus';
 
 let supabase: ReturnType<typeof createClient>;
+let systemInfoInterval: NodeJS.Timeout;
 
 async function initSupabase() {
   if (supabase) return supabase;
@@ -35,27 +36,25 @@ async function initSupabase() {
     if (!macAddress) throw new Error('Could not get MAC address');
 
     // Get or create device token
-    const { data: existingToken, error: tokenError } = await supabase
-      .from('device_tokens')
-      .select('token, expires_at')
-      .eq('mac_address', macAddress)
-      .eq('status', 'active')
-      .maybeSingle();
+    const { data: tokenData, error: tokenError } = await createDeviceToken(macAddress);
 
     if (tokenError) throw tokenError;
+    if (!tokenData) throw new Error('Failed to get or create device token');
 
-    let deviceToken;
-    if (existingToken) {
-      if (new Date(existingToken.expires_at) < new Date()) {
-        const tokenData = await createDeviceToken(macAddress);
-        deviceToken = tokenData.token;
-      } else {
-        deviceToken = existingToken.token;
-      }
-    } else {
-      const tokenData = await createDeviceToken(macAddress);
-      deviceToken = tokenData.token;
+    const deviceToken = tokenData.token;
+
+    // Set up periodic system info updates
+    if (systemInfoInterval) {
+      clearInterval(systemInfoInterval);
     }
+
+    systemInfoInterval = setInterval(async () => {
+      try {
+        await updateDeviceSystemInfo(deviceToken);
+      } catch (error) {
+        console.error('Error in periodic system info update:', error);
+      }
+    }, 30000); // Update every 30 seconds
 
     // Get device info and set up realtime subscription
     const { data: device } = await supabase
@@ -94,6 +93,9 @@ async function initSupabase() {
       // Update status when window is closing
       window.addEventListener('beforeunload', async (event) => {
         event.preventDefault();
+        if (systemInfoInterval) {
+          clearInterval(systemInfoInterval);
+        }
         await updateDeviceStatus(deviceToken, 'offline', systemInfo);
       });
     }

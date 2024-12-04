@@ -6,6 +6,9 @@ export async function createDeviceToken(macAddress: string) {
   const expirationDate = new Date();
   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
+  // Get system info
+  const systemInfo = await (window as any).electronAPI.getSystemInfo();
+
   // First check if there's an existing active token
   const { data: existingToken, error: checkError } = await supabase
     .from('device_tokens')
@@ -18,6 +21,16 @@ export async function createDeviceToken(macAddress: string) {
   
   // If token exists, return it
   if (existingToken) {
+    // Update system info for existing token
+    const { error: updateError } = await supabase
+      .from('device_tokens')
+      .update({
+        system_info: systemInfo,
+        last_system_update: new Date().toISOString()
+      })
+      .eq('token', existingToken.token);
+
+    if (updateError) throw updateError;
     return existingToken;
   }
 
@@ -28,7 +41,9 @@ export async function createDeviceToken(macAddress: string) {
       token,
       mac_address: macAddress,
       status: 'active',
-      expires_at: expirationDate.toISOString()
+      expires_at: expirationDate.toISOString(),
+      system_info: systemInfo,
+      last_system_update: new Date().toISOString()
     })
     .select()
     .single();
@@ -37,4 +52,23 @@ export async function createDeviceToken(macAddress: string) {
   if (!tokenData) throw new Error('Failed to create device token');
 
   return tokenData;
+}
+
+export async function updateDeviceSystemInfo(token: string) {
+  try {
+    const systemInfo = await (window as any).electronAPI.getSystemInfo();
+    
+    const { error } = await supabase
+      .from('device_tokens')
+      .update({
+        system_info: systemInfo,
+        last_system_update: new Date().toISOString()
+      })
+      .eq('token', token);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating system info:', error);
+    throw error;
+  }
 }

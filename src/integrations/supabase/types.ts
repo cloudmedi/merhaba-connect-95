@@ -373,8 +373,10 @@ export type Database = {
           created_at: string | null
           expires_at: string
           id: string
+          last_system_update: string | null
           mac_address: string
           status: Database["public"]["Enums"]["token_status"] | null
+          system_info: Json | null
           token: string
           used_at: string | null
         }
@@ -382,8 +384,10 @@ export type Database = {
           created_at?: string | null
           expires_at: string
           id?: string
+          last_system_update?: string | null
           mac_address: string
           status?: Database["public"]["Enums"]["token_status"] | null
+          system_info?: Json | null
           token: string
           used_at?: string | null
         }
@@ -391,8 +395,10 @@ export type Database = {
           created_at?: string | null
           expires_at?: string
           id?: string
+          last_system_update?: string | null
           mac_address?: string
           status?: Database["public"]["Enums"]["token_status"] | null
+          system_info?: Json | null
           token?: string
           used_at?: string | null
         }

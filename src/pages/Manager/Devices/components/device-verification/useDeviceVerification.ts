@@ -12,7 +12,7 @@ export const useDeviceVerification = () => {
       // First verify the token
       const { data: tokenData, error: tokenError } = await supabase
         .from('device_tokens')
-        .select('*')
+        .select('*, devices(*)')
         .eq('token', token)
         .eq('status', 'active')
         .single();
@@ -35,22 +35,10 @@ export const useDeviceVerification = () => {
         .eq('token', token)
         .maybeSingle();
 
-      // Get current system info safely
-      let systemInfo = {};
-      try {
-        if (window.electronAPI?.getSystemInfo) {
-          systemInfo = await window.electronAPI.getSystemInfo();
-        } else {
-          console.warn('Electron API is not available');
-        }
-      } catch (error) {
-        console.error('Error getting system info:', error);
-      }
-
       return {
         tokenData,
         existingDevice,
-        systemInfo
+        systemInfo: tokenData.system_info || {}
       };
 
     } catch (error: any) {
