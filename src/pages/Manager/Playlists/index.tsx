@@ -6,10 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { toast } from "sonner";
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['manager-playlists'],
@@ -42,6 +44,61 @@ export default function Playlists() {
       return data;
     }
   });
+
+  const handlePlayPlaylist = async (playlist: GridPlaylist) => {
+    try {
+      // If clicking the same playlist that's currently playing
+      if (currentPlaylist?.id === playlist.id) {
+        setIsPlaying(!isPlaying);
+        return;
+      }
+
+      // Fetch songs for this playlist
+      const { data: playlistSongs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url,
+            bunny_id
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
+
+      if (error) throw error;
+
+      if (!playlistSongs || playlistSongs.length === 0) {
+        toast.error("No songs found in this playlist");
+        return;
+      }
+
+      // Transform the playlist data
+      const playlistWithSongs = {
+        id: playlist.id,
+        title: playlist.title,
+        artwork: playlist.artwork_url,
+        songs: playlistSongs.map(ps => ({
+          id: ps.songs.id,
+          title: ps.songs.title,
+          artist: ps.songs.artist || "Unknown Artist",
+          duration: ps.songs.duration?.toString() || "0:00",
+          file_url: ps.songs.file_url,
+          bunny_id: ps.songs.bunny_id
+        }))
+      };
+
+      setCurrentPlaylist(playlistWithSongs);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Error playing playlist:', error);
+      toast.error("Failed to play playlist");
+    }
+  };
 
   const filteredPlaylists = playlists?.filter(playlist =>
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -78,17 +135,21 @@ export default function Playlists() {
         title="All Playlists"
         playlists={transformedPlaylists}
         isLoading={isLoading}
-        onPlay={setCurrentPlaylist}
+        onPlay={handlePlayPlaylist}
+        currentPlayingId={currentPlaylist?.id}
+        isPlaying={isPlaying}
       />
 
       {currentPlaylist && (
         <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: [] // We'll need to fetch songs when implementing play functionality
+          key={currentPlaylist.id}
+          playlist={currentPlaylist}
+          onClose={() => {
+            setCurrentPlaylist(null);
+            setIsPlaying(false);
           }}
-          onClose={() => setCurrentPlaylist(null)}
+          onPlayStateChange={setIsPlaying}
+          autoPlay={true}
         />
       )}
     </div>
