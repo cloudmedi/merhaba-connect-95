@@ -138,10 +138,9 @@ export default function ManagerDashboard() {
 
       {currentPlaylist && (
         <MusicPlayer
-          key={currentPlaylist.id}
           playlist={{
             title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork,
+            artwork: currentPlaylist.artwork_url,
             songs: currentPlaylist.songs
           }}
           onClose={handleClose}
