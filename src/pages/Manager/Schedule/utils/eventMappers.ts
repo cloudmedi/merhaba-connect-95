@@ -21,23 +21,24 @@ export const mapDatabaseToScheduleEvent = (dbEvent: DatabaseScheduleEvent): Sche
   };
 };
 
-export const mapEventToDatabase = (event: Partial<ScheduleEvent>): Omit<DatabaseScheduleEvent, 'playlists' | 'devices'> => {
+export const mapEventToDatabase = (event: Partial<ScheduleEvent>): DatabaseScheduleEvent => {
   const { color, devices, playlist, ...rest } = event;
   
-  // Create a base event object with required fields
-  const dbEvent: Omit<DatabaseScheduleEvent, 'playlists' | 'devices'> = {
-    id: event.id || crypto.randomUUID(), // Ensure id is always present
+  const dbEvent: DatabaseScheduleEvent = {
+    id: event.id || crypto.randomUUID(),
     title: event.title || '',
+    description: rest.description || null,
+    playlist_id: rest.playlist_id || null,
     start_time: event.start_time || new Date().toISOString(),
     end_time: event.end_time || new Date().toISOString(),
     notifications: event.notifications ? JSON.stringify(event.notifications) as Json : null,
     recurrence: event.recurrence ? JSON.stringify(event.recurrence) as Json : null,
-    description: rest.description || null,
-    playlist_id: rest.playlist_id || null,
     created_by: rest.created_by || null,
     company_id: rest.company_id || null,
     created_at: rest.created_at || new Date().toISOString(),
-    updated_at: rest.updated_at || new Date().toISOString()
+    updated_at: rest.updated_at || new Date().toISOString(),
+    playlists: undefined,
+    devices: undefined
   };
 
   return dbEvent;

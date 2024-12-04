@@ -44,16 +44,16 @@ export interface ScheduleEvent {
 export interface DatabaseScheduleEvent {
   id: string;
   title: string;
-  description?: string;
-  playlist_id?: string;
+  description?: string | null;
+  playlist_id?: string | null;
   start_time: string;
   end_time: string;
   recurrence?: Json;
   notifications?: Json;
-  created_by?: string;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_by?: string | null;
+  company_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   playlists?: {
     id: string;
     name: string;
