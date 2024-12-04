@@ -66,22 +66,6 @@ export function usePlaylistMutations() {
 
       let playlist;
       if (isEditMode && existingPlaylist) {
-        // Önce mevcut kategorileri ve atanmış yöneticileri temizle
-        await Promise.all([
-          supabase
-            .from('playlist_categories')
-            .delete()
-            .eq('playlist_id', existingPlaylist.id),
-          supabase
-            .from('playlist_assignments')
-            .delete()
-            .eq('playlist_id', existingPlaylist.id),
-          supabase
-            .from('playlist_songs')
-            .delete()
-            .eq('playlist_id', existingPlaylist.id)
-        ]);
-
         const { data, error } = await supabase
           .from('playlists')
           .update(playlistPayload)
@@ -91,6 +75,19 @@ export function usePlaylistMutations() {
 
         if (error) throw error;
         playlist = data;
+
+        // Mevcut kategorileri temizle
+        await supabase
+          .from('playlist_categories')
+          .delete()
+          .eq('playlist_id', existingPlaylist.id);
+
+        // Mevcut atanmış yöneticileri temizle
+        await supabase
+          .from('playlist_assignments')
+          .delete()
+          .eq('playlist_id', existingPlaylist.id);
+
       } else {
         const { data, error } = await supabase
           .from('playlists')
@@ -134,6 +131,13 @@ export function usePlaylistMutations() {
 
       // Şarkı atamalarını yap
       if (playlistData.selectedSongs.length > 0) {
+        if (isEditMode) {
+          await supabase
+            .from('playlist_songs')
+            .delete()
+            .eq('playlist_id', playlist.id);
+        }
+
         const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
           playlist_id: playlist.id,
           song_id: song.id,
