@@ -4,7 +4,6 @@ import { DeviceList } from "./components/DeviceList";
 import { DeviceHeader } from "./components/DeviceHeader";
 import { DeviceFilters } from "./components/DeviceFilters";
 import { DeviceStats } from "./components/DeviceStats";
-import { DeviceGroups } from "./components/DeviceGroups";
 import { BranchGroupsTab } from "@/components/devices/BranchGroupsTab";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,16 +75,10 @@ export default function Devices() {
                     Cihazlar
                   </TabsTrigger>
                   <TabsTrigger 
-                    value="auto-groups"
-                    className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
-                  >
-                    Otomatik Gruplar
-                  </TabsTrigger>
-                  <TabsTrigger 
                     value="custom-groups"
                     className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                   >
-                    Özel Gruplar
+                    Gruplar
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -114,10 +107,6 @@ export default function Devices() {
                   </ScrollArea>
                 </div>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="auto-groups" className="p-6">
-              <DeviceGroups />
             </TabsContent>
             
             <TabsContent value="custom-groups" className="p-6">
