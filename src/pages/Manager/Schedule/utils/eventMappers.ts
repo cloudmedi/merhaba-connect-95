@@ -34,8 +34,8 @@ export const mapEventToDatabase = (event: Omit<ScheduleEvent, 'id' | 'color'>) =
     playlist_id: event.playlist_id,
     start_time: event.start_time,
     end_time: event.end_time,
-    recurrence: event.recurrence,
-    notifications: event.notifications,
+    recurrence: event.recurrence ? JSON.stringify(event.recurrence) : null,
+    notifications: event.notifications ? JSON.stringify(event.notifications) : null,
   };
 
   console.log('💾 Mapped database event:', dbEvent);
