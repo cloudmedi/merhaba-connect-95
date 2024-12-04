@@ -1,6 +1,6 @@
 import type { Device as BaseDevice, DeviceSystemInfo as BaseDeviceSystemInfo } from "@/pages/Manager/Devices/hooks/types";
 
-export interface PushDialogDevice extends Omit<BaseDevice, 'system_info'> {
+export interface PushDialogDevice extends Omit<BaseDevice, 'system_info' | 'branches'> {
   system_info: BaseDeviceSystemInfo;
   branches?: {
     id?: string;
