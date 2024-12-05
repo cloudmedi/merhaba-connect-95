@@ -11,8 +11,8 @@ export class WebSocketManager {
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
 
-  constructor(deviceId: string) {
-    const fileSystem = new FileSystemManager(deviceId);
+  constructor(deviceToken: string) {
+    const fileSystem = new FileSystemManager(deviceToken);
     const downloadManager = new DownloadManager(fileSystem);
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
     
@@ -23,32 +23,8 @@ export class WebSocketManager {
       return;
     }
 
-    // Get device token from database and connect
-    this.initializeConnection();
-  }
-
-  private async initializeConnection() {
-    try {
-      // Get device token directly from the database
-      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?status=eq.active`, {
-        headers: {
-          'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
-          'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
-        }
-      }).then(res => res.json());
-
-      const deviceToken = deviceTokens?.[0]?.token;
-      if (!deviceToken) {
-        console.error('No active device token found');
-        return;
-      }
-
-      console.log('Found active token:', deviceToken);
-      this.connectWithToken(deviceToken);
-
-    } catch (error) {
-      console.error('Error getting device token:', error);
-    }
+    console.log('Initializing WebSocket connection with token:', deviceToken);
+    this.connectWithToken(deviceToken);
   }
 
   private async connectWithToken(token: string) {
@@ -58,14 +34,13 @@ export class WebSocketManager {
         return;
       }
 
-      // Construct WebSocket URL with device token
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened with token:', token);
+        console.log('WebSocket connection opened successfully with token:', token);
         this.reconnectAttempts = 0;
       });
 
