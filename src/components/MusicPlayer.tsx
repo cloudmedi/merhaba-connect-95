@@ -72,24 +72,15 @@ export function MusicPlayer({
   }, [isPlaying, onPlayStateChange]);
 
   const handlePlaylistChange = async () => {
-    // Stop current playback
     setIsPlaying(false);
-    
-    // Start transition animation
     setIsTransitioning(true);
-
-    // Wait for animation
     await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Reset state for new playlist
     setCurrentSongIndex(0);
     setIsPlaying(true);
     setIsTransitioning(false);
-
     toast.success(`Now playing: ${playlist.title}`);
   };
 
-  // Validate playlist has songs
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
     onClose();
