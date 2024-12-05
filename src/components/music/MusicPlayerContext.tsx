@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { Song, Playlist } from './types';
 
 interface MusicPlayerContextType {
@@ -38,23 +38,51 @@ export function MusicPlayerProvider({
   initialPlaylist,
   initialSongIndex = 0,
 }: MusicPlayerProviderProps) {
-  // ... Burada mevcut MusicPlayer'dan state yönetimini taşıyacağız
-  
-  const value = useMemo(() => ({
-    currentSong: null,
-    playlist: null,
-    isPlaying: false,
-    currentTime: 0,
-    duration: 0,
-    volume: 1,
-    isMuted: false,
-    togglePlay: () => {},
-    nextTrack: () => {},
-    previousTrack: () => {},
-    seekTo: () => {},
-    setVolume: () => {},
-    toggleMute: () => {},
-  }), []);
+  const [currentSong, setCurrentSong] = useState<Song | null>(
+    initialPlaylist?.songs?.[initialSongIndex] || null
+  );
+  const [playlist, setPlaylist] = useState<Playlist | null>(initialPlaylist || null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
+
+  const nextTrack = useCallback(() => {
+    // Implementation
+  }, []);
+
+  const previousTrack = useCallback(() => {
+    // Implementation
+  }, []);
+
+  const seekTo = useCallback((time: number) => {
+    setCurrentTime(time);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
+
+  const value = {
+    currentSong,
+    playlist,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    isMuted,
+    togglePlay,
+    nextTrack,
+    previousTrack,
+    seekTo,
+    setVolume,
+    toggleMute,
+  };
 
   return (
     <MusicPlayerContext.Provider value={value}>

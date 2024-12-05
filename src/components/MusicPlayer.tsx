@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { X } from "lucide-react";
-import { AudioPlayer } from "./AudioPlayer";
-import { VolumeControls } from "./VolumeControls";
-import { TrackInfo } from "./TrackInfo";
+import { AudioPlayer } from "@/components/music/AudioPlayer";
+import { VolumeControls } from "@/components/music/VolumeControls";
+import { TrackInfo } from "@/components/music/TrackInfo";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
-import { getOptimizedImageUrl, getAudioUrl } from "./utils";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { MusicPlayerProvider, useMusicPlayer } from "./MusicPlayerContext";
-import type { MusicPlayerProps } from "./types";
+import { Button } from "@/components/ui/button";
+import { getOptimizedImageUrl, getAudioUrl } from "@/components/music/utils";
+import { ErrorBoundary } from "@/components/music/ErrorBoundary";
+import { MusicPlayerProvider, useMusicPlayer } from "@/components/music/MusicPlayerContext";
+import type { MusicPlayerProps } from "@/components/music/types";
 
 const MusicPlayerContent = memo(function MusicPlayerContent({ 
   playlist, 

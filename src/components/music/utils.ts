@@ -1,10 +1,11 @@
-export const getOptimizedImageUrl = (url: string) => {
-  if (!url || !url.includes('b-cdn.net')) return url;
+export const getOptimizedImageUrl = (url?: string) => {
+  if (!url) return "/placeholder.svg";
+  if (!url.includes('b-cdn.net')) return url;
   return `${url}?width=400&quality=85&format=webp`;
 };
 
-export const getAudioUrl = (song: any) => {
-  if (!song.file_url) {
+export const getAudioUrl = (song?: { file_url?: string; bunny_id?: string }) => {
+  if (!song?.file_url) {
     console.error('No file_url provided for song:', song);
     return '';
   }
