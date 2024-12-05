@@ -1,5 +1,5 @@
-import * as fs from 'fs-extra';
 import fetch from 'node-fetch';
+import * as fs from 'fs-extra';
 import { FileSystemManager } from './FileSystemManager';
 
 export class DownloadManager {
