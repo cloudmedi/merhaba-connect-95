@@ -4,9 +4,6 @@ import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
 import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
-import { PlayerControls } from "./music/PlayerControls";
-import { PlayerProgress } from "./music/PlayerProgress";
-import { TrackInfo } from "./music/TrackInfo";
 
 interface MusicPlayerProps {
   playlist: {
@@ -29,9 +26,9 @@ interface MusicPlayerProps {
   currentSongId?: string | number;
 }
 
-export function MusicPlayer({
-  playlist,
-  onClose,
+export function MusicPlayer({ 
+  playlist, 
+  onClose, 
   initialSongIndex = 0,
   autoPlay = true,
   onSongChange,
@@ -42,10 +39,6 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isShuffled, setIsShuffled] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
   
   useEffect(() => {
     if (currentSongId && playlist.songs) {
@@ -89,6 +82,7 @@ export function MusicPlayer({
   };
 
   const handlePlayPause = (playing: boolean) => {
+    console.log('MusicPlayer handlePlayPause:', playing);
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
   };
@@ -103,49 +97,68 @@ export function MusicPlayer({
     setVolume(isMuted ? 75 : 0);
   };
 
-  const handleRepeat = () => {
-    const modes: ('off' | 'all' | 'one')[] = ['off', 'all', 'one'];
-    const currentIndex = modes.indexOf(repeatMode);
-    setRepeatMode(modes[(currentIndex + 1) % modes.length]);
+  const getOptimizedImageUrl = (url: string) => {
+    if (!url || !url.includes('b-cdn.net')) return url;
+    return `${url}?width=400&quality=85&format=webp`;
   };
 
-  const handleShuffle = () => {
-    setIsShuffled(!isShuffled);
+  const getAudioUrl = (song: any) => {
+    if (!song.file_url) {
+      console.error('No file_url provided for song:', song);
+      return '';
+    }
+    
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
-      <div className="absolute inset-0 bg-gradient-to-t from-black/95 to-black/90 backdrop-blur-lg" />
+      <div 
+        className="absolute inset-0 bg-cover bg-center music-player-backdrop"
+        style={{ 
+          backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
+          filter: 'blur(80px)',
+          transform: 'scale(1.2)',
+          opacity: '0.15'
+        }}
+      />
+      
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
       
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
-        <div className="flex-1 min-w-[180px] max-w-[300px]">
-          <TrackInfo
-            artwork={currentSong.artwork_url || playlist.artwork}
-            title={currentSong.title}
-            artist={currentSong.artist}
+        <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
+          <img 
+            src={getOptimizedImageUrl(playlist.artwork)} 
+            alt={currentSong?.title}
+            className="w-14 h-14 rounded-md object-cover shadow-lg"
           />
+          <div className="min-w-0">
+            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
+              {currentSong?.title}
+            </h3>
+            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
+              {currentSong?.artist}
+            </p>
+          </div>
         </div>
 
-        <div className="flex-1 max-w-2xl px-4 flex flex-col items-center gap-2">
-          <PlayerControls
-            isPlaying={isPlaying}
-            onPrevious={handlePrevious}
-            onPlayPause={() => handlePlayPause(!isPlaying)}
+        <div className="flex-1 max-w-2xl px-4">
+          <AudioPlayer
+            audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
-            onShuffle={handleShuffle}
-            onRepeat={handleRepeat}
-            isShuffled={isShuffled}
-            repeatMode={repeatMode}
-          />
-          
-          <PlayerProgress
-            progress={(currentTime / duration) * 100}
-            duration={duration}
-            currentTime={currentTime}
-            onProgressChange={(values) => {
-              const time = (values[0] / 100) * duration;
-              setCurrentTime(time);
-            }}
+            onPrevious={handlePrevious}
+            volume={isMuted ? 0 : volume / 100}
+            autoPlay={autoPlay}
+            onPlayStateChange={handlePlayPause}
           />
         </div>
 
