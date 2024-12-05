@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Volume2, VolumeX } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
-import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
-import { AudioPlayer } from "./music/AudioPlayer";
+import { PlayerControls } from "./music/PlayerControls";
+import { VolumeControl } from "./music/VolumeControl";
+import { TrackInfo } from "./music/TrackInfo";
+import { ProgressBar } from "./music/ProgressBar";
 
 interface MusicPlayerProps {
   playlist: {
@@ -27,9 +29,9 @@ interface MusicPlayerProps {
   currentSongId?: string | number;
 }
 
-export function MusicPlayer({ 
-  playlist, 
-  onClose, 
+export function MusicPlayer({
+  playlist,
+  onClose,
   initialSongIndex = 0,
   autoPlay = true,
   onSongChange,
@@ -40,18 +42,51 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [previousPlaylistId, setPreviousPlaylistId] = useState<string | undefined>(playlist.id);
-  
-  // Playlist değişikliğini izle
-  useEffect(() => {
-    if (playlist.id && playlist.id !== previousPlaylistId) {
-      handlePlaylistChange();
-    }
-    setPreviousPlaylistId(playlist.id);
-  }, [playlist.id]);
+  const [progress, setProgress] = useState(0);
+  const [audio] = useState(new Audio());
 
-  // Mevcut şarkı ID'sini izle
+  useEffect(() => {
+    if (!playlist.songs || playlist.songs.length === 0) {
+      toast.error("No songs available in this playlist");
+      onClose();
+      return;
+    }
+
+    const currentSong = playlist.songs[currentSongIndex];
+    audio.src = getAudioUrl(currentSong);
+    
+    if (autoPlay) {
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
+    }
+
+    const handleTimeUpdate = () => {
+      const progress = (audio.currentTime / audio.duration) * 100;
+      setProgress(progress);
+    };
+
+    const handleEnded = () => {
+      handleNext();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
+      audio.src = '';
+    };
+  }, [playlist.songs, currentSongIndex]);
+
+  useEffect(() => {
+    audio.volume = isMuted ? 0 : volume / 100;
+  }, [volume, isMuted]);
+
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -61,54 +96,39 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
-  // Initial song index değişikliğini izle
-  useEffect(() => {
-    setCurrentSongIndex(initialSongIndex);
-  }, [initialSongIndex]);
-
-  // Play state değişikliklerini parent'a bildir
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
-  const handlePlaylistChange = async () => {
-    setIsPlaying(false);
-    setIsTransitioning(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setCurrentSongIndex(0);
-    setIsPlaying(true);
-    setIsTransitioning(false);
-    toast.success(`Now playing: ${playlist.title}`);
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch(console.error);
+    }
+    setIsPlaying(!isPlaying);
+    onPlayStateChange?.(!isPlaying);
   };
 
-  if (!playlist.songs || playlist.songs.length === 0) {
-    toast.error("No songs available in this playlist");
-    onClose();
-    return null;
-  }
-
-  const currentSong = playlist.songs[currentSongIndex];
-
   const handleNext = () => {
-    if (playlist.songs && playlist.songs.length > 0) {
-      const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
-      setCurrentSongIndex(nextIndex);
-      onSongChange?.(nextIndex);
-    }
+    if (!playlist.songs) return;
+    const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
+    setCurrentSongIndex(nextIndex);
+    onSongChange?.(nextIndex);
   };
 
   const handlePrevious = () => {
-    if (playlist.songs && playlist.songs.length > 0) {
-      const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
-      setCurrentSongIndex(prevIndex);
-      onSongChange?.(prevIndex);
-    }
+    if (!playlist.songs) return;
+    const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
+    setCurrentSongIndex(prevIndex);
+    onSongChange?.(prevIndex);
   };
 
-  const handlePlayPause = (playing: boolean) => {
-    console.log('MusicPlayer - handlePlayPause:', playing);
-    setIsPlaying(playing);
-    onPlayStateChange?.(playing);
+  const handleProgressChange = (values: number[]) => {
+    const [value] = values;
+    const time = (value / 100) * audio.duration;
+    audio.currentTime = time;
+    setProgress(value);
   };
 
   const handleVolumeChange = (values: number[]) => {
@@ -121,104 +141,56 @@ export function MusicPlayer({
     setVolume(isMuted ? 75 : 0);
   };
 
-  const getOptimizedImageUrl = (url: string) => {
-    if (!url || !url.includes('b-cdn.net')) return url;
-    return `${url}?width=400&quality=85&format=webp`;
-  };
-
   const getAudioUrl = (song: any) => {
-    if (!song.file_url) {
-      console.error('No file_url provided for song:', song);
-      return '';
-    }
-    
-    if (song.file_url.startsWith('http')) {
-      return song.file_url;
-    }
-    
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    }
-    
+    if (!song.file_url) return '';
+    if (song.file_url.startsWith('http')) return song.file_url;
+    if (song.bunny_id) return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
+  if (!playlist.songs || playlist.songs.length === 0) return null;
+  const currentSong = playlist.songs[currentSongIndex];
+
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up transition-opacity duration-300 ${
-      isTransitioning ? 'opacity-0' : 'opacity-100'
-    }`}>
-      <div 
-        className="absolute inset-0 bg-cover bg-center music-player-backdrop"
-        style={{ 
-          backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
-          filter: 'blur(80px)',
-          transform: 'scale(1.2)',
-          opacity: '0.15'
-        }}
-      />
-      
-      <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
-      
-      <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
-          <img 
-            src={getOptimizedImageUrl(playlist.artwork)} 
-            alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg"
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10">
+      <div className="max-w-screen-2xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <TrackInfo
+            title={currentSong.title}
+            artist={currentSong.artist}
+            artwork={playlist.artwork}
           />
-          <div className="min-w-0">
-            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
-              {currentSong?.title}
-            </h3>
-            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
-              {currentSong?.artist}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex-1 max-w-2xl px-4">
-          <AudioPlayer
-            key={`${playlist.id}-${currentSongIndex}`}
-            audioUrl={getAudioUrl(currentSong)}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            volume={isMuted ? 0 : volume / 100}
-            autoPlay={autoPlay}
-            onPlayStateChange={handlePlayPause}
-          />
-        </div>
-
-        <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/10"
-              onClick={toggleMute}
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="h-5 w-5" />
-              ) : (
-                <Volume2 className="h-5 w-5" />
-              )}
-            </Button>
-            <Slider
-              value={[isMuted ? 0 : volume]}
-              onValueChange={handleVolumeChange}
-              max={100}
-              step={1}
-              className="w-24"
+          <div className="flex-1 max-w-2xl space-y-2">
+            <PlayerControls
+              isPlaying={isPlaying}
+              onPlayPause={handlePlayPause}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+            />
+            <ProgressBar
+              progress={progress}
+              onProgressChange={handleProgressChange}
             />
           </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white/70 hover:text-white hover:bg-white/10"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+
+          <div className="flex items-center gap-4">
+            <VolumeControl
+              volume={volume}
+              isMuted={isMuted}
+              onVolumeChange={handleVolumeChange}
+              onMuteToggle={toggleMute}
+            />
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

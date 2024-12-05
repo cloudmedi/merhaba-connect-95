@@ -3,43 +3,40 @@ import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
-  onPrevious: () => void;
   onPlayPause: () => void;
   onNext: () => void;
+  onPrevious: () => void;
 }
 
-export function PlayerControls({
-  isPlaying,
-  onPrevious,
-  onPlayPause,
-  onNext,
-}: PlayerControlsProps) {
+export function PlayerControls({ isPlaying, onPlayPause, onNext, onPrevious }: PlayerControlsProps) {
   return (
-    <div className="flex items-center space-x-2">
-      <Button 
-        variant="ghost" 
-        size="icon" 
+    <div className="flex items-center justify-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onPrevious}
-        className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
+        className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
       >
         <SkipBack className="h-5 w-5" />
       </Button>
+      
       <Button
         size="icon"
-        className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] h-8 w-8 transition-colors"
         onClick={onPlayPause}
+        className="bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full transition-all"
       >
         {isPlaying ? (
           <Pause className="h-5 w-5" />
         ) : (
-          <Play className="h-5 w-5" />
+          <Play className="h-5 w-5 ml-0.5" />
         )}
       </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onNext}
-        className="text-gray-400 hover:text-[#9b87f5] hover:bg-[#1A1F2C] transition-colors"
+        className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
       >
         <SkipForward className="h-5 w-5" />
       </Button>

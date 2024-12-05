@@ -7,12 +7,14 @@ interface ProgressBarProps {
 
 export function ProgressBar({ progress, onProgressChange }: ProgressBarProps) {
   return (
-    <Slider
-      value={[progress]}
-      onValueChange={onProgressChange}
-      max={100}
-      step={0.1}
-      className="w-full cursor-pointer"
-    />
+    <div className="w-full px-2">
+      <Slider
+        value={[progress]}
+        onValueChange={onProgressChange}
+        max={100}
+        step={0.1}
+        className="w-full"
+      />
+    </div>
   );
 }
