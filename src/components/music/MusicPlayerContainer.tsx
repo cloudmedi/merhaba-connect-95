@@ -5,7 +5,6 @@ import { VolumeControl } from "./VolumeControl";
 import { TrackInfo } from "./TrackInfo";
 import { ProgressBar } from "./ProgressBar";
 import { useAudioPlayer } from "./hooks/useAudioPlayer";
-import { useNavigate } from "react-router-dom";
 
 interface MusicPlayerProps {
   playlist: {
@@ -38,14 +37,13 @@ export function MusicPlayerContainer({
   onPlayStateChange,
   currentSongId
 }: MusicPlayerProps) {
-  const navigate = useNavigate();
   const {
     currentSongIndex,
     volume,
     isMuted,
     isPlaying,
     progress,
-    handlePlayPause,
+    handlePlayStateChange,
     handleNext,
     handlePrevious,
     handleProgressChange,
@@ -65,10 +63,9 @@ export function MusicPlayerContainer({
   const currentSong = getCurrentSong();
   if (!currentSong) return null;
 
-  const handleArtworkClick = () => {
-    if (playlist.id) {
-      navigate(`/manager/playlists/${playlist.id}`);
-    }
+  // Convert single volume number to array for VolumeControl
+  const handleVolumeChangeWrapper = (values: number[]) => {
+    handleVolumeChange(values[0]);
   };
 
   return (
@@ -79,13 +76,12 @@ export function MusicPlayerContainer({
             title={currentSong.title}
             artist={currentSong.artist}
             artwork={playlist.artwork}
-            onArtworkClick={handleArtworkClick}
           />
 
           <div className="flex-1 max-w-2xl space-y-2">
             <PlayerControls
               isPlaying={isPlaying}
-              onPlayPause={handlePlayPause}
+              onPlayPause={handlePlayStateChange}
               onNext={handleNext}
               onPrevious={handlePrevious}
             />
@@ -99,7 +95,7 @@ export function MusicPlayerContainer({
             <VolumeControl
               volume={volume}
               isMuted={isMuted}
-              onVolumeChange={handleVolumeChange}
+              onVolumeChange={handleVolumeChangeWrapper}
               onMuteToggle={toggleMute}
             />
             

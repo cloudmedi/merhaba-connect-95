@@ -3,7 +3,7 @@ import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
-  onPlayPause: () => void;
+  onPlayPause: (playing: boolean) => void;
   onNext: () => void;
   onPrevious: () => void;
 }
@@ -22,7 +22,7 @@ export function PlayerControls({ isPlaying, onPlayPause, onNext, onPrevious }: P
       
       <Button
         size="icon"
-        onClick={onPlayPause}
+        onClick={() => onPlayPause(!isPlaying)}
         className="bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full transition-all"
       >
         {isPlaying ? (
