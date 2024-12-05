@@ -27,18 +27,18 @@ export function FileUploadPreview({
 
   const uploadFile = async (file: File) => {
     if (!announcementId) {
-      toast.error("No announcement ID provided");
-      return;
+      toast.error("Announcement ID is missing. Please try again.");
+      return null;
     }
 
     setIsUploading(true);
     try {
       // Convert file to base64
       const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
+      const base64Promise = new Promise<string>((resolve) => {
         reader.onload = () => {
           const base64 = reader.result?.toString().split(',')[1];
-          resolve(base64);
+          if (base64) resolve(base64);
         };
       });
       reader.readAsDataURL(file);
@@ -73,18 +73,20 @@ export function FileUploadPreview({
     const newPreviews: FileWithPreview[] = [];
 
     for (const file of Array.from(uploadedFiles)) {
-      if (await validateAudioFile(file, maxFileSize, maxDuration)) {
-        try {
-          await uploadFile(file);
-          validFiles.push(file);
-          newPreviews.push({
-            file,
-            previewUrl: URL.createObjectURL(file),
-            isPlaying: false
-          });
-        } catch (error) {
-          console.error('Failed to upload file:', error);
+      try {
+        if (await validateAudioFile(file, maxFileSize, maxDuration)) {
+          const uploadedUrl = await uploadFile(file);
+          if (uploadedUrl) {
+            validFiles.push(file);
+            newPreviews.push({
+              file,
+              previewUrl: URL.createObjectURL(file),
+              isPlaying: false
+            });
+          }
         }
+      } catch (error) {
+        console.error('Failed to process file:', error);
       }
     }
 
