@@ -14,11 +14,16 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 
+// Manager specific navigation items
 const navItems = [
   {
     title: "Dashboard",
     href: "/manager",
     exact: true,
+  },
+  {
+    title: "Playlists",
+    href: "/manager/playlists",
   },
   {
     title: "Devices",
@@ -31,10 +36,6 @@ const navItems = [
   {
     title: "Announcements",
     href: "/manager/announcements",
-  },
-  {
-    title: "Settings",
-    href: "/manager/settings",
   },
 ];
 

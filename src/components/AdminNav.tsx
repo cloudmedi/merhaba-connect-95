@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { Button } from "./ui/button";
 
+// Super Admin specific navigation items
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/super-admin" },
   { icon: Users, label: "Users", href: "/super-admin/users" },
