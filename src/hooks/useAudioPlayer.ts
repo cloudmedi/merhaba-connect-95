@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useAudioPlayer(audioUrl: string | undefined) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +42,6 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
       if (audio.duration) {
         setProgress((audio.currentTime / audio.duration) * 100);
       }
@@ -124,7 +122,6 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   return {
     isPlaying,
     progress,
-    currentTime,
     duration,
     isLoading,
     error,
