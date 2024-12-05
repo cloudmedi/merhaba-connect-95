@@ -14,16 +14,16 @@ type Genre = Database['public']['Tables']['genres']['Row'];
 type Playlist = Database['public']['Tables']['playlists']['Row'] & {
   company?: { name: string } | null;
   profiles?: { first_name: string; last_name: string } | null;
-  genres?: { id: string; name: string } | null;
+  genres?: { name: string } | null;
 };
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
-  const [currentPlaylist, setCurrentPlaylist] = useState<any | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
   const navigate = useNavigate();
 
-  const { data: playlists, isLoading } = useQuery<Playlist[]>({
+  const { data: playlists = [], isLoading: isPlaylistsLoading } = useQuery<Playlist[]>({
     queryKey: ['playlists'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -32,16 +32,15 @@ export function PlaylistsContent() {
           *,
           company:company_id(name),
           profiles:created_by(first_name, last_name),
-          genres:genre_id(id, name)
-        `)
-        .order('created_at', { ascending: false });
+          genres:genre_id(name)
+        `);
 
       if (error) throw error;
       return data;
     }
   });
 
-  const { data: genres } = useQuery<Genre[]>({
+  const { data: genres = [] } = useQuery<Genre[]>({
     queryKey: ['genres'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -54,11 +53,11 @@ export function PlaylistsContent() {
     }
   });
 
-  const filteredPlaylists = playlists?.filter(playlist => {
+  const filteredPlaylists = playlists.filter(playlist => {
     const matchesSearch = playlist.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = selectedGenre === "all" || playlist.genre_id === selectedGenre;
     return matchesSearch && matchesGenre;
-  }) || [];
+  });
 
   return (
     <div className="space-y-8">
@@ -108,15 +107,15 @@ export function PlaylistsContent() {
           genre: p.genres?.name || "Unknown Genre",
           mood: "Various"
         }))}
-        isLoading={isLoading}
+        isLoading={isPlaylistsLoading}
         onPlay={(playlist) => setCurrentPlaylist(playlist)}
       />
 
       {currentPlaylist && (
         <MusicPlayer 
           playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url
+            title: currentPlaylist.name,
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg"
           }}
           onClose={() => setCurrentPlaylist(null)}
         />
