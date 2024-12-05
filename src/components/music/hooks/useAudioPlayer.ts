@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAudioControls } from './useAudioControls';
-import { useFadeEffect } from './useFadeEffect';
 
 interface UseAudioPlayerProps {
   playlist: {
@@ -29,9 +28,9 @@ export function useAudioPlayer({
   currentSongId
 }: UseAudioPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeInProgressRef = useRef(false);
+  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     isPlaying,
@@ -45,8 +44,6 @@ export function useAudioPlayer({
     toggleMute
   } = useAudioControls();
 
-  const { startFade, clearFade, FADE_DURATION } = useFadeEffect();
-
   const getAudioUrl = (song: any) => {
     if (!song.file_url) return '';
     if (song.file_url.startsWith('http')) return song.file_url;
@@ -54,25 +51,31 @@ export function useAudioPlayer({
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
-  const cleanupAudio = (audio: HTMLAudioElement | null) => {
-    if (audio) {
-      audio.pause();
-      audio.src = '';
-      audio.load();
+  const cleanupAudio = () => {
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+    
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.load();
+    }
+    
+    if (nextAudioRef.current) {
+      nextAudioRef.current.pause();
+      nextAudioRef.current.src = '';
+      nextAudioRef.current.load();
     }
   };
 
-  const handleFadeComplete = () => {
-    if (nextAudioRef.current) {
-      cleanupAudio(currentAudioRef.current);
-      currentAudioRef.current = nextAudioRef.current;
-      nextAudioRef.current = null;
-      setCurrentSongIndex(prevIndex => 
-        prevIndex === playlist.songs!.length - 1 ? 0 : prevIndex + 1
-      );
-      onSongChange?.(currentSongIndex);
-      fadeInProgressRef.current = false;
-    }
+  const switchToNextTrack = () => {
+    if (!playlist.songs) return;
+    
+    const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
+    setCurrentSongIndex(nextIndex);
+    onSongChange?.(nextIndex);
   };
 
   useEffect(() => {
@@ -80,62 +83,42 @@ export function useAudioPlayer({
 
     const currentSong = playlist.songs[currentSongIndex];
     const audio = new Audio(getAudioUrl(currentSong));
-    currentAudioRef.current = audio;
-    
-    if (autoPlay) {
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-        setIsPlaying(false);
-        onPlayStateChange?.(false);
-      });
-    }
+    audioRef.current = audio;
+
+    audio.volume = isMuted ? 0 : volume / 100;
 
     const handleTimeUpdate = () => {
       if (!audio.duration) return;
       setProgress((audio.currentTime / audio.duration) * 100);
-      
-      // Start fade when nearing the end of the song
-      if (!fadeInProgressRef.current && 
-          audio.duration - audio.currentTime <= FADE_DURATION / 1000) {
-        fadeInProgressRef.current = true;
-        const nextIndex = currentSongIndex === playlist.songs!.length - 1 ? 0 : currentSongIndex + 1;
-        const nextSong = playlist.songs![nextIndex];
-        
-        if (!nextAudioRef.current) {
-          const nextAudio = new Audio(getAudioUrl(nextSong));
-          nextAudioRef.current = nextAudio;
-          startFade(currentAudioRef.current, nextAudio, volume, handleFadeComplete);
-        }
-      }
+    };
+
+    const handleEnded = () => {
+      switchToNextTrack();
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.volume = isMuted ? 0 : volume / 100;
+    audio.addEventListener('ended', handleEnded);
+
+    if (autoPlay || isPlaying) {
+      audio.play().catch(console.error);
+      setIsPlaying(true);
+      onPlayStateChange?.(true);
+    }
 
     return () => {
-      clearFade();
       audio.removeEventListener('timeupdate', handleTimeUpdate);
-      cleanupAudio(audio);
-      fadeInProgressRef.current = false;
+      audio.removeEventListener('ended', handleEnded);
+      cleanupAudio();
     };
-  }, [playlist.songs, currentSongIndex]);
-
-  useEffect(() => {
-    if (currentAudioRef.current) {
-      currentAudioRef.current.volume = isMuted ? 0 : volume / 100;
-    }
-    if (nextAudioRef.current) {
-      nextAudioRef.current.volume = isMuted ? 0 : volume / 100;
-    }
-  }, [volume, isMuted]);
+  }, [playlist.songs, currentSongIndex, volume, isMuted]);
 
   const handlePlayPause = () => {
-    if (!currentAudioRef.current) return;
+    if (!audioRef.current) return;
     
     if (isPlaying) {
-      currentAudioRef.current.pause();
+      audioRef.current.pause();
     } else {
-      currentAudioRef.current.play().catch(console.error);
+      audioRef.current.play().catch(console.error);
     }
     
     setIsPlaying(!isPlaying);
@@ -143,45 +126,23 @@ export function useAudioPlayer({
   };
 
   const handleNext = () => {
-    if (!playlist.songs) return;
-    
-    clearFade();
-    fadeInProgressRef.current = false;
-    
-    if (nextAudioRef.current) {
-      cleanupAudio(nextAudioRef.current);
-      nextAudioRef.current = null;
-    }
-    
-    const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
-    const nextSong = playlist.songs[nextIndex];
-    const nextAudio = new Audio(getAudioUrl(nextSong));
-    
-    nextAudioRef.current = nextAudio;
-    startFade(currentAudioRef.current, nextAudio, volume, handleFadeComplete);
+    cleanupAudio();
+    switchToNextTrack();
   };
 
   const handlePrevious = () => {
     if (!playlist.songs) return;
-    
-    clearFade();
-    fadeInProgressRef.current = false;
-    
-    if (nextAudioRef.current) {
-      cleanupAudio(nextAudioRef.current);
-      nextAudioRef.current = null;
-    }
-    
+    cleanupAudio();
     const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
     setCurrentSongIndex(prevIndex);
     onSongChange?.(prevIndex);
   };
 
   const handleProgressChange = (values: number[]) => {
-    if (!currentAudioRef.current?.duration) return;
+    if (!audioRef.current?.duration) return;
     const [value] = values;
-    const time = (value / 100) * currentAudioRef.current.duration;
-    currentAudioRef.current.currentTime = time;
+    const time = (value / 100) * audioRef.current.duration;
+    audioRef.current.currentTime = time;
     setProgress(value);
   };
 
