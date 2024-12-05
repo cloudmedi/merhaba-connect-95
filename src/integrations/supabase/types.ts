@@ -838,6 +838,13 @@ export type Database = {
             foreignKeyName: "offline_songs_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
+            referencedRelation: "paginated_playlist_songs"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "offline_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
             referencedRelation: "song_play_statistics"
             referencedColumns: ["song_id"]
           },
@@ -1016,6 +1023,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "playlists"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "paginated_playlist_songs"
+            referencedColumns: ["song_id"]
           },
           {
             foreignKeyName: "playlist_songs_song_id_fkey"
@@ -1323,6 +1337,13 @@ export type Database = {
             foreignKeyName: "song_play_history_song_id_fkey"
             columns: ["song_id"]
             isOneToOne: false
+            referencedRelation: "paginated_playlist_songs"
+            referencedColumns: ["song_id"]
+          },
+          {
+            foreignKeyName: "song_play_history_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
             referencedRelation: "song_play_statistics"
             referencedColumns: ["song_id"]
           },
@@ -1481,6 +1502,35 @@ export type Database = {
             columns: ["mood_id"]
             isOneToOne: false
             referencedRelation: "moods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paginated_playlist_songs: {
+        Row: {
+          artist: string | null
+          artwork_url: string | null
+          bunny_id: string | null
+          duration: number | null
+          file_url: string | null
+          playlist_id: string | null
+          position: number | null
+          song_id: string | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "most_played_bar_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
             referencedColumns: ["id"]
           },
         ]

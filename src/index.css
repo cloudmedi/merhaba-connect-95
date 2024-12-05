@@ -39,30 +39,26 @@
   }
 }
 
-/* Hide scrollbars but keep scroll functionality */
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.scrollbar-style {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-*::-webkit-scrollbar {
-  display: none;
+.scrollbar-style::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Skeleton Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+.scrollbar-style::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.skeleton-loading {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(to right, #f5f5f5 4%, #eeeeee 25%, #f5f5f5 36%);
-  background-size: 1000px 100%;
+.scrollbar-style::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.scrollbar-style::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 /* Music Player Styles */
