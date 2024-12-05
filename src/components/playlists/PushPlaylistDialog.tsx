@@ -8,15 +8,17 @@ import { DeviceList } from "./push-dialog/DeviceList";
 import { GroupList } from "./push-dialog/GroupList";
 import { DialogFooter } from "./push-dialog/DialogFooter";
 import { usePushDialogData } from "./push-dialog/usePushDialogData";
+import { supabase } from "@/integrations/supabase/client";
 import type { PushDialogDevice } from "./push-dialog/deviceTypes";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
   onClose: () => void;
   playlistTitle: string;
+  playlistId: string;
 }
 
-export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlaylistDialogProps) {
+export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId }: PushPlaylistDialogProps) {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("devices");
@@ -73,11 +75,40 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     }
 
     try {
-      // Implement playlist push logic here
+      // Get offline player IDs for selected devices
+      const { data: offlinePlayers, error: playersError } = await supabase
+        .from('offline_players')
+        .select('id, device_id')
+        .in('device_id', selectedDevices);
+
+      if (playersError) throw playersError;
+
+      if (!offlinePlayers || offlinePlayers.length === 0) {
+        toast.error("Seçili cihazlar için offline player bulunamadı");
+        return;
+      }
+
+      // Create offline playlist entries
+      const offlinePlaylistEntries = offlinePlayers.map(player => ({
+        device_id: player.id,
+        playlist_id: playlistId,
+        sync_status: 'pending',
+        last_synced_at: new Date().toISOString()
+      }));
+
+      const { error: insertError } = await supabase
+        .from('offline_playlists')
+        .upsert(offlinePlaylistEntries, {
+          onConflict: 'device_id,playlist_id'
+        });
+
+      if (insertError) throw insertError;
+
       toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderildi`);
       onClose();
       setSelectedDevices([]);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error pushing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
     }
   };

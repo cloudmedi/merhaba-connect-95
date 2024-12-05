@@ -23,6 +23,8 @@ export class OfflinePlaylistManager {
 
   async syncPlaylist(playlist: Playlist): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('Starting playlist sync:', playlist.id);
+      
       // Save playlist info
       await this.fileSystem.savePlaylistInfo(playlist.id, {
         id: playlist.id,
@@ -34,9 +36,13 @@ export class OfflinePlaylistManager {
         }))
       });
 
+      console.log('Playlist info saved, starting song downloads');
+
       // Download songs that don't exist locally
       for (const song of playlist.songs) {
         if (!await this.fileSystem.songExists(song.id)) {
+          console.log('Downloading song:', song.id);
+          
           const url = this.getBunnyUrl(song);
           const result = await this.downloadManager.downloadSong(song.id, url);
           
@@ -52,6 +58,8 @@ export class OfflinePlaylistManager {
             hash: result.hash,
             downloadedAt: new Date().toISOString()
           });
+          
+          console.log('Song downloaded and metadata saved:', song.id);
         }
       }
 
@@ -59,6 +67,7 @@ export class OfflinePlaylistManager {
       const keepSongIds = playlist.songs.map(s => s.id);
       await this.fileSystem.cleanup(keepSongIds);
 
+      console.log('Playlist sync completed successfully:', playlist.id);
       return { success: true };
     } catch (error) {
       console.error('Error syncing playlist:', error);
@@ -75,7 +84,7 @@ export class OfflinePlaylistManager {
 
   async getOfflinePlaylists(): Promise<any[]> {
     try {
-      const playlistsDir = path.join(this.fileSystem.baseDir, 'playlists');
+      const playlistsDir = this.fileSystem.getPlaylistsDir();
       const files = await fs.readdir(playlistsDir);
       
       const playlists = [];
