@@ -15,7 +15,10 @@ export default defineConfig({
           'sonner',
           'node-fetch',
           'fs-extra',
-          'crypto'
+          'crypto',
+          'clsx',
+          'tailwind-merge',
+          'lucide-react'
         ]
       }
     }
@@ -32,8 +35,7 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        },
-        external: ['sonner', 'lucide-react']
+        }
       }
     },
     plugins: [react()],
