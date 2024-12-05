@@ -1,14 +1,6 @@
-import { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { EmptyState } from "./components/EmptyState";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
@@ -118,23 +110,23 @@ export function MusicTable({
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <div className="border rounded-lg">
-        <div className="overflow-hidden">
-          <ScrollArea className="h-[calc(100vh-280px)] rounded-md">
+        <div className="relative overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-280px)] rounded-md" type="always">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b">
-                  <TableHead className="w-[30px] bg-white sticky top-0">
+                  <TableHead className="w-[30px] bg-white sticky top-0 z-20">
                     <Checkbox
                       checked={selectedSongs.length === songs.length}
                       onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                     />
                   </TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Title</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Artist</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Album</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Genres</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0">Duration</TableHead>
-                  <TableHead className="w-[50px] bg-white sticky top-0"></TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Artist</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Album</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Genres</TableHead>
+                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0 z-20">Duration</TableHead>
+                  <TableHead className="w-[50px] bg-white sticky top-0 z-20"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -163,7 +155,7 @@ export function MusicTable({
         totalPages={totalPages}
         onPageChange={onPageChange}
         startIndex={startIndex}
-        endIndex={Math.min(startIndex + songs.length, totalCount)}
+        endIndex={endIndex}
         totalItems={totalCount}
       />
 
