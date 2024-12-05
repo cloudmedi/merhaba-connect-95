@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,12 +39,13 @@
   }
 }
 
-.hide-scrollbar {
+/* Hide scrollbars but keep scroll functionality */
+* {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
 
@@ -86,34 +89,10 @@
 }
 
 .fc .fc-button-primary {
-  @apply bg-[#6E59A5] border-[#6E59A5] text-white hover:bg-[#5558DD] hover:border-[#5558DD];
+  @apply bg-[#6E59A5] border-[#6E59A5] text-white hover:bg-[#5a478a] hover:border-[#5a478a];
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active,
 .fc .fc-button-primary:not(:disabled):active {
   @apply bg-[#4c3b7a] border-[#4c3b7a];
-}
-
-/* Global scrollbar styles */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.7);
-}
-
-/* Firefox scrollbar styles */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
