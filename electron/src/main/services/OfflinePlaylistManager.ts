@@ -25,7 +25,7 @@ export class OfflinePlaylistManager {
     try {
       console.log(`Starting sync for playlist ${playlist.id} - ${playlist.name}`);
       
-      // Save playlist info
+      // Save playlist info locally
       await this.fileSystem.savePlaylistInfo(playlist.id, {
         id: playlist.id,
         name: playlist.name,

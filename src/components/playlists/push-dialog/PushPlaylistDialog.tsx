@@ -148,6 +148,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
             selectedCount={selectedDevices.length}
             onCancel={onClose}
             onPush={handlePush}
+            isSyncing={isSyncing}
           />
         </div>
       </DialogContent>

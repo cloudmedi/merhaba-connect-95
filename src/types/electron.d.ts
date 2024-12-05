@@ -44,6 +44,7 @@ export interface ElectronAPI {
       bunny_id?: string;
     }>;
   }) => Promise<{ success: boolean; error?: string }>;
+  getStorageStats: () => Promise<{ used: number; total: number }>;
 }
 
 declare global {
