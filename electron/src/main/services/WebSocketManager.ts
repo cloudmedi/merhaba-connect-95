@@ -23,25 +23,25 @@ export class WebSocketManager {
       return;
     }
 
-    console.log('Initializing WebSocket connection with token:', deviceToken);
-    this.connectWithToken(deviceToken);
+    console.log('Initializing WebSocket connection with device token:', deviceToken);
+    this.connect(deviceToken);
   }
 
-  private async connectWithToken(token: string) {
+  private async connect(deviceToken: string) {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
         return;
       }
 
-      // Construct WebSocket URL with device token from device_tokens table
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
+      // Use the actual device token from device_tokens table for WebSocket connection
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened successfully with token:', token);
+        console.log('WebSocket connection opened successfully with device token:', deviceToken);
         this.reconnectAttempts = 0;
       });
 
@@ -58,7 +58,7 @@ export class WebSocketManager {
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'error',
                 payload: result.success ? {
-                  token: token,
+                  deviceToken,
                   playlistId: playlist.id
                 } : result.error
               }));
@@ -78,7 +78,7 @@ export class WebSocketManager {
         this.reconnectAttempts++;
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connectWithToken(token), this.reconnectDelay);
+          setTimeout(() => this.connect(deviceToken), this.reconnectDelay);
         }
       });
     } catch (error) {
@@ -86,7 +86,7 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connectWithToken(token), this.reconnectDelay);
+        setTimeout(() => this.connect(deviceToken), this.reconnectDelay);
       }
     }
   }
