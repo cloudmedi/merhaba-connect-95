@@ -6,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search } from "lucide-react";
-import { useDevices } from "../../Devices/hooks/useDevices";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useDevices } from "./hooks/useDevices";
+import { SearchBar } from "./components/SearchBar";
+import { DeviceList } from "./components/DeviceList";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -25,7 +27,6 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
   
   const { devices, isLoading } = useDevices();
 
-  // Reset form when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setName("");
@@ -69,7 +70,6 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
 
     try {
       setIsSubmitting(true);
-
       const { data: group, error: groupError } = await supabase
         .from('branch_groups')
         .insert([{ name, description }])
@@ -133,15 +133,7 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
 
             <div>
               <Label>Cihazlar</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cihaz ara..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
           </div>
 
@@ -157,26 +149,17 @@ export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: Create
           </div>
 
           <ScrollArea className="flex-1 border rounded-md">
-            <div className="p-4 space-y-2">
-              {isLoading ? (
-                <div className="text-center py-4">Yükleniyor...</div>
-              ) : filteredDevices.length === 0 ? (
-                <div className="text-center py-4">Cihaz bulunamadı</div>
-              ) : (
-                filteredDevices.map((device) => (
-                  <div key={device.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={device.id}
-                      checked={selectedDevices.has(device.id)}
-                      onCheckedChange={() => handleDeviceSelect(device.id)}
-                    />
-                    <label htmlFor={device.id} className="text-sm">
-                      {device.name}
-                    </label>
-                  </div>
-                ))
-              )}
-            </div>
+            {isLoading ? (
+              <div className="text-center py-4">Yükleniyor...</div>
+            ) : filteredDevices.length === 0 ? (
+              <div className="text-center py-4">Cihaz bulunamadı</div>
+            ) : (
+              <DeviceList
+                devices={filteredDevices}
+                selectedDevices={selectedDevices}
+                onDeviceSelect={handleDeviceSelect}
+              />
+            )}
           </ScrollArea>
 
           <DialogFooter>
