@@ -1,59 +1,60 @@
+import { FileUploadPreview } from "./FileUploadPreview";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { FileUploadPreview } from "./FileUploadPreview";
 import { Textarea } from "@/components/ui/textarea";
-import type { CampaignFormData } from "../types";
 
 interface CampaignBasicInfoProps {
-  formData: CampaignFormData;
-  onFormDataChange: (data: Partial<CampaignFormData>) => void;
+  formData: {
+    title: string;
+    description: string;
+    files: File[];
+  };
+  onFormDataChange: (data: Partial<typeof formData>) => void;
   onNext: () => void;
+  announcementId: string | null;
 }
 
-export function CampaignBasicInfo({ formData, onFormDataChange, onNext }: CampaignBasicInfoProps) {
-  const canProceed = formData.title.trim() && formData.files.length > 0;
-
+export function CampaignBasicInfo({ 
+  formData, 
+  onFormDataChange, 
+  onNext,
+  announcementId 
+}: CampaignBasicInfoProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label className="text-base font-semibold">Kampanya Adı</Label>
+          <Label htmlFor="title">Kampanya Başlığı</Label>
           <Input
+            id="title"
             value={formData.title}
             onChange={(e) => onFormDataChange({ title: e.target.value })}
-            placeholder="Kampanya adını girin"
-            className="mt-2"
+            placeholder="Kampanya başlığını girin"
           />
         </div>
-
         <div>
-          <Label className="text-base font-semibold">Açıklama</Label>
+          <Label htmlFor="description">Açıklama</Label>
           <Textarea
+            id="description"
             value={formData.description}
             onChange={(e) => onFormDataChange({ description: e.target.value })}
             placeholder="Kampanya açıklamasını girin"
-            className="mt-2 h-24"
           />
         </div>
-
         <div>
-          <Label className="text-base font-semibold">Anonslar</Label>
-          <div className="mt-2 border-2 border-dashed rounded-lg p-4 bg-gray-50">
-            <FileUploadPreview
-              files={formData.files}
-              onFilesChange={(files) => onFormDataChange({ files })}
-              maxFileSize={10}
-              maxDuration={300}
-            />
-          </div>
+          <Label>Ses Dosyaları</Label>
+          <FileUploadPreview
+            files={formData.files}
+            onFilesChange={(files) => onFormDataChange({ files })}
+            maxFileSize={10}
+            maxDuration={300}
+            announcementId={announcementId}
+          />
         </div>
       </div>
-
-      <div className="flex justify-end pt-4 border-t">
-        <Button onClick={onNext} disabled={!canProceed} size="lg">
-          İleri
-        </Button>
+      <div className="flex justify-end">
+        <Button onClick={onNext}>İleri</Button>
       </div>
     </div>
   );

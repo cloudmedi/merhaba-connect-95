@@ -15,6 +15,7 @@ interface CreateCampaignDialogProps {
 
 export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialogProps) {
   const [activeTab, setActiveTab] = useState("basic");
+  const [announcementId, setAnnouncementId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -32,13 +33,38 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
     setFormData(prev => ({ ...prev, ...data }));
   };
 
+  const createAnnouncement = async () => {
+    if (!user) {
+      toast.error("Oturum açmanız gerekiyor");
+      return null;
+    }
+
+    const { data: announcement, error: announcementError } = await supabase
+      .from('announcements')
+      .insert({
+        title: formData.title,
+        description: formData.description,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        repeat_type: formData.repeatType,
+        repeat_interval: formData.repeatInterval,
+        created_by: user.id,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (announcementError) {
+      console.error('Error creating announcement:', announcementError);
+      toast.error("Kampanya oluşturulurken bir hata oluştu");
+      return null;
+    }
+
+    return announcement;
+  };
+
   const handleCreateCampaign = async () => {
     try {
-      if (!user) {
-        toast.error("Oturum açmanız gerekiyor");
-        return;
-      }
-
       if (!formData.title.trim()) {
         toast.error("Lütfen kampanya başlığı girin");
         return;
@@ -54,37 +80,11 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
         return;
       }
 
-      // Create announcement
-      const { data: announcement, error: announcementError } = await supabase
-        .from('announcements')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          start_date: formData.startDate,
-          end_date: formData.endDate,
-          repeat_type: formData.repeatType,
-          repeat_interval: formData.repeatInterval,
-          created_by: user.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      // Create announcement first
+      const announcement = await createAnnouncement();
+      if (!announcement) return;
 
-      if (announcementError) throw announcementError;
-
-      // Upload files and create announcement_files entries
-      for (const file of formData.files) {
-        const { data: fileData, error: uploadError } = await supabase.functions.invoke('upload-announcement', {
-          body: {
-            fileName: file.name,
-            fileData: await file.arrayBuffer(),
-            contentType: file.type,
-            announcementId: announcement.id
-          }
-        });
-
-        if (uploadError) throw uploadError;
-      }
+      setAnnouncementId(announcement.id);
 
       // Get unique branch IDs from selected devices
       const { data: deviceBranches } = await supabase
@@ -129,6 +129,7 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
       repeatInterval: 1,
       devices: []
     });
+    setAnnouncementId(null);
     setActiveTab("basic");
   };
 
@@ -149,6 +150,7 @@ export function CreateCampaignDialog({ open, onOpenChange }: CreateCampaignDialo
               formData={formData}
               onFormDataChange={handleFormDataChange}
               onNext={() => setActiveTab("devices")}
+              announcementId={announcementId}
             />
           )}
           {activeTab === "devices" && (
