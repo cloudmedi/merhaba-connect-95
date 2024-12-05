@@ -38,6 +38,8 @@ export function AudioPlayer({
       setDuration(audio.duration);
       if (autoPlay) {
         audio.play().catch(console.error);
+        setIsPlaying(true);
+        onPlayStateChange?.(true);
       }
     };
 
