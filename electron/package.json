@@ -15,7 +15,8 @@
     "react-dom": "^18.2.0",
     "systeminformation": "latest",
     "uuid": "latest",
-    "node-fetch": "^2.6.9"
+    "node-fetch": "^2.6.9",
+    "sonner": "latest"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",
