@@ -17,11 +17,15 @@ export function ProgressBar({ progress, onProgressChange }: ProgressBarProps) {
       step={0.1}
       aria-label="Progress"
     >
-      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/10">
-        <SliderPrimitive.Range className="absolute h-full bg-white/50 group-hover:bg-white transition-colors" />
+      <SliderPrimitive.Track 
+        className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-white/5"
+      >
+        <SliderPrimitive.Range 
+          className="absolute h-full bg-gradient-to-r from-white/40 to-white/60 group-hover:from-white/60 group-hover:to-white/80 transition-all duration-300" 
+        />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb 
-        className="hidden group-hover:block h-3 w-3 rounded-full border border-white/50 bg-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        className="opacity-0 group-hover:opacity-100 h-[10px] w-[10px] rounded-full border border-white/40 bg-white shadow-sm ring-offset-background transition-all duration-200 hover:h-[12px] hover:w-[12px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
       />
     </SliderPrimitive.Root>
   );
