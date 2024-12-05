@@ -7,6 +7,7 @@ import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { PlaylistCard } from "./components/PlaylistCard";
 import { PlaylistGridHeader } from "./components/PlaylistGridHeader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 interface PlaylistGridProps {
   title: string;
