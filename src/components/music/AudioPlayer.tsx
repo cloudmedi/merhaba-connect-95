@@ -1,7 +1,5 @@
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { Loader2 } from "lucide-react";
-import { PlayerControls } from "./PlayerControls";
-import { ProgressBar } from "./ProgressBar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useEffect, memo } from "react";
 
@@ -12,15 +10,19 @@ interface AudioPlayerProps {
   volume?: number;
   autoPlay?: boolean;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  repeat?: boolean;
 }
 
-function AudioPlayerComponent({ 
-  audioUrl, 
-  onNext, 
-  onPrevious, 
+function AudioPlayerComponent({
+  audioUrl,
+  onNext,
+  onPrevious,
   volume = 1,
   autoPlay = false,
-  onPlayStateChange
+  onPlayStateChange,
+  onTimeUpdate,
+  repeat = false,
 }: AudioPlayerProps) {
   const {
     isPlaying,
@@ -31,7 +33,9 @@ function AudioPlayerComponent({
     seek,
     setVolume,
     play,
-    onEnded
+    onEnded,
+    currentTime,
+    duration
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
@@ -48,12 +52,23 @@ function AudioPlayerComponent({
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
-  // Handle song ending
+  useEffect(() => {
+    if (onTimeUpdate) {
+      onTimeUpdate(currentTime, duration);
+    }
+  }, [currentTime, duration, onTimeUpdate]);
+
   useEffect(() => {
     if (onNext) {
-      onEnded(onNext);
+      onEnded(() => {
+        if (repeat) {
+          play();
+        } else {
+          onNext();
+        }
+      });
     }
-  }, [onNext, onEnded]);
+  }, [onNext, onEnded, repeat, play]);
 
   if (error) {
     return (
@@ -63,30 +78,15 @@ function AudioPlayerComponent({
     );
   }
 
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-full opacity-100 transition-opacity duration-200">
-        <ProgressBar 
-          progress={progress} 
-          onProgressChange={(values) => seek(values[0])} 
-        />
+  if (isLoading) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-transparent">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
       </div>
-      <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-        <PlayerControls
-          isPlaying={isPlaying}
-          onPrevious={onPrevious}
-          onPlayPause={togglePlay}
-          onNext={onNext}
-        />
-      </div>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-        </div>
-      )}
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
-// Memoize the component to prevent unnecessary re-renders
 export const AudioPlayer = memo(AudioPlayerComponent);
