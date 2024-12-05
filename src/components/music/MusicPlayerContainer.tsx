@@ -43,7 +43,7 @@ export function MusicPlayerContainer({
     isMuted,
     isPlaying,
     progress,
-    handlePlayPause,
+    handlePlayStateChange,
     handleNext,
     handlePrevious,
     handleProgressChange,
@@ -81,7 +81,7 @@ export function MusicPlayerContainer({
           <div className="flex-1 max-w-2xl space-y-2">
             <PlayerControls
               isPlaying={isPlaying}
-              onPlayPause={handlePlayPause}
+              onPlayPause={handlePlayStateChange}
               onNext={handleNext}
               onPrevious={handlePrevious}
             />
