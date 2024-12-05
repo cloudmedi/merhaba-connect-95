@@ -18,16 +18,13 @@ export function PlaylistCard({
   onClick,
 }: PlaylistCardProps) {
   const handlePlayClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
-    
     console.log('PlaylistCard - Play clicked:', {
       playlistId: playlist.id,
       currentPlayingId,
       isPlaying,
       isCurrentlyPlaying: currentPlayingId === playlist.id && isPlaying
     });
-    
     onPlay?.(playlist);
   };
 

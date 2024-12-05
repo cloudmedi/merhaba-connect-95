@@ -57,14 +57,11 @@ export function MusicPlayer({
     audio.src = getAudioUrl(currentSong);
     
     if (autoPlay) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setIsPlaying(false);
-          onPlayStateChange?.(false);
-        });
-      }
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
     }
 
     const handleTimeUpdate = () => {
@@ -105,25 +102,27 @@ export function MusicPlayer({
   useEffect(() => {
     console.log('MusicPlayer - Play state effect:', { isPlaying });
     
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setIsPlaying(false);
-          onPlayStateChange?.(false);
-        });
+    const updatePlayState = async () => {
+      try {
+        if (isPlaying) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+        onPlayStateChange?.(isPlaying);
+      } catch (error) {
+        console.error('Error updating play state:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
       }
-    } else {
-      audio.pause();
-    }
-    
-    onPlayStateChange?.(isPlaying);
+    };
+
+    updatePlayState();
   }, [isPlaying]);
 
   const handlePlayPause = () => {
     console.log('MusicPlayer - handlePlayPause triggered');
-    setIsPlaying(prev => !prev);
+    setIsPlaying(!isPlaying);
   };
 
   const handleNext = () => {

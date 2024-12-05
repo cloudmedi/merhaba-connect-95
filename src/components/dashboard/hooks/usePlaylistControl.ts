@@ -28,71 +28,71 @@ export function usePlaylistControl() {
         currentIsPlaying: isPlaying
       });
 
-      // Aynı playlist'e tıklandığında sadece play/pause toggle
+      // Eğer şu an çalan playlist'e tıklandıysa sadece play/pause durumunu değiştir
       if (currentPlaylist?.id === playlist.id) {
         console.log('Toggling play state for current playlist');
-        setIsPlaying(prev => !prev);
+        setIsPlaying(!isPlaying);
         return;
       }
 
-      // Yeni playlist seçildiğinde mevcut çalanı durdur
+      // Yeni bir playlist seçildiyse önce mevcut çalanı durdur
       setIsPlaying(false);
       
-      let playlistToSet: PlaylistWithSongs;
-
+      // Eğer şarkılar zaten playlist objesi içindeyse
       if (playlist.songs && playlist.songs.length > 0) {
         console.log('Using existing songs from playlist');
-        playlistToSet = {
+        setCurrentPlaylist({
           id: playlist.id,
           title: playlist.title,
           artwork_url: playlist.artwork_url,
           songs: playlist.songs
-        };
-      } else {
-        console.log('Fetching songs for playlist:', playlist.id);
-        const { data: playlistSongs, error } = await supabase
-          .from('playlist_songs')
-          .select(`
-            position,
-            songs (
-              id,
-              title,
-              artist,
-              duration,
-              file_url,
-              bunny_id
-            )
-          `)
-          .eq('playlist_id', playlist.id)
-          .order('position');
-
-        if (error) throw error;
-
-        if (!playlistSongs || playlistSongs.length === 0) {
-          toast.error("No songs found in this playlist");
-          return;
-        }
-
-        playlistToSet = {
-          id: playlist.id,
-          title: playlist.title,
-          artwork_url: playlist.artwork_url,
-          songs: playlistSongs.map(ps => ({
-            id: ps.songs.id,
-            title: ps.songs.title,
-            artist: ps.songs.artist || "Unknown Artist",
-            duration: ps.songs.duration?.toString() || "0:00",
-            file_url: ps.songs.file_url,
-            bunny_id: ps.songs.bunny_id
-          }))
-        };
+        });
+        setIsPlaying(true);
+        return;
       }
 
+      // Değilse şarkıları yükle
+      console.log('Fetching songs for playlist:', playlist.id);
+      const { data: playlistSongs, error } = await supabase
+        .from('playlist_songs')
+        .select(`
+          position,
+          songs (
+            id,
+            title,
+            artist,
+            duration,
+            file_url,
+            bunny_id
+          )
+        `)
+        .eq('playlist_id', playlist.id)
+        .order('position');
+
+      if (error) throw error;
+
+      if (!playlistSongs || playlistSongs.length === 0) {
+        toast.error("No songs found in this playlist");
+        return;
+      }
+
+      const formattedPlaylist = {
+        id: playlist.id,
+        title: playlist.title,
+        artwork_url: playlist.artwork_url,
+        songs: playlistSongs.map(ps => ({
+          id: ps.songs.id,
+          title: ps.songs.title,
+          artist: ps.songs.artist || "Unknown Artist",
+          duration: ps.songs.duration?.toString() || "0:00",
+          file_url: ps.songs.file_url,
+          bunny_id: ps.songs.bunny_id
+        }))
+      };
+
       console.log('Setting new playlist and starting playback');
-      setCurrentPlaylist(playlistToSet);
-      // Kısa bir gecikme ile play state'ini güncelle
-      setTimeout(() => setIsPlaying(true), 50);
-      
+      setCurrentPlaylist(formattedPlaylist);
+      setIsPlaying(true);
     } catch (error) {
       console.error('Error handling playlist:', error);
       toast.error("Failed to load playlist");
