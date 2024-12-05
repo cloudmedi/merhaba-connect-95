@@ -15,7 +15,10 @@ const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
 if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing Supabase environment variables')
+  console.error('Missing Supabase environment variables:', {
+    VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY
+  })
 }
 
 let win: BrowserWindow | null
@@ -80,8 +83,14 @@ async function initializeOfflineSupport() {
   if (macAddress) {
     deviceId = macAddress.replace(/:/g, '');
     setupOfflineHandlers(deviceId);
+    
+    console.log('Initializing WebSocket with deviceId:', deviceId);
+    console.log('Using Supabase URL:', VITE_SUPABASE_URL);
+    
     // WebSocket bağlantısını başlat
     new WebSocketManager(deviceId);
+  } else {
+    console.error('Could not get MAC address for device identification');
   }
 }
 
