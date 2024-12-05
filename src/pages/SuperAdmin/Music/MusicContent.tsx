@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
@@ -11,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const {
     songs,
@@ -67,24 +65,6 @@ export function MusicContent() {
     }
   };
 
-  const handleCreatePlaylist = () => {
-    if (selectedSongs.length === 0) {
-      toast({
-        title: "No songs selected",
-        description: "Please select at least one song to create a playlist",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    navigate("/super-admin/playlists/create", {
-      state: { selectedSongs }
-    });
-  };
-
-  // Get unique genres from songs
-  const uniqueGenres = Array.from(new Set(songs.flatMap(song => song.genre || [])));
-
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
@@ -92,7 +72,7 @@ export function MusicContent() {
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
-            onCreatePlaylist={handleCreatePlaylist}
+            onCreatePlaylist={() => {}}
             onDeleteSelected={() => {
               toast({
                 title: "Songs Deleted",
@@ -117,7 +97,7 @@ export function MusicContent() {
         onGenreChange={(genre) => setFilterGenre(genre)}
         onPlaylistChange={(playlist) => setFilterPlaylist(playlist)}
         onRecentChange={(recent) => setSortByRecent(recent)}
-        genres={uniqueGenres}
+        genres={[]}
         playlists={[]}
       />
       

@@ -110,21 +110,18 @@ export function MusicTable({
     bunny_id: song.bunny_id
   }));
 
-  // Only show songs for the current page
-  const visibleSongs = songs.slice(startIndex, endIndex);
-
   return (
-    <div className="space-y-4 bg-white rounded-lg shadow">
-      <div className="border rounded-lg">
+    <div className="space-y-4 bg-white rounded-lg shadow-sm">
+      <div className="border rounded-lg overflow-hidden">
         <div className="relative">
-          <ScrollArea className="h-[calc(100vh-280px)] rounded-md" type="always">
+          <ScrollArea className="h-[calc(100vh-280px)]" type="always">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[30px] bg-white sticky top-0 z-20">
                     <Checkbox
                       checked={selectedSongs.length === songs.length}
-                      onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                      onCheckedChange={onSelectAll}
                     />
                   </TableHead>
                   <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
@@ -136,7 +133,7 @@ export function MusicTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleSongs.map((song) => (
+                {songs.map((song) => (
                   <SongTableRow
                     key={song.id}
                     song={song}
@@ -160,7 +157,7 @@ export function MusicTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={startIndex + 1}
+        startIndex={startIndex}
         endIndex={endIndex}
         totalItems={totalCount}
       />
