@@ -44,6 +44,10 @@ export class WebSocketManager {
       }).then(res => res.json());
 
       const deviceToken = deviceTokens?.[0]?.token;
+      if (!deviceToken) {
+        console.error('No device token found');
+        return;
+      }
 
       // Construct WebSocket URL with device token
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
@@ -86,12 +90,18 @@ export class WebSocketManager {
       this.ws.on('close', () => {
         console.log('WebSocket connection closed');
         this.reconnectAttempts++;
-        setTimeout(() => this.connect(), this.reconnectDelay);
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
+          setTimeout(() => this.connect(), this.reconnectDelay);
+        }
       });
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
       this.reconnectAttempts++;
-      setTimeout(() => this.connect(), this.reconnectDelay);
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
+        setTimeout(() => this.connect(), this.reconnectDelay);
+      }
     }
   }
 }
