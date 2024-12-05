@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import * as si from 'systeminformation'
 import dotenv from 'dotenv'
+import { setupOfflineHandlers } from './ipc/offlineHandlers'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -17,6 +18,7 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 }
 
 let win: BrowserWindow | null
+let deviceId: string | null = null
 
 async function getMacAddress() {
   try {
@@ -72,6 +74,14 @@ async function getSystemInfo() {
   }
 }
 
+async function initializeOfflineSupport() {
+  const macAddress = await getMacAddress();
+  if (macAddress) {
+    deviceId = macAddress.replace(/:/g, '');
+    setupOfflineHandlers(deviceId);
+  }
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -100,7 +110,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+  await initializeOfflineSupport();
+  createWindow();
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -118,3 +131,4 @@ app.on('activate', () => {
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo)
 ipcMain.handle('get-mac-address', getMacAddress)
+ipcMain.handle('get-device-id', () => deviceId)

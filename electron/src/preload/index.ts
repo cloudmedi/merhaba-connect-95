@@ -9,5 +9,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   getEnvVars: () => new Promise((resolve) => {
     ipcRenderer.once('env-vars', (_event, vars) => resolve(vars))
-  })
+  }),
+  // Offline functionality
+  syncPlaylist: (playlist: any) => ipcRenderer.invoke('sync-playlist', playlist),
+  getOfflinePlaylists: () => ipcRenderer.invoke('get-offline-playlists'),
+  getStorageStats: () => ipcRenderer.invoke('get-storage-stats')
 })

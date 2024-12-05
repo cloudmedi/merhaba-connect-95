@@ -1,0 +1,93 @@
+import { FileSystemManager } from './FileSystemManager';
+import { DownloadManager } from './DownloadManager';
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  file_url: string;
+  bunny_id?: string;
+}
+
+interface Playlist {
+  id: string;
+  name: string;
+  songs: Song[];
+}
+
+export class OfflinePlaylistManager {
+  constructor(
+    private fileSystem: FileSystemManager,
+    private downloadManager: DownloadManager
+  ) {}
+
+  async syncPlaylist(playlist: Playlist): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Save playlist info
+      await this.fileSystem.savePlaylistInfo(playlist.id, {
+        id: playlist.id,
+        name: playlist.name,
+        songs: playlist.songs.map(s => ({
+          id: s.id,
+          title: s.title,
+          artist: s.artist
+        }))
+      });
+
+      // Download songs that don't exist locally
+      for (const song of playlist.songs) {
+        if (!await this.fileSystem.songExists(song.id)) {
+          const url = this.getBunnyUrl(song);
+          const result = await this.downloadManager.downloadSong(song.id, url);
+          
+          if (!result.success) {
+            console.error(`Failed to download song ${song.id}:`, result.error);
+            continue;
+          }
+
+          await this.fileSystem.saveMetadata(song.id, {
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            hash: result.hash,
+            downloadedAt: new Date().toISOString()
+          });
+        }
+      }
+
+      // Cleanup unused songs
+      const keepSongIds = playlist.songs.map(s => s.id);
+      await this.fileSystem.cleanup(keepSongIds);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error syncing playlist:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  private getBunnyUrl(song: Song): string {
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    return song.file_url;
+  }
+
+  async getOfflinePlaylists(): Promise<any[]> {
+    try {
+      const playlistsDir = path.join(this.fileSystem.baseDir, 'playlists');
+      const files = await fs.readdir(playlistsDir);
+      
+      const playlists = [];
+      for (const file of files) {
+        const playlist = await fs.readJson(path.join(playlistsDir, file));
+        playlists.push(playlist);
+      }
+      
+      return playlists;
+    } catch (error) {
+      console.error('Error reading offline playlists:', error);
+      return [];
+    }
+  }
+}
