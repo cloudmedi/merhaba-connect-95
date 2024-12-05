@@ -32,9 +32,15 @@ export function AudioPlayer({
     error,
     play,
     pause,
+    togglePlay,
     seek,
     setVolume
-  } = useAudioPlayer(audioUrl);
+  } = useAudioPlayer(audioUrl, {
+    autoPlay,
+    volume,
+    onPlayStateChange,
+    onEnded: onNext
+  });
 
   useEffect(() => {
     setVolume(volume);
@@ -51,12 +57,8 @@ export function AudioPlayer({
   }, [isPlaying, onPlayStateChange]);
 
   const handlePlayPause = useCallback(() => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [isPlaying, play, pause]);
+    togglePlay();
+  }, [togglePlay]);
 
   if (error) {
     toast.error("Şarkı yüklenirken bir hata oluştu", {

@@ -78,19 +78,29 @@ export function useAudioPlayer(
     try {
       await audioRef.current.play();
       setState(prev => ({ ...prev, isPlaying: true }));
+      onPlayStateChange?.(true);
     } catch (error) {
       if (error instanceof Error) {
         setState(prev => ({ ...prev, error: error.message }));
         onError?.(error);
       }
     }
-  }, [onError]);
+  }, [onPlayStateChange, onError]);
 
   const pause = useCallback(() => {
     if (!audioRef.current) return;
     audioRef.current.pause();
     setState(prev => ({ ...prev, isPlaying: false }));
-  }, []);
+    onPlayStateChange?.(false);
+  }, [onPlayStateChange]);
+
+  const togglePlay = useCallback(() => {
+    if (state.isPlaying) {
+      pause();
+    } else {
+      play();
+    }
+  }, [state.isPlaying, play, pause]);
 
   const seek = useCallback((time: number) => {
     if (!audioRef.current) return;
@@ -115,8 +125,10 @@ export function useAudioPlayer(
     ...state,
     play,
     pause,
+    togglePlay,
     seek,
     setVolume,
     toggleMute,
+    onEnded
   };
 }
