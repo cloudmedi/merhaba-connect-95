@@ -1,25 +1,29 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
-interface PresenceManagerOptions {
-  heartbeatInterval: number;
-  reconnectDelay: number;
+interface PresenceConfig {
+  heartbeatInterval?: number;
+  reconnectDelay?: number;
 }
 
 export class PresenceManager {
-  private client: SupabaseClient;
-  private options: PresenceManagerOptions;
-  private presenceChannel: any;
   private deviceToken: string | null = null;
+  private presenceChannel: any;
   private heartbeatInterval: NodeJS.Timeout | null = null;
+  private config: Required<PresenceConfig>;
 
-  constructor(client: SupabaseClient, options: PresenceManagerOptions) {
-    this.client = client;
-    this.options = options;
+  constructor(
+    private supabase: SupabaseClient,
+    config: PresenceConfig = {}
+  ) {
+    this.config = {
+      heartbeatInterval: config.heartbeatInterval || 5000,
+      reconnectDelay: config.reconnectDelay || 3000
+    };
   }
 
-  async initialize(deviceToken: string) {
+  async initialize(deviceToken: string): Promise<void> {
     this.deviceToken = deviceToken;
-    this.presenceChannel = this.client.channel('device_status');
+    this.presenceChannel = this.supabase.channel('device_status');
     
     await this.setupPresence();
     this.startHeartbeat();
@@ -68,7 +72,7 @@ export class PresenceManager {
       } catch (error) {
         console.error('Heartbeat error:', error);
       }
-    }, this.options.heartbeatInterval);
+    }, this.config.heartbeatInterval);
   }
 
   cleanup() {
