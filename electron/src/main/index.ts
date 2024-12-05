@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'node:path'
 import * as si from 'systeminformation'
 import dotenv from 'dotenv'
-import { getDeviceIdentifier } from '../utils/deviceIdentifier'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -14,10 +13,7 @@ const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
 
 if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing Supabase environment variables:', {
-    VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY
-  })
+  console.error('Missing Supabase environment variables')
 }
 
 let win: BrowserWindow | null
@@ -121,5 +117,4 @@ app.on('activate', () => {
 
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo)
-ipcMain.handle('get-device-id', getDeviceIdentifier)
 ipcMain.handle('get-mac-address', getMacAddress)

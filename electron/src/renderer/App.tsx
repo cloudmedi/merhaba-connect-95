@@ -13,7 +13,6 @@ function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const initialize = async () => {
@@ -26,38 +25,37 @@ function App() {
         
         // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
+        console.log('MAC Address:', macAddress);
         
         if (!macAddress) {
-          throw new Error('Could not get MAC address');
+          throw new Error('MAC adresi alınamadı');
         }
 
         // Get or create token for this MAC address
         const tokenData = await createDeviceToken(macAddress);
+        console.log('Token Data:', tokenData);
+        
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
         }
 
+        // Get system info
+        const sysInfo = await window.electronAPI.getSystemInfo();
+        setSystemInfo(sysInfo);
+
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
-        setError(error.message || 'An error occurred');
+        setError(error.message || 'Bir hata oluştu');
         setIsLoading(false);
       }
     };
 
     initialize();
-    
-    // Set up system info listeners
-    window.electronAPI.getSystemInfo().then(setSystemInfo);
-    window.electronAPI.onSystemInfoUpdate(setSystemInfo);
-  }, [retryCount]);
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-  };
+  }, []);
 
   if (error) {
-    return <ErrorState error={error} onRetry={handleRetry} />;
+    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
   }
 
   if (isLoading) {

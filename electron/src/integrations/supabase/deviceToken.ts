@@ -1,8 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from './client';
 
 export async function createDeviceToken(macAddress: string) {
   try {
+    console.log('Checking for existing token with MAC address:', macAddress);
+    
     // First check if there's an existing active token
     const { data: existingToken, error: checkError } = await supabase
       .from('device_tokens')
@@ -30,7 +31,7 @@ export async function createDeviceToken(macAddress: string) {
     // Get system info
     const systemInfo = await (window as any).electronAPI.getSystemInfo();
     if (!systemInfo) {
-      throw new Error('Could not get system information');
+      throw new Error('Sistem bilgisi alınamadı');
     }
 
     const { data: tokenData, error: tokenError } = await supabase
@@ -48,42 +49,17 @@ export async function createDeviceToken(macAddress: string) {
 
     if (tokenError) {
       console.error('Error creating device token:', tokenError);
-      throw new Error('Failed to create device token');
+      throw new Error('Token oluşturulamadı');
     }
     
     if (!tokenData) {
-      throw new Error('No token data returned after creation');
+      throw new Error('Token oluşturma sonrası veri dönmedi');
     }
 
     console.log('Created new token:', tokenData.token);
     return tokenData;
   } catch (error: any) {
     console.error('Error in createDeviceToken:', error);
-    throw error;
-  }
-}
-
-export async function updateDeviceSystemInfo(token: string) {
-  try {
-    const systemInfo = await (window as any).electronAPI.getSystemInfo();
-    if (!systemInfo) {
-      throw new Error('Could not get system information');
-    }
-    
-    const { error } = await supabase
-      .from('device_tokens')
-      .update({
-        system_info: systemInfo,
-        last_system_update: new Date().toISOString()
-      })
-      .eq('token', token);
-
-    if (error) {
-      console.error('Error updating system info:', error);
-      throw error;
-    }
-  } catch (error: any) {
-    console.error('Error in updateDeviceSystemInfo:', error);
     throw error;
   }
 }
