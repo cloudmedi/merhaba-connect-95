@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { memo } from "react";
 import { X } from "lucide-react";
 import { AudioPlayer } from "@/components/music/AudioPlayer";
 import { VolumeControls } from "@/components/music/VolumeControls";
 import { TrackInfo } from "@/components/music/TrackInfo";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getOptimizedImageUrl, getAudioUrl } from "@/components/music/utils";
+import { getOptimizedImageUrl } from "@/components/music/utils";
 import { ErrorBoundary } from "@/components/music/ErrorBoundary";
 import { MusicPlayerProvider, useMusicPlayer } from "@/components/music/MusicPlayerContext";
 import type { MusicPlayerProps } from "@/components/music/types";
@@ -17,29 +17,18 @@ const MusicPlayerContent = memo(function MusicPlayerContent({
   autoPlay = true,
   onSongChange,
   onPlayStateChange,
-  currentSongId
 }: MusicPlayerProps) {
-  const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
-  const [volume, setVolume] = useState(75);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  
-  useEffect(() => {
-    if (currentSongId && playlist.songs) {
-      const index = playlist.songs.findIndex(song => song.id === currentSongId);
-      if (index !== -1) {
-        setCurrentSongIndex(index);
-      }
-    }
-  }, [currentSongId, playlist.songs]);
-
-  useEffect(() => {
-    setCurrentSongIndex(initialSongIndex);
-  }, [initialSongIndex]);
-
-  useEffect(() => {
-    onPlayStateChange?.(isPlaying);
-  }, [isPlaying, onPlayStateChange]);
+  const {
+    currentSong,
+    isPlaying,
+    volume,
+    isMuted,
+    toggleMute,
+    setVolume,
+    playNext,
+    playPrevious,
+    setCurrentSongIndex
+  } = useMusicPlayer();
 
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
@@ -47,38 +36,9 @@ const MusicPlayerContent = memo(function MusicPlayerContent({
     return null;
   }
 
-  const currentSong = playlist.songs[currentSongIndex];
-
-  const handleNext = useCallback(() => {
-    if (playlist.songs && playlist.songs.length > 0) {
-      const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
-      setCurrentSongIndex(nextIndex);
-      onSongChange?.(nextIndex);
-    }
-  }, [currentSongIndex, playlist.songs, onSongChange]);
-
-  const handlePrevious = useCallback(() => {
-    if (playlist.songs && playlist.songs.length > 0) {
-      const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
-      setCurrentSongIndex(prevIndex);
-      onSongChange?.(prevIndex);
-    }
-  }, [currentSongIndex, playlist.songs, onSongChange]);
-
-  const handlePlayStateChange = useCallback((playing: boolean) => {
-    setIsPlaying(playing);
-    onPlayStateChange?.(playing);
-  }, [onPlayStateChange]);
-
-  const handleVolumeChange = useCallback((values: number[]) => {
+  const handleVolumeChange = (values: number[]) => {
     setVolume(values[0]);
-    setIsMuted(values[0] === 0);
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-    setVolume(isMuted ? 75 : 0);
-  }, [isMuted]);
+  };
 
   return (
     <div 
@@ -111,12 +71,14 @@ const MusicPlayerContent = memo(function MusicPlayerContent({
 
           <div className="flex-1 max-w-2xl px-4">
             <AudioPlayer
-              audioUrl={getAudioUrl(currentSong)}
-              onNext={handleNext}
-              onPrevious={handlePrevious}
-              volume={isMuted ? 0 : volume / 100}
+              onNext={playNext}
+              onPrevious={playPrevious}
               autoPlay={autoPlay}
-              onPlayStateChange={handlePlayStateChange}
+              onPlayStateChange={onPlayStateChange}
+              onSongChange={(index) => {
+                setCurrentSongIndex(index);
+                onSongChange?.(index);
+              }}
             />
           </div>
 

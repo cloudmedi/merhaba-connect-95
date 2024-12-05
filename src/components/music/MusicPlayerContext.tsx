@@ -1,20 +1,23 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { Song, Playlist } from './types';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import type { Song, Playlist, AudioPlayerState } from './types';
 
 interface MusicPlayerContextType {
   currentSong: Song | null;
   playlist: Playlist | null;
   isPlaying: boolean;
-  currentTime: number;
-  duration: number;
   volume: number;
   isMuted: boolean;
+  progress: number;
+  duration: number;
+  currentTime: number;
   togglePlay: () => void;
-  nextTrack: () => void;
-  previousTrack: () => void;
-  seekTo: (time: number) => void;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
+  seekTo: (time: number) => void;
+  playNext: () => void;
+  playPrevious: () => void;
+  setCurrentSongIndex: (index: number) => void;
+  audioState: AudioPlayerState;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | null>(null);
@@ -38,50 +41,84 @@ export function MusicPlayerProvider({
   initialPlaylist,
   initialSongIndex = 0,
 }: MusicPlayerProviderProps) {
-  const [currentSong, setCurrentSong] = useState<Song | null>(
-    initialPlaylist?.songs?.[initialSongIndex] || null
-  );
+  const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [playlist, setPlaylist] = useState<Playlist | null>(initialPlaylist || null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(75);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+  const [audioState, setAudioState] = useState<AudioPlayerState>({
+    isLoading: false,
+    error: null,
+    isPlaying: false,
+    progress: 0,
+    currentTime: 0,
+    duration: 0,
+    volume: 0.75,
+    isMuted: false
+  });
+
+  const currentSong = playlist?.songs?.[currentSongIndex] || null;
 
   const togglePlay = useCallback(() => {
     setIsPlaying(prev => !prev);
   }, []);
 
-  const nextTrack = useCallback(() => {
-    // Implementation
-  }, []);
-
-  const previousTrack = useCallback(() => {
-    // Implementation
-  }, []);
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+    setVolume(prev => (isMuted ? 75 : 0));
+  }, [isMuted]);
 
   const seekTo = useCallback((time: number) => {
     setCurrentTime(time);
-  }, []);
+    setProgress((time / duration) * 100);
+  }, [duration]);
 
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-  }, []);
+  const playNext = useCallback(() => {
+    if (playlist?.songs) {
+      setCurrentSongIndex(prev => 
+        prev === playlist.songs.length - 1 ? 0 : prev + 1
+      );
+    }
+  }, [playlist?.songs]);
+
+  const playPrevious = useCallback(() => {
+    if (playlist?.songs) {
+      setCurrentSongIndex(prev => 
+        prev === 0 ? playlist.songs.length - 1 : prev - 1
+      );
+    }
+  }, [playlist?.songs]);
+
+  useEffect(() => {
+    if (initialPlaylist) {
+      setPlaylist(initialPlaylist);
+    }
+  }, [initialPlaylist]);
+
+  useEffect(() => {
+    setCurrentSongIndex(initialSongIndex);
+  }, [initialSongIndex]);
 
   const value = {
     currentSong,
     playlist,
     isPlaying,
-    currentTime,
-    duration,
     volume,
     isMuted,
+    progress,
+    duration,
+    currentTime,
     togglePlay,
-    nextTrack,
-    previousTrack,
-    seekTo,
     setVolume,
     toggleMute,
+    seekTo,
+    playNext,
+    playPrevious,
+    setCurrentSongIndex,
+    audioState
   };
 
   return (
