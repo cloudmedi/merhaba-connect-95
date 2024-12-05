@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { createDeviceToken } from './deviceToken';
 import { PresenceManager } from './presence/presenceManager';
 
-// Singleton instance for Supabase client
 let supabaseInstance: ReturnType<typeof createClient> | null = null;
 let presenceManager: PresenceManager | null = null;
 let isInitialized = false;
@@ -45,7 +44,6 @@ async function initSupabase() {
       }
     );
 
-    // Initialize presence manager
     presenceManager = new PresenceManager(supabaseInstance, {
       heartbeatInterval: 5000,
       reconnectDelay: 3000
