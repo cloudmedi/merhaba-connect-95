@@ -2,17 +2,28 @@ import { createClient } from '@supabase/supabase-js';
 import { createDeviceToken } from './deviceToken';
 import { PresenceManager } from './presence/presenceManager';
 
-let supabase: ReturnType<typeof createClient>;
 let presenceManager: PresenceManager;
-let isInitialized = false;
 let currentDeviceToken: string | null = null;
 
-async function initSupabase() {
-  if (isInitialized) {
-    console.log('Supabase already initialized with token:', currentDeviceToken);
-    return supabase;
+// Create a single instance of the Supabase client
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || '',
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
   }
+);
 
+async function initSupabase() {
   try {
     console.log('Starting Supabase initialization...');
     const envVars = await (window as any).electronAPI.getEnvVars();
@@ -21,24 +32,6 @@ async function initSupabase() {
       console.error('Missing Supabase connection details:', envVars);
       throw new Error('Missing Supabase connection details');
     }
-
-    console.log('Creating Supabase client...');
-    supabase = createClient(
-      envVars.VITE_SUPABASE_URL,
-      envVars.VITE_SUPABASE_ANON_KEY,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: false
-        },
-        realtime: {
-          params: {
-            eventsPerSecond: 10
-          }
-        }
-      }
-    );
 
     presenceManager = new PresenceManager(supabase, {
       heartbeatInterval: 5000,
@@ -64,7 +57,6 @@ async function initSupabase() {
 
     console.log('Initializing presence manager with token:', currentDeviceToken);
     await presenceManager.initialize(currentDeviceToken);
-    isInitialized = true;
 
     console.log('Supabase initialization completed successfully');
     return supabase;
