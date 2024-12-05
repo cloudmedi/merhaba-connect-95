@@ -25,7 +25,7 @@ export function SongList({
   isPlaying = false
 }: SongListProps) {
   return (
-    <div className="relative overflow-auto max-h-[600px]">
+    <div className="h-[calc(100vh-300px)] overflow-y-auto">
       <Table>
         <TableHeader className="sticky top-0 bg-white z-10">
           <TableRow>
