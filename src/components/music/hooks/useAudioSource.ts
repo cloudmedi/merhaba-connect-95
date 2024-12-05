@@ -14,6 +14,23 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
   const offsetRef = useRef<number>(0);
   const durationRef = useRef<number>(0);
 
+  const getBunnyUrl = (url: string): string => {
+    if (!url) return '';
+    
+    // If it's already a full URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If it's a Bunny CDN path without the domain
+    if (url.startsWith('cloud-media/')) {
+      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+    }
+    
+    // If it's just the file name/path, add the Bunny CDN domain
+    return `https://cloud-media.b-cdn.net/${url}`;
+  };
+
   useEffect(() => {
     let aborted = false;
 
@@ -21,7 +38,14 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
       if (!context) return;
 
       try {
-        const response = await fetch(url);
+        const fullUrl = getBunnyUrl(url);
+        console.log('Loading audio from:', fullUrl);
+        
+        const response = await fetch(fullUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to load audio file: ${response.statusText}`);
+        }
+
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await context.decodeAudioData(arrayBuffer);
 
@@ -44,7 +68,7 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
         sourceRef.current = source;
         gainNodeRef.current = gainNode;
 
-        console.log('Audio source initialized:', { url, duration: audioBuffer.duration });
+        console.log('Audio source initialized:', { url: fullUrl, duration: audioBuffer.duration });
       } catch (error) {
         console.error('Error loading audio:', error);
         toast.error("Error loading audio file");
