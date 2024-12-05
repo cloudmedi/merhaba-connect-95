@@ -1,19 +1,33 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
-  const upgrade = req.headers.get('upgrade') || ''
-  if (upgrade.toLowerCase() != 'websocket') {
-    return new Response('Expected websocket connection', { status: 400 })
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
-  // WebSocket bağlantısını yükselt
+  const upgrade = req.headers.get('upgrade') || ''
+  if (upgrade.toLowerCase() != 'websocket') {
+    return new Response('Expected websocket connection', { 
+      status: 400,
+      headers: corsHeaders 
+    })
+  }
+
+  // Create WebSocket connection
   const { socket, response } = Deno.upgradeWebSocket(req)
+
+  // Initialize Supabase client
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
 
   socket.onopen = () => {
     console.log('WebSocket connection opened')
@@ -27,7 +41,7 @@ serve(async (req) => {
       if (data.type === 'sync_playlist') {
         const { deviceId, playlist } = data.payload
 
-        // Cihazın offline_players tablosundaki kaydını bul
+        // Find the offline_player record for this device
         const { data: offlinePlayer } = await supabase
           .from('offline_players')
           .select('id')
@@ -35,7 +49,7 @@ serve(async (req) => {
           .single()
 
         if (offlinePlayer) {
-          // Playlist'i offline_playlists tablosuna ekle
+          // Update or create offline_playlists record
           const { error: playlistError } = await supabase
             .from('offline_playlists')
             .upsert({
@@ -45,11 +59,9 @@ serve(async (req) => {
               last_synced_at: new Date().toISOString()
             })
 
-          if (playlistError) {
-            throw playlistError
-          }
+          if (playlistError) throw playlistError
 
-          // Şarkıları offline_songs tablosuna ekle
+          // Add songs to offline_songs table
           const songPromises = playlist.songs.map(async (song: any) => {
             const { error: songError } = await supabase
               .from('offline_songs')
@@ -60,14 +72,12 @@ serve(async (req) => {
                 last_synced_at: new Date().toISOString()
               })
 
-            if (songError) {
-              throw songError
-            }
+            if (songError) throw songError
           })
 
           await Promise.all(songPromises)
 
-          // Başarılı yanıt gönder
+          // Send success response
           socket.send(JSON.stringify({
             type: 'sync_success',
             payload: {
