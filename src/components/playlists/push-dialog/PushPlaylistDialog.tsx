@@ -1,5 +1,5 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
@@ -56,6 +57,27 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
     }
   };
 
+  const checkDownloadProgress = useCallback(async (songIds: string[]) => {
+    const interval = setInterval(async () => {
+      const newProgress: { [key: string]: number } = {};
+      let allCompleted = true;
+
+      for (const songId of songIds) {
+        const progress = await window.electronAPI.getDownloadProgress(songId);
+        newProgress[songId] = progress;
+        if (progress < 100) allCompleted = false;
+      }
+
+      setDownloadProgress(newProgress);
+
+      if (allCompleted) {
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handlePush = async () => {
     if (selectedDevices.length === 0) {
       toast.error("Lütfen en az bir cihaz seçin");
@@ -66,7 +88,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
       setIsSyncing(true);
       toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
 
-      // Get playlist details with songs
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -86,19 +107,23 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
 
       if (playlistError) throw playlistError;
 
-      // Send playlist directly to each selected device
+      const songs = playlist.playlist_songs.map((ps: any) => ({
+        ...ps.songs,
+        file_url: ps.songs.bunny_id 
+          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+          : ps.songs.file_url
+      }));
+
+      const songIds = songs.map((s: any) => s.id);
+      const cleanup = await checkDownloadProgress(songIds);
+
       for (const deviceId of selectedDevices) {
         console.log(`Sending playlist to device ${deviceId}`);
         
         const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
           name: playlist.name,
-          songs: playlist.playlist_songs.map((ps: any) => ({
-            ...ps.songs,
-            file_url: ps.songs.bunny_id 
-              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
-              : ps.songs.file_url
-          }))
+          songs: songs
         });
 
         if (!result.success) {
@@ -107,6 +132,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
         }
       }
 
+      cleanup();
       toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
       setSelectedDevices([]);
@@ -115,6 +141,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
       toast.error("Playlist gönderilirken bir hata oluştu");
     } finally {
       setIsSyncing(false);
+      setDownloadProgress({});
     }
   };
 
@@ -144,6 +171,26 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
             }}
             isLoading={isLoading}
           />
+
+          {Object.keys(downloadProgress).length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">İndirme Durumu:</p>
+              {Object.entries(downloadProgress).map(([songId, progress]) => (
+                <div key={songId} className="space-y-1">
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Şarkı ID: {songId}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <DialogFooter
             selectedCount={selectedDevices.length}

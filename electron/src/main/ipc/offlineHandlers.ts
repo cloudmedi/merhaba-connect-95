@@ -34,4 +34,9 @@ export function setupOfflineHandlers(deviceId: string) {
   ipcMain.handle('get-storage-stats', async () => {
     return await fileSystem.getStorageStats();
   });
+
+  // Yeni handler: İndirme durumunu kontrol etmek için
+  ipcMain.handle('get-download-progress', async (_, songId) => {
+    return downloadManager.getProgress(songId);
+  });
 }

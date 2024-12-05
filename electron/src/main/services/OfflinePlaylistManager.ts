@@ -43,7 +43,9 @@ export class OfflinePlaylistManager {
       for (const song of playlist.songs) {
         if (!await this.fileSystem.songExists(song.id)) {
           console.log(`Downloading song ${song.id} - ${song.title}`);
-          const url = song.file_url;
+          const url = song.bunny_id 
+            ? `https://cloud-media.b-cdn.net/${song.bunny_id}`
+            : song.file_url;
           console.log(`Using URL: ${url}`);
           
           const result = await this.downloadManager.downloadSong(song.id, url);
@@ -75,5 +77,9 @@ export class OfflinePlaylistManager {
       console.error('Error syncing playlist:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
+  }
+
+  getDownloadProgress(songId: string): number {
+    return this.downloadManager.getProgress(songId);
   }
 }

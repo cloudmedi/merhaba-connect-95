@@ -45,6 +45,7 @@ export interface ElectronAPI {
     }>;
   }) => Promise<{ success: boolean; error?: string }>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
+  getDownloadProgress: (songId: string) => Promise<number>;
 }
 
 declare global {
