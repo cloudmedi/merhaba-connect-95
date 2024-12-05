@@ -72,12 +72,19 @@ export function useAudioPlayer({
     isTransitioning.current = false;
   };
 
-  const switchToNextTrack = () => {
-    if (!playlist.songs || isTransitioning.current) return;
+  // Pre-load next track
+  const preloadNextTrack = () => {
+    if (!playlist.songs || playlist.songs.length <= 1) return;
     
     const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
-    setCurrentSongIndex(nextIndex);
-    onSongChange?.(nextIndex);
+    const nextSong = playlist.songs[nextIndex];
+    
+    if (nextSong) {
+      const audio = new Audio();
+      audio.src = getAudioUrl(nextSong);
+      audio.load();
+      nextAudioRef.current = audio;
+    }
   };
 
   useEffect(() => {
@@ -85,26 +92,23 @@ export function useAudioPlayer({
 
     const currentSong = playlist.songs[currentSongIndex];
     
-    // Create new audio instance
     const audio = new Audio(getAudioUrl(currentSong));
     audioRef.current = audio;
 
-    // Set initial volume
     audio.volume = isMuted ? 0 : volume / 100;
 
     const handleTimeUpdate = () => {
       if (!audio.duration) return;
       setProgress((audio.currentTime / audio.duration) * 100);
-    };
 
-    const handleEnded = () => {
-      if (!isTransitioning.current) {
-        switchToNextTrack();
+      // Start transition when near the end of the track
+      if (audio.duration - audio.currentTime <= 0.3 && !isTransitioning.current) {
+        handleNext();
       }
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('loadedmetadata', preloadNextTrack);
 
     if (autoPlay || isPlaying) {
       audio.play().catch(console.error);
@@ -114,7 +118,7 @@ export function useAudioPlayer({
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('loadedmetadata', preloadNextTrack);
       cleanupAudio();
     };
   }, [playlist.songs, currentSongIndex, volume, isMuted]);
@@ -141,9 +145,10 @@ export function useAudioPlayer({
     if (!nextSong) return;
 
     isTransitioning.current = true;
-    const nextAudio = new Audio(getAudioUrl(nextSong));
-    nextAudioRef.current = nextAudio;
 
+    // Use pre-loaded audio if available, otherwise create new
+    const nextAudio = nextAudioRef.current || new Audio(getAudioUrl(nextSong));
+    
     startFade(
       audioRef.current,
       nextAudio,
@@ -154,6 +159,7 @@ export function useAudioPlayer({
         isTransitioning.current = false;
         setCurrentSongIndex(nextIndex);
         onSongChange?.(nextIndex);
+        preloadNextTrack(); // Pre-load the next track after transition
       }
     );
   };
