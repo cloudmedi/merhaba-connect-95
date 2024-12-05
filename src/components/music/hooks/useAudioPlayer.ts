@@ -80,6 +80,7 @@ export function useAudioPlayer({
     const nextSong = playlist.songs[nextIndex];
     
     if (nextSong) {
+      console.log('Preloading next track:', nextSong.title);
       const audio = new Audio();
       audio.src = getAudioUrl(nextSong);
       audio.load();
@@ -91,6 +92,7 @@ export function useAudioPlayer({
     if (!playlist.songs || playlist.songs.length === 0) return;
 
     const currentSong = playlist.songs[currentSongIndex];
+    console.log('Setting up audio for:', currentSong.title);
     
     const audio = new Audio(getAudioUrl(currentSong));
     audioRef.current = audio;
@@ -125,19 +127,6 @@ export function useAudioPlayer({
     };
   }, [playlist.songs, currentSongIndex, volume, isMuted]);
 
-  const handlePlayPause = () => {
-    if (!audioRef.current) return;
-    
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(console.error);
-    }
-    
-    setIsPlaying(!isPlaying);
-    onPlayStateChange?.(!isPlaying);
-  };
-
   const handleNext = () => {
     if (!playlist.songs || isTransitioning.current) return;
 
@@ -147,7 +136,7 @@ export function useAudioPlayer({
     if (!nextSong) return;
 
     isTransitioning.current = true;
-    console.log('Starting fade transition to next track');
+    console.log('Starting transition to next track:', nextSong.title);
 
     // Use pre-loaded audio if available, otherwise create new
     const nextAudio = nextAudioRef.current || new Audio(getAudioUrl(nextSong));
@@ -162,8 +151,8 @@ export function useAudioPlayer({
         isTransitioning.current = false;
         setCurrentSongIndex(nextIndex);
         onSongChange?.(nextIndex);
-        preloadNextTrack(); // Pre-load the next track after transition
-        console.log('Fade transition completed');
+        preloadNextTrack();
+        console.log('Transition completed to:', nextSong.title);
       }
     );
   };
@@ -190,7 +179,7 @@ export function useAudioPlayer({
     isMuted,
     isPlaying,
     progress,
-    handlePlayPause,
+    handlePlayStateChange,
     handleNext,
     handlePrevious,
     handleProgressChange,

@@ -17,6 +17,7 @@ export function useFadeEffect() {
     onFadeComplete: () => void
   ) => {
     clearFade();
+    console.log('Starting fade effect');
 
     // Set initial volumes
     if (currentAudio) {
@@ -25,7 +26,16 @@ export function useFadeEffect() {
     nextAudio.volume = 0;
 
     // Start playing next track
-    nextAudio.play().catch(console.error);
+    const playPromise = nextAudio.play();
+    if (playPromise) {
+      playPromise
+        .then(() => {
+          console.log('Next audio started playing successfully');
+        })
+        .catch(error => {
+          console.error('Error playing next audio:', error);
+        });
+    }
 
     // Crossfade duration (500ms for smoother transition)
     const FADE_DURATION = 500;
@@ -50,6 +60,7 @@ export function useFadeEffect() {
           currentAudio.pause();
           currentAudio.currentTime = 0;
         }
+        console.log('Fade transition completed');
         onFadeComplete();
       }
     }, 16); // Update every 16ms (60fps) for smooth transition
