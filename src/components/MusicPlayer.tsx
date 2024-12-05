@@ -7,7 +7,7 @@ import { AudioPlayer } from "./music/AudioPlayer";
 
 interface MusicPlayerProps {
   playlist: {
-    id?: string; // Playlist ID'sini ekledik
+    id?: string;
     title: string;
     artwork: string;
     songs?: Array<{
@@ -43,14 +43,15 @@ export function MusicPlayer({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [previousPlaylistId, setPreviousPlaylistId] = useState<string | undefined>(playlist.id);
   
+  // Reset player state when playlist changes
   useEffect(() => {
-    // Playlist değişikliğini kontrol et
     if (playlist.id && playlist.id !== previousPlaylistId) {
       handlePlaylistChange();
     }
     setPreviousPlaylistId(playlist.id);
   }, [playlist.id]);
 
+  // Update current song index when currentSongId changes
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -60,23 +61,27 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
+  // Update current song index when initialSongIndex changes
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
   }, [initialSongIndex]);
 
+  // Notify parent component of play state changes
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
   const handlePlaylistChange = async () => {
-    // Geçiş efekti için state'i güncelle
-    setIsTransitioning(true);
+    // Stop current playback
     setIsPlaying(false);
+    
+    // Start transition animation
+    setIsTransitioning(true);
 
-    // Kısa bir gecikme ile yeni playlist'e geç
+    // Wait for animation
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Yeni playlist için state'i resetle
+    // Reset state for new playlist
     setCurrentSongIndex(0);
     setIsPlaying(true);
     setIsTransitioning(false);
@@ -84,6 +89,7 @@ export function MusicPlayer({
     toast.success(`Now playing: ${playlist.title}`);
   };
 
+  // Validate playlist has songs
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
     onClose();
@@ -186,6 +192,7 @@ export function MusicPlayer({
             volume={isMuted ? 0 : volume / 100}
             autoPlay={autoPlay}
             onPlayStateChange={handlePlayPause}
+            key={`${playlist.id}-${currentSongIndex}`}
           />
         </div>
 
