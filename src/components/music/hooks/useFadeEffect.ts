@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 
-const FADE_DURATION = 3000; // 3 seconds fade duration
+const FADE_DURATION = 1000; // 1 second fade duration
 
 export function useFadeEffect() {
   const fadeInterval = useRef<NodeJS.Timeout | null>(null);
@@ -20,37 +20,39 @@ export function useFadeEffect() {
   ) => {
     clearFade();
 
-    // Prepare next audio
-    nextAudio.volume = 0;
-    const playPromise = nextAudio.play();
-    if (playPromise) {
-      playPromise.catch(console.error);
+    // Set initial volumes
+    if (currentAudio) {
+      currentAudio.volume = currentVolume / 100;
     }
+    nextAudio.volume = 0;
 
-    let progress = 0;
-    const step = 20; // Update every 20ms
-    const volumeStep = step / FADE_DURATION;
+    // Start playing next audio
+    nextAudio.play().catch(console.error);
 
+    const startTime = Date.now();
+    
     fadeInterval.current = setInterval(() => {
-      progress += step;
-      
-      // Fade out current audio if it exists
-      if (currentAudio) {
-        currentAudio.volume = Math.max(0, 1 - (progress / FADE_DURATION));
-      }
-      
-      // Fade in next audio
-      nextAudio.volume = Math.min(1, progress / FADE_DURATION) * (currentVolume / 100);
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(1, elapsed / FADE_DURATION);
 
-      if (progress >= FADE_DURATION) {
+      // Fade out current audio
+      if (currentAudio) {
+        currentAudio.volume = Math.max(0, (1 - progress) * (currentVolume / 100));
+      }
+
+      // Fade in next audio
+      nextAudio.volume = progress * (currentVolume / 100);
+
+      // Complete fade
+      if (progress >= 1) {
         clearFade();
         if (currentAudio) {
           currentAudio.pause();
-          currentAudio.src = '';
+          currentAudio.currentTime = 0;
         }
         onFadeComplete();
       }
-    }, step);
+    }, 50); // Update every 50ms for smooth transition
   }, []);
 
   return {

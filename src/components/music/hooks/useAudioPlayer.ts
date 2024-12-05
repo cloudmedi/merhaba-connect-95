@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAudioControls } from './useAudioControls';
+import { useFadeEffect } from './useFadeEffect';
 
 interface UseAudioPlayerProps {
   playlist: {
@@ -30,7 +31,7 @@ export function useAudioPlayer({
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTransitioning = useRef(false);
 
   const {
     isPlaying,
@@ -44,6 +45,8 @@ export function useAudioPlayer({
     toggleMute
   } = useAudioControls();
 
+  const { startFade, clearFade } = useFadeEffect();
+
   const getAudioUrl = (song: any) => {
     if (!song.file_url) return '';
     if (song.file_url.startsWith('http')) return song.file_url;
@@ -52,10 +55,7 @@ export function useAudioPlayer({
   };
 
   const cleanupAudio = () => {
-    if (fadeTimeoutRef.current) {
-      clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = null;
-    }
+    clearFade();
     
     if (audioRef.current) {
       audioRef.current.pause();
@@ -68,10 +68,12 @@ export function useAudioPlayer({
       nextAudioRef.current.src = '';
       nextAudioRef.current.load();
     }
+
+    isTransitioning.current = false;
   };
 
   const switchToNextTrack = () => {
-    if (!playlist.songs) return;
+    if (!playlist.songs || isTransitioning.current) return;
     
     const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
     setCurrentSongIndex(nextIndex);
@@ -82,9 +84,12 @@ export function useAudioPlayer({
     if (!playlist.songs || playlist.songs.length === 0) return;
 
     const currentSong = playlist.songs[currentSongIndex];
+    
+    // Create new audio instance
     const audio = new Audio(getAudioUrl(currentSong));
     audioRef.current = audio;
 
+    // Set initial volume
     audio.volume = isMuted ? 0 : volume / 100;
 
     const handleTimeUpdate = () => {
@@ -93,7 +98,9 @@ export function useAudioPlayer({
     };
 
     const handleEnded = () => {
-      switchToNextTrack();
+      if (!isTransitioning.current) {
+        switchToNextTrack();
+      }
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -126,12 +133,33 @@ export function useAudioPlayer({
   };
 
   const handleNext = () => {
-    cleanupAudio();
-    switchToNextTrack();
+    if (!playlist.songs || isTransitioning.current) return;
+
+    const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
+    const nextSong = playlist.songs[nextIndex];
+
+    if (!nextSong) return;
+
+    isTransitioning.current = true;
+    const nextAudio = new Audio(getAudioUrl(nextSong));
+    nextAudioRef.current = nextAudio;
+
+    startFade(
+      audioRef.current,
+      nextAudio,
+      volume,
+      () => {
+        audioRef.current = nextAudio;
+        nextAudioRef.current = null;
+        isTransitioning.current = false;
+        setCurrentSongIndex(nextIndex);
+        onSongChange?.(nextIndex);
+      }
+    );
   };
 
   const handlePrevious = () => {
-    if (!playlist.songs) return;
+    if (!playlist.songs || isTransitioning.current) return;
     cleanupAudio();
     const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
     setCurrentSongIndex(prevIndex);
