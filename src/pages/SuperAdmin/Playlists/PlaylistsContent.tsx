@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Database } from "@/integrations/supabase/types";
+import { GridPlaylist } from "@/components/dashboard/types";
 
 type PlaylistRow = Database['public']['Tables']['playlists']['Row'];
 type Genre = Database['public']['Tables']['genres']['Row'];
@@ -38,7 +39,7 @@ export function PlaylistsContent() {
         `);
 
       if (error) throw error;
-      return data as PlaylistWithRelations[];
+      return data as unknown as PlaylistWithRelations[];
     }
   });
 
@@ -60,6 +61,13 @@ export function PlaylistsContent() {
     const matchesGenre = selectedGenre === "all" || playlist.genre_id === selectedGenre;
     return matchesSearch && matchesGenre;
   });
+
+  const handlePlaylistSelect = (playlist: GridPlaylist) => {
+    const fullPlaylist = playlists.find(p => p.id === playlist.id);
+    if (fullPlaylist) {
+      setCurrentPlaylist(fullPlaylist);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -110,7 +118,7 @@ export function PlaylistsContent() {
           mood: "Various"
         }))}
         isLoading={isPlaylistsLoading}
-        onPlay={setCurrentPlaylist}
+        onPlay={handlePlaylistSelect}
       />
 
       {currentPlaylist && (
