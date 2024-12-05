@@ -1,12 +1,9 @@
-import { useAudioPlayer } from "@/hooks/useAudioPlayer";
-import { Loader2 } from "lucide-react";
-import { PlayerControls } from "./PlayerControls";
-import { ProgressBar } from "./ProgressBar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useEffect, memo } from "react";
+import { useState, useEffect, useRef } from 'react';
+import { PlayerControls } from './PlayerControls';
+import { ProgressBar } from './ProgressBar';
 
 interface AudioPlayerProps {
-  audioUrl?: string;
+  audioUrl: string;
   onNext?: () => void;
   onPrevious?: () => void;
   volume?: number;
@@ -14,79 +11,95 @@ interface AudioPlayerProps {
   onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
-function AudioPlayerComponent({ 
-  audioUrl, 
-  onNext, 
-  onPrevious, 
+export function AudioPlayer({
+  audioUrl,
+  onNext,
+  onPrevious,
   volume = 1,
   autoPlay = false,
   onPlayStateChange
 }: AudioPlayerProps) {
-  const {
-    isPlaying,
-    progress,
-    isLoading,
-    error,
-    togglePlay,
-    seek,
-    setVolume,
-    play,
-    onEnded
-  } = useAudioPlayer(audioUrl);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    setVolume(volume);
-  }, [volume, setVolume]);
+    const audio = new Audio();
+    audioRef.current = audio;
+
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      if (autoPlay) {
+        audio.play().catch(console.error);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setProgress(0);
+      onNext?.();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    audio.src = audioUrl;
+    audio.load();
+    audio.volume = volume;
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
+      audio.src = '';
+    };
+  }, [audioUrl, autoPlay, onNext, volume]);
 
   useEffect(() => {
-    if (autoPlay) {
-      play();
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
     }
-  }, [autoPlay, audioUrl, play]);
+  }, [volume]);
 
-  useEffect(() => {
-    onPlayStateChange?.(isPlaying);
-  }, [isPlaying, onPlayStateChange]);
+  const togglePlay = () => {
+    if (!audioRef.current) return;
 
-  // Handle song ending
-  useEffect(() => {
-    if (onNext) {
-      onEnded(onNext);
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(console.error);
     }
-  }, [onNext, onEnded]);
+    
+    setIsPlaying(!isPlaying);
+    onPlayStateChange?.(!isPlaying);
+  };
 
-  if (error) {
-    return (
-      <Alert variant="destructive" className="my-2">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const handleSeek = (value: number) => {
+    if (!audioRef.current || !duration) return;
+    
+    const time = (value / 100) * duration;
+    audioRef.current.currentTime = time;
+    setProgress(value);
+  };
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="w-full opacity-100 transition-opacity duration-200">
-        <ProgressBar 
-          progress={progress} 
-          onProgressChange={(values) => seek(values[0])} 
-        />
-      </div>
-      <div className={`transition-opacity duration-200 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-        <PlayerControls
-          isPlaying={isPlaying}
-          onPrevious={onPrevious}
-          onPlayPause={togglePlay}
-          onNext={onNext}
-        />
-      </div>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-        </div>
-      )}
+      <PlayerControls
+        isPlaying={isPlaying}
+        onPlayPause={togglePlay}
+        onNext={onNext}
+        onPrevious={onPrevious}
+      />
+      <ProgressBar progress={progress} onProgressChange={handleSeek} />
     </div>
   );
 }
-
-// Memoize the component to prevent unnecessary re-renders
-export const AudioPlayer = memo(AudioPlayerComponent);

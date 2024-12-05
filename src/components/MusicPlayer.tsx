@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { X, Volume2, VolumeX } from "lucide-react";
-import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
 import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
+import { AudioPlayer } from "./music/AudioPlayer";
 
 interface MusicPlayerProps {
   playlist: {
+    id?: string; // Playlist ID'sini ekledik
     title: string;
     artwork: string;
     songs?: Array<{
@@ -39,7 +40,17 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [previousPlaylistId, setPreviousPlaylistId] = useState<string | undefined>(playlist.id);
   
+  useEffect(() => {
+    // Playlist değişikliğini kontrol et
+    if (playlist.id && playlist.id !== previousPlaylistId) {
+      handlePlaylistChange();
+    }
+    setPreviousPlaylistId(playlist.id);
+  }, [playlist.id]);
+
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -56,6 +67,22 @@ export function MusicPlayer({
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
+
+  const handlePlaylistChange = async () => {
+    // Geçiş efekti için state'i güncelle
+    setIsTransitioning(true);
+    setIsPlaying(false);
+
+    // Kısa bir gecikme ile yeni playlist'e geç
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Yeni playlist için state'i resetle
+    setCurrentSongIndex(0);
+    setIsPlaying(true);
+    setIsTransitioning(false);
+
+    toast.success(`Now playing: ${playlist.title}`);
+  };
 
   if (!playlist.songs || playlist.songs.length === 0) {
     toast.error("No songs available in this playlist");
@@ -82,7 +109,6 @@ export function MusicPlayer({
   };
 
   const handlePlayPause = (playing: boolean) => {
-    console.log('MusicPlayer handlePlayPause:', playing);
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
   };
@@ -120,7 +146,9 @@ export function MusicPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
+    <div className={`fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up transition-opacity duration-300 ${
+      isTransitioning ? 'opacity-0' : 'opacity-100'
+    }`}>
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
@@ -131,7 +159,6 @@ export function MusicPlayer({
         }}
       />
       
-      {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
       
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
