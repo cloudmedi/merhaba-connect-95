@@ -7,13 +7,11 @@ export class WebSocketManager {
   private ws: WebSocket | null = null;
   private playlistManager: OfflinePlaylistManager;
   private supabaseUrl: string;
-  private deviceId: string;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
 
   constructor(deviceId: string) {
-    this.deviceId = deviceId;
     const fileSystem = new FileSystemManager(deviceId);
     const downloadManager = new DownloadManager(fileSystem);
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
@@ -25,18 +23,18 @@ export class WebSocketManager {
       return;
     }
 
-    this.connect();
+    this.connect(deviceId);
   }
 
-  private async connect() {
+  private async connect(deviceId: string) {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
         return;
       }
 
-      // Get device token
-      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?mac_address=eq.${this.deviceId}`, {
+      // Get device token using MAC address
+      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?mac_address=eq.${deviceId}&status=eq.active`, {
         headers: {
           'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
           'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
@@ -45,18 +43,20 @@ export class WebSocketManager {
 
       const deviceToken = deviceTokens?.[0]?.token;
       if (!deviceToken) {
-        console.error('No device token found');
+        console.error('No active device token found for MAC address:', deviceId);
         return;
       }
 
-      // Construct WebSocket URL with device token
+      console.log('Found active token for device:', deviceToken);
+
+      // Construct WebSocket URL with device token instead of deviceId
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened');
+        console.log('WebSocket connection opened with token:', deviceToken);
         this.reconnectAttempts = 0;
       });
 
@@ -73,6 +73,7 @@ export class WebSocketManager {
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'error',
                 payload: result.success ? {
+                  token: deviceToken,
                   playlistId: playlist.id
                 } : result.error
               }));
@@ -92,7 +93,7 @@ export class WebSocketManager {
         this.reconnectAttempts++;
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connect(), this.reconnectDelay);
+          setTimeout(() => this.connect(deviceId), this.reconnectDelay);
         }
       });
     } catch (error) {
@@ -100,7 +101,7 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connect(), this.reconnectDelay);
+        setTimeout(() => this.connect(deviceId), this.reconnectDelay);
       }
     }
   }
