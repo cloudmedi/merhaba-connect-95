@@ -1,21 +1,21 @@
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  onSelectAll?: () => void;
-  selectedCount?: number;
-  totalCount?: number;
+  onSelectAll: () => void;
+  selectedCount: number;
+  totalCount: number;
 }
 
 export function SearchBar({ 
   searchQuery, 
-  onSearchChange,
+  onSearchChange, 
   onSelectAll,
-  selectedCount = 0,
-  totalCount = 0
+  selectedCount,
+  totalCount 
 }: SearchBarProps) {
   return (
     <div className="flex items-center justify-between gap-4">
@@ -28,15 +28,13 @@ export function SearchBar({
           className="pl-10"
         />
       </div>
-      {onSelectAll && (
-        <Button 
-          variant="outline" 
-          onClick={onSelectAll}
-          className="whitespace-nowrap"
-        >
-          {selectedCount === totalCount ? "Seçimi Kaldır" : "Tümünü Seç"}
-        </Button>
-      )}
+      <Button 
+        variant="outline" 
+        onClick={onSelectAll}
+        className="whitespace-nowrap"
+      >
+        {selectedCount === totalCount ? "Seçimi Kaldır" : "Tümünü Seç"}
+      </Button>
     </div>
   );
 }

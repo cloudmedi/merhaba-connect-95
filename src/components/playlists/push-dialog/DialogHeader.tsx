@@ -1,10 +1,9 @@
-import { DialogHeader as UIDialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DialogHeaderProps } from "./types";
+import { DialogHeader as Header, DialogTitle } from "@/components/ui/dialog";
 
-export function DialogHeader({ onClose }: DialogHeaderProps) {
+export function DialogHeader() {
   return (
-    <UIDialogHeader>
+    <Header>
       <DialogTitle>Push Playlist</DialogTitle>
-    </UIDialogHeader>
+    </Header>
   );
 }

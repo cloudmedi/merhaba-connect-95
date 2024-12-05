@@ -9,7 +9,7 @@ interface DialogFooterProps {
 
 export function DialogFooter({ selectedCount, onCancel, onPush, isSyncing }: DialogFooterProps) {
   return (
-    <div className="flex items-center justify-between border-t pt-4">
+    <div className="flex justify-between items-center">
       <p className="text-sm text-gray-500">
         {selectedCount} cihaz seçildi
       </p>
@@ -17,11 +17,7 @@ export function DialogFooter({ selectedCount, onCancel, onPush, isSyncing }: Dia
         <Button variant="outline" onClick={onCancel} disabled={isSyncing}>
           İptal
         </Button>
-        <Button 
-          onClick={onPush}
-          disabled={selectedCount === 0 || isSyncing}
-          className="bg-[#1A1F2C] text-white hover:bg-[#2A2F3C]"
-        >
+        <Button onClick={onPush} disabled={selectedCount === 0 || isSyncing}>
           {isSyncing ? 'Gönderiliyor...' : 'Cihazlara Gönder'}
         </Button>
       </div>

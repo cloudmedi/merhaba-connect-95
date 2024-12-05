@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import * as fs from 'fs-extra';
 import { FileSystemManager } from './FileSystemManager';
+import * as crypto from 'crypto';
 
 export class DownloadManager {
   constructor(private fileSystem: FileSystemManager) {}
@@ -12,6 +13,7 @@ export class DownloadManager {
       const response = await fetch(url);
       
       if (!response.ok) {
+        console.error(`Failed to download: ${response.statusText}`);
         throw new Error(`Failed to download: ${response.statusText}`);
       }
 
@@ -24,7 +26,7 @@ export class DownloadManager {
       return { success: true, hash };
     } catch (error) {
       console.error(`Error downloading song ${songId}:`, error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   }
 

@@ -43,7 +43,9 @@ export class OfflinePlaylistManager {
       for (const song of playlist.songs) {
         if (!await this.fileSystem.songExists(song.id)) {
           console.log(`Downloading song ${song.id} - ${song.title}`);
-          const url = this.getBunnyUrl(song);
+          const url = song.file_url;
+          console.log(`Using URL: ${url}`);
+          
           const result = await this.downloadManager.downloadSong(song.id, url);
           
           if (!result.success) {
@@ -71,14 +73,7 @@ export class OfflinePlaylistManager {
       return { success: true };
     } catch (error) {
       console.error('Error syncing playlist:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
-  }
-
-  private getBunnyUrl(song: Song): string {
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    }
-    return song.file_url;
   }
 }

@@ -7,16 +7,9 @@ import { DialogHeader } from "./DialogHeader";
 import { SearchBar } from "./SearchBar";
 import { DeviceList } from "./DeviceList";
 import { DialogFooter } from "./DialogFooter";
-import { PushDialogDevice } from "./types";
+import { PushDialogDevice, PushDialogProps } from "./types";
 
-interface PushPlaylistDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  playlistTitle: string;
-  playlistId: string;
-}
-
-export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId }: PushPlaylistDialogProps) {
+export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId }: PushDialogProps) {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
@@ -40,8 +33,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
           *,
           branches (
             id,
-            name,
-            company_id
+            name
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
@@ -101,7 +93,12 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
         const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
           name: playlist.name,
-          songs: playlist.playlist_songs.map((ps: any) => ps.songs)
+          songs: playlist.playlist_songs.map((ps: any) => ({
+            ...ps.songs,
+            file_url: ps.songs.bunny_id 
+              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+              : ps.songs.file_url
+          }))
         });
 
         if (!result.success) {
@@ -124,7 +121,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader onClose={onClose} />
+        <DialogHeader />
 
         <div className="space-y-4">
           <SearchBar
@@ -145,6 +142,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
                   : [...prev, deviceId]
               );
             }}
+            isLoading={isLoading}
           />
 
           <DialogFooter
