@@ -18,7 +18,10 @@ export default defineConfig({
           'crypto',
           'clsx',
           'tailwind-merge',
-          'lucide-react'
+          'lucide-react',
+          'bufferutil',
+          'utf-8-validate',
+          'ws'
         ]
       }
     }
