@@ -81,7 +81,6 @@ export function OfflinePlayerApp() {
 
   const handlePlayPlaylist = (playlist: any) => {
     setCurrentPlaylist({
-      id: playlist.id, // Add playlist ID here
       title: playlist.name,
       artwork: playlist.artwork_url,
       songs: playlist.songs.map((ps: any) => ({
@@ -132,13 +131,9 @@ export function OfflinePlayerApp() {
 
       {currentPlaylist && (
         <MusicPlayer
-          playlist={{
-            id: currentPlaylist.id, // Add playlist ID here
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork,
-            songs: currentPlaylist.songs
-          }}
+          playlist={currentPlaylist}
           onClose={() => setCurrentPlaylist(null)}
+          autoPlay={true}
         />
       )}
     </div>

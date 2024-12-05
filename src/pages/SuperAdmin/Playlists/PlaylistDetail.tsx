@@ -90,14 +90,14 @@ export function PlaylistDetail() {
 
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
-
+    
     const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
       return acc + (song.duration || 0);
     }, 0);
-
+    
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-
+    
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -132,7 +132,6 @@ export function PlaylistDetail() {
         {isPlaying && playlist.songs && (
           <MusicPlayer
             playlist={{
-              id: playlist.id,
               title: playlist.name,
               artwork: playlist.artwork_url || "/placeholder.svg",
               songs: playlist.songs.map((song: any) => ({
