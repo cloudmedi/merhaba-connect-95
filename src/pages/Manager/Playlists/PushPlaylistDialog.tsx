@@ -16,11 +16,14 @@ interface PushPlaylistDialogProps {
   isOpen: boolean;
   onClose: () => void;
   playlistTitle: string;
+  playlistId: string;
 }
 
-export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlaylistDialogProps) {
+export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId }: PushPlaylistDialogProps) {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
@@ -64,6 +67,27 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     }
   };
 
+  const checkDownloadProgress = async (songIds: string[]) => {
+    const interval = setInterval(async () => {
+      const newProgress: { [key: string]: number } = {};
+      let allCompleted = true;
+
+      for (const songId of songIds) {
+        const progress = await window.electronAPI.getDownloadProgress(songId);
+        newProgress[songId] = progress;
+        if (progress < 100) allCompleted = false;
+      }
+
+      setDownloadProgress(newProgress);
+
+      if (allCompleted) {
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  };
+
   const handlePush = async () => {
     if (selectedDevices.length === 0) {
       toast.error("Lütfen en az bir cihaz seçin");
@@ -71,12 +95,66 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
     }
 
     try {
-      // Burada playlist'i seçili cihazlara gönderme işlemi yapılacak
-      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderildi`);
+      setIsSyncing(true);
+      toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
+
+      // Get playlist details with songs
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          playlist_songs (
+            songs (
+              id,
+              title,
+              artist,
+              file_url,
+              bunny_id
+            )
+          )
+        `)
+        .eq('id', playlistId)
+        .single();
+
+      if (playlistError) throw playlistError;
+
+      // Format songs data
+      const songs = playlist.playlist_songs.map((ps: any) => ({
+        ...ps.songs,
+        file_url: ps.songs.bunny_id 
+          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+          : ps.songs.file_url
+      }));
+
+      const songIds = songs.map((s: any) => s.id);
+      const cleanup = await checkDownloadProgress(songIds);
+
+      // Send playlist to each selected device
+      for (const deviceId of selectedDevices) {
+        console.log(`Sending playlist to device ${deviceId}`);
+        
+        const result = await window.electronAPI.syncPlaylist({
+          id: playlist.id,
+          name: playlist.name,
+          songs: songs
+        });
+
+        if (!result.success) {
+          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
+          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
+        }
+      }
+
+      cleanup();
+      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
       setSelectedDevices([]);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error pushing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
+    } finally {
+      setIsSyncing(false);
+      setDownloadProgress({});
     }
   };
 
@@ -119,8 +197,8 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
                     key={device.id}
                     className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
                     onClick={() => {
-                      setSelectedDevices(prev => 
-                        prev.includes(device.id) 
+                      setSelectedDevices(prev =>
+                        prev.includes(device.id)
                           ? prev.filter(id => id !== device.id)
                           : [...prev, device.id]
                       );
@@ -129,8 +207,8 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
                     <Checkbox
                       checked={selectedDevices.includes(device.id)}
                       onCheckedChange={() => {
-                        setSelectedDevices(prev => 
-                          prev.includes(device.id) 
+                        setSelectedDevices(prev =>
+                          prev.includes(device.id)
                             ? prev.filter(id => id !== device.id)
                             : [...prev, device.id]
                         );
@@ -170,6 +248,26 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
             )}
           </ScrollArea>
 
+          {Object.keys(downloadProgress).length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">İndirme Durumu:</p>
+              {Object.entries(downloadProgress).map(([songId, progress]) => (
+                <div key={songId} className="space-y-1">
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Şarkı ID: {songId}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-500">
               {selectedDevices.length} cihaz seçildi
@@ -178,8 +276,8 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle }: PushPlayl
               <Button variant="outline" onClick={onClose}>
                 İptal
               </Button>
-              <Button onClick={handlePush}>
-                Cihazlara Gönder
+              <Button onClick={handlePush} disabled={isSyncing}>
+                {isSyncing ? "Gönderiliyor..." : "Cihazlara Gönder"}
               </Button>
             </div>
           </div>
