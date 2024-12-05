@@ -164,11 +164,11 @@ export function MusicTable({
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
+            id: currentlyPlaying.playlist_id, // Add playlist ID here
             title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
             songs: transformedSongs
           }}
-          initialSongIndex={currentSongIndex}
           onClose={() => {
             setCurrentlyPlaying(null);
             setIsPlaying(false);
