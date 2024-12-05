@@ -45,6 +45,7 @@ export interface DialogFooterProps {
   selectedCount: number;
   onCancel: () => void;
   onPush: () => void;
+  isSyncing: boolean;
 }
 
 export interface PushDialogDevice extends Omit<Device, 'system_info' | 'branches'> {
