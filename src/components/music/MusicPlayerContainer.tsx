@@ -5,6 +5,7 @@ import { VolumeControl } from "./VolumeControl";
 import { TrackInfo } from "./TrackInfo";
 import { ProgressBar } from "./ProgressBar";
 import { useAudioPlayer } from "./hooks/useAudioPlayer";
+import { useNavigate } from "react-router-dom";
 
 interface MusicPlayerProps {
   playlist: {
@@ -37,6 +38,7 @@ export function MusicPlayerContainer({
   onPlayStateChange,
   currentSongId
 }: MusicPlayerProps) {
+  const navigate = useNavigate();
   const {
     currentSongIndex,
     volume,
@@ -63,6 +65,12 @@ export function MusicPlayerContainer({
   const currentSong = getCurrentSong();
   if (!currentSong) return null;
 
+  const handleArtworkClick = () => {
+    if (playlist.id) {
+      navigate(`/manager/playlists/${playlist.id}`);
+    }
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10">
       <div className="max-w-screen-2xl mx-auto px-4 py-3">
@@ -71,6 +79,7 @@ export function MusicPlayerContainer({
             title={currentSong.title}
             artist={currentSong.artist}
             artwork={playlist.artwork}
+            onArtworkClick={handleArtworkClick}
           />
 
           <div className="flex-1 max-w-2xl space-y-2">
