@@ -7,13 +7,17 @@ export class WebSocketManager {
   private ws: WebSocket | null = null;
   private playlistManager: OfflinePlaylistManager;
   private supabaseUrl: string;
+  private deviceId: string;
+  private reconnectAttempts: number = 0;
+  private maxReconnectAttempts: number = 5;
+  private reconnectDelay: number = 5000;
 
   constructor(deviceId: string) {
+    this.deviceId = deviceId;
     const fileSystem = new FileSystemManager(deviceId);
     const downloadManager = new DownloadManager(fileSystem);
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
     
-    // Get Supabase URL from environment variables
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     
     if (!this.supabaseUrl) {
@@ -24,16 +28,32 @@ export class WebSocketManager {
     this.connect();
   }
 
-  private connect() {
+  private async connect() {
     try {
-      // Construct WebSocket URL
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('Max reconnection attempts reached');
+        return;
+      }
+
+      // Get device token
+      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?mac_address=eq.${this.deviceId}`, {
+        headers: {
+          'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
+          'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
+        }
+      }).then(res => res.json());
+
+      const deviceToken = deviceTokens?.[0]?.token;
+
+      // Construct WebSocket URL with device token
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
         console.log('WebSocket connection opened');
+        this.reconnectAttempts = 0;
       });
 
       this.ws.on('message', async (data) => {
@@ -43,11 +63,8 @@ export class WebSocketManager {
 
           if (message.type === 'sync_playlist') {
             const { playlist } = message.payload;
-            
-            // Playlist'i senkronize et
             const result = await this.playlistManager.syncPlaylist(playlist);
             
-            // Sonucu gönder
             if (this.ws?.readyState === WebSocket.OPEN) {
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'error',
@@ -68,13 +85,13 @@ export class WebSocketManager {
 
       this.ws.on('close', () => {
         console.log('WebSocket connection closed');
-        // Bağlantıyı yeniden kur
-        setTimeout(() => this.connect(), 5000);
+        this.reconnectAttempts++;
+        setTimeout(() => this.connect(), this.reconnectDelay);
       });
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
-      // Retry connection after delay
-      setTimeout(() => this.connect(), 5000);
+      this.reconnectAttempts++;
+      setTimeout(() => this.connect(), this.reconnectDelay);
     }
   }
 }

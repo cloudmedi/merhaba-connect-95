@@ -20,14 +20,34 @@ serve(async (req) => {
     })
   }
 
-  // Create WebSocket connection
-  const { socket, response } = Deno.upgradeWebSocket(req)
-
+  // Get authentication token from URL params
+  const url = new URL(req.url)
+  const token = url.searchParams.get('token')
+  
   // Initialize Supabase client
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
+
+  // Verify device token if provided
+  if (token) {
+    const { data: deviceToken, error } = await supabase
+      .from('device_tokens')
+      .select('*')
+      .eq('token', token)
+      .single()
+
+    if (error || !deviceToken) {
+      return new Response('Invalid device token', { 
+        status: 403,
+        headers: corsHeaders 
+      })
+    }
+  }
+
+  // Create WebSocket connection
+  const { socket, response } = Deno.upgradeWebSocket(req)
 
   socket.onopen = () => {
     console.log('WebSocket connection opened')
