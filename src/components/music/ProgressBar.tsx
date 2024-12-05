@@ -2,7 +2,7 @@ import { Slider } from "@/components/ui/slider";
 
 interface ProgressBarProps {
   progress: number;
-  onProgressChange: (value: number[]) => void;
+  onProgressChange: (values: number[]) => void;
 }
 
 export function ProgressBar({ progress, onProgressChange }: ProgressBarProps) {

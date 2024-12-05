@@ -83,9 +83,10 @@ export function AudioPlayer({
     onPlayStateChange?.(!isPlaying);
   };
 
-  const handleSeek = (value: number) => {
+  const handleSeek = (values: number[]) => {
     if (!audioRef.current || !duration) return;
     
+    const [value] = values;
     const time = (value / 100) * duration;
     audioRef.current.currentTime = time;
     setProgress(value);
