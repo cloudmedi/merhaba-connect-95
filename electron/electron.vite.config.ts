@@ -7,7 +7,16 @@ export default defineConfig({
     build: {
       outDir: 'out/main',
       rollupOptions: {
-        external: ['dotenv', 'systeminformation', '@supabase/supabase-js', 'uuid', 'sonner']
+        external: [
+          'dotenv', 
+          'systeminformation', 
+          '@supabase/supabase-js', 
+          'uuid', 
+          'sonner',
+          'node-fetch',
+          'fs-extra',
+          'crypto'
+        ]
       }
     }
   },
