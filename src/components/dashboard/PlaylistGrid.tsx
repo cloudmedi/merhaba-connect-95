@@ -6,8 +6,6 @@ import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import { PlaylistCard } from "./components/PlaylistCard";
 import { PlaylistGridHeader } from "./components/PlaylistGridHeader";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
 
 interface PlaylistGridProps {
   title: string;
@@ -45,20 +43,6 @@ export function PlaylistGrid({
   isPlaying = false,
 }: PlaylistGridProps) {
   const navigate = useNavigate();
-  const [selectedGenre, setSelectedGenre] = useState<string>("all");
-
-  const { data: genres } = useQuery({
-    queryKey: ['genres'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('genres')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
 
   const { data: playlistSongs } = useQuery({
     queryKey: ['playlist-songs'],
@@ -91,11 +75,13 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (playlist: GridPlaylist) => {
+    // If clicking the currently playing playlist, we want to toggle play/pause
     if (playlist.id === currentPlayingId) {
       onPlay?.(playlist);
       return;
     }
 
+    // Otherwise, load and play the new playlist
     const playlistWithSongs = {
       ...playlist,
       songs: playlistSongs
@@ -117,10 +103,6 @@ export function PlaylistGrid({
     navigate(`/manager/playlists/${playlist.id}`);
   };
 
-  const filteredPlaylists = selectedGenre === "all" 
-    ? playlists 
-    : playlists.filter(playlist => playlist.genre === selectedGenre);
-
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
@@ -132,35 +114,15 @@ export function PlaylistGrid({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <PlaylistGridHeader
-          title={title}
-          description={description}
-          categoryId={categoryId}
-          onViewAll={handleViewAll}
-        />
-        <div className="w-[200px]">
-          <Select
-            value={selectedGenre}
-            onValueChange={setSelectedGenre}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
-              {genres?.map((genre) => (
-                <SelectItem key={genre.id} value={genre.name}>
-                  {genre.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <PlaylistGridHeader
+        title={title}
+        description={description}
+        categoryId={categoryId}
+        onViewAll={handleViewAll}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {filteredPlaylists.map((playlist) => (
+        {playlists.map((playlist) => (
           <PlaylistCard
             key={playlist.id}
             playlist={playlist}
