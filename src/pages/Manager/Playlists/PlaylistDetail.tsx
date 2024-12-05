@@ -90,7 +90,6 @@ export function PlaylistDetail() {
     if (playlist.songs && playlist.songs.length > 0) {
       setCurrentSongIndex(0);
       setIsPlaying(true);
-      toast.success("Playing playlist");
     }
   };
 
@@ -157,6 +156,7 @@ export function PlaylistDetail() {
           isOpen={isPushDialogOpen}
           onClose={() => setIsPushDialogOpen(false)}
           playlistTitle={playlist.name}
+          playlistId={playlist.id}
         />
       </div>
     </div>
