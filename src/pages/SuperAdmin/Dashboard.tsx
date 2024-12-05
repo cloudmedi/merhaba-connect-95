@@ -1,7 +1,5 @@
 import { AdminNav } from "@/components/AdminNav";
 import { SystemStats } from "@/components/dashboard/SystemStats";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { RecentActivities } from "@/components/dashboard/RecentActivities";
 
 export default function Dashboard() {
   return (
@@ -15,13 +13,6 @@ export default function Dashboard() {
           </div>
 
           <SystemStats />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <RecentActivities />
-            </div>
-            <QuickActions />
-          </div>
         </div>
       </main>
     </div>
