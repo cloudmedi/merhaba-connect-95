@@ -16,6 +16,7 @@ export function PlaylistSync() {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [syncStatus, setSyncStatus] = useState<Record<string, SyncStatus>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     loadOfflinePlaylists();
@@ -84,6 +85,27 @@ export function PlaylistSync() {
     }
   };
 
+  const checkDownloadProgress = async (songIds: string[]) => {
+    const interval = setInterval(async () => {
+      const newProgress: { [key: string]: number } = {};
+      let allCompleted = true;
+
+      for (const songId of songIds) {
+        const progress = await window.electronAPI.getDownloadProgress(songId);
+        newProgress[songId] = progress;
+        if (progress < 100) allCompleted = false;
+      }
+
+      setDownloadProgress(newProgress);
+
+      if (allCompleted) {
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -138,6 +160,21 @@ export function PlaylistSync() {
                 )}
               </div>
             ))
+          )}
+
+          {Object.keys(downloadProgress).length > 0 && (
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <h4 className="font-medium">İndirme Durumu</h4>
+              {Object.entries(downloadProgress).map(([songId, progress]) => (
+                <div key={songId} className="space-y-1">
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Şarkı ID: {songId}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-1" />
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </CardContent>
