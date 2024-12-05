@@ -31,7 +31,10 @@ export const useAudioBuffer = (url: string, context: AudioContext | null) => {
   };
 
   useEffect(() => {
-    if (!context || !url) return;
+    if (!context || !url) {
+      console.log('Missing context or URL, skipping audio buffer loading');
+      return;
+    }
 
     const loadAudioBuffer = async () => {
       try {

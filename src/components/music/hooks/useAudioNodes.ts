@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { toast } from "sonner";
 
 interface AudioNodes {
   source: AudioBufferSourceNode | null;
@@ -11,7 +12,11 @@ export const useAudioNodes = (context: AudioContext | null) => {
   const offsetRef = useRef<number>(0);
 
   const createNodes = useCallback((buffer: AudioBuffer) => {
-    if (!context) return null;
+    if (!context) {
+      console.error('Cannot create nodes: AudioContext not available');
+      toast.error("Audio system is not initialized");
+      return null;
+    }
 
     try {
       // Clean up existing nodes
