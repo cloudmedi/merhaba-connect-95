@@ -1,10 +1,7 @@
-import { useEffect, useCallback } from "react";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
-import { PlayerControls } from "./PlayerControls";
-import { ProgressBar } from "./ProgressBar";
+import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LoadingOverlay } from "./LoadingOverlay";
-import { toast } from "sonner";
+import { useEffect, memo } from "react";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -13,17 +10,19 @@ interface AudioPlayerProps {
   volume?: number;
   autoPlay?: boolean;
   onPlayStateChange?: (isPlaying: boolean) => void;
-  onSongChange?: (index: number) => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  repeat?: boolean;
 }
 
-export function AudioPlayer({ 
-  audioUrl, 
-  onNext, 
-  onPrevious, 
+function AudioPlayerComponent({
+  audioUrl,
+  onNext,
+  onPrevious,
   volume = 1,
   autoPlay = false,
   onPlayStateChange,
-  onSongChange
+  onTimeUpdate,
+  repeat = false,
 }: AudioPlayerProps) {
   const {
     isPlaying,
@@ -32,20 +31,12 @@ export function AudioPlayer({
     duration,
     isLoading,
     error,
-    play,
-    pause,
     togglePlay,
     seek,
-    setVolume
-  } = useAudioPlayer(audioUrl, {
-    autoPlay,
-    volume,
-    onPlayStateChange,
-    onEnded: () => {
-      onNext?.();
-      onSongChange?.(currentTime);
-    }
-  });
+    setVolume,
+    play,
+    onEnded
+  } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
     setVolume(volume);
@@ -61,59 +52,41 @@ export function AudioPlayer({
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
-  const handlePlayPause = useCallback(() => {
-    togglePlay();
-  }, [togglePlay]);
+  useEffect(() => {
+    if (onTimeUpdate) {
+      onTimeUpdate(currentTime, duration);
+    }
+  }, [currentTime, duration, onTimeUpdate]);
+
+  useEffect(() => {
+    if (onNext) {
+      onEnded(() => {
+        if (repeat) {
+          play();
+        } else {
+          onNext();
+        }
+      });
+    }
+  }, [onNext, onEnded, repeat, play]);
 
   if (error) {
-    toast.error("Şarkı yüklenirken bir hata oluştu", {
-      description: error,
-      action: {
-        label: "Tekrar Dene",
-        onClick: () => play()
-      }
-    });
+    return (
+      <Alert variant="destructive" className="my-2">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
 
-  return (
-    <div 
-      className="relative flex flex-col items-center gap-2"
-      role="region"
-      aria-label="Audio player controls"
-    >
-      {isLoading && <LoadingOverlay />}
-      
-      <div 
-        className="w-full flex items-center gap-4 text-sm text-white/60"
-        role="timer"
-        aria-label="Track progress"
-      >
-        <span>{formatTime(currentTime)}</span>
-        <div className="flex-1">
-          <ProgressBar 
-            progress={progress} 
-            onProgressChange={(values) => seek(values[0])}
-            duration={duration}
-            currentTime={currentTime}
-          />
-        </div>
-        <span>{formatTime(duration)}</span>
+  if (isLoading) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-transparent">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
       </div>
+    );
+  }
 
-      <div className="transition-opacity duration-200">
-        <PlayerControls
-          isPlaying={isPlaying}
-          onPrevious={onPrevious}
-          onPlayPause={handlePlayPause}
-          onNext={onNext}
-        />
-      </div>
-    </div>
-  );
+  return null;
 }
 
-function formatTime(time: number) {
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
+export const AudioPlayer = memo(AudioPlayerComponent);

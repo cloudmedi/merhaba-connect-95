@@ -1,134 +1,137 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { AudioPlayerState, AudioControls, PlaybackConfig } from "@/components/music/types";
 
-export function useAudioPlayer(
-  audioUrl: string | undefined,
-  config: PlaybackConfig = {}
-) {
-  const {
-    autoPlay = false,
-    volume: initialVolume = 1,
-    onPlayStateChange,
-    onTimeUpdate,
-    onEnded,
-    onError,
-  } = config;
-
-  const [state, setState] = useState<AudioPlayerState>({
-    isPlaying: false,
-    progress: 0,
-    currentTime: 0,
-    duration: 0,
-    volume: initialVolume,
-    isMuted: false,
-    isLoading: false,
-    error: null,
-  });
-
+export function useAudioPlayer(audioUrl: string | undefined) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const onEndedCallbackRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!audioUrl) {
-      setState(prev => ({ ...prev, error: "Audio URL is missing" }));
+      setError("Audio URL is missing");
       return;
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setIsLoading(true);
+    setError(null);
 
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
     audioRef.current = audio;
 
     const handleCanPlay = () => {
-      setState(prev => ({ ...prev, isLoading: false, duration: audio.duration }));
-      if (state.isPlaying) {
+      setIsLoading(false);
+      setDuration(audio.duration);
+      if (isPlaying) {
         audio.play().catch(console.error);
       }
     };
 
+    const handleLoadStart = () => {
+      setIsLoading(true);
+      setError(null);
+    };
+
+    const handleError = () => {
+      console.error('Audio error:', audio.error);
+      setIsLoading(false);
+      setError(`Failed to load audio: ${audio.error?.message || 'Unknown error'}`);
+      setIsPlaying(false);
+    };
+
     const handleTimeUpdate = () => {
-      setState(prev => {
-        const currentTime = audio.currentTime;
-        const progress = (currentTime / audio.duration) * 100;
-        onTimeUpdate?.(currentTime);
-        return { ...prev, currentTime, progress };
-      });
+      setCurrentTime(audio.currentTime);
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
     };
 
     const handleEnded = () => {
-      setState(prev => ({ ...prev, isPlaying: false, progress: 0, currentTime: 0 }));
-      onEnded?.();
+      setIsPlaying(false);
+      setProgress(0);
+      if (onEndedCallbackRef.current) {
+        onEndedCallbackRef.current();
+      }
     };
 
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('error', handleError);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
+    audio.src = audioUrl;
+    audio.load();
+
     return () => {
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('error', handleError);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.src = '';
-      audioRef.current = null;
+      setIsPlaying(false);
+      setProgress(0);
+      setError(null);
     };
   }, [audioUrl]);
 
-  const play = useCallback(async () => {
+  useEffect(() => {
     if (!audioRef.current) return;
-    try {
-      await audioRef.current.play();
-      setState(prev => ({ ...prev, isPlaying: true }));
-      onPlayStateChange?.(true);
-    } catch (error) {
-      if (error instanceof Error) {
-        setState(prev => ({ ...prev, error: error.message }));
-        onError?.(error);
-      }
-    }
-  }, [onPlayStateChange, onError]);
 
-  const pause = useCallback(() => {
-    if (!audioRef.current) return;
-    audioRef.current.pause();
-    setState(prev => ({ ...prev, isPlaying: false }));
-    onPlayStateChange?.(false);
-  }, [onPlayStateChange]);
+    if (isPlaying) {
+      const playPromise = audioRef.current.play();
+      if (playPromise) {
+        playPromise.catch(error => {
+          console.error('Error playing audio:', error);
+          setError("Failed to play audio");
+          setIsPlaying(false);
+        });
+      }
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
 
   const togglePlay = useCallback(() => {
-    if (state.isPlaying) {
-      pause();
-    } else {
-      play();
-    }
-  }, [state.isPlaying, play, pause]);
+    setIsPlaying(prev => !prev);
+  }, []);
 
-  const seek = useCallback((time: number) => {
-    if (!audioRef.current) return;
+  const play = useCallback(() => {
+    setIsPlaying(true);
+  }, []);
+
+  const seek = useCallback((value: number) => {
+    if (!audioRef.current || !duration) return;
+    const time = (value / 100) * duration;
     audioRef.current.currentTime = time;
-    setState(prev => ({ ...prev, currentTime: time }));
+    setProgress(value);
+  }, [duration]);
+
+  const setVolume = useCallback((value: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.volume = Math.max(0, Math.min(1, value));
   }, []);
 
-  const setVolume = useCallback((volume: number) => {
-    if (!audioRef.current) return;
-    audioRef.current.volume = volume;
-    setState(prev => ({ ...prev, volume }));
+  const onEnded = useCallback((callback: () => void) => {
+    onEndedCallbackRef.current = callback;
   }, []);
-
-  const toggleMute = useCallback(() => {
-    if (!audioRef.current) return;
-    const newMutedState = !state.isMuted;
-    audioRef.current.muted = newMutedState;
-    setState(prev => ({ ...prev, isMuted: newMutedState }));
-  }, [state.isMuted]);
 
   return {
-    ...state,
-    play,
-    pause,
+    isPlaying,
+    progress,
+    currentTime,
+    duration,
+    isLoading,
+    error,
     togglePlay,
+    play,
     seek,
     setVolume,
-    toggleMute,
     onEnded
   };
 }

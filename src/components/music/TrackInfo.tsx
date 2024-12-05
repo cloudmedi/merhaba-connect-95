@@ -8,14 +8,10 @@ export function TrackInfo({ artwork, title, artist }: TrackInfoProps) {
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
   return (
-    <div 
-      className="flex items-center space-x-4"
-      role="complementary"
-      aria-label="Now playing"
-    >
+    <div className="flex items-center space-x-4">
       <img
         src={artwork || defaultArtwork}
-        alt={`Album artwork for ${title}`}
+        alt={title}
         className="w-12 h-12 rounded object-cover"
         onError={(e) => {
           const img = e.target as HTMLImageElement;
@@ -23,18 +19,8 @@ export function TrackInfo({ artwork, title, artist }: TrackInfoProps) {
         }}
       />
       <div>
-        <p 
-          className="font-medium text-white"
-          aria-label="Track title"
-        >
-          {title}
-        </p>
-        <p 
-          className="text-sm text-white/60"
-          aria-label="Artist name"
-        >
-          {artist}
-        </p>
+        <p className="font-medium text-black">{title}</p>
+        <p className="text-sm text-gray-500">{artist}</p>
       </div>
     </div>
   );
