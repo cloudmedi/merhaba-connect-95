@@ -8,9 +8,7 @@ import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { usePlaylistControl } from "@/components/dashboard/hooks/usePlaylistControl";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { QuickActions } from "@/components/dashboard/QuickActions";
-import { RecentActivities } from "@/components/dashboard/RecentActivities";
+import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,7 +97,7 @@ export default function ManagerDashboard() {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">
-      <ResizablePanel defaultSize={75} minSize={30}>
+      <ResizablePanel defaultSize={100} minSize={30}>
         <div className="h-full p-6">
           <HeroPlaylist 
             playlist={heroPlaylist} 
@@ -153,15 +151,6 @@ export default function ManagerDashboard() {
               autoPlay={true}
             />
           )}
-        </div>
-      </ResizablePanel>
-      
-      <ResizableHandle withHandle />
-      
-      <ResizablePanel defaultSize={25} minSize={20}>
-        <div className="h-full p-6 space-y-6">
-          <QuickActions />
-          <RecentActivities />
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
