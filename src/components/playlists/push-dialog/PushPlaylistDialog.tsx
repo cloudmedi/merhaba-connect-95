@@ -7,6 +7,7 @@ import { DialogHeader } from "./DialogHeader";
 import { SearchBar } from "./SearchBar";
 import { DeviceList } from "./DeviceList";
 import { DialogFooter } from "./DialogFooter";
+import { PushDialogDevice } from "./types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -38,13 +39,14 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
           *,
           branches (
             id,
-            name
+            name,
+            company_id
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
 
       if (error) throw error;
-      return data;
+      return data as PushDialogDevice[];
     },
   });
 
@@ -109,7 +111,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader title="Push Playlist" />
+        <DialogHeader onClose={onClose} />
 
         <div className="space-y-4">
           <SearchBar

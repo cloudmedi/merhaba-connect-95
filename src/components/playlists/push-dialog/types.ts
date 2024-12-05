@@ -30,7 +30,7 @@ export interface SearchBarProps {
 }
 
 export interface DeviceListProps {
-  devices: Device[];
+  devices: PushDialogDevice[];
   selectedDevices: string[];
   onToggleDevice: (deviceId: string) => void;
 }
@@ -45,4 +45,13 @@ export interface DialogFooterProps {
   selectedCount: number;
   onCancel: () => void;
   onPush: () => void;
+}
+
+export interface PushDialogDevice extends Omit<Device, 'system_info' | 'branches'> {
+  system_info: DeviceSystemInfo;
+  branches?: {
+    id?: string;
+    name?: string;
+    company_id?: string | null;
+  } | null;
 }

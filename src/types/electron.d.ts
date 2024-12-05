@@ -33,6 +33,17 @@ export interface ElectronAPI {
       mac: string;
     }>;
   }>;
+  syncPlaylist: (playlist: {
+    id: string;
+    name: string;
+    songs: Array<{
+      id: string;
+      title: string;
+      artist?: string;
+      file_url: string;
+      bunny_id?: string;
+    }>;
+  }) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {
