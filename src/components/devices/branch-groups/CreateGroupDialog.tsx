@@ -1,166 +1,197 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search } from "lucide-react";
+import { useDevices } from "../../Devices/hooks/useDevices";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { DeviceSelection } from "@/components/devices/branch-groups/DeviceSelection";
-import { Separator } from "@/components/ui/separator";
 
 interface CreateGroupDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => Promise<void>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onGroupCreated: () => void;
 }
 
-export function CreateGroupDialog({ isOpen, onClose, onSuccess }: CreateGroupDialogProps) {
+export function CreateGroupDialog({ open, onOpenChange, onGroupCreated }: CreateGroupDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { devices, isLoading } = useDevices();
+
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setDescription("");
+      setSearchQuery("");
+      setSelectedDevices(new Set());
+      setIsSubmitting(false);
+    }
+  }, [open]);
+
+  const filteredDevices = devices?.filter(device => 
+    device.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  const handleDeviceSelect = (deviceId: string) => {
+    setSelectedDevices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(deviceId)) {
+        newSet.delete(deviceId);
+      } else {
+        newSet.add(deviceId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (filteredDevices.length === selectedDevices.size) {
+      setSelectedDevices(new Set());
+    } else {
+      setSelectedDevices(new Set(filteredDevices.map(d => d.id)));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
-
     if (!name.trim()) {
-      toast.error("Lütfen grup adı girin");
+      toast.error("Grup adı gereklidir");
       return;
     }
 
-    if (selectedDevices.length === 0) {
-      toast.error("Lütfen en az bir cihaz seçin");
-      return;
-    }
-
-    setIsLoading(true);
     try {
-      // Get user's profile for company_id
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user?.id)
-        .single();
+      setIsSubmitting(true);
 
-      if (!userProfile?.company_id) {
-        toast.error("Şirket bilgisi bulunamadı");
-        return;
-      }
-
-      // Create the group
       const { data: group, error: groupError } = await supabase
         .from('branch_groups')
-        .insert({
-          name,
-          description,
-          company_id: userProfile.company_id,
-          created_by: user?.id
-        })
+        .insert([{ name, description }])
         .select()
         .single();
 
       if (groupError) throw groupError;
 
-      // Get branch IDs for selected devices
-      const { data: deviceData, error: deviceError } = await supabase
-        .from('devices')
-        .select('branch_id')
-        .in('id', selectedDevices)
-        .not('branch_id', 'is', null);
+      if (selectedDevices.size > 0) {
+        const assignments = Array.from(selectedDevices).map(deviceId => ({
+          group_id: group.id,
+          branch_id: deviceId
+        }));
 
-      if (deviceError) throw deviceError;
-
-      // Create branch group assignments
-      const branchIds = deviceData
-        .map(d => d.branch_id)
-        .filter((id): id is string => id !== null);
-
-      if (branchIds.length > 0) {
         const { error: assignError } = await supabase
           .from('branch_group_assignments')
-          .insert(
-            branchIds.map(branchId => ({
-              branch_id: branchId,
-              group_id: group.id
-            }))
-          );
+          .insert(assignments);
 
         if (assignError) throw assignError;
       }
 
       toast.success("Grup başarıyla oluşturuldu");
-      await onSuccess();
-      onClose();
-      resetForm();
+      onGroupCreated();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error creating group:', error);
       toast.error("Grup oluşturulurken bir hata oluştu");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setName("");
-    setDescription("");
-    setSelectedDevices([]);
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Yeni Grup Oluştur</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-hidden flex flex-col">
           <div className="space-y-4">
             <div>
-              <Label>Grup Adı</Label>
+              <Label htmlFor="name">Grup Adı</Label>
               <Input
+                id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Grup adı girin"
+                placeholder="Grup adını girin"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="description">Açıklama</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Grup açıklamasını girin"
               />
             </div>
 
             <div>
-              <Label>Açıklama</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Grup açıklaması girin"
-                rows={3}
-              />
+              <Label>Cihazlar</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cihaz ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </div>
           </div>
 
-          <Separator />
-
-          <div>
-            <Label className="mb-4 block">Cihazlar</Label>
-            <DeviceSelection
-              selectedDevices={selectedDevices}
-              onDevicesChange={setSelectedDevices}
+          <div className="flex items-center gap-2 py-2">
+            <Checkbox
+              id="select-all"
+              checked={filteredDevices.length > 0 && filteredDevices.length === selectedDevices.size}
+              onCheckedChange={handleSelectAll}
             />
+            <label htmlFor="select-all" className="text-sm">
+              Tümünü Seç ({selectedDevices.size} / {filteredDevices.length})
+            </label>
           </div>
 
-          <div className="flex justify-between items-center pt-4">
-            <p className="text-sm text-gray-500">
-              {selectedDevices.length} cihaz seçildi
-            </p>
-            <div className="space-x-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                İptal
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Oluşturuluyor..." : "Oluştur"}
-              </Button>
+          <ScrollArea className="flex-1 border rounded-md">
+            <div className="p-4 space-y-2">
+              {isLoading ? (
+                <div className="text-center py-4">Yükleniyor...</div>
+              ) : filteredDevices.length === 0 ? (
+                <div className="text-center py-4">Cihaz bulunamadı</div>
+              ) : (
+                filteredDevices.map((device) => (
+                  <div key={device.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={device.id}
+                      checked={selectedDevices.has(device.id)}
+                      onCheckedChange={() => handleDeviceSelect(device.id)}
+                    />
+                    <label htmlFor={device.id} className="text-sm">
+                      {device.name}
+                    </label>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
+          </ScrollArea>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              İptal
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Oluşturuluyor..." : "Oluştur"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
