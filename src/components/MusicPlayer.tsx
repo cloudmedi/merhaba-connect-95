@@ -82,9 +82,7 @@ export function MusicPlayer({
   };
 
   const handlePlayPause = (playing: boolean) => {
-    console.log('MusicPlayer handlePlayPause:', playing);
     setIsPlaying(playing);
-    onPlayStateChange?.(playing);
   };
 
   const handleVolumeChange = (values: number[]) => {
@@ -121,6 +119,7 @@ export function MusicPlayer({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
+      {/* Blurred background with artwork */}
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
@@ -133,7 +132,8 @@ export function MusicPlayer({
       
       {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
-      
+
+      {/* Content */}
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
           <img 
