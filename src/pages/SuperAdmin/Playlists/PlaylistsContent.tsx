@@ -11,6 +11,11 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { Database } from "@/integrations/supabase/types";
 
 type Genre = Database['public']['Tables']['genres']['Row'];
+type Playlist = Database['public']['Tables']['playlists']['Row'] & {
+  company?: { name: string } | null;
+  profiles?: { first_name: string; last_name: string } | null;
+  genres?: { id: string; name: string } | null;
+};
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,7 +23,7 @@ export function PlaylistsContent() {
   const [currentPlaylist, setCurrentPlaylist] = useState<any | null>(null);
   const navigate = useNavigate();
 
-  const { data: playlists, isLoading } = useQuery({
+  const { data: playlists, isLoading } = useQuery<Playlist[]>({
     queryKey: ['playlists'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,7 +46,7 @@ export function PlaylistsContent() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('genres')
-        .select('id, name')
+        .select('*')
         .order('name');
 
       if (error) throw error;
