@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -66,6 +68,31 @@ export function MusicContent() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('songs')
+        .delete()
+        .in('id', selectedSongs.map(song => song.id));
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedSongs.length} songs have been deleted`,
+      });
+
+      setSelectedSongs([]);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete songs",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreatePlaylist = () => {
     if (selectedSongs.length === 0) {
       toast({
@@ -91,28 +118,26 @@ export function MusicContent() {
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
         <MusicHeader />
-        {selectedSongs.length > 0 && (
-          <MusicActions
-            selectedCount={selectedSongs.length}
-            onCreatePlaylist={handleCreatePlaylist}
-            onDeleteSelected={() => {
-              toast({
-                title: "Songs Deleted",
-                description: `${selectedSongs.length} songs have been deleted`,
-              });
-              setSelectedSongs([]);
-            }}
-            onAddGenre={() => {}}
-            onChangeGenre={() => {}}
-            onAddPlaylist={() => {}}
-            onChangePlaylist={() => {}}
-            onAddMood={() => {}}
-            onChangeMood={() => {}}
-            onChangeArtist={() => {}}
-            onChangeAlbum={() => {}}
-            onApprove={() => {}}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {selectedSongs.length > 0 && (
+            <>
+              <Button 
+                onClick={handleCreatePlaylist}
+                className="whitespace-nowrap"
+              >
+                Create Playlist ({selectedSongs.length} songs)
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete}
+                className="whitespace-nowrap"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete ({selectedSongs.length})
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       
       <MusicFilters
