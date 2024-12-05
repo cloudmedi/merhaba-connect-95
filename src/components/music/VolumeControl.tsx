@@ -1,53 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Volume2, VolumeX } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Volume2, VolumeX, X } from "lucide-react";
 
 interface VolumeControlProps {
-  volume: number;
+  volume: number[];
   isMuted: boolean;
-  onVolumeChange: (values: number[]) => void;
-  onMuteToggle: () => void;
+  onVolumeToggle: () => void;
+  onVolumeChange: (value: number[]) => void;
+  onClose: () => void;
 }
 
 export function VolumeControl({
   volume,
   isMuted,
+  onVolumeToggle,
   onVolumeChange,
-  onMuteToggle,
+  onClose,
 }: VolumeControlProps) {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
         <Button
           variant="ghost"
           size="icon"
-          className="text-white/70 hover:text-white hover:bg-white/10"
-          onClick={onMuteToggle}
+          onClick={onVolumeToggle}
+          className="h-8 w-8"
         >
-          {isMuted || volume === 0 ? (
-            <VolumeX className="h-5 w-5" />
+          {isMuted || volume[0] === 0 ? (
+            <VolumeX className="h-4 w-4" />
           ) : (
-            <Volume2 className="h-5 w-5" />
+            <Volume2 className="h-4 w-4" />
           )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-4">
-        <div className="space-y-4">
-          <h4 className="font-medium leading-none">Volume</h4>
-          <Slider
-            value={[isMuted ? 0 : volume]}
-            onValueChange={onVolumeChange}
-            max={100}
-            step={1}
-            className="w-full"
-          />
-        </div>
-      </PopoverContent>
-    </Popover>
+        <Slider
+          value={volume}
+          onValueChange={onVolumeChange}
+          max={100}
+          step={1}
+          className="w-32"
+        />
+      </div>
+      <Button variant="ghost" size="icon" onClick={onClose}>
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }

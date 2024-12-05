@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Volume2, VolumeX } from "lucide-react";
 import { AudioPlayer } from "./music/AudioPlayer";
 import { toast } from "sonner";
+import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
-import { PlayerControls } from "./music/PlayerControls";
-import { ProgressBar } from "./music/ProgressBar";
-import { VolumeControl } from "./music/VolumeControl";
-import { cn } from "@/lib/utils";
 
 interface MusicPlayerProps {
   playlist: {
@@ -29,9 +26,9 @@ interface MusicPlayerProps {
   currentSongId?: string | number;
 }
 
-export function MusicPlayer({
-  playlist,
-  onClose,
+export function MusicPlayer({ 
+  playlist, 
+  onClose, 
   initialSongIndex = 0,
   autoPlay = true,
   onSongChange,
@@ -42,13 +39,7 @@ export function MusicPlayer({
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isShuffle, setIsShuffle] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
-  const [isMiniPlayer, setIsMiniPlayer] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [progress, setProgress] = useState(0);
-
+  
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -76,12 +67,7 @@ export function MusicPlayer({
 
   const handleNext = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      let nextIndex;
-      if (isShuffle) {
-        nextIndex = Math.floor(Math.random() * playlist.songs.length);
-      } else {
-        nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
-      }
+      const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
       setCurrentSongIndex(nextIndex);
       onSongChange?.(nextIndex);
     }
@@ -89,18 +75,14 @@ export function MusicPlayer({
 
   const handlePrevious = () => {
     if (playlist.songs && playlist.songs.length > 0) {
-      let prevIndex;
-      if (isShuffle) {
-        prevIndex = Math.floor(Math.random() * playlist.songs.length);
-      } else {
-        prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
-      }
+      const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
       setCurrentSongIndex(prevIndex);
       onSongChange?.(prevIndex);
     }
   };
 
   const handlePlayPause = (playing: boolean) => {
+    console.log('MusicPlayer handlePlayPause:', playing);
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
   };
@@ -113,19 +95,6 @@ export function MusicPlayer({
   const toggleMute = () => {
     setIsMuted(!isMuted);
     setVolume(isMuted ? 75 : 0);
-  };
-
-  const handleTimeUpdate = (time: number, dur: number) => {
-    setCurrentTime(time);
-    setDuration(dur);
-    setProgress((time / dur) * 100);
-  };
-
-  const handleProgressChange = (values: number[]) => {
-    const newProgress = values[0];
-    setProgress(newProgress);
-    const newTime = (duration * newProgress) / 100;
-    setCurrentTime(newTime);
   };
 
   const getOptimizedImageUrl = (url: string) => {
@@ -151,10 +120,7 @@ export function MusicPlayer({
   };
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up",
-      isMiniPlayer && "h-20"
-    )}>
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
@@ -165,6 +131,7 @@ export function MusicPlayer({
         }}
       />
       
+      {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
       
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -175,47 +142,48 @@ export function MusicPlayer({
             className="w-14 h-14 rounded-md object-cover shadow-lg"
           />
           <div className="min-w-0">
-            <h3 className="text-white font-semibold text-sm truncate">
+            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
               {currentSong?.title}
             </h3>
-            <p className="text-white/60 text-xs font-normal truncate">
+            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
               {currentSong?.artist}
             </p>
           </div>
         </div>
 
-        <div className="flex-1 max-w-2xl px-4 space-y-2">
-          <PlayerControls
-            isPlaying={isPlaying}
-            isRepeat={isRepeat}
-            isShuffle={isShuffle}
-            isMiniPlayer={isMiniPlayer}
-            onPrevious={handlePrevious}
-            onPlayPause={() => handlePlayPause(!isPlaying)}
+        <div className="flex-1 max-w-2xl px-4">
+          <AudioPlayer
+            audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
-            onRepeatToggle={() => setIsRepeat(!isRepeat)}
-            onShuffleToggle={() => setIsShuffle(!isShuffle)}
-            onPlaylistToggle={() => {}}
-            onMiniPlayerToggle={() => setIsMiniPlayer(!isMiniPlayer)}
+            onPrevious={handlePrevious}
+            volume={isMuted ? 0 : volume / 100}
+            autoPlay={autoPlay}
+            onPlayStateChange={handlePlayPause}
           />
-          
-          {!isMiniPlayer && (
-            <ProgressBar
-              progress={progress}
-              duration={duration}
-              currentTime={currentTime}
-              onProgressChange={handleProgressChange}
-            />
-          )}
         </div>
 
         <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
-          <VolumeControl
-            volume={volume}
-            isMuted={isMuted}
-            onVolumeChange={handleVolumeChange}
-            onMuteToggle={toggleMute}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              onClick={toggleMute}
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="h-5 w-5" />
+              ) : (
+                <Volume2 className="h-5 w-5" />
+              )}
+            </Button>
+            <Slider
+              value={[isMuted ? 0 : volume]}
+              onValueChange={handleVolumeChange}
+              max={100}
+              step={1}
+              className="w-24"
+            />
+          </div>
           
           <Button 
             variant="ghost" 
@@ -227,17 +195,6 @@ export function MusicPlayer({
           </Button>
         </div>
       </div>
-
-      <AudioPlayer
-        audioUrl={getAudioUrl(currentSong)}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-        volume={isMuted ? 0 : volume / 100}
-        autoPlay={autoPlay}
-        onPlayStateChange={handlePlayPause}
-        onTimeUpdate={handleTimeUpdate}
-        repeat={isRepeat}
-      />
     </div>
   );
 }
