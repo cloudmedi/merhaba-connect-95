@@ -6,10 +6,14 @@ import * as crypto from 'crypto';
 export class DownloadManager {
   private downloadProgress: { [key: string]: number } = {};
 
-  constructor(private fileSystem: FileSystemManager) {}
+  constructor(private fileSystem: FileSystemManager) {
+    console.log('DownloadManager initialized');
+  }
 
   getProgress(songId: string): number {
-    return this.downloadProgress[songId] || 0;
+    const progress = this.downloadProgress[songId] || 0;
+    console.log(`Current progress for song ${songId}:`, progress);
+    return progress;
   }
 
   async downloadSong(songId: string, url: string): Promise<{ success: boolean; hash?: string; error?: string }> {
@@ -24,6 +28,8 @@ export class DownloadManager {
       }
 
       const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+      console.log(`Total file size: ${contentLength} bytes`);
+      
       let downloaded = 0;
       const chunks: Buffer[] = [];
 
@@ -60,7 +66,9 @@ export class DownloadManager {
       const filePath = this.fileSystem.getSongPath(songId);
       const fileBuffer = await fs.readFile(filePath);
       const actualHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-      return actualHash === expectedHash;
+      const isValid = actualHash === expectedHash;
+      console.log(`Verifying download for song ${songId}:`, isValid);
+      return isValid;
     } catch (error) {
       console.error(`Error verifying song ${songId}:`, error);
       return false;

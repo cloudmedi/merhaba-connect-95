@@ -27,6 +27,7 @@ export function PlaylistSync() {
 
   const loadOfflinePlaylists = async () => {
     try {
+      console.log('Loading offline playlists...');
       setIsLoading(true);
       const result = await window.electronAPI.getOfflinePlaylists();
       console.log('Loaded playlists:', result);
@@ -45,6 +46,7 @@ export function PlaylistSync() {
       if (playlist.songs) {
         for (const song of playlist.songs) {
           try {
+            console.log(`Checking download progress for song ${song.id}...`);
             const progress = await window.electronAPI.getDownloadProgress(song.id);
             console.log(`Download progress for song ${song.id}:`, progress);
             setDownloadProgress(prev => ({

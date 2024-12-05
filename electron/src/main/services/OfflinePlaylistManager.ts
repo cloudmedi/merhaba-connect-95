@@ -19,11 +19,14 @@ export class OfflinePlaylistManager {
   constructor(
     private fileSystem: FileSystemManager,
     private downloadManager: DownloadManager
-  ) {}
+  ) {
+    console.log('OfflinePlaylistManager initialized');
+  }
 
   async syncPlaylist(playlist: Playlist): Promise<{ success: boolean; error?: string }> {
     try {
       console.log(`Starting sync for playlist ${playlist.id} - ${playlist.name}`);
+      console.log('Songs to sync:', playlist.songs);
       
       // Save playlist info locally
       await this.fileSystem.savePlaylistInfo(playlist.id, {
@@ -41,7 +44,10 @@ export class OfflinePlaylistManager {
 
       // Download songs that don't exist locally
       for (const song of playlist.songs) {
-        if (!await this.fileSystem.songExists(song.id)) {
+        const exists = await this.fileSystem.songExists(song.id);
+        console.log(`Checking if song ${song.id} exists locally:`, exists);
+        
+        if (!exists) {
           console.log(`Downloading song ${song.id} - ${song.title}`);
           const url = song.bunny_id 
             ? `https://cloud-media.b-cdn.net/${song.bunny_id}`
@@ -49,6 +55,7 @@ export class OfflinePlaylistManager {
           console.log(`Using URL: ${url}`);
           
           const result = await this.downloadManager.downloadSong(song.id, url);
+          console.log(`Download result for song ${song.id}:`, result);
           
           if (!result.success) {
             console.error(`Failed to download song ${song.id}:`, result.error);
