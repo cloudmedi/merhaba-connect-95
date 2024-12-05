@@ -22,3 +22,31 @@ export interface MusicPlayerProps {
   onPlayStateChange?: (isPlaying: boolean) => void;
   currentSongId?: string | number;
 }
+
+export interface AudioPlayerState {
+  isPlaying: boolean;
+  progress: number;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  isMuted: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface AudioControls {
+  play: () => Promise<void>;
+  pause: () => void;
+  seek: (time: number) => void;
+  setVolume: (volume: number) => void;
+  toggleMute: () => void;
+}
+
+export interface PlaybackConfig {
+  autoPlay?: boolean;
+  volume?: number;
+  onPlayStateChange?: (isPlaying: boolean) => void;
+  onTimeUpdate?: (currentTime: number) => void;
+  onEnded?: () => void;
+  onError?: (error: Error) => void;
+}

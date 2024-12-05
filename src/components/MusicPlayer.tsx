@@ -5,9 +5,11 @@ import { VolumeControls } from "./music/VolumeControls";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { getOptimizedImageUrl, getAudioUrl } from "./music/utils";
+import { ErrorBoundary } from "./music/ErrorBoundary";
+import { MusicPlayerProvider, useMusicPlayer } from "./music/MusicPlayerContext";
 import type { MusicPlayerProps } from "./music/types";
 
-export const MusicPlayer = memo(function MusicPlayer({ 
+const MusicPlayerContent = memo(function MusicPlayerContent({ 
   playlist, 
   onClose, 
   initialSongIndex = 0,
@@ -80,6 +82,7 @@ export const MusicPlayer = memo(function MusicPlayer({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
+      <ErrorBoundary>
       <div 
         className="absolute inset-0 bg-cover bg-center music-player-backdrop"
         style={{ 
@@ -138,6 +141,18 @@ export const MusicPlayer = memo(function MusicPlayer({
           </Button>
         </div>
       </div>
+      </ErrorBoundary>
     </div>
+  );
+});
+
+export const MusicPlayer = memo(function MusicPlayer(props: MusicPlayerProps) {
+  return (
+    <MusicPlayerProvider 
+      initialPlaylist={props.playlist}
+      initialSongIndex={props.initialSongIndex}
+    >
+      <MusicPlayerContent {...props} />
+    </MusicPlayerProvider>
   );
 });
