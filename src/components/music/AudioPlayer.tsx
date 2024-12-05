@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { PlayerControls } from "./PlayerControls";
 import { ProgressBar } from "./ProgressBar";
@@ -23,7 +23,6 @@ export function AudioPlayer({
   autoPlay = false,
   onPlayStateChange
 }: AudioPlayerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const {
     isPlaying,
     progress,
@@ -31,11 +30,10 @@ export function AudioPlayer({
     duration,
     isLoading,
     error,
-    togglePlay,
-    seek,
-    setVolume,
     play,
-    onEnded
+    pause,
+    seek,
+    setVolume
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
@@ -52,44 +50,13 @@ export function AudioPlayer({
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
-  useEffect(() => {
-    if (onNext) {
-      onEnded(onNext);
+  const handlePlayPause = useCallback(() => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
     }
-  }, [onNext, onEnded]);
-
-  // Klavye kısayolları
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Eğer bir input veya textarea üzerinde değilsek
-      if (
-        document.activeElement?.tagName !== "INPUT" &&
-        document.activeElement?.tagName !== "TEXTAREA"
-      ) {
-        switch (e.code) {
-          case "Space":
-            e.preventDefault();
-            togglePlay();
-            break;
-          case "ArrowLeft":
-            onPrevious?.();
-            break;
-          case "ArrowRight":
-            onNext?.();
-            break;
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [togglePlay, onNext, onPrevious]);
-
-  const formatTime = useCallback((time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }, []);
+  }, [isPlaying, play, pause]);
 
   if (error) {
     toast.error("Şarkı yüklenirken bir hata oluştu", {
@@ -102,7 +69,7 @@ export function AudioPlayer({
   }
 
   return (
-    <div ref={containerRef} className="relative flex flex-col items-center gap-2">
+    <div className="relative flex flex-col items-center gap-2">
       {isLoading && <LoadingOverlay />}
       
       <div className="w-full flex items-center gap-4 text-sm text-white/60">
@@ -122,10 +89,16 @@ export function AudioPlayer({
         <PlayerControls
           isPlaying={isPlaying}
           onPrevious={onPrevious}
-          onPlayPause={togglePlay}
+          onPlayPause={handlePlayPause}
           onNext={onNext}
         />
       </div>
     </div>
   );
+}
+
+function formatTime(time: number) {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }

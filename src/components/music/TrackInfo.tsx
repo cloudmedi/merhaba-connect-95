@@ -19,8 +19,8 @@ export function TrackInfo({ artwork, title, artist }: TrackInfoProps) {
         }}
       />
       <div>
-        <p className="font-medium text-black">{title}</p>
-        <p className="text-sm text-gray-500">{artist}</p>
+        <p className="font-medium text-white">{title}</p>
+        <p className="text-sm text-white/60">{artist}</p>
       </div>
     </div>
   );

@@ -3,9 +3,9 @@ import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
-  onPrevious: () => void;
+  onPrevious?: () => void;
   onPlayPause: () => void;
-  onNext: () => void;
+  onNext?: () => void;
 }
 
 export function PlayerControls({

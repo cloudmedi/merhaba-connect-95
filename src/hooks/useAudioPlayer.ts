@@ -26,7 +26,6 @@ export function useAudioPlayer(
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const onEndedCallbackRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!audioUrl) {
@@ -46,16 +45,6 @@ export function useAudioPlayer(
       }
     };
 
-    const handleLoadStart = () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-    };
-
-    const handleError = () => {
-      console.error('Audio error:', audio.error);
-      setState(prev => ({ ...prev, isLoading: false, error: `Şarkı yüklenemedi: ${audio.error?.message || 'Bilinmeyen hata'}` }));
-      setState(prev => ({ ...prev, isPlaying: false }));
-    };
-
     const handleTimeUpdate = () => {
       setState(prev => {
         const currentTime = audio.currentTime;
@@ -67,87 +56,67 @@ export function useAudioPlayer(
 
     const handleEnded = () => {
       setState(prev => ({ ...prev, isPlaying: false, progress: 0, currentTime: 0 }));
-      onEndedCallbackRef.current?.();
+      onEnded?.();
     };
 
     audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('error', handleError);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
 
-    if (autoPlay) {
-      audio.play().catch(console.error);
-    }
-
     return () => {
       audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('error', handleError);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.src = '';
-      setState(prev => ({ ...prev, isPlaying: false, progress: 0, currentTime: 0, error: null }));
       audioRef.current = null;
     };
   }, [audioUrl]);
 
-  useEffect(() => {
+  const play = useCallback(async () => {
     if (!audioRef.current) return;
-
-    if (state.isPlaying) {
-      const playPromise = audioRef.current.play();
-      if (playPromise) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setState(prev => ({ ...prev, error: "Şarkı oynatılamadı" }));
-          onError?.(error);
-        });
+    try {
+      await audioRef.current.play();
+      setState(prev => ({ ...prev, isPlaying: true }));
+    } catch (error) {
+      if (error instanceof Error) {
+        setState(prev => ({ ...prev, error: error.message }));
+        onError?.(error);
       }
-    } else {
-      audioRef.current.pause();
     }
-  }, [state.isPlaying]);
+  }, [onError]);
 
-  const controls: AudioControls = {
-    play: async () => {
-      if (!audioRef.current) return;
-      try {
-        await audioRef.current.play();
-        setState(prev => ({ ...prev, isPlaying: true }));
-      } catch (error) {
-        if (error instanceof Error) {
-          setState(prev => ({ ...prev, error: error.message }));
-          onError?.(error);
-        }
-      }
-    },
-    pause: () => {
-      if (!audioRef.current) return;
-      audioRef.current.pause();
-      setState(prev => ({ ...prev, isPlaying: false }));
-    },
-    seek: (time: number) => {
-      if (!audioRef.current) return;
-      audioRef.current.currentTime = time;
-      setState(prev => ({ ...prev, currentTime: time }));
-    },
-    setVolume: (volume: number) => {
-      if (!audioRef.current) return;
-      audioRef.current.volume = volume;
-      setState(prev => ({ ...prev, volume }));
-    },
-    toggleMute: () => {
-      if (!audioRef.current) return;
-      const newMutedState = !state.isMuted;
-      audioRef.current.muted = newMutedState;
-      setState(prev => ({ ...prev, isMuted: newMutedState }));
-    },
-  };
+  const pause = useCallback(() => {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    setState(prev => ({ ...prev, isPlaying: false }));
+  }, []);
+
+  const seek = useCallback((time: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = time;
+    setState(prev => ({ ...prev, currentTime: time }));
+  }, []);
+
+  const setVolume = useCallback((volume: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.volume = volume;
+    setState(prev => ({ ...prev, volume }));
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    if (!audioRef.current) return;
+    const newMutedState = !state.isMuted;
+    audioRef.current.muted = newMutedState;
+    setState(prev => ({ ...prev, isMuted: newMutedState }));
+  }, [state.isMuted]);
 
   return {
     ...state,
-    ...controls,
+    play,
+    pause,
+    seek,
+    setVolume,
+    toggleMute,
   };
 }
