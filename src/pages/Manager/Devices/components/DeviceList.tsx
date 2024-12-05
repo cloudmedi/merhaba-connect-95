@@ -4,15 +4,71 @@ import { toast } from "sonner";
 import { useDevices } from "../hooks/useDevices";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface DeviceListProps {
   devices: Device[];
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function DeviceList({ devices }: DeviceListProps) {
   const { deleteDevice } = useDevices();
+  const [displayedDevices, setDisplayedDevices] = useState<Device[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    // Reset when devices prop changes
+    setDisplayedDevices(devices.slice(0, ITEMS_PER_PAGE));
+    setPage(1);
+    setHasMore(devices.length > ITEMS_PER_PAGE);
+  }, [devices]);
+
+  useEffect(() => {
+    // Set up intersection observer for infinite scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    const sentinel = document.getElementById('sentinel');
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, page, devices]);
+
+  const loadMore = async () => {
+    setLoading(true);
+    try {
+      const nextItems = devices.slice(
+        page * ITEMS_PER_PAGE,
+        (page + 1) * ITEMS_PER_PAGE
+      );
+      
+      if (nextItems.length > 0) {
+        setDisplayedDevices(prev => [...prev, ...nextItems]);
+        setPage(prev => prev + 1);
+        setHasMore(devices.length > (page + 1) * ITEMS_PER_PAGE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more devices:', error);
+      toast.error('Cihazlar yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const channel = supabase.channel('device_status')
@@ -57,7 +113,7 @@ export function DeviceList({ devices }: DeviceListProps) {
     }
   };
 
-  if (devices.length === 0) {
+  if (displayedDevices.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <p className="text-gray-500 mb-2">Henüz kayıtlı cihaz bulunmuyor</p>
@@ -79,7 +135,7 @@ export function DeviceList({ devices }: DeviceListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {devices.map((device) => (
+          {displayedDevices.map((device) => (
             <DeviceListItem 
               key={device.id} 
               device={device}
@@ -88,6 +144,16 @@ export function DeviceList({ devices }: DeviceListProps) {
           ))}
         </TableBody>
       </Table>
+      
+      {/* Sentinel element for infinite scroll */}
+      <div 
+        id="sentinel" 
+        className="h-4 w-full flex items-center justify-center p-4"
+      >
+        {loading && (
+          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        )}
+      </div>
     </Card>
   );
 }
