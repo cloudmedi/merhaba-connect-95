@@ -6,6 +6,7 @@ import { PlayerControls } from "./music/PlayerControls";
 import { VolumeControl } from "./music/VolumeControl";
 import { TrackInfo } from "./music/TrackInfo";
 import { ProgressBar } from "./music/ProgressBar";
+import { AudioController } from "./music/AudioController";
 
 interface MusicPlayerProps {
   playlist: {
@@ -43,9 +44,8 @@ export function MusicPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
-  const [audio] = useState(new Audio());
+  const [audioController] = useState(() => new AudioController());
 
-  // Playlist ve şarkı yükleme
   useEffect(() => {
     if (!playlist.songs || playlist.songs.length === 0) {
       toast.error("No songs available in this playlist");
@@ -54,44 +54,27 @@ export function MusicPlayer({
     }
 
     const currentSong = playlist.songs[currentSongIndex];
-    audio.src = getAudioUrl(currentSong);
+    audioController.setSource(getAudioUrl(currentSong));
     
     if (autoPlay) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
-          setIsPlaying(false);
-          onPlayStateChange?.(false);
-        });
-      }
+      audioController.play().then(success => {
+        setIsPlaying(success);
+        onPlayStateChange?.(success);
+      });
     }
 
-    const handleTimeUpdate = () => {
-      setProgress((audio.currentTime / audio.duration) * 100);
-    };
-
-    const handleEnded = () => {
-      handleNext();
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
+    audioController.onTimeUpdate(setProgress);
+    audioController.onEnded(handleNext);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.pause();
-      audio.src = '';
+      audioController.cleanup();
     };
   }, [playlist.songs, currentSongIndex]);
 
-  // Ses kontrolü
   useEffect(() => {
-    audio.volume = isMuted ? 0 : volume / 100;
+    audioController.setVolume(isMuted ? 0 : volume);
   }, [volume, isMuted]);
 
-  // Şarkı ID değişimi kontrolü
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -101,21 +84,18 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
-  // Play/Pause kontrolü
   useEffect(() => {
     console.log('MusicPlayer - Play state effect:', { isPlaying });
     
     if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error('Error playing audio:', error);
+      audioController.play().then(success => {
+        if (!success) {
           setIsPlaying(false);
           onPlayStateChange?.(false);
-        });
-      }
+        }
+      });
     } else {
-      audio.pause();
+      audioController.pause();
     }
     
     onPlayStateChange?.(isPlaying);
@@ -142,8 +122,7 @@ export function MusicPlayer({
 
   const handleProgressChange = (values: number[]) => {
     const [value] = values;
-    const time = (value / 100) * audio.duration;
-    audio.currentTime = time;
+    audioController.seek(value);
     setProgress(value);
   };
 
