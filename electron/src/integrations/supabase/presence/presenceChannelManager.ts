@@ -4,6 +4,10 @@ import { PresenceConfig } from './types';
 export class PresenceChannelManager {
   private presenceChannel: RealtimeChannel | null = null;
   private isSubscribed = false;
+  private lastTrackTime: number = 0;
+  private readonly MIN_TRACK_INTERVAL = 1000; // 1 saniye minimum izleme aralığı
+  private currentState: 'online' | 'offline' = 'offline';
+  private stateUpdateTimeout: NodeJS.Timeout | null = null;
 
   constructor(
     private supabase: SupabaseClient,
@@ -42,6 +46,7 @@ export class PresenceChannelManager {
               state,
               timestamp: new Date().toISOString()
             });
+            this.handleStateSync(state);
           }
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
@@ -51,7 +56,7 @@ export class PresenceChannelManager {
               newPresences,
               timestamp: new Date().toISOString()
             });
-            this.onStatusChange('online');
+            this.handleStateChange('online');
           }
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
@@ -61,7 +66,8 @@ export class PresenceChannelManager {
               leftPresences,
               timestamp: new Date().toISOString()
             });
-            this.onStatusChange('offline');
+            // Leave olayını hemen işleme alma, biraz bekle
+            this.debouncedStateChange('offline');
           }
         });
 
@@ -75,8 +81,7 @@ export class PresenceChannelManager {
           await this.track('online');
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           console.log('Channel closed or error occurred:', status);
-          this.isSubscribed = false;
-          await this.onStatusChange('offline');
+          this.handleStateChange('offline');
           console.log(`Attempting to reconnect in ${this.config.reconnectDelay}ms`);
           setTimeout(() => this.setup(), this.config.reconnectDelay);
         }
@@ -88,9 +93,31 @@ export class PresenceChannelManager {
         deviceToken: this.deviceToken,
         timestamp: new Date().toISOString()
       });
-      this.isSubscribed = false;
       setTimeout(() => this.setup(), this.config.reconnectDelay);
     }
+  }
+
+  private handleStateSync(state: any): void {
+    const presences = state[this.deviceToken] || [];
+    const isOnline = presences.length > 0;
+    this.handleStateChange(isOnline ? 'online' : 'offline');
+  }
+
+  private handleStateChange(newState: 'online' | 'offline'): void {
+    if (this.currentState !== newState) {
+      this.currentState = newState;
+      this.onStatusChange(newState);
+    }
+  }
+
+  private debouncedStateChange(newState: 'online' | 'offline'): void {
+    if (this.stateUpdateTimeout) {
+      clearTimeout(this.stateUpdateTimeout);
+    }
+
+    this.stateUpdateTimeout = setTimeout(() => {
+      this.handleStateChange(newState);
+    }, 2000); // 2 saniye bekle
   }
 
   async track(status: 'online' | 'offline'): Promise<void> {
@@ -100,6 +127,12 @@ export class PresenceChannelManager {
         hasChannel: !!this.presenceChannel,
         isSubscribed: this.isSubscribed
       });
+      return;
+    }
+
+    const now = Date.now();
+    if (now - this.lastTrackTime < this.MIN_TRACK_INTERVAL) {
+      console.log('Skipping track, too soon since last update');
       return;
     }
 
@@ -116,6 +149,7 @@ export class PresenceChannelManager {
         lastSeen: new Date().toISOString(),
       });
       
+      this.lastTrackTime = now;
       console.log('Successfully tracked presence status');
     } catch (error) {
       console.error('Error updating presence:', {
@@ -124,26 +158,26 @@ export class PresenceChannelManager {
         deviceToken: this.deviceToken,
         timestamp: new Date().toISOString()
       });
-      this.isSubscribed = false;
       await this.setup();
     }
   }
 
   async cleanup(): Promise<void> {
+    if (this.stateUpdateTimeout) {
+      clearTimeout(this.stateUpdateTimeout);
+    }
+
     if (this.presenceChannel) {
       try {
         console.log('Starting presence channel cleanup');
         this.isSubscribed = false;
         
         console.log('Tracking offline status before cleanup');
-        await this.presenceChannel.track({
-          token: this.deviceToken,
-          status: 'offline',
-          lastSeen: new Date().toISOString(),
-        });
+        await this.track('offline');
         
         console.log('Removing presence channel');
         await this.supabase.removeChannel(this.presenceChannel);
+        this.presenceChannel = null;
         console.log('Presence channel cleanup completed');
       } catch (error) {
         console.error('Error during presence cleanup:', {
