@@ -130,7 +130,6 @@ export function CreatePlaylist() {
           onClick={() => setIsAssignDialogOpen(true)}
           className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200"
           size="lg"
-          disabled={!isEditMode || !existingPlaylist?.id}
         >
           <Users className="w-4 h-4 mr-2" />
           {playlistData.assignedManagers.length > 0 
