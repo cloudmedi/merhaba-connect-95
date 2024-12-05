@@ -132,31 +132,3 @@ app.on('activate', () => {
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
 ipcMain.handle('get-device-id', () => deviceId);
-
-// Add new handler for playlist syncing
-ipcMain.handle('sync-playlist', async (_, playlist) => {
-  console.log('Received sync request for playlist:', playlist);
-  
-  if (!deviceId) {
-    console.error('No device ID available');
-    return { success: false, error: 'No device ID available' };
-  }
-
-  try {
-    const fileSystem = new FileSystemManager(deviceId);
-    const downloadManager = new DownloadManager(fileSystem);
-    const playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
-
-    console.log('Starting playlist sync...');
-    const result = await playlistManager.syncPlaylist(playlist);
-    console.log('Playlist sync result:', result);
-
-    return result;
-  } catch (error) {
-    console.error('Error syncing playlist:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
-  }
-});
