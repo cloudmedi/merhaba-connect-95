@@ -7,7 +7,6 @@ let currentDeviceToken: string | null = null;
 let isInitializing = false;
 let initializationPromise: Promise<any> | null = null;
 
-// Create a single instance of the Supabase client
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
   process.env.VITE_SUPABASE_ANON_KEY || '',
@@ -15,19 +14,22 @@ const supabase = createClient(
     auth: {
       persistSession: true,
       detectSessionInUrl: false,
-      autoRefreshToken: false, // Disable auto refresh to prevent recursion
+      autoRefreshToken: false,
       flowType: 'implicit'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 2
+      }
     }
   }
 );
 
 async function initSupabase() {
-  // If already initializing, return the existing promise
   if (initializationPromise) {
     return initializationPromise;
   }
 
-  // If already initialized, return the client
   if (presenceManager && currentDeviceToken) {
     return supabase;
   }
@@ -76,7 +78,6 @@ async function initSupabase() {
       return supabase;
     } catch (error) {
       console.error('Supabase initialization error:', error);
-      // Clear the promise so we can retry initialization
       initializationPromise = null;
       throw error;
     }
@@ -85,7 +86,6 @@ async function initSupabase() {
   return initializationPromise;
 }
 
-// Clean up function to handle cleanup of resources
 async function cleanup() {
   if (presenceManager) {
     await presenceManager.cleanup();

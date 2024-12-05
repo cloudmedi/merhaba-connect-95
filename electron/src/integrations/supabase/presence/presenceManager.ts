@@ -15,6 +15,7 @@ export class PresenceManager {
   private missedHeartbeats = 0;
   private readonly MAX_MISSED_HEARTBEATS = 2;
   private cleanupInProgress = false;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     console.log('Initializing PresenceManager with config:', config);
@@ -29,6 +30,15 @@ export class PresenceManager {
   }
 
   async initialize(deviceToken: string): Promise<void> {
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = this._initialize(deviceToken);
+    return this.initializationPromise;
+  }
+
+  private async _initialize(deviceToken: string): Promise<void> {
     if (this.isInitialized || this.cleanupInProgress) {
       console.log('PresenceManager already initialized or cleanup in progress');
       return;
@@ -95,6 +105,9 @@ export class PresenceManager {
       });
       await this.cleanup();
       await this.reconnect();
+      throw error;
+    } finally {
+      this.initializationPromise = null;
     }
   }
 
@@ -167,19 +180,10 @@ export class PresenceManager {
       await this.cleanup();
       console.log(`Waiting ${this.config.reconnectDelay}ms before reconnecting`);
       await new Promise(resolve => setTimeout(resolve, this.config.reconnectDelay));
-      await this.initialize(this.deviceToken!);
+      if (this.deviceToken) {
+        await this.initialize(this.deviceToken);
+      }
     }
-  }
-
-  private setupCleanup(): void {
-    const cleanup = async () => {
-      console.log('Starting presence cleanup...');
-      await this.cleanup();
-    };
-
-    window.addEventListener('beforeunload', cleanup);
-    window.addEventListener('unload', cleanup);
-    console.log('Cleanup event listeners set up');
   }
 
   async cleanup(): Promise<void> {
