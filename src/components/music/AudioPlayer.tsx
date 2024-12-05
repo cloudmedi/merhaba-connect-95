@@ -27,15 +27,15 @@ function AudioPlayerComponent({
   const {
     isPlaying,
     progress,
+    currentTime,
+    duration,
     isLoading,
     error,
     togglePlay,
     seek,
     setVolume,
     play,
-    onEnded,
-    currentTime,
-    duration
+    onEnded
   } = useAudioPlayer(audioUrl);
 
   useEffect(() => {
