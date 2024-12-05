@@ -6,10 +6,12 @@ import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const {
     songs,
@@ -54,7 +56,6 @@ export function MusicContent() {
         description: "Song deleted successfully",
       });
 
-      // Refresh the songs list
       refetch();
     } catch (error: any) {
       toast({
@@ -65,6 +66,21 @@ export function MusicContent() {
     }
   };
 
+  const handleCreatePlaylist = () => {
+    if (selectedSongs.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select at least one song to create a playlist",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    navigate("/super-admin/playlists/create", {
+      state: { selectedSongs }
+    });
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
@@ -72,7 +88,7 @@ export function MusicContent() {
         {selectedSongs.length > 0 && (
           <MusicActions
             selectedCount={selectedSongs.length}
-            onCreatePlaylist={() => {}}
+            onCreatePlaylist={handleCreatePlaylist}
             onDeleteSelected={() => {
               toast({
                 title: "Songs Deleted",
