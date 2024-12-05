@@ -49,47 +49,45 @@ export function SongList({
         <div className="col-span-2 text-right">DURATION</div>
       </div>
 
-      <ScrollArea className="h-[600px] w-full overflow-auto" type="always">
-        <div className="pr-4">
-          {songs.map((song, index) => (
-            <div 
-              key={song.id}
-              onClick={() => handleSongClick(song, index)}
-              className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-all duration-200 items-center border-b border-gray-100 cursor-pointer group ${
-                (currentSongId === song.id || currentSongIndex === index) 
-                  ? 'bg-purple-50/50' 
-                  : ''
-              }`}
-            >
-              <div className="col-span-1 text-gray-400 group-hover:text-gray-900 transition-colors">
-                {index + 1}
-              </div>
-              <div className="col-span-5 font-medium text-gray-900 flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                  <Music2 className={`w-4 h-4 ${
-                    currentSongId === song.id 
-                      ? 'text-purple-600' 
-                      : 'text-gray-400 group-hover:text-purple-600'
-                  }`} />
-                </div>
-                <span className={`truncate ${
+      <div className="h-[600px] overflow-auto">
+        {songs.map((song, index) => (
+          <div 
+            key={song.id}
+            onClick={() => handleSongClick(song, index)}
+            className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-all duration-200 items-center border-b border-gray-100 cursor-pointer group ${
+              (currentSongId === song.id || currentSongIndex === index) 
+                ? 'bg-purple-50/50' 
+                : ''
+            }`}
+          >
+            <div className="col-span-1 text-gray-400 group-hover:text-gray-900 transition-colors">
+              {index + 1}
+            </div>
+            <div className="col-span-5 font-medium text-gray-900 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                <Music2 className={`w-4 h-4 ${
                   currentSongId === song.id 
                     ? 'text-purple-600' 
-                    : 'group-hover:text-purple-600'
-                }`}>
-                  {song.title}
-                </span>
+                    : 'text-gray-400 group-hover:text-purple-600'
+                }`} />
               </div>
-              <div className="col-span-4 text-gray-600 truncate group-hover:text-gray-900">
-                {song.artist}
-              </div>
-              <div className="col-span-2 text-right text-gray-600 group-hover:text-gray-900">
-                {formatDuration(song.duration)}
-              </div>
+              <span className={`truncate ${
+                currentSongId === song.id 
+                  ? 'text-purple-600' 
+                  : 'group-hover:text-purple-600'
+              }`}>
+                {song.title}
+              </span>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+            <div className="col-span-4 text-gray-600 truncate group-hover:text-gray-900">
+              {song.artist}
+            </div>
+            <div className="col-span-2 text-right text-gray-600 group-hover:text-gray-900">
+              {formatDuration(song.duration)}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
