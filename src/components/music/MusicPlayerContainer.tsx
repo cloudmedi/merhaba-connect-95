@@ -63,6 +63,11 @@ export function MusicPlayerContainer({
   const currentSong = getCurrentSong();
   if (!currentSong) return null;
 
+  // Convert single volume number to array for VolumeControl
+  const handleVolumeChangeWrapper = (values: number[]) => {
+    handleVolumeChange(values[0]);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10">
       <div className="max-w-screen-2xl mx-auto px-4 py-3">
@@ -90,7 +95,7 @@ export function MusicPlayerContainer({
             <VolumeControl
               volume={volume}
               isMuted={isMuted}
-              onVolumeChange={handleVolumeChange}
+              onVolumeChange={handleVolumeChangeWrapper}
               onMuteToggle={toggleMute}
             />
             
