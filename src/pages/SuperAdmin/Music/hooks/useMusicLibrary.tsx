@@ -18,21 +18,20 @@ export interface Song {
 }
 
 export const useMusicLibrary = () => {
-  const [filterGenre, setFilterGenre] = useState<string>("all-genres");
-  const [filterPlaylist, setFilterPlaylist] = useState<string>("all-playlists");
+  const [filterGenre, setFilterGenre] = useState<string>("all");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['songs-count', filterGenre, filterPlaylist],
+    queryKey: ['songs-count', filterGenre],
     queryFn: async () => {
       let query = supabase
         .from('songs')
         .select('*', { count: 'exact', head: true });
 
-      if (filterGenre !== "all-genres") {
+      if (filterGenre !== "all") {
         query = query.contains('genre', [filterGenre]);
       }
 
@@ -49,22 +48,26 @@ export const useMusicLibrary = () => {
 
   // Then fetch paginated songs
   const { data: songs = [], isLoading, refetch } = useQuery({
-    queryKey: ['songs', filterGenre, filterPlaylist, sortByRecent, currentPage],
+    queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
+
+      console.log('Fetching songs with genre filter:', filterGenre);
 
       let query = supabase
         .from('songs')
         .select('*')
         .range(from, to);
 
-      if (filterGenre !== "all-genres") {
+      if (filterGenre !== "all") {
         query = query.contains('genre', [filterGenre]);
       }
 
       if (sortByRecent) {
         query = query.order('created_at', { ascending: false });
+      } else {
+        query = query.order('title');
       }
 
       const { data, error } = await query;
@@ -78,6 +81,28 @@ export const useMusicLibrary = () => {
     }
   });
 
+  // Fetch unique genres from songs
+  const { data: genres = [] } = useQuery({
+    queryKey: ['genres'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('genre');
+
+      if (error) {
+        console.error('Error fetching genres:', error);
+        throw error;
+      }
+
+      // Extract unique genres from all songs
+      const allGenres = data
+        .flatMap(song => song.genre || [])
+        .filter((genre): genre is string => Boolean(genre));
+
+      return Array.from(new Set(allGenres)).sort();
+    }
+  });
+
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
   return {
@@ -85,8 +110,6 @@ export const useMusicLibrary = () => {
     isLoading,
     filterGenre,
     setFilterGenre,
-    filterPlaylist,
-    setFilterPlaylist,
     sortByRecent,
     setSortByRecent,
     currentPage,
@@ -94,6 +117,7 @@ export const useMusicLibrary = () => {
     totalPages,
     itemsPerPage,
     totalCount,
-    refetch
+    refetch,
+    genres
   };
 };
