@@ -4,7 +4,7 @@ import { PlayerControls } from "./PlayerControls";
 import { VolumeControl } from "./VolumeControl";
 import { TrackInfo } from "./TrackInfo";
 import { ProgressBar } from "./ProgressBar";
-import { useAudioPlayer } from "./hooks/useAudioPlayer";
+import { useHowlPlayer } from "./hooks/useHowlPlayer";
 
 interface MusicPlayerProps {
   playlist: {
@@ -50,23 +50,17 @@ export function MusicPlayerContainer({
     handleVolumeChange,
     toggleMute,
     getCurrentSong
-  } = useAudioPlayer({
+  } = useHowlPlayer({
     playlist,
     initialSongIndex,
     autoPlay,
     onSongChange,
-    onPlayStateChange,
-    currentSongId
+    onPlayStateChange
   });
 
   if (!playlist.songs || playlist.songs.length === 0) return null;
   const currentSong = getCurrentSong();
   if (!currentSong) return null;
-
-  // Convert single volume number to array for VolumeControl
-  const handleVolumeChangeWrapper = (values: number[]) => {
-    handleVolumeChange(values[0]);
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10">
@@ -95,7 +89,7 @@ export function MusicPlayerContainer({
             <VolumeControl
               volume={volume}
               isMuted={isMuted}
-              onVolumeChange={handleVolumeChangeWrapper}
+              onVolumeChange={handleVolumeChange}
               onMuteToggle={toggleMute}
             />
             
