@@ -23,6 +23,7 @@
     "@electron/remote": "^2.1.2",
     "@supabase/supabase-js": "^2.39.3",
     "clsx": "^2.1.0",
+    "dotenv": "^16.4.7",
     "electron-updater": "^6.1.7",
     "lucide-react": "latest",
     "node-fetch": "^2.6.9",
