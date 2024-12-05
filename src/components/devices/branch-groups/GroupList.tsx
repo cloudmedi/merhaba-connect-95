@@ -24,6 +24,12 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
+  const handleDeleteClick = (group: Group) => {
+    console.log('Delete clicked for group:', group);
+    setSelectedGroup(group);
+    setDeleteDialogOpen(true);
+  };
+
   return (
     <ScrollArea className="h-[400px]">
       <div className="space-y-4">
@@ -64,10 +70,7 @@ export function GroupList({ groups, onRefresh }: GroupListProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setSelectedGroup(group);
-                      setDeleteDialogOpen(true);
-                    }}
+                    onClick={() => handleDeleteClick(group)}
                     className="text-gray-500 hover:text-red-600"
                   >
                     <Trash2 className="w-4 h-4" />

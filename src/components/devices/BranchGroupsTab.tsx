@@ -17,12 +17,14 @@ export function BranchGroupsTab() {
 
   const fetchGroups = async () => {
     try {
+      console.log('Fetching groups...');
       const { data, error } = await supabase
         .from('branch_groups')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Fetched groups:', data);
       setGroups(data || []);
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -32,8 +34,32 @@ export function BranchGroupsTab() {
     }
   };
 
+  // Initial fetch
   useEffect(() => {
     fetchGroups();
+  }, []);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('branch_groups_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'branch_groups'
+        },
+        (payload) => {
+          console.log('Received real-time update:', payload);
+          fetchGroups();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const filteredGroups = groups.filter(group =>
