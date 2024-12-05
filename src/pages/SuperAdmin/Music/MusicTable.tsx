@@ -111,10 +111,10 @@ export function MusicTable({
   }));
 
   return (
-    <div className="space-y-4 bg-white rounded-lg shadow-sm">
-      <div className="border rounded-lg overflow-hidden">
-        <div className="relative">
-          <ScrollArea className="h-[calc(100vh-280px)]" type="always">
+    <div className="space-y-4">
+      <div className="border rounded-lg">
+        <div className="h-[calc(100vh-280px)] relative">
+          <ScrollArea className="h-full rounded-md" type="always">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
