@@ -105,6 +105,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
         });
 
         if (!result.success) {
+          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
           toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
         }
       }
