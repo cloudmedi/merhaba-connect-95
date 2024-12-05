@@ -110,6 +110,7 @@ export function PlaylistDetail() {
         isOpen={isPushDialogOpen}
         onClose={() => setIsPushDialogOpen(false)}
         playlistTitle={playlist.title}
+        playlistId={playlist.id}
       />
 
       {isPlaying && (

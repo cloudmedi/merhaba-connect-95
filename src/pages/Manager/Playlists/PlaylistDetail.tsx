@@ -8,6 +8,7 @@ import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { toast } from "sonner";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -59,22 +60,28 @@ export function PlaylistDetail() {
   });
 
   if (isLoading) {
-    return <PlaylistDetailLoader />;
+    return (
+      <DashboardLayout>
+        <PlaylistDetailLoader />
+      </DashboardLayout>
+    );
   }
 
   if (!playlist) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-semibold text-gray-900">Playlist not found</h2>
-          <button 
-            onClick={() => navigate("/manager")}
-            className="text-purple-600 hover:text-purple-700 font-medium"
-          >
-            Back to Media Library
-          </button>
+      <DashboardLayout>
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-900">Playlist not found</h2>
+            <button 
+              onClick={() => navigate("/manager")}
+              className="text-purple-600 hover:text-purple-700 font-medium"
+            >
+              Back to Media Library
+            </button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
@@ -111,8 +118,8 @@ export function PlaylistDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
+    <DashboardLayout>
+      <div className="space-y-8">
         <PlaylistHeader
           onBack={() => navigate("/manager")}
           artworkUrl={playlist.artwork_url}
@@ -157,8 +164,9 @@ export function PlaylistDetail() {
           isOpen={isPushDialogOpen}
           onClose={() => setIsPushDialogOpen(false)}
           playlistTitle={playlist.name}
+          playlistId={playlist.id}
         />
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
