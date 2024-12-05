@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -18,8 +19,6 @@ export function MusicContent() {
     isLoading,
     filterGenre,
     setFilterGenre,
-    filterPlaylist,
-    setFilterPlaylist,
     sortByRecent,
     setSortByRecent,
     currentPage,
@@ -27,7 +26,8 @@ export function MusicContent() {
     totalPages,
     itemsPerPage,
     totalCount,
-    refetch
+    refetch,
+    genres
   } = useMusicLibrary();
 
   const handleSelectAll = (checked: boolean) => {
@@ -81,6 +81,12 @@ export function MusicContent() {
     });
   };
 
+  const filteredSongs = songs.filter(song => 
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.album?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
@@ -111,14 +117,14 @@ export function MusicContent() {
       
       <MusicFilters
         onGenreChange={(genre) => setFilterGenre(genre)}
-        onPlaylistChange={(playlist) => setFilterPlaylist(playlist)}
         onRecentChange={(recent) => setSortByRecent(recent)}
-        genres={[]}
-        playlists={[]}
+        onSearchChange={setSearchQuery}
+        genres={genres}
+        searchQuery={searchQuery}
       />
       
       <MusicTable
-        songs={songs}
+        songs={filteredSongs}
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
