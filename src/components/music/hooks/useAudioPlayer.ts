@@ -31,6 +31,7 @@ export function useAudioPlayer({
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const nextAudioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeInProgressRef = useRef(false);
 
   const {
     isPlaying,
@@ -53,14 +54,24 @@ export function useAudioPlayer({
     return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
+  const cleanupAudio = (audio: HTMLAudioElement | null) => {
+    if (audio) {
+      audio.pause();
+      audio.src = '';
+      audio.load();
+    }
+  };
+
   const handleFadeComplete = () => {
     if (nextAudioRef.current) {
+      cleanupAudio(currentAudioRef.current);
       currentAudioRef.current = nextAudioRef.current;
       nextAudioRef.current = null;
       setCurrentSongIndex(prevIndex => 
         prevIndex === playlist.songs!.length - 1 ? 0 : prevIndex + 1
       );
       onSongChange?.(currentSongIndex);
+      fadeInProgressRef.current = false;
     }
   };
 
@@ -80,10 +91,13 @@ export function useAudioPlayer({
     }
 
     const handleTimeUpdate = () => {
+      if (!audio.duration) return;
       setProgress((audio.currentTime / audio.duration) * 100);
       
       // Start fade when nearing the end of the song
-      if (audio.duration - audio.currentTime <= FADE_DURATION / 1000) {
+      if (!fadeInProgressRef.current && 
+          audio.duration - audio.currentTime <= FADE_DURATION / 1000) {
+        fadeInProgressRef.current = true;
         const nextIndex = currentSongIndex === playlist.songs!.length - 1 ? 0 : currentSongIndex + 1;
         const nextSong = playlist.songs![nextIndex];
         
@@ -101,8 +115,8 @@ export function useAudioPlayer({
     return () => {
       clearFade();
       audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.pause();
-      audio.src = '';
+      cleanupAudio(audio);
+      fadeInProgressRef.current = false;
     };
   }, [playlist.songs, currentSongIndex]);
 
@@ -116,14 +130,15 @@ export function useAudioPlayer({
   }, [volume, isMuted]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    if (currentAudioRef.current) {
-      if (isPlaying) {
-        currentAudioRef.current.pause();
-      } else {
-        currentAudioRef.current.play().catch(console.error);
-      }
+    if (!currentAudioRef.current) return;
+    
+    if (isPlaying) {
+      currentAudioRef.current.pause();
+    } else {
+      currentAudioRef.current.play().catch(console.error);
     }
+    
+    setIsPlaying(!isPlaying);
     onPlayStateChange?.(!isPlaying);
   };
 
@@ -131,6 +146,12 @@ export function useAudioPlayer({
     if (!playlist.songs) return;
     
     clearFade();
+    fadeInProgressRef.current = false;
+    
+    if (nextAudioRef.current) {
+      cleanupAudio(nextAudioRef.current);
+      nextAudioRef.current = null;
+    }
     
     const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
     const nextSong = playlist.songs[nextIndex];
@@ -144,9 +165,10 @@ export function useAudioPlayer({
     if (!playlist.songs) return;
     
     clearFade();
+    fadeInProgressRef.current = false;
+    
     if (nextAudioRef.current) {
-      nextAudioRef.current.pause();
-      nextAudioRef.current.src = '';
+      cleanupAudio(nextAudioRef.current);
       nextAudioRef.current = null;
     }
     
