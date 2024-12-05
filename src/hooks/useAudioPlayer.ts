@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export function useAudioPlayer(audioUrl: string | undefined) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +38,12 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleError = () => {
       console.error('Audio error:', audio.error);
       setIsLoading(false);
-      setError(`Failed to load audio: ${audio.error?.message || 'Unknown error'}`);
+      setError(`Şarkı yüklenemedi: ${audio.error?.message || 'Bilinmeyen hata'}`);
       setIsPlaying(false);
     };
 
     const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
       if (audio.duration) {
         setProgress((audio.currentTime / audio.duration) * 100);
       }
@@ -50,6 +52,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const handleEnded = () => {
       setIsPlaying(false);
       setProgress(0);
+      setCurrentTime(0);
       if (onEndedCallbackRef.current) {
         onEndedCallbackRef.current();
       }
@@ -74,6 +77,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       audio.src = '';
       setIsPlaying(false);
       setProgress(0);
+      setCurrentTime(0);
       setError(null);
     };
   }, [audioUrl]);
@@ -86,7 +90,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
       if (playPromise) {
         playPromise.catch(error => {
           console.error('Error playing audio:', error);
-          setError("Failed to play audio");
+          setError("Şarkı oynatılamadı");
           setIsPlaying(false);
         });
       }
@@ -108,6 +112,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
     const time = (value / 100) * duration;
     audioRef.current.currentTime = time;
     setProgress(value);
+    setCurrentTime(time);
   }, [duration]);
 
   const setVolume = useCallback((value: number) => {
@@ -122,6 +127,7 @@ export function useAudioPlayer(audioUrl: string | undefined) {
   return {
     isPlaying,
     progress,
+    currentTime,
     duration,
     isLoading,
     error,
