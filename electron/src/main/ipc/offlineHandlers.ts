@@ -13,7 +13,7 @@ export function setupOfflineHandlers(deviceId: string) {
   });
 
   ipcMain.handle('get-offline-playlists', async () => {
-    return await playlistManager.getOfflinePlaylists();
+    return await fileSystem.getOfflinePlaylists();
   });
 
   ipcMain.handle('get-storage-stats', async () => {

@@ -72,22 +72,4 @@ export class OfflinePlaylistManager {
     }
     return song.file_url;
   }
-
-  async getOfflinePlaylists(): Promise<any[]> {
-    try {
-      const playlistsDir = path.join(this.fileSystem.baseDir, 'playlists');
-      const files = await fs.readdir(playlistsDir);
-      
-      const playlists = [];
-      for (const file of files) {
-        const playlist = await fs.readJson(path.join(playlistsDir, file));
-        playlists.push(playlist);
-      }
-      
-      return playlists;
-    } catch (error) {
-      console.error('Error reading offline playlists:', error);
-      return [];
-    }
-  }
 }
