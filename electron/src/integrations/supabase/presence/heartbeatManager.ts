@@ -1,5 +1,6 @@
 export class HeartbeatManager {
   private interval: NodeJS.Timeout | null = null;
+  private isRunning = false;
 
   constructor(
     private intervalMs: number,
@@ -7,6 +8,13 @@ export class HeartbeatManager {
   ) {}
 
   async start(): Promise<void> {
+    if (this.isRunning) {
+      console.log('Heartbeat already running');
+      return;
+    }
+
+    this.isRunning = true;
+    
     if (this.interval) {
       clearInterval(this.interval);
     }
@@ -14,11 +22,14 @@ export class HeartbeatManager {
     await this.onHeartbeat();
     
     this.interval = setInterval(async () => {
-      await this.onHeartbeat();
+      if (this.isRunning) {
+        await this.onHeartbeat();
+      }
     }, this.intervalMs);
   }
 
   stop(): void {
+    this.isRunning = false;
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;

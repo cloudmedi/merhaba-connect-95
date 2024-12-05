@@ -3,6 +3,7 @@ import { PresenceConfig } from './types';
 
 export class PresenceChannelManager {
   private presenceChannel: RealtimeChannel | null = null;
+  private isSubscribed = false;
 
   constructor(
     private supabase: SupabaseClient,
@@ -14,7 +15,7 @@ export class PresenceChannelManager {
   async setup(): Promise<void> {
     try {
       if (this.presenceChannel) {
-        await this.supabase.removeChannel(this.presenceChannel);
+        await this.cleanup();
       }
 
       const channelName = `presence_${this.deviceToken}`;
@@ -30,42 +31,56 @@ export class PresenceChannelManager {
 
       this.presenceChannel
         .on('presence', { event: 'sync' }, () => {
-          const state = this.presenceChannel?.presenceState();
-          console.log('Presence state synced:', state);
+          if (this.isSubscribed) {
+            const state = this.presenceChannel?.presenceState();
+            console.log('Presence state synced:', state);
+          }
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('Device joined:', key, newPresences);
-          this.onStatusChange('online');
+          if (this.isSubscribed) {
+            console.log('Device joined:', key, newPresences);
+            this.onStatusChange('online');
+          }
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('Device left:', key, leftPresences);
-          this.onStatusChange('offline');
+          if (this.isSubscribed) {
+            console.log('Device left:', key, leftPresences);
+            this.onStatusChange('offline');
+          }
         });
 
       await this.presenceChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          this.isSubscribed = true;
           console.log('Successfully subscribed to presence channel');
+          await this.track('online');
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          this.isSubscribed = false;
+          console.log('Presence channel closed or error occurred');
+          await this.onStatusChange('offline');
+          setTimeout(() => this.setup(), this.config.reconnectDelay);
         }
       });
 
     } catch (error) {
       console.error('Error setting up presence channel:', error);
+      this.isSubscribed = false;
       setTimeout(() => this.setup(), this.config.reconnectDelay);
     }
   }
 
-  async track(status: 'online' | 'offline', systemInfo?: any): Promise<void> {
-    if (!this.deviceToken || !this.presenceChannel) return;
+  async track(status: 'online' | 'offline'): Promise<void> {
+    if (!this.deviceToken || !this.presenceChannel || !this.isSubscribed) return;
 
     try {
       await this.presenceChannel.track({
         token: this.deviceToken,
         status,
-        systemInfo,
         lastSeen: new Date().toISOString(),
       });
     } catch (error) {
       console.error('Error updating presence:', error);
+      this.isSubscribed = false;
       await this.setup();
     }
   }
@@ -73,6 +88,7 @@ export class PresenceChannelManager {
   async cleanup(): Promise<void> {
     if (this.presenceChannel) {
       try {
+        this.isSubscribed = false;
         await this.presenceChannel.track({
           token: this.deviceToken,
           status: 'offline',
