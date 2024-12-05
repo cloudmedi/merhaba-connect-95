@@ -3,6 +3,7 @@ import path from 'node:path'
 import * as si from 'systeminformation'
 import dotenv from 'dotenv'
 import { setupOfflineHandlers } from './ipc/offlineHandlers'
+import { WebSocketManager } from './services/WebSocketManager'
 
 // Load .env file
 dotenv.config({ path: path.join(__dirname, '../../../.env') })
@@ -79,6 +80,8 @@ async function initializeOfflineSupport() {
   if (macAddress) {
     deviceId = macAddress.replace(/:/g, '');
     setupOfflineHandlers(deviceId);
+    // WebSocket bağlantısını başlat
+    new WebSocketManager(deviceId);
   }
 }
 
