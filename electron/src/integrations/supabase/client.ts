@@ -11,14 +11,8 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || '',
   {
     auth: {
-      autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      }
     }
   }
 );
@@ -33,30 +27,36 @@ async function initSupabase() {
       throw new Error('Missing Supabase connection details');
     }
 
-    presenceManager = new PresenceManager(supabase, {
-      heartbeatInterval: 5000,
-      reconnectDelay: 3000
-    });
-
-    console.log('Getting MAC address...');
-    const macAddress = await (window as any).electronAPI.getMacAddress();
-    if (!macAddress) {
-      console.error('Failed to get MAC address');
-      return supabase;
+    if (!presenceManager) {
+      presenceManager = new PresenceManager(supabase, {
+        heartbeatInterval: 5000,
+        reconnectDelay: 3000
+      });
     }
 
-    console.log('Creating device token with MAC address:', macAddress);
-    const tokenData = await createDeviceToken(macAddress);
-    if (!tokenData) {
-      console.error('Failed to create/get device token');
-      return supabase;
+    if (!currentDeviceToken) {
+      console.log('Getting MAC address...');
+      const macAddress = await (window as any).electronAPI.getMacAddress();
+      if (!macAddress) {
+        console.error('Failed to get MAC address');
+        return supabase;
+      }
+
+      console.log('Creating device token with MAC address:', macAddress);
+      const tokenData = await createDeviceToken(macAddress);
+      if (!tokenData) {
+        console.error('Failed to create/get device token');
+        return supabase;
+      }
+
+      console.log('Device token created/retrieved:', tokenData);
+      currentDeviceToken = tokenData.token;
     }
 
-    console.log('Device token created/retrieved:', tokenData);
-    currentDeviceToken = tokenData.token;
-
-    console.log('Initializing presence manager with token:', currentDeviceToken);
-    await presenceManager.initialize(currentDeviceToken);
+    if (currentDeviceToken && presenceManager) {
+      console.log('Initializing presence manager with token:', currentDeviceToken);
+      await presenceManager.initialize(currentDeviceToken);
+    }
 
     console.log('Supabase initialization completed successfully');
     return supabase;
