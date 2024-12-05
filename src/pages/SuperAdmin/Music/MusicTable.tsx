@@ -98,7 +98,7 @@ export function MusicTable({
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + songs.length, totalCount);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   const transformedSongs = songs.map(song => ({
     id: song.id,
@@ -112,8 +112,8 @@ export function MusicTable({
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <div className="border rounded-lg">
-        <div className="relative overflow-hidden">
-          <ScrollArea className="h-[calc(100vh-280px)] rounded-md" type="always">
+        <div className="relative">
+          <ScrollArea className="h-[calc(100vh-280px)] rounded-md border" type="always">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b">
@@ -132,7 +132,7 @@ export function MusicTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {songs.map((song) => (
+                {songs.slice(0, itemsPerPage).map((song) => (
                   <SongTableRow
                     key={song.id}
                     song={song}
