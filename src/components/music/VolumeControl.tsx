@@ -20,7 +20,7 @@ export function VolumeControl({
       <Button
         variant="ghost"
         size="icon"
-        className="text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+        className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
         onClick={onMuteToggle}
       >
         {isMuted || volume === 0 ? (
@@ -29,7 +29,7 @@ export function VolumeControl({
           <Volume2 className="h-5 w-5" />
         )}
       </Button>
-      <div className="group relative w-24">
+      <div className="group relative w-[100px]">
         <Slider
           value={[isMuted ? 0 : volume]}
           onValueChange={onVolumeChange}
@@ -37,14 +37,14 @@ export function VolumeControl({
           step={1}
           className="relative"
         >
-          <div className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-white/5">
+          <div className="relative h-[3px] w-full grow overflow-hidden rounded-full bg-white/10">
             <div 
-              className="absolute h-full bg-gradient-to-r from-white/40 to-white/60 group-hover:from-white/60 group-hover:to-white/80 transition-all duration-300"
+              className="absolute h-full bg-gradient-to-r from-white/60 to-white/80 group-hover:from-white/70 group-hover:to-white/90 transition-all duration-300"
               style={{ width: `${isMuted ? 0 : volume}%` }}
             />
           </div>
           <div 
-            className="opacity-0 group-hover:opacity-100 absolute h-[10px] w-[10px] rounded-full border border-white/40 bg-white shadow-sm transition-all duration-200 hover:h-[12px] hover:w-[12px]"
+            className="opacity-0 group-hover:opacity-100 absolute h-[10px] w-[10px] rounded-full border border-white/50 bg-white shadow-sm transition-all duration-200 hover:scale-110"
             style={{ 
               left: `calc(${isMuted ? 0 : volume}% - 5px)`,
               top: '50%',

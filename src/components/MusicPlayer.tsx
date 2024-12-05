@@ -39,13 +39,12 @@ export function MusicPlayer({
   currentSongId
 }: MusicPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
-  const [volume, setVolume] = useState(75);
+  const [volume, setVolume] = useState(100); // Initialize volume to 100%
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
   const [audio] = useState(new Audio());
 
-  // Playlist ve şarkı yükleme
   useEffect(() => {
     if (!playlist.songs || playlist.songs.length === 0) {
       toast.error("No songs available in this playlist");
@@ -83,12 +82,11 @@ export function MusicPlayer({
     };
   }, [playlist.songs, currentSongIndex]);
 
-  // Ses kontrolü
+  // Volume control
   useEffect(() => {
     audio.volume = isMuted ? 0 : volume / 100;
   }, [volume, isMuted]);
 
-  // Şarkı ID değişimi kontrolü
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -153,7 +151,9 @@ export function MusicPlayer({
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    setVolume(isMuted ? 75 : 0);
+    if (isMuted) {
+      setVolume(100); // Restore to 100% when unmuting
+    }
   };
 
   const getAudioUrl = (song: any) => {
@@ -200,7 +200,7 @@ export function MusicPlayer({
             <Button 
               variant="ghost" 
               size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/10"
+              className="text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
               onClick={onClose}
             >
               <X className="h-5 w-5" />
