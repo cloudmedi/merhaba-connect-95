@@ -616,6 +616,7 @@ export type Database = {
           id: string
           maintenance_reminders: boolean | null
           system_updates: boolean | null
+          theme: string | null
           updated_at: string | null
           user_id: string
         }
@@ -626,6 +627,7 @@ export type Database = {
           id?: string
           maintenance_reminders?: boolean | null
           system_updates?: boolean | null
+          theme?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -636,6 +638,7 @@ export type Database = {
           id?: string
           maintenance_reminders?: boolean | null
           system_updates?: boolean | null
+          theme?: string | null
           updated_at?: string | null
           user_id?: string
         }
