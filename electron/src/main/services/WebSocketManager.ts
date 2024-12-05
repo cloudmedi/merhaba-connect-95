@@ -34,6 +34,7 @@ export class WebSocketManager {
         return;
       }
 
+      // Construct WebSocket URL with device token from device_tokens table
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
