@@ -37,7 +37,11 @@ export function AudioPlayer({
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
       if (autoPlay) {
-        audio.play().catch(console.error);
+        audio.play().catch(error => {
+          console.error('Error playing audio:', error);
+          setIsPlaying(false);
+          onPlayStateChange?.(false);
+        });
         setIsPlaying(true);
         onPlayStateChange?.(true);
       }
@@ -64,8 +68,10 @@ export function AudioPlayer({
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.src = '';
+      setIsPlaying(false);
+      onPlayStateChange?.(false);
     };
-  }, [audioUrl, autoPlay, onNext, volume]);
+  }, [audioUrl, autoPlay, onNext, volume, onPlayStateChange]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -79,7 +85,11 @@ export function AudioPlayer({
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(console.error);
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
     }
     
     setIsPlaying(!isPlaying);

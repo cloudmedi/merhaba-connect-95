@@ -43,6 +43,7 @@ export function MusicPlayer({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [previousPlaylistId, setPreviousPlaylistId] = useState<string | undefined>(playlist.id);
   
+  // Playlist değişikliğini izle
   useEffect(() => {
     if (playlist.id && playlist.id !== previousPlaylistId) {
       handlePlaylistChange();
@@ -50,6 +51,7 @@ export function MusicPlayer({
     setPreviousPlaylistId(playlist.id);
   }, [playlist.id]);
 
+  // Mevcut şarkı ID'sini izle
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -59,10 +61,12 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
+  // Initial song index değişikliğini izle
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
   }, [initialSongIndex]);
 
+  // Play state değişikliklerini parent'a bildir
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
@@ -102,6 +106,7 @@ export function MusicPlayer({
   };
 
   const handlePlayPause = (playing: boolean) => {
+    console.log('MusicPlayer - handlePlayPause:', playing);
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
   };
@@ -173,13 +178,13 @@ export function MusicPlayer({
 
         <div className="flex-1 max-w-2xl px-4">
           <AudioPlayer
+            key={`${playlist.id}-${currentSongIndex}`}
             audioUrl={getAudioUrl(currentSong)}
             onNext={handleNext}
             onPrevious={handlePrevious}
             volume={isMuted ? 0 : volume / 100}
             autoPlay={autoPlay}
             onPlayStateChange={handlePlayPause}
-            key={`${playlist.id}-${currentSongIndex}`}
           />
         </div>
 

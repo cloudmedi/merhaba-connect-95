@@ -22,6 +22,7 @@ export function PlaylistCard({
     onPlay?.(playlist);
   };
 
+  // Şu anki playlist çalıyor mu kontrolü
   const isCurrentlyPlaying = currentPlayingId === playlist.id && isPlaying;
 
   return (
