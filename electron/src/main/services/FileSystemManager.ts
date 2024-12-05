@@ -33,11 +33,20 @@ export class FileSystemManager {
     const filePath = this.getSongPath(songId);
     console.log('Saving song to:', filePath);
     
-    await fs.writeFile(filePath, songBuffer);
-    const hash = this.calculateFileHash(songBuffer);
-    console.log('Song saved successfully with hash:', hash);
-    
-    return hash;
+    try {
+      await fs.writeFile(filePath, songBuffer);
+      const hash = this.calculateFileHash(songBuffer);
+      console.log('Song saved successfully with hash:', hash);
+      
+      // Dosya boyutunu kontrol et
+      const stats = await fs.stat(filePath);
+      console.log(`Saved file size: ${stats.size} bytes`);
+      
+      return hash;
+    } catch (error) {
+      console.error('Error saving song:', error);
+      throw error;
+    }
   }
 
   async savePlaylistInfo(playlistId: string, data: any): Promise<void> {
@@ -45,8 +54,20 @@ export class FileSystemManager {
     console.log('Saving playlist info to:', filePath);
     console.log('Playlist data:', data);
     
-    await fs.writeJson(filePath, data, { spaces: 2 });
-    console.log('Playlist info saved successfully');
+    try {
+      await fs.writeJson(filePath, data, { spaces: 2 });
+      console.log('Playlist info saved successfully');
+      
+      // Dosya varlığını ve boyutunu kontrol et
+      const exists = await fs.pathExists(filePath);
+      if (exists) {
+        const stats = await fs.stat(filePath);
+        console.log(`Playlist info file size: ${stats.size} bytes`);
+      }
+    } catch (error) {
+      console.error('Error saving playlist info:', error);
+      throw error;
+    }
   }
 
   async saveMetadata(songId: string, metadata: any): Promise<void> {
@@ -54,8 +75,20 @@ export class FileSystemManager {
     console.log('Saving metadata to:', filePath);
     console.log('Metadata:', metadata);
     
-    await fs.writeJson(filePath, metadata, { spaces: 2 });
-    console.log('Metadata saved successfully');
+    try {
+      await fs.writeJson(filePath, metadata, { spaces: 2 });
+      console.log('Metadata saved successfully');
+      
+      // Dosya varlığını ve boyutunu kontrol et
+      const exists = await fs.pathExists(filePath);
+      if (exists) {
+        const stats = await fs.stat(filePath);
+        console.log(`Metadata file size: ${stats.size} bytes`);
+      }
+    } catch (error) {
+      console.error('Error saving metadata:', error);
+      throw error;
+    }
   }
 
   getSongPath(songId: string): string {
@@ -63,8 +96,13 @@ export class FileSystemManager {
   }
 
   async songExists(songId: string): Promise<boolean> {
-    const exists = fs.existsSync(this.getSongPath(songId));
-    console.log(`Checking if song ${songId} exists:`, exists);
+    const filePath = this.getSongPath(songId);
+    const exists = fs.existsSync(filePath);
+    console.log(`Checking if song ${songId} exists at ${filePath}:`, exists);
+    if (exists) {
+      const stats = await fs.stat(filePath);
+      console.log(`Existing song file size: ${stats.size} bytes`);
+    }
     return exists;
   }
 
@@ -76,17 +114,22 @@ export class FileSystemManager {
     const songDir = path.join(this.baseDir, 'songs');
     let used = 0;
 
-    const files = await fs.readdir(songDir);
-    for (const file of files) {
-      const stats = await fs.stat(path.join(songDir, file));
-      used += stats.size;
-    }
+    try {
+      const files = await fs.readdir(songDir);
+      for (const file of files) {
+        const stats = await fs.stat(path.join(songDir, file));
+        used += stats.size;
+      }
 
-    console.log('Storage stats:', { used, total: await this.getDiskSpace() });
-    return {
-      used,
-      total: await this.getDiskSpace()
-    };
+      console.log('Storage stats:', { used, total: await this.getDiskSpace() });
+      return {
+        used,
+        total: await this.getDiskSpace()
+      };
+    } catch (error) {
+      console.error('Error getting storage stats:', error);
+      throw error;
+    }
   }
 
   private async getDiskSpace(): Promise<number> {
@@ -98,14 +141,19 @@ export class FileSystemManager {
     const songDir = path.join(this.baseDir, 'songs');
     console.log('Starting cleanup. Keeping songs:', keepSongIds);
     
-    const files = await fs.readdir(songDir);
-    for (const file of files) {
-      const songId = file.replace('song_', '').replace('.mp3', '');
-      if (!keepSongIds.includes(songId)) {
-        console.log('Removing unused song:', file);
-        await fs.unlink(path.join(songDir, file));
+    try {
+      const files = await fs.readdir(songDir);
+      for (const file of files) {
+        const songId = file.replace('song_', '').replace('.mp3', '');
+        if (!keepSongIds.includes(songId)) {
+          console.log('Removing unused song:', file);
+          await fs.unlink(path.join(songDir, file));
+        }
       }
+      console.log('Cleanup completed');
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      throw error;
     }
-    console.log('Cleanup completed');
   }
 }

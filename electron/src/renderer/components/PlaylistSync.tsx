@@ -20,20 +20,48 @@ export function PlaylistSync() {
 
   useEffect(() => {
     loadOfflinePlaylists();
+    // Her 2 saniyede bir indirme durumunu kontrol et
+    const interval = setInterval(checkAllDownloads, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadOfflinePlaylists = async () => {
     try {
+      setIsLoading(true);
       const result = await window.electronAPI.getOfflinePlaylists();
+      console.log('Loaded playlists:', result);
       setPlaylists(result);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading playlists:', error);
       toast.error('Playlistler yüklenirken hata oluştu');
+      setIsLoading(false);
+    }
+  };
+
+  const checkAllDownloads = async () => {
+    // Tüm playlistlerdeki şarkıların indirme durumunu kontrol et
+    for (const playlist of playlists) {
+      if (playlist.songs) {
+        for (const song of playlist.songs) {
+          try {
+            const progress = await window.electronAPI.getDownloadProgress(song.id);
+            console.log(`Download progress for song ${song.id}:`, progress);
+            setDownloadProgress(prev => ({
+              ...prev,
+              [song.id]: progress
+            }));
+          } catch (error) {
+            console.error(`Error checking download progress for song ${song.id}:`, error);
+          }
+        }
+      }
     }
   };
 
   const handleSync = async (playlist: any) => {
     try {
+      console.log('Starting sync for playlist:', playlist);
       setSyncStatus(prev => ({
         ...prev,
         [playlist.id]: {
@@ -45,6 +73,7 @@ export function PlaylistSync() {
       }));
 
       const result = await window.electronAPI.syncPlaylist(playlist);
+      console.log('Sync result:', result);
       
       if (result.success) {
         setSyncStatus(prev => ({
@@ -83,27 +112,6 @@ export function PlaylistSync() {
       default:
         return <Music className="w-4 h-4" />;
     }
-  };
-
-  const checkDownloadProgress = async (songIds: string[]) => {
-    const interval = setInterval(async () => {
-      const newProgress: { [key: string]: number } = {};
-      let allCompleted = true;
-
-      for (const songId of songIds) {
-        const progress = await window.electronAPI.getDownloadProgress(songId);
-        newProgress[songId] = progress;
-        if (progress < 100) allCompleted = false;
-      }
-
-      setDownloadProgress(newProgress);
-
-      if (allCompleted) {
-        clearInterval(interval);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
   };
 
   return (
