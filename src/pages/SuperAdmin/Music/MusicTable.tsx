@@ -96,7 +96,6 @@ export function MusicTable({
     setCurrentSongIndex(songIndex);
     setCurrentlyPlaying(song);
     setIsPlaying(true);
-    // When playing from the music table, we'll create a temporary playlist
     setCurrentPlaylistId('temp-playlist');
   };
 
@@ -118,42 +117,46 @@ export function MusicTable({
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
-      <ScrollArea className="h-[calc(100vh-400px)]">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="w-[30px]">
-                <Checkbox
-                  checked={selectedSongs.length === songs.length}
-                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
-                />
-              </TableHead>
-              <TableHead className="font-medium text-gray-700">Title</TableHead>
-              <TableHead className="font-medium text-gray-700">Artist</TableHead>
-              <TableHead className="font-medium text-gray-700">Album</TableHead>
-              <TableHead className="font-medium text-gray-700">Genres</TableHead>
-              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {songs.map((song) => (
-              <SongTableRow
-                key={song.id}
-                song={song}
-                isSelected={selectedSongs.some((s) => s.id === song.id)}
-                onSelect={(checked) => onSelectSong(song, checked)}
-                onPlay={() => handlePlaySong(song)}
-                formatDuration={formatDuration}
-                defaultArtwork={defaultArtwork}
-                onDelete={() => onDelete(song.id)}
-                isPlaying={isPlaying}
-                currentlyPlayingId={currentlyPlaying?.id}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+      <div className="border rounded-lg">
+        <div className="overflow-hidden">
+          <ScrollArea className="h-[calc(100vh-280px)] rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b">
+                  <TableHead className="w-[30px] bg-white sticky top-0">
+                    <Checkbox
+                      checked={selectedSongs.length === songs.length}
+                      onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                    />
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Title</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Artist</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Album</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0">Genres</TableHead>
+                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0">Duration</TableHead>
+                  <TableHead className="w-[50px] bg-white sticky top-0"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {songs.map((song) => (
+                  <SongTableRow
+                    key={song.id}
+                    song={song}
+                    isSelected={selectedSongs.some((s) => s.id === song.id)}
+                    onSelect={(checked) => onSelectSong(song, checked)}
+                    onPlay={() => handlePlaySong(song)}
+                    formatDuration={formatDuration}
+                    defaultArtwork={defaultArtwork}
+                    onDelete={() => onDelete(song.id)}
+                    isPlaying={isPlaying}
+                    currentlyPlayingId={currentlyPlaying?.id}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </div>
+      </div>
 
       <TablePagination
         currentPage={currentPage}
