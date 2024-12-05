@@ -9,6 +9,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MusicPlayer } from "@/components/MusicPlayer";
 
+interface Genre {
+  id: string;
+  name: string;
+}
+
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
@@ -33,12 +38,12 @@ export function PlaylistsContent() {
     }
   });
 
-  const { data: genres } = useQuery({
+  const { data: genres } = useQuery<Genre[]>({
     queryKey: ['genres'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('genres')
-        .select('*')
+        .select('id, name')
         .order('name');
 
       if (error) throw error;
