@@ -75,6 +75,8 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (playlist: GridPlaylist) => {
+    console.log('PlaylistGrid - handlePlayClick', { currentPlayingId: playlist.id, isPlaying });
+    
     // If clicking the currently playing playlist, we want to toggle play/pause
     if (playlist.id === currentPlayingId) {
       onPlay?.(playlist);
@@ -126,7 +128,7 @@ export function PlaylistGrid({
           <PlaylistCard
             key={playlist.id}
             playlist={playlist}
-            isPlaying={isPlaying}
+            isPlaying={isPlaying && currentPlayingId === playlist.id}
             currentPlayingId={currentPlayingId}
             onPlay={handlePlayClick}
             onClick={handleCardClick}

@@ -19,6 +19,7 @@ export function PlaylistCard({
 }: PlaylistCardProps) {
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('PlaylistCard - handlePlayClick', { isPlaying, currentPlayingId, playlistId: playlist.id });
     onPlay?.(playlist);
   };
 

@@ -97,10 +97,12 @@ export function MusicPlayer({
   }, [currentSongId, playlist.songs]);
 
   useEffect(() => {
+    console.log('MusicPlayer - isPlaying changed:', isPlaying);
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);
 
   const handlePlayPause = () => {
+    console.log('MusicPlayer - handlePlayPause', { isPlaying });
     if (isPlaying) {
       audio.pause();
     } else {
