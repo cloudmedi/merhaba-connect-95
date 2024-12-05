@@ -125,15 +125,13 @@ export function PlaylistDetail() {
           onPush={() => setIsPushDialogOpen(true)}
         />
 
-        <div className="w-full">
-          <SongList 
-            songs={playlist.songs}
-            onSongSelect={handleSongSelect}
-            currentSongIndex={isPlaying ? currentSongIndex : undefined}
-            onCurrentSongIndexChange={setCurrentSongIndex}
-            isPlaying={isPlaying}
-          />
-        </div>
+        <SongList 
+          songs={playlist.songs}
+          onSongSelect={handleSongSelect}
+          currentSongIndex={isPlaying ? currentSongIndex : undefined}
+          onCurrentSongIndexChange={setCurrentSongIndex}
+          isPlaying={isPlaying}
+        />
 
         {isPlaying && playlist.songs && (
           <MusicPlayer

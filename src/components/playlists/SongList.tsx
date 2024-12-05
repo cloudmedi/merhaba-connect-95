@@ -25,51 +25,49 @@ export function SongList({
   isPlaying = false
 }: SongListProps) {
   return (
-    <div className="relative w-full">
-      <div className="w-full overflow-y-auto max-h-[600px] scrollbar-style">
-        <Table>
-          <TableHeader className="sticky top-0 bg-white z-10">
-            <TableRow>
-              <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Artist</TableHead>
-              <TableHead className="text-right">Duration</TableHead>
+    <div className="w-full h-[600px] overflow-y-auto scrollbar-style">
+      <Table>
+        <TableHeader className="sticky top-0 bg-white z-10">
+          <TableRow>
+            <TableHead className="w-[50px]">#</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Artist</TableHead>
+            <TableHead className="text-right">Duration</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {songs.map((song, index) => (
+            <TableRow 
+              key={song.id}
+              className={`cursor-pointer hover:bg-gray-50 ${
+                currentSongIndex === index ? 'bg-purple-50' : ''
+              }`}
+              onClick={() => {
+                onSongSelect?.(song);
+                onCurrentSongIndexChange?.(index);
+              }}
+            >
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Music2 className={`w-4 h-4 ${
+                    currentSongIndex === index && isPlaying 
+                      ? 'text-purple-600' 
+                      : 'text-gray-400'
+                  }`} />
+                  {index + 1}
+                </div>
+              </TableCell>
+              <TableCell className={`font-medium ${
+                currentSongIndex === index ? 'text-purple-600' : ''
+              }`}>
+                {song.title}
+              </TableCell>
+              <TableCell>{song.artist}</TableCell>
+              <TableCell className="text-right">{song.duration}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {songs.map((song, index) => (
-              <TableRow 
-                key={song.id}
-                className={`cursor-pointer hover:bg-gray-50 ${
-                  currentSongIndex === index ? 'bg-purple-50' : ''
-                }`}
-                onClick={() => {
-                  onSongSelect?.(song);
-                  onCurrentSongIndexChange?.(index);
-                }}
-              >
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Music2 className={`w-4 h-4 ${
-                      currentSongIndex === index && isPlaying 
-                        ? 'text-purple-600' 
-                        : 'text-gray-400'
-                    }`} />
-                    {index + 1}
-                  </div>
-                </TableCell>
-                <TableCell className={`font-medium ${
-                  currentSongIndex === index ? 'text-purple-600' : ''
-                }`}>
-                  {song.title}
-                </TableCell>
-                <TableCell>{song.artist}</TableCell>
-                <TableCell className="text-right">{song.duration}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
