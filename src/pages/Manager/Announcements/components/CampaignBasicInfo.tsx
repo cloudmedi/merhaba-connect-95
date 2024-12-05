@@ -3,14 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CampaignFormData } from "../types";
 
 interface CampaignBasicInfoProps {
-  formData: {
-    title: string;
-    description: string;
-    files: File[];
-  };
-  onFormDataChange: (data: Partial<typeof formData>) => void;
+  formData: Pick<CampaignFormData, "title" | "description" | "files">;
+  onFormDataChange: (data: Partial<CampaignFormData>) => void;
   onNext: () => void;
   announcementId: string | null;
 }
