@@ -2,7 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 export class DeviceStatusManager {
   private lastUpdateTime: number = 0;
-  private readonly MIN_UPDATE_INTERVAL = 2000; // 2 seconds
+  private readonly MIN_UPDATE_INTERVAL = 2000; // 2 saniye minimum güncelleme aralığı
 
   constructor(private supabase: SupabaseClient) {}
 

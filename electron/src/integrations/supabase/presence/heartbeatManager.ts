@@ -2,7 +2,7 @@ export class HeartbeatManager {
   private interval: NodeJS.Timeout | null = null;
   private isRunning = false;
   private consecutiveFailures = 0;
-  private readonly MAX_CONSECUTIVE_FAILURES = 3;
+  private readonly MAX_CONSECUTIVE_FAILURES = 2;
 
   constructor(
     private intervalMs: number,

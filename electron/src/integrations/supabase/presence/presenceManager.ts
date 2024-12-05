@@ -13,12 +13,12 @@ export class PresenceManager {
   private isInitialized = false;
   private lastStatus: 'online' | 'offline' = 'offline';
   private missedHeartbeats = 0;
-  private readonly MAX_MISSED_HEARTBEATS = 3;
+  private readonly MAX_MISSED_HEARTBEATS = 2; // 2 kaçırılan heartbeat toleransı
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     this.config = {
-      heartbeatInterval: config.heartbeatInterval || 10000, // 10 seconds
-      reconnectDelay: config.reconnectDelay || 5000
+      heartbeatInterval: 5000, // 5 saniye
+      reconnectDelay: 3000
     };
     this.deviceStatusManager = new DeviceStatusManager(supabase);
   }
@@ -45,11 +45,9 @@ export class PresenceManager {
         deviceToken,
         this.config,
         async (status) => {
-          if (this.lastStatus !== status) {
-            await this.updateDeviceStatus(status);
-            this.lastStatus = status;
-            this.missedHeartbeats = 0;
-          }
+          await this.updateDeviceStatus(status);
+          this.lastStatus = status;
+          this.missedHeartbeats = 0;
         }
       );
 
