@@ -94,8 +94,10 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
 
       if (playlistError) throw playlistError;
 
-      // Send playlist to each selected device
+      // Send playlist directly to each selected device
       for (const deviceId of selectedDevices) {
+        console.log(`Sending playlist to device ${deviceId}`);
+        
         const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
           name: playlist.name,
