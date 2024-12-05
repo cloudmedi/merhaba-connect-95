@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Key } from 'lucide-react';
 
 interface TokenDisplayProps {
@@ -14,9 +13,9 @@ export function TokenDisplay({ token }: TokenDisplayProps) {
         <CardTitle className="flex items-center gap-2">
           <Key className="w-5 h-5" />
           Cihaz Token
-          <Badge variant="secondary" className="ml-auto">
+          <div className="ml-auto px-2 py-1 text-xs bg-gray-100 rounded-full">
             Aktif
-          </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
