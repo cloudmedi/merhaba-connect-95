@@ -16,7 +16,8 @@
     "systeminformation": "latest",
     "uuid": "latest",
     "node-fetch": "^2.6.9",
-    "sonner": "latest"
+    "sonner": "latest",
+    "lucide-react": "latest"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",

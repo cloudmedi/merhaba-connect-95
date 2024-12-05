@@ -33,7 +33,7 @@ export default defineConfig({
         input: {
           index: path.join(__dirname, 'index.html')
         },
-        external: ['sonner']
+        external: ['sonner', 'lucide-react']
       }
     },
     plugins: [react()],
