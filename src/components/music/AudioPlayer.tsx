@@ -13,6 +13,7 @@ interface AudioPlayerProps {
   volume?: number;
   autoPlay?: boolean;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  onSongChange?: (index: number) => void;
 }
 
 export function AudioPlayer({ 
@@ -21,7 +22,8 @@ export function AudioPlayer({
   onPrevious, 
   volume = 1,
   autoPlay = false,
-  onPlayStateChange
+  onPlayStateChange,
+  onSongChange
 }: AudioPlayerProps) {
   const {
     isPlaying,
@@ -39,7 +41,10 @@ export function AudioPlayer({
     autoPlay,
     volume,
     onPlayStateChange,
-    onEnded: onNext
+    onEnded: () => {
+      onNext?.();
+      onSongChange?.(currentTime);
+    }
   });
 
   useEffect(() => {
