@@ -1,32 +1,13 @@
-import { useState, useEffect } from "react";
-import { X, Volume2, VolumeX } from "lucide-react";
+import { useState, useEffect, useCallback, memo } from "react";
+import { X } from "lucide-react";
 import { AudioPlayer } from "./music/AudioPlayer";
+import { VolumeControls } from "./music/VolumeControls";
 import { toast } from "sonner";
-import { Slider } from "./ui/slider";
 import { Button } from "./ui/button";
+import { getOptimizedImageUrl, getAudioUrl } from "./music/utils";
+import type { MusicPlayerProps } from "./music/types";
 
-interface MusicPlayerProps {
-  playlist: {
-    title: string;
-    artwork: string;
-    songs?: Array<{
-      id: string | number;
-      title: string;
-      artist: string;
-      duration: string | number;
-      file_url: string;
-      bunny_id?: string;
-    }>;
-  };
-  onClose: () => void;
-  initialSongIndex?: number;
-  autoPlay?: boolean;
-  onSongChange?: (index: number) => void;
-  onPlayStateChange?: (isPlaying: boolean) => void;
-  currentSongId?: string | number;
-}
-
-export function MusicPlayer({ 
+export const MusicPlayer = memo(function MusicPlayer({ 
   playlist, 
   onClose, 
   initialSongIndex = 0,
@@ -65,59 +46,37 @@ export function MusicPlayer({
 
   const currentSong = playlist.songs[currentSongIndex];
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (playlist.songs && playlist.songs.length > 0) {
       const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
       setCurrentSongIndex(nextIndex);
       onSongChange?.(nextIndex);
     }
-  };
+  }, [currentSongIndex, playlist.songs, onSongChange]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (playlist.songs && playlist.songs.length > 0) {
       const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
       setCurrentSongIndex(prevIndex);
       onSongChange?.(prevIndex);
     }
-  };
+  }, [currentSongIndex, playlist.songs, onSongChange]);
 
-  const handlePlayPause = (playing: boolean) => {
+  const handlePlayPause = useCallback((playing: boolean) => {
     console.log('MusicPlayer handlePlayPause:', playing);
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
-  };
+  }, [onPlayStateChange]);
 
-  const handleVolumeChange = (values: number[]) => {
+  const handleVolumeChange = useCallback((values: number[]) => {
     setVolume(values[0]);
     setIsMuted(values[0] === 0);
-  };
+  }, []);
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
     setVolume(isMuted ? 75 : 0);
-  };
-
-  const getOptimizedImageUrl = (url: string) => {
-    if (!url || !url.includes('b-cdn.net')) return url;
-    return `${url}?width=400&quality=85&format=webp`;
-  };
-
-  const getAudioUrl = (song: any) => {
-    if (!song.file_url) {
-      console.error('No file_url provided for song:', song);
-      return '';
-    }
-    
-    if (song.file_url.startsWith('http')) {
-      return song.file_url;
-    }
-    
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    }
-    
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
-  };
+  }, [isMuted]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
@@ -131,7 +90,6 @@ export function MusicPlayer({
         }}
       />
       
-      {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
       
       <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -163,27 +121,12 @@ export function MusicPlayer({
         </div>
 
         <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/70 hover:text-white hover:bg-white/10"
-              onClick={toggleMute}
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="h-5 w-5" />
-              ) : (
-                <Volume2 className="h-5 w-5" />
-              )}
-            </Button>
-            <Slider
-              value={[isMuted ? 0 : volume]}
-              onValueChange={handleVolumeChange}
-              max={100}
-              step={1}
-              className="w-24"
-            />
-          </div>
+          <VolumeControls
+            volume={volume}
+            isMuted={isMuted}
+            onVolumeChange={handleVolumeChange}
+            onMuteToggle={toggleMute}
+          />
           
           <Button 
             variant="ghost" 
@@ -197,4 +140,4 @@ export function MusicPlayer({
       </div>
     </div>
   );
-}
+});
