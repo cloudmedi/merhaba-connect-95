@@ -35,19 +35,34 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
     let aborted = false;
 
     const initializeAudio = async () => {
-      if (!context) return;
+      if (!context) {
+        console.error('AudioContext is not available');
+        return;
+      }
 
       try {
         const fullUrl = getBunnyUrl(url);
         console.log('Loading audio from:', fullUrl);
         
+        // Resume AudioContext if it's suspended
+        if (context.state === 'suspended') {
+          await context.resume();
+          console.log('AudioContext resumed');
+        }
+
         const response = await fetch(fullUrl);
         if (!response.ok) {
           throw new Error(`Failed to load audio file: ${response.statusText}`);
         }
 
+        console.log('Audio file fetched, decoding...');
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await context.decodeAudioData(arrayBuffer);
+        console.log('Audio decoded successfully:', {
+          duration: audioBuffer.duration,
+          numberOfChannels: audioBuffer.numberOfChannels,
+          sampleRate: audioBuffer.sampleRate
+        });
 
         if (aborted) return;
 
@@ -62,13 +77,14 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
         gainNode.connect(context.destination);
 
         source.onended = () => {
+          console.log('Audio playback ended');
           if (onEnded) onEnded();
         };
 
         sourceRef.current = source;
         gainNodeRef.current = gainNode;
 
-        console.log('Audio source initialized:', { url: fullUrl, duration: audioBuffer.duration });
+        console.log('Audio source initialized successfully');
       } catch (error) {
         console.error('Error loading audio:', error);
         toast.error("Error loading audio file");
@@ -82,6 +98,7 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
       if (sourceRef.current) {
         try {
           sourceRef.current.stop();
+          console.log('Audio source stopped and cleaned up');
         } catch (e) {
           // Ignore errors when stopping
         }
@@ -90,12 +107,16 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
   }, [url, context, onEnded]);
 
   const play = () => {
-    if (!sourceRef.current || !context) return;
+    if (!sourceRef.current || !context) {
+      console.error('Cannot play: Audio source or context not initialized');
+      return;
+    }
 
     try {
+      console.log('Starting playback:', { offset: offsetRef.current });
       sourceRef.current.start(0, offsetRef.current);
       startTimeRef.current = context.currentTime - offsetRef.current;
-      console.log('Playing audio:', { offset: offsetRef.current });
+      console.log('Playback started successfully');
     } catch (error) {
       console.error('Error playing audio:', error);
       toast.error("Error playing audio");
@@ -103,19 +124,26 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
   };
 
   const pause = () => {
-    if (!sourceRef.current || !context) return;
+    if (!sourceRef.current || !context) {
+      console.error('Cannot pause: Audio source or context not initialized');
+      return;
+    }
 
     try {
       sourceRef.current.stop();
       offsetRef.current = context.currentTime - startTimeRef.current;
-      console.log('Pausing audio:', { offset: offsetRef.current });
+      console.log('Playback paused:', { offset: offsetRef.current });
     } catch (error) {
       console.error('Error pausing audio:', error);
     }
   };
 
   const setVolume = (value: number) => {
-    if (!gainNodeRef.current) return;
+    if (!gainNodeRef.current) {
+      console.error('Cannot set volume: Gain node not initialized');
+      return;
+    }
+    console.log('Setting volume:', value);
     gainNodeRef.current.gain.value = value;
   };
 
