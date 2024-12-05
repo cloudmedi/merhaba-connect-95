@@ -45,6 +45,7 @@ export function MusicPlayer({
   const [progress, setProgress] = useState(0);
   const [audio] = useState(new Audio());
 
+  // Playlist ve şarkı yükleme
   useEffect(() => {
     if (!playlist.songs || playlist.songs.length === 0) {
       toast.error("No songs available in this playlist");
@@ -64,8 +65,7 @@ export function MusicPlayer({
     }
 
     const handleTimeUpdate = () => {
-      const progress = (audio.currentTime / audio.duration) * 100;
-      setProgress(progress);
+      setProgress((audio.currentTime / audio.duration) * 100);
     };
 
     const handleEnded = () => {
@@ -83,10 +83,12 @@ export function MusicPlayer({
     };
   }, [playlist.songs, currentSongIndex]);
 
+  // Ses kontrolü
   useEffect(() => {
     audio.volume = isMuted ? 0 : volume / 100;
   }, [volume, isMuted]);
 
+  // Şarkı ID değişimi kontrolü
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -96,20 +98,30 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
+  // Play/Pause kontrolü
   useEffect(() => {
-    if (isPlaying) {
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
+    console.log('MusicPlayer - Play state effect:', { isPlaying });
+    
+    const updatePlayState = async () => {
+      try {
+        if (isPlaying) {
+          await audio.play();
+        } else {
+          audio.pause();
+        }
+        onPlayStateChange?.(isPlaying);
+      } catch (error) {
+        console.error('Error updating play state:', error);
         setIsPlaying(false);
         onPlayStateChange?.(false);
-      });
-    } else {
-      audio.pause();
-    }
-    onPlayStateChange?.(isPlaying);
-  }, [isPlaying, onPlayStateChange]);
+      }
+    };
+
+    updatePlayState();
+  }, [isPlaying]);
 
   const handlePlayPause = () => {
+    console.log('MusicPlayer - handlePlayPause triggered');
     setIsPlaying(!isPlaying);
   };
 
