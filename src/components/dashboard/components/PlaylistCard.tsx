@@ -28,7 +28,7 @@ export function PlaylistCard({
     onPlay?.(playlist);
   };
 
-  // Şu anki playlist çalıyor mu kontrolü
+  // Check if this playlist is currently playing
   const isCurrentlyPlaying = currentPlayingId === playlist.id && isPlaying;
 
   return (
@@ -46,7 +46,9 @@ export function PlaylistCard({
           <Button
             size="icon"
             variant="ghost"
-            className="w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100"
+            className={`w-12 h-12 rounded-full bg-white/30 hover:bg-white/40 transition-all duration-300 ${
+              isCurrentlyPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            } ${isCurrentlyPlaying ? 'scale-100' : 'scale-75 group-hover:scale-100'}`}
             onClick={handlePlayClick}
           >
             {isCurrentlyPlaying ? (
