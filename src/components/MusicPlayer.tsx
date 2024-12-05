@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { X } from "lucide-react";
-import { AudioPlayer } from "./music/AudioPlayer";
-import { VolumeControls } from "./music/VolumeControls";
+import { AudioPlayer } from "./AudioPlayer";
+import { VolumeControls } from "./VolumeControls";
+import { TrackInfo } from "./TrackInfo";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { getOptimizedImageUrl, getAudioUrl } from "./music/utils";
-import { ErrorBoundary } from "./music/ErrorBoundary";
-import { MusicPlayerProvider, useMusicPlayer } from "./music/MusicPlayerContext";
-import type { MusicPlayerProps } from "./music/types";
+import { Button } from "../ui/button";
+import { getOptimizedImageUrl, getAudioUrl } from "./utils";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { MusicPlayerProvider, useMusicPlayer } from "./MusicPlayerContext";
+import type { MusicPlayerProps } from "./types";
 
 const MusicPlayerContent = memo(function MusicPlayerContent({ 
   playlist, 
@@ -64,8 +65,7 @@ const MusicPlayerContent = memo(function MusicPlayerContent({
     }
   }, [currentSongIndex, playlist.songs, onSongChange]);
 
-  const handlePlayPause = useCallback((playing: boolean) => {
-    console.log('MusicPlayer handlePlayPause:', playing);
+  const handlePlayStateChange = useCallback((playing: boolean) => {
     setIsPlaying(playing);
     onPlayStateChange?.(playing);
   }, [onPlayStateChange]);
@@ -81,66 +81,64 @@ const MusicPlayerContent = memo(function MusicPlayerContent({
   }, [isMuted]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up">
+    <div 
+      className="fixed bottom-0 left-0 right-0 z-50 animate-slide-in-up"
+      role="region"
+      aria-label="Music player"
+    >
       <ErrorBoundary>
-      <div 
-        className="absolute inset-0 bg-cover bg-center music-player-backdrop"
-        style={{ 
-          backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
-          filter: 'blur(80px)',
-          transform: 'scale(1.2)',
-          opacity: '0.15'
-        }}
-      />
-      
-      <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" />
-      
-      <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
-          <img 
-            src={getOptimizedImageUrl(playlist.artwork)} 
-            alt={currentSong?.title}
-            className="w-14 h-14 rounded-md object-cover shadow-lg"
-          />
-          <div className="min-w-0">
-            <h3 className="text-white font-medium text-sm truncate hover:text-white/90 transition-colors cursor-default">
-              {currentSong?.title}
-            </h3>
-            <p className="text-white/60 text-xs truncate hover:text-white/70 transition-colors cursor-default">
-              {currentSong?.artist}
-            </p>
+        <div 
+          className="absolute inset-0 bg-cover bg-center music-player-backdrop"
+          style={{ 
+            backgroundImage: `url(${getOptimizedImageUrl(playlist.artwork)})`,
+            filter: 'blur(80px)',
+            transform: 'scale(1.2)',
+            opacity: '0.15'
+          }}
+          aria-hidden="true"
+        />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/95 to-[#121212]/90" aria-hidden="true" />
+        
+        <div className="relative px-6 py-4 flex items-center justify-between max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-4 flex-1 min-w-[180px] max-w-[300px]">
+            <TrackInfo
+              artwork={getOptimizedImageUrl(playlist.artwork)}
+              title={currentSong?.title || ""}
+              artist={currentSong?.artist || "Unknown Artist"}
+            />
+          </div>
+
+          <div className="flex-1 max-w-2xl px-4">
+            <AudioPlayer
+              audioUrl={getAudioUrl(currentSong)}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+              volume={isMuted ? 0 : volume / 100}
+              autoPlay={autoPlay}
+              onPlayStateChange={handlePlayStateChange}
+            />
+          </div>
+
+          <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
+            <VolumeControls
+              volume={volume}
+              isMuted={isMuted}
+              onVolumeChange={handleVolumeChange}
+              onMuteToggle={toggleMute}
+            />
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white/70 hover:text-white hover:bg-white/10"
+              onClick={onClose}
+              aria-label="Close player"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
-
-        <div className="flex-1 max-w-2xl px-4">
-          <AudioPlayer
-            audioUrl={getAudioUrl(currentSong)}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-            volume={isMuted ? 0 : volume / 100}
-            autoPlay={autoPlay}
-            onPlayStateChange={handlePlayPause}
-          />
-        </div>
-
-        <div className="flex items-center gap-4 flex-1 justify-end min-w-[180px]">
-          <VolumeControls
-            volume={volume}
-            isMuted={isMuted}
-            onVolumeChange={handleVolumeChange}
-            onMuteToggle={toggleMute}
-          />
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white/70 hover:text-white hover:bg-white/10"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
       </ErrorBoundary>
     </div>
   );

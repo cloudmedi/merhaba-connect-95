@@ -71,10 +71,18 @@ export function AudioPlayer({
   }
 
   return (
-    <div className="relative flex flex-col items-center gap-2">
+    <div 
+      className="relative flex flex-col items-center gap-2"
+      role="region"
+      aria-label="Audio player controls"
+    >
       {isLoading && <LoadingOverlay />}
       
-      <div className="w-full flex items-center gap-4 text-sm text-white/60">
+      <div 
+        className="w-full flex items-center gap-4 text-sm text-white/60"
+        role="timer"
+        aria-label="Track progress"
+      >
         <span>{formatTime(currentTime)}</span>
         <div className="flex-1">
           <ProgressBar 

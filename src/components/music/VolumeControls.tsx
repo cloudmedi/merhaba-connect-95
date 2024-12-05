@@ -17,12 +17,18 @@ export const VolumeControls = memo(function VolumeControls({
   onMuteToggle
 }: VolumeControlsProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div 
+      className="flex items-center gap-2"
+      role="group"
+      aria-label="Volume controls"
+    >
       <Button
         variant="ghost"
         size="icon"
         className="text-white/70 hover:text-white hover:bg-white/10"
         onClick={onMuteToggle}
+        aria-label={isMuted ? "Unmute" : "Mute"}
+        aria-pressed={isMuted}
       >
         {isMuted || volume === 0 ? (
           <VolumeX className="h-5 w-5" />
@@ -36,6 +42,11 @@ export const VolumeControls = memo(function VolumeControls({
         max={100}
         step={1}
         className="w-24"
+        aria-label="Volume"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={volume}
+        aria-valuetext={`Volume ${volume}%`}
       />
     </div>
   );

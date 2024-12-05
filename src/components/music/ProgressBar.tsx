@@ -29,12 +29,17 @@ export function ProgressBar({ progress, onProgressChange, duration, currentTime 
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const currentTimeFormatted = formatTime(currentTime);
+  const durationFormatted = formatTime(duration);
+
   return (
     <div 
       className="relative w-full group"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       onMouseMove={handleMouseMove}
+      role="group"
+      aria-label="Progress bar"
     >
       <Slider
         value={[progress]}
@@ -42,6 +47,11 @@ export function ProgressBar({ progress, onProgressChange, duration, currentTime 
         max={100}
         step={0.1}
         className="w-full cursor-pointer"
+        aria-label="Track progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress}
+        aria-valuetext={`${currentTimeFormatted} of ${durationFormatted}`}
       />
       
       {isHovering && (
@@ -51,6 +61,7 @@ export function ProgressBar({ progress, onProgressChange, duration, currentTime 
             "opacity-0 group-hover:opacity-100 transition-opacity duration-200"
           )}
           style={{ left: `${hoverPosition}%` }}
+          role="tooltip"
         >
           {formatTime(hoverTime)}
         </div>
