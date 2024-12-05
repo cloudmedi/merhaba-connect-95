@@ -111,7 +111,7 @@ export function PlaylistDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <PlaylistHeader
           onBack={() => navigate("/manager")}
