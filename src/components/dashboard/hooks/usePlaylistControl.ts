@@ -24,7 +24,7 @@ export function usePlaylistControl() {
     try {
       // If clicking the currently playing playlist, only toggle play state
       if (currentPlaylist?.id === playlist.id) {
-        console.log('Toggling play state for current playlist');
+        console.log('Toggling play state for current playlist', { isPlaying });
         setIsPlaying(!isPlaying);
         return;
       }
