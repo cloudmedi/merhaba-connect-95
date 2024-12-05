@@ -39,13 +39,13 @@
   }
 }
 
-/* Hide scrollbars but keep scroll functionality */
-* {
+/* Sadece belirli elementlerde kaydırma çubuğunu gizle */
+.hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-*::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
