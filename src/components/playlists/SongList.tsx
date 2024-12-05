@@ -26,7 +26,7 @@ export function SongList({
 }: SongListProps) {
   return (
     <div className="relative w-full">
-      <div className="overflow-auto max-h-[600px] w-full">
+      <div className="w-full overflow-y-auto max-h-[600px] scrollbar-style">
         <Table>
           <TableHeader className="sticky top-0 bg-white z-10">
             <TableRow>
