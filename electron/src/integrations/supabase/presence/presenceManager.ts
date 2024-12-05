@@ -12,10 +12,12 @@ export class PresenceManager {
   private config: Required<PresenceConfig>;
   private isInitialized = false;
   private lastStatus: 'online' | 'offline' = 'offline';
+  private missedHeartbeats = 0;
+  private readonly MAX_MISSED_HEARTBEATS = 3;
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     this.config = {
-      heartbeatInterval: config.heartbeatInterval || 30000,
+      heartbeatInterval: config.heartbeatInterval || 10000, // 10 seconds
       reconnectDelay: config.reconnectDelay || 5000
     };
     this.deviceStatusManager = new DeviceStatusManager(supabase);
@@ -29,6 +31,7 @@ export class PresenceManager {
     
     console.log('Initializing PresenceManager for device:', deviceToken);
     this.deviceToken = deviceToken;
+    this.missedHeartbeats = 0;
 
     try {
       const isValidDevice = await this.deviceStatusManager.verifyDevice(deviceToken);
@@ -45,6 +48,7 @@ export class PresenceManager {
           if (this.lastStatus !== status) {
             await this.updateDeviceStatus(status);
             this.lastStatus = status;
+            this.missedHeartbeats = 0;
           }
         }
       );
@@ -65,7 +69,7 @@ export class PresenceManager {
       this.isInitialized = true;
     } catch (error) {
       console.error('Error initializing presence:', error);
-      throw error;
+      await this.reconnect();
     }
   }
 
@@ -77,6 +81,14 @@ export class PresenceManager {
       console.log(`Device status updated to ${status}`);
     } catch (error) {
       console.error('Error updating device status:', error);
+      this.missedHeartbeats++;
+      
+      if (this.missedHeartbeats >= this.MAX_MISSED_HEARTBEATS) {
+        console.log('Too many missed heartbeats, marking device as offline');
+        await this.deviceStatusManager.updateStatus(this.deviceToken, 'offline');
+        this.lastStatus = 'offline';
+        await this.reconnect();
+      }
     }
   }
 
@@ -85,17 +97,24 @@ export class PresenceManager {
 
     try {
       await this.presenceChannelManager.track('online');
+      this.missedHeartbeats = 0;
     } catch (error) {
       console.error('Error updating presence:', error);
-      // Attempt to reconnect on error
-      await this.reconnect();
+      this.missedHeartbeats++;
+      
+      if (this.missedHeartbeats >= this.MAX_MISSED_HEARTBEATS) {
+        console.log('Too many missed heartbeats, attempting to reconnect...');
+        await this.reconnect();
+      }
     }
   }
 
   private async reconnect(): Promise<void> {
     console.log('Attempting to reconnect presence channel...');
     if (this.presenceChannelManager) {
-      await this.presenceChannelManager.setup();
+      await this.cleanup();
+      await new Promise(resolve => setTimeout(resolve, this.config.reconnectDelay));
+      await this.initialize(this.deviceToken!);
     }
   }
 
@@ -128,6 +147,7 @@ export class PresenceManager {
     this.presenceChannelManager = null;
     this.isInitialized = false;
     this.lastStatus = 'offline';
+    this.missedHeartbeats = 0;
     console.log('Presence cleanup completed');
   }
 }
