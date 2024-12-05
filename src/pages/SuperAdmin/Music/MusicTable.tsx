@@ -109,6 +109,8 @@ export function MusicTable({
     bunny_id: song.bunny_id
   }));
 
+  const visibleSongs = songs.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <div className="border rounded-lg">
@@ -132,7 +134,7 @@ export function MusicTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {songs.slice(0, itemsPerPage).map((song) => (
+                {visibleSongs.map((song) => (
                   <SongTableRow
                     key={song.id}
                     song={song}
@@ -156,7 +158,7 @@ export function MusicTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={startIndex}
+        startIndex={startIndex + 1}
         endIndex={endIndex}
         totalItems={totalCount}
       />
