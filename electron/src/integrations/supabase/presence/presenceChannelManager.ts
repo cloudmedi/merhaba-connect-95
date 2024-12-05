@@ -8,6 +8,8 @@ export class PresenceChannelManager {
   private readonly MIN_TRACK_INTERVAL = 1000; // 1 saniye minimum izleme aralığı
   private currentState: 'online' | 'offline' = 'offline';
   private stateUpdateTimeout: NodeJS.Timeout | null = null;
+  private lastHeartbeatTime: number = Date.now();
+  private readonly OFFLINE_THRESHOLD = 10000; // 10 saniye eşiği
 
   constructor(
     private supabase: SupabaseClient,
@@ -57,6 +59,7 @@ export class PresenceChannelManager {
               timestamp: new Date().toISOString()
             });
             this.handleStateChange('online');
+            this.lastHeartbeatTime = Date.now(); // Join olayında heartbeat zamanını güncelle
           }
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
@@ -66,8 +69,15 @@ export class PresenceChannelManager {
               leftPresences,
               timestamp: new Date().toISOString()
             });
-            // Leave olayını hemen işleme alma, biraz bekle
-            this.debouncedStateChange('offline');
+            
+            // Leave olayını sadece son heartbeat'ten belirli bir süre geçtiyse işle
+            const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatTime;
+            if (timeSinceLastHeartbeat > this.OFFLINE_THRESHOLD) {
+              console.log('Device is truly offline - no heartbeat for:', timeSinceLastHeartbeat, 'ms');
+              this.handleStateChange('offline');
+            } else {
+              console.log('Ignoring leave event - recent heartbeat detected:', timeSinceLastHeartbeat, 'ms ago');
+            }
           }
         });
 
@@ -81,7 +91,10 @@ export class PresenceChannelManager {
           await this.track('online');
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           console.log('Channel closed or error occurred:', status);
-          this.handleStateChange('offline');
+          const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatTime;
+          if (timeSinceLastHeartbeat > this.OFFLINE_THRESHOLD) {
+            this.handleStateChange('offline');
+          }
           console.log(`Attempting to reconnect in ${this.config.reconnectDelay}ms`);
           setTimeout(() => this.setup(), this.config.reconnectDelay);
         }
@@ -100,7 +113,17 @@ export class PresenceChannelManager {
   private handleStateSync(state: any): void {
     const presences = state[this.deviceToken] || [];
     const isOnline = presences.length > 0;
-    this.handleStateChange(isOnline ? 'online' : 'offline');
+    
+    if (isOnline) {
+      this.lastHeartbeatTime = Date.now(); // State sync'te online ise heartbeat zamanını güncelle
+    }
+    
+    const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatTime;
+    if (!isOnline && timeSinceLastHeartbeat > this.OFFLINE_THRESHOLD) {
+      this.handleStateChange('offline');
+    } else if (isOnline) {
+      this.handleStateChange('online');
+    }
   }
 
   private handleStateChange(newState: 'online' | 'offline'): void {
@@ -108,16 +131,6 @@ export class PresenceChannelManager {
       this.currentState = newState;
       this.onStatusChange(newState);
     }
-  }
-
-  private debouncedStateChange(newState: 'online' | 'offline'): void {
-    if (this.stateUpdateTimeout) {
-      clearTimeout(this.stateUpdateTimeout);
-    }
-
-    this.stateUpdateTimeout = setTimeout(() => {
-      this.handleStateChange(newState);
-    }, 2000); // 2 saniye bekle
   }
 
   async track(status: 'online' | 'offline'): Promise<void> {
@@ -150,6 +163,9 @@ export class PresenceChannelManager {
       });
       
       this.lastTrackTime = now;
+      if (status === 'online') {
+        this.lastHeartbeatTime = now;
+      }
       console.log('Successfully tracked presence status');
     } catch (error) {
       console.error('Error updating presence:', {
