@@ -22,16 +22,9 @@ export function usePlaylistControl() {
 
   const handlePlayPlaylist = async (playlist: any) => {
     try {
-      console.log('handlePlayPlaylist called with:', {
-        newPlaylistId: playlist.id,
-        currentPlaylistId: currentPlaylist?.id,
-        currentIsPlaying: isPlaying
-      });
-
       // Eğer şu an çalan playlist'e tıklandıysa sadece play/pause durumunu değiştir
       if (currentPlaylist?.id === playlist.id) {
-        console.log('Toggling play state for current playlist');
-        setIsPlaying(!isPlaying);
+        setIsPlaying(prevState => !prevState);
         return;
       }
 
@@ -40,7 +33,6 @@ export function usePlaylistControl() {
       
       // Eğer şarkılar zaten playlist objesi içindeyse
       if (playlist.songs && playlist.songs.length > 0) {
-        console.log('Using existing songs from playlist');
         setCurrentPlaylist({
           id: playlist.id,
           title: playlist.title,
@@ -52,7 +44,6 @@ export function usePlaylistControl() {
       }
 
       // Değilse şarkıları yükle
-      console.log('Fetching songs for playlist:', playlist.id);
       const { data: playlistSongs, error } = await supabase
         .from('playlist_songs')
         .select(`
@@ -90,7 +81,6 @@ export function usePlaylistControl() {
         }))
       };
 
-      console.log('Setting new playlist and starting playback');
       setCurrentPlaylist(formattedPlaylist);
       setIsPlaying(true);
     } catch (error) {
@@ -100,12 +90,10 @@ export function usePlaylistControl() {
   };
 
   const handlePlayStateChange = (playing: boolean) => {
-    console.log('Play state changed:', { newState: playing, currentState: isPlaying });
     setIsPlaying(playing);
   };
 
   const handleClose = () => {
-    console.log('Closing player');
     setCurrentPlaylist(null);
     setIsPlaying(false);
   };
