@@ -101,8 +101,10 @@ export function useAudioPlayer({
       if (!audio.duration) return;
       setProgress((audio.currentTime / audio.duration) * 100);
 
-      // Start transition when near the end of the track
-      if (audio.duration - audio.currentTime <= 0.3 && !isTransitioning.current) {
+      // Start transition when near the end of the track (5 seconds before end)
+      const timeRemaining = audio.duration - audio.currentTime;
+      if (timeRemaining <= 5 && !isTransitioning.current) {
+        console.log('Starting transition, time remaining:', timeRemaining);
         handleNext();
       }
     };
@@ -145,6 +147,7 @@ export function useAudioPlayer({
     if (!nextSong) return;
 
     isTransitioning.current = true;
+    console.log('Starting fade transition to next track');
 
     // Use pre-loaded audio if available, otherwise create new
     const nextAudio = nextAudioRef.current || new Audio(getAudioUrl(nextSong));
@@ -160,6 +163,7 @@ export function useAudioPlayer({
         setCurrentSongIndex(nextIndex);
         onSongChange?.(nextIndex);
         preloadNextTrack(); // Pre-load the next track after transition
+        console.log('Fade transition completed');
       }
     );
   };

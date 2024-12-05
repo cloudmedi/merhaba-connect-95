@@ -18,24 +18,24 @@ export function useFadeEffect() {
   ) => {
     clearFade();
 
-    // Pre-load next audio and start playing before fade
-    nextAudio.volume = 0;
-    
-    // Start playing next track immediately
-    const playPromise = nextAudio.play();
-    if (playPromise) {
-      playPromise.catch(console.error);
+    // Set initial volumes
+    if (currentAudio) {
+      currentAudio.volume = currentVolume / 100;
     }
+    nextAudio.volume = 0;
 
-    // Quick crossfade (300ms) for seamless transition
-    const FADE_DURATION = 300;
+    // Start playing next track
+    nextAudio.play().catch(console.error);
+
+    // Crossfade duration (500ms for smoother transition)
+    const FADE_DURATION = 500;
     const startTime = Date.now();
     
     fadeInterval.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(1, elapsed / FADE_DURATION);
 
-      // Fade out current audio quickly
+      // Fade out current audio
       if (currentAudio) {
         currentAudio.volume = Math.max(0, (1 - progress) * (currentVolume / 100));
       }
@@ -52,7 +52,7 @@ export function useFadeEffect() {
         }
         onFadeComplete();
       }
-    }, 20); // Update every 20ms for smoother transition
+    }, 16); // Update every 16ms (60fps) for smooth transition
   }, []);
 
   return {
