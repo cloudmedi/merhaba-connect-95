@@ -17,6 +17,7 @@ interface UseAudioPlayerProps {
   autoPlay?: boolean;
   onSongChange?: (index: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  currentSongId?: string | number;
 }
 
 export function useAudioPlayer({
@@ -24,7 +25,8 @@ export function useAudioPlayer({
   initialSongIndex = 0,
   autoPlay = false,
   onSongChange,
-  onPlayStateChange
+  onPlayStateChange,
+  currentSongId
 }: UseAudioPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [isPlaying, setIsPlaying] = useState(false);
