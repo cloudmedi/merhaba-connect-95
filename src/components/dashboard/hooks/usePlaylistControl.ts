@@ -28,17 +28,17 @@ export function usePlaylistControl() {
         currentIsPlaying: isPlaying
       });
 
-      // If clicking the currently playing playlist, toggle play/pause
+      // Eğer şu an çalan playlist'e tıklandıysa sadece play/pause durumunu değiştir
       if (currentPlaylist?.id === playlist.id) {
         console.log('Toggling play state for current playlist');
         setIsPlaying(!isPlaying);
         return;
       }
 
-      // Stop current playback before loading new playlist
+      // Yeni bir playlist seçildiyse önce mevcut çalanı durdur
       setIsPlaying(false);
       
-      // If songs are already in the playlist object
+      // Eğer şarkılar zaten playlist objesi içindeyse
       if (playlist.songs && playlist.songs.length > 0) {
         console.log('Using existing songs from playlist');
         setCurrentPlaylist({
@@ -51,7 +51,7 @@ export function usePlaylistControl() {
         return;
       }
 
-      // Otherwise fetch songs
+      // Değilse şarkıları yükle
       console.log('Fetching songs for playlist:', playlist.id);
       const { data: playlistSongs, error } = await supabase
         .from('playlist_songs')
