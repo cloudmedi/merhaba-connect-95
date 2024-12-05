@@ -5,10 +5,10 @@ interface TrackInfoProps {
 }
 
 export function TrackInfo({ artwork, title, artist }: TrackInfoProps) {
-  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+  const defaultArtwork = "/placeholder.svg";
 
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center gap-4">
       <img
         src={artwork || defaultArtwork}
         alt={title}
@@ -18,9 +18,9 @@ export function TrackInfo({ artwork, title, artist }: TrackInfoProps) {
           img.src = defaultArtwork;
         }}
       />
-      <div>
-        <p className="font-medium text-black">{title}</p>
-        <p className="text-sm text-gray-500">{artist}</p>
+      <div className="min-w-0">
+        <p className="font-medium text-white truncate">{title}</p>
+        <p className="text-sm text-white/60 truncate">{artist}</p>
       </div>
     </div>
   );
