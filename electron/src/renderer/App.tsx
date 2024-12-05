@@ -2,14 +2,9 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { initSupabase } from '../integrations/supabase/client';
 import { createDeviceToken } from '../integrations/supabase/deviceToken';
-import { SystemInfo } from './types';
-import { DeviceInfo } from './components/DeviceInfo';
 import { TokenDisplay } from './components/TokenDisplay';
-import { ErrorState } from './components/ErrorState';
-import { LoadingState } from './components/LoadingState';
 
 function App() {
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,17 +26,11 @@ function App() {
           throw new Error('MAC adresi alınamadı');
         }
 
-        // Get or create token for this MAC address
+        // Get or create token
         const tokenData = await createDeviceToken(macAddress);
-        console.log('Token Data:', tokenData);
-        
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
         }
-
-        // Get system info
-        const sysInfo = await window.electronAPI.getSystemInfo();
-        setSystemInfo(sysInfo);
 
         setIsLoading(false);
       } catch (error: any) {
@@ -55,18 +44,34 @@ function App() {
   }, []);
 
   if (error) {
-    return <ErrorState error={error} onRetry={() => window.location.reload()} />;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-red-600 text-xl mb-4">Hata</h2>
+          <p className="text-gray-700">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Tekrar Dene
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-600">Yükleniyor...</div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto">
         <TokenDisplay token={deviceToken} />
-        {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
       </div>
     </div>
   );

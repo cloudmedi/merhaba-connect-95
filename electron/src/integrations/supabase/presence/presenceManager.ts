@@ -10,24 +10,25 @@ export class PresenceManager {
   private presenceChannelManager: PresenceChannelManager | null = null;
   private heartbeatManager: HeartbeatManager | null = null;
   private config: Required<PresenceConfig>;
+  private isInitialized = false;
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     this.config = {
-      heartbeatInterval: config.heartbeatInterval || 5000,
-      reconnectDelay: config.reconnectDelay || 3000
+      heartbeatInterval: config.heartbeatInterval || 30000, // 30 saniyeye çıkarıldı
+      reconnectDelay: config.reconnectDelay || 5000
     };
     this.deviceStatusManager = new DeviceStatusManager(supabase);
   }
 
   async initialize(deviceToken: string): Promise<void> {
+    if (this.isInitialized) return;
+    
     console.log('Initializing PresenceManager for device:', deviceToken);
     this.deviceToken = deviceToken;
 
     try {
       const isValidDevice = await this.deviceStatusManager.verifyDevice(deviceToken);
       if (!isValidDevice) return;
-
-      const deviceChannel = this.deviceStatusManager.setupStatusChannel(deviceToken);
 
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
@@ -40,16 +41,16 @@ export class PresenceManager {
       this.setupCleanup();
 
       // Initial status update
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await this.deviceStatusManager.updateStatus(deviceToken, 'online', systemInfo);
+      await this.deviceStatusManager.updateStatus(deviceToken, 'online');
 
-      // Start heartbeat
+      // Start heartbeat with longer interval
       this.heartbeatManager = new HeartbeatManager(
         this.config.heartbeatInterval,
         () => this.updatePresence()
       );
       await this.heartbeatManager.start();
 
+      this.isInitialized = true;
     } catch (error) {
       console.error('Error initializing presence:', error);
       throw error;
@@ -60,9 +61,8 @@ export class PresenceManager {
     if (!this.deviceToken || !this.presenceChannelManager) return;
 
     try {
-      const systemInfo = await (window as any).electronAPI.getSystemInfo();
-      await this.presenceChannelManager.track('online', systemInfo);
-      await this.deviceStatusManager.updateStatus(this.deviceToken, 'online', systemInfo);
+      await this.presenceChannelManager.track('online');
+      await this.deviceStatusManager.updateStatus(this.deviceToken, 'online');
     } catch (error) {
       console.error('Error updating presence:', error);
     }
@@ -90,6 +90,7 @@ export class PresenceManager {
 
     this.deviceToken = null;
     this.presenceChannelManager = null;
+    this.isInitialized = false;
     console.log('Presence cleanup completed');
   }
 }
