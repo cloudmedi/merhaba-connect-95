@@ -23,7 +23,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
@@ -67,27 +66,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
     }
   };
 
-  const checkDownloadProgress = async (songIds: string[]) => {
-    const interval = setInterval(async () => {
-      const newProgress: { [key: string]: number } = {};
-      let allCompleted = true;
-
-      for (const songId of songIds) {
-        const progress = await window.electronAPI.getDownloadProgress(songId);
-        newProgress[songId] = progress;
-        if (progress < 100) allCompleted = false;
-      }
-
-      setDownloadProgress(newProgress);
-
-      if (allCompleted) {
-        clearInterval(interval);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  };
-
   const handlePush = async () => {
     if (selectedDevices.length === 0) {
       toast.error("Lütfen en az bir cihaz seçin");
@@ -126,9 +104,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
           : ps.songs.file_url
       }));
 
-      const songIds = songs.map((s: any) => s.id);
-      const cleanup = await checkDownloadProgress(songIds);
-
       // Send playlist to each selected device
       for (const deviceId of selectedDevices) {
         console.log(`Sending playlist to device ${deviceId}`);
@@ -145,7 +120,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
         }
       }
 
-      cleanup();
       toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
       setSelectedDevices([]);
@@ -154,7 +128,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
       toast.error("Playlist gönderilirken bir hata oluştu");
     } finally {
       setIsSyncing(false);
-      setDownloadProgress({});
     }
   };
 
@@ -247,26 +220,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
               </div>
             )}
           </ScrollArea>
-
-          {Object.keys(downloadProgress).length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">İndirme Durumu:</p>
-              {Object.entries(downloadProgress).map(([songId, progress]) => (
-                <div key={songId} className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Şarkı ID: {songId}</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-500">
