@@ -1,30 +1,21 @@
 import { Music2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useInView } from "react-intersection-observer";
-import { useEffect } from "react";
 
-interface PlaylistSong {
-  song_id: string;
+interface Song {
+  id: string | number;
   title: string;
   artist: string;
-  duration: number;
-  file_url: string;
-  bunny_id?: string;
-  position: number;
-  playlist_id: string;
-  artwork_url?: string;
+  duration: string | number;
+  file_url?: string;
 }
 
 interface SongListProps {
-  songs: PlaylistSong[];
-  onSongSelect?: (song: PlaylistSong) => void;
+  songs: Song[];
+  onSongSelect?: (song: Song) => void;
   currentSongId?: string | number;
   currentSongIndex?: number;
   onCurrentSongIndexChange?: (index: number) => void;
   isPlaying?: boolean;
-  hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
-  fetchNextPage?: () => void;
 }
 
 export function SongList({ 
@@ -33,29 +24,18 @@ export function SongList({
   currentSongId,
   currentSongIndex,
   onCurrentSongIndexChange,
-  isPlaying = false,
-  hasNextPage,
-  isFetchingNextPage,
-  fetchNextPage
+  isPlaying = false
 }: SongListProps) {
-  const { ref, inView } = useInView({
-    threshold: 0.5
-  });
-
-  useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage && fetchNextPage) {
-      console.log('Loading more songs...'); // Debug log
-      fetchNextPage();
+  const formatDuration = (duration: string | number) => {
+    if (typeof duration === 'number') {
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const formatDuration = (duration: number) => {
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return duration;
   };
 
-  const handleSongClick = (song: PlaylistSong, index: number) => {
+  const handleSongClick = (song: Song, index: number) => {
     onSongSelect?.(song);
     onCurrentSongIndexChange?.(index);
   };
@@ -72,10 +52,10 @@ export function SongList({
       <ScrollArea className="h-[calc(100vh-400px)]">
         {songs.map((song, index) => (
           <div 
-            key={song.song_id}
+            key={song.id}
             onClick={() => handleSongClick(song, index)}
             className={`grid grid-cols-12 py-4 text-sm hover:bg-gray-50/50 transition-all duration-200 items-center border-b border-gray-100 cursor-pointer group ${
-              (currentSongId === song.song_id || currentSongIndex === index) 
+              (currentSongId === song.id || currentSongIndex === index) 
                 ? 'bg-purple-50/50' 
                 : ''
             }`}
@@ -86,13 +66,13 @@ export function SongList({
             <div className="col-span-5 font-medium text-gray-900 flex items-center gap-3">
               <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center group-hover:bg-purple-100 transition-colors">
                 <Music2 className={`w-4 h-4 ${
-                  currentSongId === song.song_id 
+                  currentSongId === song.id 
                     ? 'text-purple-600' 
                     : 'text-gray-400 group-hover:text-purple-600'
                 }`} />
               </div>
               <span className={`truncate ${
-                currentSongId === song.song_id 
+                currentSongId === song.id 
                   ? 'text-purple-600' 
                   : 'group-hover:text-purple-600'
               }`}>
@@ -107,15 +87,6 @@ export function SongList({
             </div>
           </div>
         ))}
-
-        {/* Infinite scroll trigger */}
-        <div ref={ref} className="py-4 text-center">
-          {isFetchingNextPage ? (
-            <div className="text-sm text-gray-500">Loading more songs...</div>
-          ) : hasNextPage ? (
-            <div className="text-sm text-gray-400">Scroll for more songs</div>
-          ) : null}
-        </div>
       </ScrollArea>
     </div>
   );
