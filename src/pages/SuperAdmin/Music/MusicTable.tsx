@@ -58,6 +58,7 @@ export function MusicTable({
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
   const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -95,6 +96,8 @@ export function MusicTable({
     setCurrentSongIndex(songIndex);
     setCurrentlyPlaying(song);
     setIsPlaying(true);
+    // When playing from the music table, we'll create a temporary playlist
+    setCurrentPlaylistId('temp-playlist');
   };
 
   const handleSongChange = (index: number) => {
@@ -164,11 +167,11 @@ export function MusicTable({
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
+            id: currentPlaylistId,
             title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
             songs: transformedSongs
           }}
-          initialSongIndex={currentSongIndex}
           onClose={() => {
             setCurrentlyPlaying(null);
             setIsPlaying(false);

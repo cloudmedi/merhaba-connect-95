@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAudioContext } from './useAudioContext';
-import { useAudioSource } from './useAudioSource';
+import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 
 interface UseAudioPlayerProps {
@@ -11,6 +9,7 @@ interface UseAudioPlayerProps {
       artist: string;
       duration: string | number;
       file_url: string;
+      bunny_id?: string;
     }>;
   };
   initialSongIndex?: number;
@@ -23,90 +22,123 @@ interface UseAudioPlayerProps {
 export function useAudioPlayer({
   playlist,
   initialSongIndex = 0,
-  autoPlay = false,
+  autoPlay = true,
   onSongChange,
   onPlayStateChange,
   currentSongId
 }: UseAudioPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
-
-  const audioContext = useAudioContext();
-  const currentSong = playlist.songs?.[currentSongIndex];
-
-  const { play, pause, setVolume: setSourceVolume, duration } = useAudioSource({
-    url: currentSong?.file_url || '',
-    context: audioContext,
-    onEnded: () => {
-      handleNext();
-    }
-  });
+  const [audio] = useState(new Audio());
 
   useEffect(() => {
+    if (!playlist.songs || playlist.songs.length === 0) {
+      toast.error("No songs available in this playlist");
+      return;
+    }
+
+    const currentSong = playlist.songs[currentSongIndex];
+    audio.src = getAudioUrl(currentSong);
+    
     if (autoPlay) {
-      handlePlayStateChange(true);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
     }
-  }, [autoPlay]);
+
+    const handleTimeUpdate = () => {
+      setProgress((audio.currentTime / audio.duration) * 100);
+    };
+
+    const handleEnded = () => {
+      handleNext();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
+      audio.src = '';
+    };
+  }, [playlist.songs, currentSongIndex]);
 
   useEffect(() => {
-    // Update volume when mute state changes
-    setSourceVolume(isMuted ? 0 : volume / 100);
+    audio.volume = isMuted ? 0 : volume / 100;
   }, [volume, isMuted]);
 
-  const handlePlayStateChange = useCallback((playing: boolean) => {
-    console.log('Play state change:', { playing });
-    
-    if (playing) {
-      play();
-    } else {
-      pause();
+  useEffect(() => {
+    if (currentSongId && playlist.songs) {
+      const index = playlist.songs.findIndex(song => song.id === currentSongId);
+      if (index !== -1) {
+        setCurrentSongIndex(index);
+      }
     }
+  }, [currentSongId, playlist.songs]);
 
-    setIsPlaying(playing);
-    onPlayStateChange?.(playing);
-  }, [play, pause, onPlayStateChange]);
+  useEffect(() => {
+    if (isPlaying) {
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
+    } else {
+      audio.pause();
+    }
+    onPlayStateChange?.(isPlaying);
+  }, [isPlaying]);
 
-  const handleNext = useCallback(() => {
-    if (!playlist.songs || playlist.songs.length === 0) return;
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
 
-    const nextIndex = (currentSongIndex + 1) % playlist.songs.length;
-    console.log('Playing next song:', { currentIndex: currentSongIndex, nextIndex });
-    
+  const handleNext = () => {
+    if (!playlist.songs) return;
+    const nextIndex = currentSongIndex === playlist.songs.length - 1 ? 0 : currentSongIndex + 1;
     setCurrentSongIndex(nextIndex);
     onSongChange?.(nextIndex);
-  }, [currentSongIndex, playlist.songs, onSongChange]);
+  };
 
-  const handlePrevious = useCallback(() => {
-    if (!playlist.songs || playlist.songs.length === 0) return;
-
+  const handlePrevious = () => {
+    if (!playlist.songs) return;
     const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
-    console.log('Playing previous song:', { currentIndex: currentSongIndex, prevIndex });
-    
     setCurrentSongIndex(prevIndex);
     onSongChange?.(prevIndex);
-  }, [currentSongIndex, playlist.songs, onSongChange]);
+  };
 
-  const handleProgressChange = useCallback((values: number[]) => {
+  const handleProgressChange = (values: number[]) => {
     const [value] = values;
+    const time = (value / 100) * audio.duration;
+    audio.currentTime = time;
     setProgress(value);
-    // Web Audio API doesn't support seeking directly, we'll need to reload the audio
-    // This is a limitation of the current implementation
-  }, []);
+  };
 
-  const handleVolumeChange = useCallback((newVolume: number) => {
-    setVolume(newVolume);
-    if (!isMuted) {
-      setSourceVolume(newVolume / 100);
+  const handleVolumeChange = (values: number[]) => {
+    setVolume(values[0]);
+    setIsMuted(values[0] === 0);
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (isMuted) {
+      setVolume(100);
     }
-  }, [isMuted]);
+  };
 
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-    setSourceVolume(isMuted ? volume / 100 : 0);
-  }, [volume, isMuted]);
+  const getAudioUrl = (song: any) => {
+    if (!song.file_url) return '';
+    if (song.file_url.startsWith('http')) return song.file_url;
+    if (song.bunny_id) return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
 
   return {
     currentSongIndex,
@@ -114,12 +146,12 @@ export function useAudioPlayer({
     isMuted,
     isPlaying,
     progress,
-    handlePlayStateChange,
+    handlePlayPause,
     handleNext,
     handlePrevious,
     handleProgressChange,
     handleVolumeChange,
     toggleMute,
-    getCurrentSong: () => currentSong
+    getCurrentSong: () => playlist.songs?.[currentSongIndex]
   };
 }
