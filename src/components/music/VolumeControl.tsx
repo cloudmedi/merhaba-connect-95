@@ -15,12 +15,6 @@ export function VolumeControl({
   onVolumeChange,
   onMuteToggle
 }: VolumeControlProps) {
-  const handleVolumeChange = (values: number[]) => {
-    // Extract the first value from the array since we only need one value
-    const [value] = values;
-    onVolumeChange(values);
-  };
-
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -38,7 +32,7 @@ export function VolumeControl({
       <div className="group relative w-[100px]">
         <Slider
           value={[isMuted ? 0 : volume]}
-          onValueChange={handleVolumeChange}
+          onValueChange={onVolumeChange}
           max={100}
           step={1}
           className="relative"
