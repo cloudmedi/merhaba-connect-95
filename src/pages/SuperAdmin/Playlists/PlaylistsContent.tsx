@@ -8,11 +8,9 @@ import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { Database } from "@/integrations/supabase/types";
 
-interface Genre {
-  id: string;
-  name: string;
-}
+type Genre = Database['public']['Tables']['genres']['Row'];
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
