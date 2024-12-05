@@ -2,8 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { createDeviceToken } from './deviceToken';
 import { PresenceManager } from './presence/presenceManager';
 
-let presenceManager: PresenceManager;
+let presenceManager: PresenceManager | null = null;
 let currentDeviceToken: string | null = null;
+let isInitializing = false;
 
 // Create a single instance of the Supabase client
 const supabase = createClient(
@@ -12,14 +13,22 @@ const supabase = createClient(
   {
     auth: {
       persistSession: true,
-      detectSessionInUrl: false
+      detectSessionInUrl: false,
+      flowType: 'implicit'
     }
   }
 );
 
 async function initSupabase() {
+  if (isInitializing) {
+    console.log('Initialization already in progress, skipping...');
+    return supabase;
+  }
+
   try {
+    isInitializing = true;
     console.log('Starting Supabase initialization...');
+    
     const envVars = await (window as any).electronAPI.getEnvVars();
     
     if (!envVars.VITE_SUPABASE_URL || !envVars.VITE_SUPABASE_ANON_KEY) {
@@ -38,15 +47,13 @@ async function initSupabase() {
       console.log('Getting MAC address...');
       const macAddress = await (window as any).electronAPI.getMacAddress();
       if (!macAddress) {
-        console.error('Failed to get MAC address');
-        return supabase;
+        throw new Error('Failed to get MAC address');
       }
 
       console.log('Creating device token with MAC address:', macAddress);
       const tokenData = await createDeviceToken(macAddress);
       if (!tokenData) {
-        console.error('Failed to create/get device token');
-        return supabase;
+        throw new Error('Failed to create/get device token');
       }
 
       console.log('Device token created/retrieved:', tokenData);
@@ -63,7 +70,18 @@ async function initSupabase() {
   } catch (error) {
     console.error('Supabase initialization error:', error);
     throw error;
+  } finally {
+    isInitializing = false;
   }
 }
 
-export { supabase, initSupabase };
+// Clean up function to handle cleanup of resources
+async function cleanup() {
+  if (presenceManager) {
+    await presenceManager.cleanup();
+    presenceManager = null;
+  }
+  currentDeviceToken = null;
+}
+
+export { supabase, initSupabase, cleanup };
