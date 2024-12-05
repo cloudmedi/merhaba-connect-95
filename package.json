@@ -86,7 +86,7 @@
     "rimraf": "^6.0.1",
     "sonner": "^1.7.0",
     "systeminformation": "^5.23.5",
-    "tailwind-merge": "^2.5.2",
+    "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.3",
     "vaul": "^0.9.3",
