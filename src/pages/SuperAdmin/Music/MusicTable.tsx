@@ -97,6 +97,7 @@ export function MusicTable({
     setCurrentlyPlaying(songs[index]);
   };
 
+  // Pagination calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
@@ -109,16 +110,17 @@ export function MusicTable({
     bunny_id: song.bunny_id
   }));
 
+  // Only show songs for the current page
   const visibleSongs = songs.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-4 bg-white rounded-lg shadow">
       <div className="border rounded-lg">
         <div className="relative">
-          <ScrollArea className="h-[calc(100vh-280px)] rounded-md border" type="always">
+          <ScrollArea className="h-[calc(100vh-280px)] rounded-md" type="always">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-b">
+                <TableRow className="hover:bg-transparent">
                   <TableHead className="w-[30px] bg-white sticky top-0 z-20">
                     <Checkbox
                       checked={selectedSongs.length === songs.length}
