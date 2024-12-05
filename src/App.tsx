@@ -14,18 +14,27 @@ import SuperAdmin from "./pages/SuperAdmin";
 import Announcements from "./pages/Manager/Announcements";
 import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Lazy load the PlaylistDetail component
 const PlaylistDetail = lazy(() => import("./pages/Manager/Playlists/PlaylistDetail").then(module => ({
   default: module.PlaylistDetail
 })));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Index />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/manager/login",
@@ -34,6 +43,7 @@ const router = createBrowserRouter([
         <ManagerLogin />
       </AuthProvider>
     ),
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/super-admin/login",
@@ -42,6 +52,7 @@ const router = createBrowserRouter([
         <SuperAdminLogin />
       </AuthProvider>
     ),
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/manager",
@@ -50,6 +61,7 @@ const router = createBrowserRouter([
         <Manager />
       </AuthProvider>
     ),
+    errorElement: <ErrorBoundary />,
     children: [
       {
         path: "devices",
@@ -88,6 +100,7 @@ const router = createBrowserRouter([
         <SuperAdmin />
       </AuthProvider>
     ),
+    errorElement: <ErrorBoundary />
   },
 ]);
 
