@@ -3,11 +3,16 @@ import './App.css';
 import { initSupabase } from '../integrations/supabase/client';
 import { createDeviceToken } from '../integrations/supabase/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
+import { SystemInfo } from './components/SystemInfo';
+import { PlaylistSync } from './components/PlaylistSync';
+import { LoadingState } from './components/LoadingState';
+import { toast } from 'sonner';
 
 function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [systemInfo, setSystemInfo] = useState<any>(null);
 
   useEffect(() => {
     const initialize = async () => {
@@ -26,16 +31,23 @@ function App() {
           throw new Error('MAC adresi alınamadı');
         }
 
+        // Get system info
+        const sysInfo = await window.electronAPI.getSystemInfo();
+        setSystemInfo(sysInfo);
+        console.log('System Info:', sysInfo);
+
         // Get or create token
         const tokenData = await createDeviceToken(macAddress);
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
+          toast.success('Cihaz başarıyla kaydedildi');
         }
 
         setIsLoading(false);
       } catch (error: any) {
         console.error('Initialization error:', error);
         setError(error.message || 'Bir hata oluştu');
+        toast.error('Cihaz kaydı başarısız: ' + error.message);
         setIsLoading(false);
       }
     };
@@ -61,17 +73,15 @@ function App() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Yükleniyor...</div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-8">
         <TokenDisplay token={deviceToken} />
+        <SystemInfo info={systemInfo} />
+        <PlaylistSync />
       </div>
     </div>
   );
