@@ -1,7 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AudioController } from '@/components/music/AudioController';
 
 export interface PlaylistWithSongs {
   id: string;
@@ -20,9 +19,8 @@ export interface PlaylistWithSongs {
 export function usePlaylistControl() {
   const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistWithSongs | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioController] = useState(() => new AudioController());
 
-  const handlePlayPlaylist = useCallback(async (playlist: any) => {
+  const handlePlayPlaylist = async (playlist: any) => {
     try {
       console.log('handlePlayPlaylist called with:', {
         newPlaylistId: playlist.id,
@@ -30,21 +28,14 @@ export function usePlaylistControl() {
         currentIsPlaying: isPlaying
       });
 
-      // If clicking the currently playing playlist, toggle play/pause
+      // Aynı playlist'e tıklandığında sadece play/pause toggle
       if (currentPlaylist?.id === playlist.id) {
         console.log('Toggling play state for current playlist');
-        if (isPlaying) {
-          audioController.pause();
-          setIsPlaying(false);
-        } else {
-          const success = await audioController.play();
-          setIsPlaying(success);
-        }
+        setIsPlaying(prev => !prev);
         return;
       }
 
-      // Stop current playback
-      audioController.pause();
+      // Yeni playlist seçildiğinde mevcut çalanı durdur
       setIsPlaying(false);
       
       let playlistToSet: PlaylistWithSongs;
@@ -99,43 +90,24 @@ export function usePlaylistControl() {
 
       console.log('Setting new playlist and starting playback');
       setCurrentPlaylist(playlistToSet);
-
-      // Set the audio source for the first song
-      if (playlistToSet.songs[0]) {
-        const songUrl = getAudioUrl(playlistToSet.songs[0]);
-        audioController.setSource(songUrl);
-        const success = await audioController.play();
-        setIsPlaying(success);
-      }
+      // Kısa bir gecikme ile play state'ini güncelle
+      setTimeout(() => setIsPlaying(true), 50);
       
     } catch (error) {
       console.error('Error handling playlist:', error);
       toast.error("Failed to load playlist");
     }
-  }, [currentPlaylist, isPlaying, audioController]);
+  };
 
-  const handlePlayStateChange = useCallback((playing: boolean) => {
+  const handlePlayStateChange = (playing: boolean) => {
     console.log('Play state changed:', { newState: playing, currentState: isPlaying });
-    if (playing) {
-      audioController.play().then(success => setIsPlaying(success));
-    } else {
-      audioController.pause();
-      setIsPlaying(false);
-    }
-  }, [audioController]);
+    setIsPlaying(playing);
+  };
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     console.log('Closing player');
-    audioController.cleanup();
     setCurrentPlaylist(null);
     setIsPlaying(false);
-  }, [audioController]);
-
-  const getAudioUrl = (song: any) => {
-    if (!song.file_url) return '';
-    if (song.file_url.startsWith('http')) return song.file_url;
-    if (song.bunny_id) return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
   };
 
   return {
