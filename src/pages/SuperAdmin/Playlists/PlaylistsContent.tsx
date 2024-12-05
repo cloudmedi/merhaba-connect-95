@@ -10,20 +10,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Database } from "@/integrations/supabase/types";
 
+type PlaylistRow = Database['public']['Tables']['playlists']['Row'];
 type Genre = Database['public']['Tables']['genres']['Row'];
-type Playlist = Database['public']['Tables']['playlists']['Row'] & {
-  company?: { name: string } | null;
-  profiles?: { first_name: string; last_name: string } | null;
-  genres?: { name: string } | null;
-};
+
+interface PlaylistWithRelations extends PlaylistRow {
+  company: { name: string } | null;
+  profiles: { first_name: string; last_name: string } | null;
+  genres: { name: string } | null;
+}
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("all");
-  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistWithRelations | null>(null);
   const navigate = useNavigate();
 
-  const { data: playlists = [], isLoading: isPlaylistsLoading } = useQuery<Playlist[]>({
+  const { data: playlists = [], isLoading: isPlaylistsLoading } = useQuery<PlaylistWithRelations[]>({
     queryKey: ['playlists'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,7 +38,7 @@ export function PlaylistsContent() {
         `);
 
       if (error) throw error;
-      return data;
+      return data as PlaylistWithRelations[];
     }
   });
 
@@ -82,7 +84,7 @@ export function PlaylistsContent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Genres</SelectItem>
-              {genres?.map((genre) => (
+              {genres.map((genre) => (
                 <SelectItem key={genre.id} value={genre.id}>
                   {genre.name}
                 </SelectItem>
@@ -108,7 +110,7 @@ export function PlaylistsContent() {
           mood: "Various"
         }))}
         isLoading={isPlaylistsLoading}
-        onPlay={(playlist) => setCurrentPlaylist(playlist)}
+        onPlay={setCurrentPlaylist}
       />
 
       {currentPlaylist && (
