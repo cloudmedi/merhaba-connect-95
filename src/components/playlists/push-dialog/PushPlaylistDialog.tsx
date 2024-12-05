@@ -19,6 +19,7 @@ interface PushPlaylistDialogProps {
 export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId }: PushPlaylistDialogProps) {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
@@ -70,6 +71,9 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
     }
 
     try {
+      setIsSyncing(true);
+      toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
+
       // Get playlist details with songs
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
@@ -92,19 +96,25 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
 
       // Send playlist to each selected device
       for (const deviceId of selectedDevices) {
-        await window.electronAPI.syncPlaylist({
+        const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
           name: playlist.name,
           songs: playlist.playlist_songs.map((ps: any) => ps.songs)
         });
+
+        if (!result.success) {
+          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
+        }
       }
 
-      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderildi`);
+      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
       setSelectedDevices([]);
     } catch (error: any) {
       console.error('Error pushing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
