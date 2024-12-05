@@ -23,34 +23,14 @@ export class WebSocketManager {
       return;
     }
 
-    this.connect(deviceId);
+    // Get device token from database and connect
+    this.initializeConnection();
   }
 
-  private formatMacAddress(mac: string): string {
-    // Remove any colons or other separators and convert to lowercase
-    const cleanMac = mac.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    
-    // Add colons every two characters
-    const formattedMac = cleanMac.match(/.{2}/g)?.join(':') || cleanMac;
-    
-    console.log('Original MAC:', mac);
-    console.log('Formatted MAC:', formattedMac);
-    
-    return formattedMac;
-  }
-
-  private async connect(deviceId: string) {
+  private async initializeConnection() {
     try {
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
-        return;
-      }
-
-      // Format MAC address to match database format
-      const formattedMacAddress = this.formatMacAddress(deviceId);
-
-      // Get device token using formatted MAC address
-      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?mac_address=eq.${formattedMacAddress}&status=eq.active`, {
+      // Get device token directly from the database
+      const { data: deviceTokens } = await fetch(`${this.supabaseUrl}/rest/v1/device_tokens?status=eq.active`, {
         headers: {
           'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
           'Authorization': `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
@@ -59,20 +39,33 @@ export class WebSocketManager {
 
       const deviceToken = deviceTokens?.[0]?.token;
       if (!deviceToken) {
-        console.error('No active device token found for MAC address:', formattedMacAddress);
+        console.error('No active device token found');
         return;
       }
 
-      console.log('Found active token for device:', deviceToken);
+      console.log('Found active token:', deviceToken);
+      this.connectWithToken(deviceToken);
 
-      // Construct WebSocket URL with device token instead of deviceId
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
+    } catch (error) {
+      console.error('Error getting device token:', error);
+    }
+  }
+
+  private async connectWithToken(token: string) {
+    try {
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('Max reconnection attempts reached');
+        return;
+      }
+
+      // Construct WebSocket URL with device token
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened with token:', deviceToken);
+        console.log('WebSocket connection opened with token:', token);
         this.reconnectAttempts = 0;
       });
 
@@ -89,7 +82,7 @@ export class WebSocketManager {
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'error',
                 payload: result.success ? {
-                  token: deviceToken,
+                  token: token,
                   playlistId: playlist.id
                 } : result.error
               }));
@@ -109,7 +102,7 @@ export class WebSocketManager {
         this.reconnectAttempts++;
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connect(deviceId), this.reconnectDelay);
+          setTimeout(() => this.connectWithToken(token), this.reconnectDelay);
         }
       });
     } catch (error) {
@@ -117,7 +110,7 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connect(deviceId), this.reconnectDelay);
+        setTimeout(() => this.connectWithToken(token), this.reconnectDelay);
       }
     }
   }
