@@ -43,7 +43,6 @@ export function MusicPlayer({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [previousPlaylistId, setPreviousPlaylistId] = useState<string | undefined>(playlist.id);
   
-  // Reset player state when playlist changes
   useEffect(() => {
     if (playlist.id && playlist.id !== previousPlaylistId) {
       handlePlaylistChange();
@@ -51,7 +50,6 @@ export function MusicPlayer({
     setPreviousPlaylistId(playlist.id);
   }, [playlist.id]);
 
-  // Update current song index when currentSongId changes
   useEffect(() => {
     if (currentSongId && playlist.songs) {
       const index = playlist.songs.findIndex(song => song.id === currentSongId);
@@ -61,12 +59,10 @@ export function MusicPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
-  // Update current song index when initialSongIndex changes
   useEffect(() => {
     setCurrentSongIndex(initialSongIndex);
   }, [initialSongIndex]);
 
-  // Notify parent component of play state changes
   useEffect(() => {
     onPlayStateChange?.(isPlaying);
   }, [isPlaying, onPlayStateChange]);

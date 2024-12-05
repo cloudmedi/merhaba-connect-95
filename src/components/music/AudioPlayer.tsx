@@ -43,6 +43,7 @@ export function AudioPlayer({
 
     const handleEnded = () => {
       setIsPlaying(false);
+      onPlayStateChange?.(false);
       setProgress(0);
       onNext?.();
     };
