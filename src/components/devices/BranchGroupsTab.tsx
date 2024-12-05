@@ -39,8 +39,9 @@ export function BranchGroupsTab() {
     fetchGroups();
   }, []);
 
-  // Set up real-time subscription
+  // Set up real-time subscription with enhanced logging
   useEffect(() => {
+    console.log('Setting up real-time subscription...');
     const channel = supabase
       .channel('branch_groups_changes')
       .on(
@@ -52,12 +53,32 @@ export function BranchGroupsTab() {
         },
         (payload) => {
           console.log('Received real-time update:', payload);
-          fetchGroups();
+          
+          // Handle different types of changes
+          if (payload.eventType === 'DELETE') {
+            console.log('Handling delete event for group:', payload.old.id);
+            setGroups(prevGroups => prevGroups.filter(group => group.id !== payload.old.id));
+            
+          } else if (payload.eventType === 'INSERT') {
+            console.log('Handling insert event for group:', payload.new);
+            setGroups(prevGroups => [payload.new, ...prevGroups]);
+            
+          } else if (payload.eventType === 'UPDATE') {
+            console.log('Handling update event for group:', payload.new);
+            setGroups(prevGroups => 
+              prevGroups.map(group => 
+                group.id === payload.new.id ? payload.new : group
+              )
+            );
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
   }, []);

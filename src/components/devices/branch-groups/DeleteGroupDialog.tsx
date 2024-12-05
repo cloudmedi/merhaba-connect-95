@@ -54,13 +54,9 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
       }
 
       console.log('Successfully deleted group');
-
-      // Call onDeleted and wait for it to complete
-      await onDeleted();
-      console.log('Successfully refreshed groups list');
-
       toast.success("Grup başarıyla silindi");
       onClose();
+      
     } catch (error) {
       console.error('Error in delete operation:', error);
       toast.error(error instanceof Error ? error.message : "Grup silinirken bir hata oluştu");
