@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { OfflinePlaylistManager } from './OfflinePlaylistManager';
 import { FileSystemManager } from './FileSystemManager';
 import { DownloadManager } from './DownloadManager';
+import { supabase } from '@supabase/supabase-js';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -23,25 +24,47 @@ export class WebSocketManager {
       return;
     }
 
-    console.log('Initializing WebSocket connection with device token:', deviceToken);
-    this.connect(deviceToken);
+    // Önce device_tokens tablosundan gerçek token'ı alalım
+    this.initializeConnection(deviceToken);
   }
 
-  private async connect(deviceToken: string) {
+  private async initializeConnection(deviceToken: string) {
+    try {
+      // Device token'ı doğrula ve aktif token'ı al
+      const { data: tokenData, error } = await supabase
+        .from('device_tokens')
+        .select('token')
+        .eq('mac_address', deviceToken)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !tokenData) {
+        console.error('Could not find active device token:', error);
+        return;
+      }
+
+      console.log('Found active device token:', tokenData.token);
+      this.connect(tokenData.token); // Gerçek token ile bağlan
+    } catch (error) {
+      console.error('Error initializing connection:', error);
+    }
+  }
+
+  private async connect(realToken: string) {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
         return;
       }
 
-      // Use the actual device token from device_tokens table for WebSocket connection
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceToken}`;
+      // Artık gerçek device token'ı kullanıyoruz
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${realToken}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened successfully with device token:', deviceToken);
+        console.log('WebSocket connection opened successfully with token:', realToken);
         this.reconnectAttempts = 0;
       });
 
@@ -58,7 +81,7 @@ export class WebSocketManager {
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'error',
                 payload: result.success ? {
-                  deviceToken,
+                  token: realToken,
                   playlistId: playlist.id
                 } : result.error
               }));
@@ -78,7 +101,7 @@ export class WebSocketManager {
         this.reconnectAttempts++;
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connect(deviceToken), this.reconnectDelay);
+          setTimeout(() => this.connect(realToken), this.reconnectDelay);
         }
       });
     } catch (error) {
@@ -86,7 +109,7 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connect(deviceToken), this.reconnectDelay);
+        setTimeout(() => this.connect(realToken), this.reconnectDelay);
       }
     }
   }
