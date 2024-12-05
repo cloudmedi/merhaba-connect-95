@@ -13,22 +13,60 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
   const startTimeRef = useRef<number>(0);
   const offsetRef = useRef<number>(0);
   const durationRef = useRef<number>(0);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
 
   const getBunnyUrl = (url: string): string => {
     if (!url) return '';
     
     // If it's already a full URL, return it
     if (url.startsWith('http://') || url.startsWith('https://')) {
+      console.log('Using full URL:', url);
       return url;
     }
     
     // If it's a Bunny CDN path without the domain
     if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+      const fullUrl = url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
+      console.log('Converted cloud-media URL:', fullUrl);
+      return fullUrl;
     }
     
     // If it's just the file name/path, add the Bunny CDN domain
-    return `https://cloud-media.b-cdn.net/${url}`;
+    const fullUrl = `https://cloud-media.b-cdn.net/${url}`;
+    console.log('Added CDN domain to URL:', fullUrl);
+    return fullUrl;
+  };
+
+  const createAndConnectNodes = (audioBuffer: AudioBuffer) => {
+    if (!context) {
+      console.error('AudioContext is not available');
+      return null;
+    }
+
+    try {
+      const source = context.createBufferSource();
+      const gainNode = context.createGain();
+
+      source.buffer = audioBuffer;
+      source.connect(gainNode);
+      gainNode.connect(context.destination);
+
+      source.onended = () => {
+        console.log('Audio playback ended naturally');
+        onEnded?.();
+      };
+
+      sourceRef.current = source;
+      gainNodeRef.current = gainNode;
+      audioBufferRef.current = audioBuffer;
+
+      console.log('Audio nodes created and connected successfully');
+      return source;
+    } catch (error) {
+      console.error('Error creating audio nodes:', error);
+      toast.error("Error setting up audio playback");
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -41,22 +79,29 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
       }
 
       try {
-        const fullUrl = getBunnyUrl(url);
-        console.log('Loading audio from:', fullUrl);
-        
-        // Resume AudioContext if it's suspended
+        // Resume AudioContext if suspended
         if (context.state === 'suspended') {
+          console.log('Resuming suspended AudioContext...');
           await context.resume();
-          console.log('AudioContext resumed');
+          console.log('AudioContext resumed successfully');
         }
+
+        const fullUrl = getBunnyUrl(url);
+        console.log('Fetching audio from:', fullUrl);
 
         const response = await fetch(fullUrl);
         if (!response.ok) {
-          throw new Error(`Failed to load audio file: ${response.statusText}`);
+          throw new Error(`Failed to fetch audio file: ${response.statusText}`);
         }
 
         console.log('Audio file fetched, decoding...');
         const arrayBuffer = await response.arrayBuffer();
+        
+        if (aborted) {
+          console.log('Audio initialization aborted');
+          return;
+        }
+
         const audioBuffer = await context.decodeAudioData(arrayBuffer);
         console.log('Audio decoded successfully:', {
           duration: audioBuffer.duration,
@@ -67,30 +112,15 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
         if (aborted) return;
 
         durationRef.current = audioBuffer.duration;
+        createAndConnectNodes(audioBuffer);
 
-        // Create and connect nodes
-        const source = context.createBufferSource();
-        const gainNode = context.createGain();
-
-        source.buffer = audioBuffer;
-        source.connect(gainNode);
-        gainNode.connect(context.destination);
-
-        source.onended = () => {
-          console.log('Audio playback ended');
-          if (onEnded) onEnded();
-        };
-
-        sourceRef.current = source;
-        gainNodeRef.current = gainNode;
-
-        console.log('Audio source initialized successfully');
       } catch (error) {
-        console.error('Error loading audio:', error);
-        toast.error("Error loading audio file");
+        console.error('Error initializing audio:', error);
+        toast.error("Failed to load audio file");
       }
     };
 
+    console.log('Starting audio initialization...');
     initializeAudio();
 
     return () => {
@@ -107,14 +137,37 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
   }, [url, context, onEnded]);
 
   const play = () => {
-    if (!sourceRef.current || !context) {
-      console.error('Cannot play: Audio source or context not initialized');
+    if (!context) {
+      console.error('Cannot play: AudioContext not available');
+      return;
+    }
+
+    if (context.state === 'suspended') {
+      console.log('Attempting to resume suspended context before playing');
+      context.resume().then(() => {
+        console.log('Context resumed successfully');
+      });
+    }
+
+    if (!audioBufferRef.current) {
+      console.error('Cannot play: Audio buffer not loaded');
       return;
     }
 
     try {
-      console.log('Starting playback:', { offset: offsetRef.current });
-      sourceRef.current.start(0, offsetRef.current);
+      // Create new nodes for each playback
+      const newSource = createAndConnectNodes(audioBufferRef.current);
+      if (!newSource) {
+        throw new Error('Failed to create audio nodes');
+      }
+
+      console.log('Starting playback:', { 
+        offset: offsetRef.current,
+        contextTime: context.currentTime,
+        duration: durationRef.current
+      });
+
+      newSource.start(0, offsetRef.current);
       startTimeRef.current = context.currentTime - offsetRef.current;
       console.log('Playback started successfully');
     } catch (error) {
@@ -132,7 +185,10 @@ export function useAudioSource({ url, context, onEnded }: AudioSourceProps) {
     try {
       sourceRef.current.stop();
       offsetRef.current = context.currentTime - startTimeRef.current;
-      console.log('Playback paused:', { offset: offsetRef.current });
+      console.log('Playback paused:', { 
+        offset: offsetRef.current,
+        contextTime: context.currentTime
+      });
     } catch (error) {
       console.error('Error pausing audio:', error);
     }
