@@ -14,6 +14,7 @@ export class PresenceManager {
   private lastStatus: 'online' | 'offline' = 'offline';
   private missedHeartbeats = 0;
   private readonly MAX_MISSED_HEARTBEATS = 2;
+  private cleanupInProgress = false;
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     console.log('Initializing PresenceManager with config:', config);
@@ -28,8 +29,8 @@ export class PresenceManager {
   }
 
   async initialize(deviceToken: string): Promise<void> {
-    if (this.isInitialized) {
-      console.log('PresenceManager already initialized');
+    if (this.isInitialized || this.cleanupInProgress) {
+      console.log('PresenceManager already initialized or cleanup in progress');
       return;
     }
     
@@ -45,26 +46,35 @@ export class PresenceManager {
         return;
       }
 
+      if (this.presenceChannelManager) {
+        await this.presenceChannelManager.cleanup();
+      }
+
       console.log('Creating PresenceChannelManager');
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
         this.config,
         async (status) => {
-          console.log('Status change callback triggered:', status);
-          await this.updateDeviceStatus(status);
-          this.lastStatus = status;
-          this.missedHeartbeats = 0;
+          if (!this.cleanupInProgress) {
+            console.log('Status change callback triggered:', status);
+            await this.updateDeviceStatus(status);
+            this.lastStatus = status;
+            this.missedHeartbeats = 0;
+          }
         }
       );
 
       console.log('Setting up presence channel');
       await this.presenceChannelManager.setup();
-      this.setupCleanup();
 
       console.log('Initial status update');
       await this.updateDeviceStatus('online');
       this.lastStatus = 'online';
+
+      if (this.heartbeatManager) {
+        this.heartbeatManager.stop();
+      }
 
       console.log('Creating HeartbeatManager');
       this.heartbeatManager = new HeartbeatManager(
@@ -83,6 +93,7 @@ export class PresenceManager {
         deviceToken,
         timestamp: new Date().toISOString()
       });
+      await this.cleanup();
       await this.reconnect();
     }
   }
@@ -172,11 +183,12 @@ export class PresenceManager {
   }
 
   async cleanup(): Promise<void> {
-    if (!this.isInitialized) {
-      console.log('No cleanup needed - not initialized');
+    if (!this.isInitialized || this.cleanupInProgress) {
+      console.log('No cleanup needed - not initialized or cleanup already in progress');
       return;
     }
 
+    this.cleanupInProgress = true;
     console.log('Starting presence cleanup...');
     
     if (this.heartbeatManager) {
@@ -194,6 +206,7 @@ export class PresenceManager {
     this.isInitialized = false;
     this.lastStatus = 'offline';
     this.missedHeartbeats = 0;
+    this.cleanupInProgress = false;
     console.log('Presence cleanup completed');
   }
 }
