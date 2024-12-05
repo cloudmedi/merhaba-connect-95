@@ -134,7 +134,8 @@ export function useHowlPlayer({
     setProgress(value);
   };
 
-  const handleVolumeChange = (newVolume: number) => {
+  const handleVolumeChange = (values: number[]) => {
+    const [newVolume] = values;
     setVolume(newVolume);
     if (currentHowl.current) {
       currentHowl.current.volume(newVolume / 100);
