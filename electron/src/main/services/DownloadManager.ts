@@ -11,15 +11,17 @@ export class DownloadManager {
   }
 
   getProgress(songId: string): number {
-    const progress = this.downloadProgress[songId] || 0;
-    console.log(`Current progress for song ${songId}:`, progress);
-    return progress;
+    return this.downloadProgress[songId] || 0;
   }
 
   async downloadSong(songId: string, url: string): Promise<{ success: boolean; hash?: string; error?: string }> {
     try {
       console.log(`Starting download for song ${songId} from ${url}`);
       
+      if (!url) {
+        throw new Error('URL is missing');
+      }
+
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -41,14 +43,23 @@ export class DownloadManager {
         // Update progress
         const progress = (downloaded / contentLength) * 100;
         this.downloadProgress[songId] = progress;
-        console.log(`Download progress for song ${songId}: ${progress.toFixed(2)}%`);
+        console.log(`Download progress for song ${songId}: ${progress.toFixed(2)}% (${downloaded}/${contentLength} bytes)`);
       }
 
       const buffer = Buffer.concat(chunks);
       console.log(`Downloaded ${buffer.length} bytes for song ${songId}`);
       
+      if (buffer.length === 0) {
+        throw new Error('Downloaded file is empty');
+      }
+
       const hash = await this.fileSystem.saveSong(songId, buffer);
       console.log(`Saved song ${songId} with hash ${hash}`);
+
+      // Verify file exists and has correct size
+      const filePath = this.fileSystem.getSongPath(songId);
+      const stats = await fs.stat(filePath);
+      console.log(`Verified saved file: ${filePath}, size: ${stats.size} bytes`);
 
       // Clear progress after successful download
       delete this.downloadProgress[songId];
@@ -57,7 +68,10 @@ export class DownloadManager {
     } catch (error) {
       console.error(`Error downloading song ${songId}:`, error);
       delete this.downloadProgress[songId];
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
     }
   }
 

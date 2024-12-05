@@ -34,13 +34,30 @@ export class FileSystemManager {
     console.log('Saving song to:', filePath);
     
     try {
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(filePath));
+      console.log('Ensured directory exists:', path.dirname(filePath));
+
+      // Write file
       await fs.writeFile(filePath, songBuffer);
+      console.log('Successfully wrote file');
+
+      // Verify file was written
+      const exists = await fs.pathExists(filePath);
+      if (!exists) {
+        throw new Error('File was not written successfully');
+      }
+
       const hash = this.calculateFileHash(songBuffer);
       console.log('Song saved successfully with hash:', hash);
       
-      // Dosya boyutunu kontrol et
+      // Check file size
       const stats = await fs.stat(filePath);
       console.log(`Saved file size: ${stats.size} bytes`);
+      
+      if (stats.size === 0) {
+        throw new Error('Saved file is empty');
+      }
       
       return hash;
     } catch (error) {

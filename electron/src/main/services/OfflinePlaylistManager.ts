@@ -28,6 +28,11 @@ export class OfflinePlaylistManager {
       console.log(`Starting sync for playlist ${playlist.id} - ${playlist.name}`);
       console.log('Songs to sync:', playlist.songs);
       
+      if (!playlist.songs || playlist.songs.length === 0) {
+        console.error('No songs in playlist');
+        return { success: false, error: 'No songs in playlist' };
+      }
+
       // Save playlist info locally
       await this.fileSystem.savePlaylistInfo(playlist.id, {
         id: playlist.id,
@@ -41,6 +46,7 @@ export class OfflinePlaylistManager {
 
       let totalSongs = playlist.songs.length;
       let downloadedSongs = 0;
+      let errors = [];
 
       // Download songs that don't exist locally
       for (const song of playlist.songs) {
@@ -59,6 +65,7 @@ export class OfflinePlaylistManager {
           
           if (!result.success) {
             console.error(`Failed to download song ${song.id}:`, result.error);
+            errors.push(`Failed to download ${song.title}: ${result.error}`);
             continue;
           }
 
@@ -79,10 +86,21 @@ export class OfflinePlaylistManager {
       await this.fileSystem.cleanup(keepSongIds);
 
       console.log(`Sync completed for playlist ${playlist.id}`);
+      
+      if (errors.length > 0) {
+        return { 
+          success: false, 
+          error: `Some songs failed to download: ${errors.join(', ')}` 
+        };
+      }
+
       return { success: true };
     } catch (error) {
       console.error('Error syncing playlist:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
     }
   }
 
