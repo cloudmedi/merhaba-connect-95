@@ -31,11 +31,23 @@ export function setupOfflineHandlers(deviceId: string) {
     }
   });
 
+  // Yeni handler: Offline playlistleri getirmek için
+  ipcMain.handle('get-offline-playlists', async () => {
+    try {
+      console.log('Getting offline playlists for device:', deviceId);
+      const playlists = await playlistManager.getOfflinePlaylists();
+      console.log('Retrieved offline playlists:', playlists);
+      return playlists;
+    } catch (error) {
+      console.error('Error getting offline playlists:', error);
+      throw error;
+    }
+  });
+
   ipcMain.handle('get-storage-stats', async () => {
     return await fileSystem.getStorageStats();
   });
 
-  // Yeni handler: İndirme durumunu kontrol etmek için
   ipcMain.handle('get-download-progress', async (_, songId) => {
     return downloadManager.getProgress(songId);
   });
