@@ -19,7 +19,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const { token } = new URL(req.url).searchParams;
+  // Correctly parse token from URL
+  const url = new URL(req.url);
+  const token = url.searchParams.get('token');
   console.log('Token received:', token);
   
   if (!token) {
@@ -35,7 +37,10 @@ serve(async (req) => {
 
   if (upgrade.toLowerCase() != 'websocket') {
     console.error('Expected websocket upgrade');
-    return new Response('Expected websocket upgrade', { status: 426 });
+    return new Response('Expected websocket upgrade', { 
+      status: 426,
+      headers: corsHeaders
+    });
   }
 
   const supabase = createClient(
@@ -89,7 +94,9 @@ serve(async (req) => {
       console.error('Error processing message:', error);
       socket.send(JSON.stringify({
         type: 'error',
-        payload: error.message
+        payload: {
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        }
       }));
     }
   };
