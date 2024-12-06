@@ -63,17 +63,7 @@ export function useDeviceVerification() {
         .eq('token', token)
         .single();
 
-      // Update token status to used when device is created
-      if (!existingDevice) {
-        const { error: updateError } = await supabase
-          .from('device_tokens')
-          .update({ status: 'used' })
-          .eq('token', token);
-
-        if (updateError) {
-          console.error('Error updating token status:', updateError);
-        }
-      }
+      // Token durumunu güncelleme işlemini kaldırdık - bu artık cihaz oluşturulduktan sonra yapılacak
 
       // Ensure system_info is a valid object before returning
       const systemInfo = isRecord(tokenData.system_info) ? tokenData.system_info : {};
@@ -91,8 +81,26 @@ export function useDeviceVerification() {
     }
   };
 
+  const markTokenAsUsed = async (token: string) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('device_tokens')
+        .update({ status: 'used' })
+        .eq('token', token);
+
+      if (updateError) {
+        console.error('Error updating token status:', updateError);
+        throw updateError;
+      }
+    } catch (error) {
+      console.error('Error marking token as used:', error);
+      throw error;
+    }
+  };
+
   return {
     isVerifying,
-    verifyTokenAndGetDeviceInfo
+    verifyTokenAndGetDeviceInfo,
+    markTokenAsUsed
   };
 }

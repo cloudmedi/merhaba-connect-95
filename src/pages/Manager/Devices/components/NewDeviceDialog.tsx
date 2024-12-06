@@ -26,7 +26,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [token, setToken] = useState("");
   const [ipAddress, setIpAddress] = useState("");
   const { createDevice } = useDevices();
-  const { isVerifying, verifyTokenAndGetDeviceInfo } = useDeviceVerification();
+  const { isVerifying, verifyTokenAndGetDeviceInfo, markTokenAsUsed } = useDeviceVerification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +57,9 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
 
       console.log('Creating device with data:', newDevice);
       await createDevice.mutateAsync(newDevice);
+      
+      // Cihaz başarıyla oluşturulduktan sonra token'ı used olarak işaretle
+      await markTokenAsUsed(token);
       
       toast.success('Cihaz başarıyla eklendi');
       onOpenChange(false);
