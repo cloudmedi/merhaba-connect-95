@@ -55,9 +55,23 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Formatted songs:', songs);
 
+      // Get device tokens for selected devices
+      const { data: deviceTokens, error: tokenError } = await supabase
+        .from('device_tokens')
+        .select('token, mac_address')
+        .in('mac_address', selectedDevices)
+        .eq('status', 'active');
+
+      if (tokenError) {
+        console.error('Error fetching device tokens:', tokenError);
+        throw tokenError;
+      }
+
+      console.log('Device tokens:', deviceTokens);
+
       // Send playlist to each selected device
-      for (const deviceId of selectedDevices) {
-        console.log(`Starting sync for device ${deviceId}`);
+      for (const device of deviceTokens) {
+        console.log(`Sending playlist to device ${device.mac_address}`);
         
         const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
@@ -65,11 +79,11 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
           songs: songs
         });
 
-        console.log(`Sync result for device ${deviceId}:`, result);
+        console.log(`Sync result for device ${device.mac_address}:`, result);
 
         if (!result.success) {
-          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
-          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
+          console.error(`Failed to sync playlist to device ${device.mac_address}:`, result.error);
+          toast.error(`${device.mac_address} cihazına gönderilirken hata oluştu: ${result.error}`);
         }
       }
 

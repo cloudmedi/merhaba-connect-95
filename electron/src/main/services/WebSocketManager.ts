@@ -101,6 +101,16 @@ export class WebSocketManager {
       this.ws.on('open', () => {
         console.log('WebSocket connection opened successfully');
         this.reconnectAttempts = 0;
+        
+        // Send initial connection message
+        if (this.ws?.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({
+            type: 'connect',
+            payload: {
+              token: realToken
+            }
+          }));
+        }
       });
 
       this.ws.on('message', async (data) => {
