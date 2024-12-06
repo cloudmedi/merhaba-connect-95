@@ -15,10 +15,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStorageStats: () => ipcRenderer.invoke('get-storage-stats'),
   getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId),
   onDownloadProgress: (callback: (data: { songId: string, progress: number }) => void) => {
-    ipcRenderer.on('download-progress', (_event, data) => callback(data))
+    const handler = (_event: any, data: any) => callback(data);
+    ipcRenderer.on('download-progress', handler);
     return () => {
-      ipcRenderer.removeListener('download-progress', (_event, data) => callback(data))
-    }
+      ipcRenderer.removeListener('download-progress', handler);
+    };
   },
   // Device registration
   registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)
