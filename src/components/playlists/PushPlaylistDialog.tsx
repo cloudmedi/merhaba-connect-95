@@ -24,23 +24,32 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Cihazları getiren sorgu
+  // Kullanıcıya ait cihazları getiren sorgu
   const { data: devices = [], isLoading } = useQuery({
-    queryKey: ['push-dialog-devices'],
+    queryKey: ['devices'],
     queryFn: async () => {
-      console.log('Fetching devices for push dialog...');
+      console.log('Fetching devices for current user...');
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!userProfile?.company_id) {
+        console.log('No company_id found for user');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('devices')
         .select(`
-          id,
-          name,
-          status,
-          category,
-          last_seen,
+          *,
           branches (
+            id,
             name
           )
-        `);
+        `)
+        .eq('branches.company_id', userProfile.company_id);
 
       if (error) {
         console.error('Error fetching devices:', error);
@@ -54,7 +63,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    device.branches?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    (device.branches?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectAll = () => {
