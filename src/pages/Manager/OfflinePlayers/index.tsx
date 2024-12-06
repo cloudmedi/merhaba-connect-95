@@ -20,7 +20,7 @@ export default function OfflinePlayersPage() {
       
       if (error) throw error;
 
-      return (data || []).map((device): OfflinePlayer => {
+      return (data || []).map((device: any): OfflinePlayer => {
         const systemInfo = typeof device.system_info === 'string' 
           ? JSON.parse(device.system_info) 
           : device.system_info || {};
@@ -63,7 +63,6 @@ export default function OfflinePlayersPage() {
     }
   });
 
-  // Helper function to validate device category
   const validateDeviceCategory = (category: string): DeviceCategory => {
     const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
     return validCategories.includes(category as DeviceCategory) 
