@@ -13,13 +13,11 @@ serve(async (req) => {
     headers: Object.fromEntries(req.headers.entries())
   });
 
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Correctly parse token from URL
   const url = new URL(req.url);
   const token = url.searchParams.get('token');
   console.log('Token received:', token);
@@ -48,7 +46,6 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 
-  // Validate device token
   console.log('Validating token in device_tokens table...');
   const { data: deviceToken, error: tokenError } = await supabase
     .from('device_tokens')
@@ -78,7 +75,6 @@ serve(async (req) => {
     try {
       console.log('Received raw message:', event.data);
       
-      // Parse and validate message structure
       let data;
       try {
         data = JSON.parse(event.data);
@@ -94,7 +90,6 @@ serve(async (req) => {
         return;
       }
 
-      // Validate message structure
       if (!data.type || !data.payload) {
         console.error('Invalid message structure - missing type or payload');
         socket.send(JSON.stringify({
@@ -109,29 +104,30 @@ serve(async (req) => {
       if (data.type === 'sync_playlist') {
         console.log('Processing playlist sync:', data.payload);
         
-        // Validate playlist data
-        const playlist = data.payload.playlist;
-        if (!playlist || !playlist.id) {
-          console.error('Invalid playlist data:', playlist);
+        const { playlist, devices } = data.payload;
+        
+        if (!playlist || !playlist.id || !devices || !Array.isArray(devices)) {
+          console.error('Invalid playlist data or devices:', { playlist, devices });
           socket.send(JSON.stringify({
             type: 'error',
             payload: {
-              message: 'Invalid playlist data'
+              message: 'Invalid playlist data or devices'
             }
           }));
           return;
         }
 
-        // Process the playlist
         try {
-          // Here you would add your playlist processing logic
+          // Burada playlist sync işlemlerini gerçekleştir
           console.log('Processing playlist with ID:', playlist.id);
+          console.log('Target devices:', devices);
           
-          // Send success response
+          // Başarılı yanıt gönder
           socket.send(JSON.stringify({
             type: 'sync_success',
             payload: {
-              playlistId: playlist.id
+              playlistId: playlist.id,
+              deviceCount: devices.length
             }
           }));
         } catch (error) {

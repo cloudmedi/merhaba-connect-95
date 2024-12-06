@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 export function usePlaylistSync(playlistId: string, playlistTitle: string) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -14,33 +15,71 @@ export function usePlaylistSync(playlistId: string, playlistTitle: string) {
       setIsSyncing(true);
       console.log('Starting WebSocket sync for devices:', selectedDevices);
 
+      // Önce playlist verilerini çekelim
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          playlist_songs (
+            songs (
+              id,
+              title,
+              artist,
+              file_url,
+              bunny_id
+            )
+          )
+        `)
+        .eq('id', playlistId)
+        .single();
+
+      if (playlistError) throw playlistError;
+
+      const songs = playlist.playlist_songs.map((ps: any) => ({
+        ...ps.songs,
+        file_url: ps.songs.bunny_id 
+          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+          : ps.songs.file_url
+      }));
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
         throw new Error('Supabase URL not found');
       }
 
       const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
+      console.log('Connecting to WebSocket:', wsUrl);
+      
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket connection opened');
+        console.log('WebSocket connection opened, sending playlist data');
+        // Edge Function'ın beklediği formatta veri gönderiyoruz
         ws.send(JSON.stringify({
           type: 'sync_playlist',
           payload: {
-            playlistId,
+            playlist: {
+              id: playlist.id,
+              name: playlist.name,
+              songs: songs
+            },
             devices: selectedDevices
           }
         }));
       };
 
       ws.onmessage = (event) => {
-        const response = JSON.parse(event.data);
-        console.log('WebSocket response:', response);
-        
-        if (response.type === 'sync_success') {
-          toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
-        } else if (response.type === 'error') {
-          toast.error(`Hata: ${response.payload.message}`);
+        console.log('WebSocket response received:', event.data);
+        try {
+          const response = JSON.parse(event.data);
+          if (response.type === 'sync_success') {
+            toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
+          } else if (response.type === 'error') {
+            toast.error(`Hata: ${response.payload.message}`);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket response:', error);
+          toast.error("Beklenmeyen bir yanıt alındı");
         }
       };
 
