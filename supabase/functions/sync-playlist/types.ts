@@ -11,11 +11,12 @@ export interface PlaylistData {
 }
 
 export interface WebSocketMessage {
-  type: 'sync_playlist' | 'sync_success' | 'error';
+  type: 'sync_playlist' | 'sync_success' | 'sync_error' | 'presence_update';
   payload: {
     playlist?: PlaylistData;
     playlistId?: string;
     devices?: string[];
+    status?: 'online' | 'offline';
     message?: string;
   };
 }

@@ -19,8 +19,25 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up download progress listener');
-    const cleanup = window.electronAPI.onDownloadProgress((data) => {
+    console.log('Setting up WebSocket listeners');
+    const cleanup = window.electronAPI.onWebSocketMessage((data) => {
+      console.log('WebSocket message received:', data);
+      if (data.type === 'sync_playlist' && data.payload.playlist) {
+        const playlist = data.payload.playlist;
+        setPlaylists(prev => [...prev, playlist]);
+        setSyncStatus(prev => ({
+          ...prev,
+          [playlist.id]: {
+            playlistId: playlist.id,
+            name: playlist.name,
+            progress: 0,
+            status: 'syncing'
+          }
+        }));
+      }
+    });
+
+    const downloadCleanup = window.electronAPI.onDownloadProgress((data) => {
       console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,
@@ -28,10 +45,9 @@ export function PlaylistSync() {
       }));
     });
 
-    // Cleanup subscription when component unmounts
     return () => {
-      console.log('Cleaning up download progress listener');
       cleanup();
+      downloadCleanup();
     };
   }, []);
 

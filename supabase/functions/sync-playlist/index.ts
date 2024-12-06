@@ -76,6 +76,7 @@ serve(async (req) => {
   socket.onopen = () => {
     console.log('WebSocket connection opened');
     deviceManager.addDevice(token, socket);
+    deviceManager.broadcastPresenceUpdate(token, 'online');
   };
 
   socket.onmessage = async (event) => {
@@ -108,6 +109,7 @@ serve(async (req) => {
   socket.onclose = () => {
     console.log('WebSocket connection closed');
     deviceManager.removeDevice(token);
+    deviceManager.broadcastPresenceUpdate(token, 'offline');
   };
 
   return response;

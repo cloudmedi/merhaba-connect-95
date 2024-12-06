@@ -80,7 +80,7 @@ export class PlaylistHandler {
     } catch (error) {
       console.error('Error processing playlist:', error);
       return {
-        type: 'error',
+        type: 'sync_error',
         payload: {
           message: error instanceof Error ? error.message : 'Unknown error occurred'
         }

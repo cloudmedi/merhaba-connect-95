@@ -4,12 +4,12 @@ export class DeviceManager {
   private connectedDevices = new Map<string, WebSocket>();
 
   addDevice(token: string, socket: WebSocket) {
-    console.log('Adding device with token:', token);
+    console.log('Device connected:', token);
     this.connectedDevices.set(token, socket);
   }
 
   removeDevice(token: string) {
-    console.log('Removing device with token:', token);
+    console.log('Device disconnected:', token);
     this.connectedDevices.delete(token);
   }
 
@@ -19,5 +19,15 @@ export class DeviceManager {
 
   isDeviceConnected(token: string): boolean {
     return this.connectedDevices.has(token);
+  }
+
+  broadcastPresenceUpdate(token: string, status: 'online' | 'offline') {
+    console.log('Broadcasting presence update:', token, status);
+    this.connectedDevices.forEach((socket) => {
+      socket.send(JSON.stringify({
+        type: 'presence_update',
+        payload: { status }
+      }));
+    });
   }
 }
