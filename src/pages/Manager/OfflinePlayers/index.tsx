@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { OfflinePlayer } from "@/types/offline-player";
+import type { Device } from "@/pages/Manager/Devices/hooks/types";
 
 export default function OfflinePlayersPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<OfflinePlayer | null>(null);
@@ -20,19 +21,41 @@ export default function OfflinePlayersPage() {
       if (error) throw error;
 
       // Convert device data to OfflinePlayer type
-      return data.map(device => ({
-        ...device,
-        device_id: device.id,
-        last_sync_at: device.last_seen || new Date().toISOString(),
-        sync_status: device.status === 'online' ? 'completed' : 'pending',
-        version: device.system_info?.version || 'Unknown',
-        settings: {
-          autoSync: true,
-          syncInterval: 30,
-          maxStorageSize: 1000,
-          ...(device.system_info?.settings || {})
-        }
-      } as OfflinePlayer));
+      return data.map((device: Device) => {
+        const systemInfo = device.system_info as Record<string, any>;
+        return {
+          id: device.id,
+          name: device.name,
+          branch_id: device.branch_id,
+          category: device.category,
+          status: device.status,
+          ip_address: device.ip_address,
+          system_info: device.system_info,
+          schedule: device.schedule,
+          last_seen: device.last_seen,
+          token: device.token,
+          location: device.location,
+          location_id: device.location_id,
+          created_at: device.created_at,
+          updated_at: device.updated_at,
+          device_id: device.id,
+          last_sync_at: device.last_seen || new Date().toISOString(),
+          sync_status: device.status === 'online' ? 'completed' : 'pending',
+          version: systemInfo?.version || 'Unknown',
+          settings: {
+            autoSync: true,
+            syncInterval: 30,
+            maxStorageSize: 1000,
+            ...(systemInfo?.settings || {})
+          },
+          devices: {
+            id: device.id,
+            name: device.name,
+            branch_id: device.branch_id || '',
+            status: device.status
+          }
+        } as OfflinePlayer;
+      });
     }
   });
 
