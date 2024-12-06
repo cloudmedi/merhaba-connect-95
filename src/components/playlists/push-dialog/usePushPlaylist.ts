@@ -20,7 +20,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       const result = await window.electronAPI.syncPlaylist({
         id: playlistId,
         name: playlistTitle,
-        songs: []  // Songs will be fetched in the WebSocket handler
+        devices: selectedDevices
       });
 
       if (!result.success) {
