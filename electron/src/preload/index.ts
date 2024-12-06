@@ -21,6 +21,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('download-progress', handler);
     };
   },
-  // Device registration
   registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)
 })

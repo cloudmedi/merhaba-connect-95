@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '../components/ui/progress';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    // Subscribe to download progress updates
+    console.log('Setting up download progress listener');
     const cleanup = window.electronAPI.onDownloadProgress((data) => {
       console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
@@ -30,6 +30,7 @@ export function PlaylistSync() {
 
     // Cleanup subscription when component unmounts
     return () => {
+      console.log('Cleaning up download progress listener');
       cleanup();
     };
   }, []);
