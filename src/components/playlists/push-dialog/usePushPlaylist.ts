@@ -7,6 +7,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
   const handlePush = async (selectedDevices: string[]) => {
     console.log('handlePush started with devices:', selectedDevices);
+    console.log('Playlist ID:', playlistId);
     
     if (selectedDevices.length === 0) {
       console.log('No devices selected');

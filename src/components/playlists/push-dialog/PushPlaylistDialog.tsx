@@ -20,7 +20,7 @@ export function PushPlaylistDialog({
   playlistTitle, 
   playlistId 
 }: PushPlaylistDialogProps) {
-  console.log('PushPlaylistDialog rendered with:', { playlistId, playlistTitle });
+  console.log('PushPlaylistDialog rendered with:', { playlistId, playlistTitle, isOpen });
   
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
