@@ -1,1 +1,4 @@
 project_id = "mfvacqmsaudhozgogfrx"
+
+[functions.sync-playlist]
+verify_jwt = false
