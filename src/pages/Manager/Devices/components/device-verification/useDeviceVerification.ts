@@ -34,12 +34,7 @@ export function useDeviceVerification() {
         return null;
       }
 
-      // Check if token is already used
-      if (tokenData.status === 'used') {
-        toast.error('Bu token zaten kullanılmış');
-        return null;
-      }
-
+      // Return device info regardless of token status
       return {
         systemInfo: tokenData.system_info,
         existingDevice: null
