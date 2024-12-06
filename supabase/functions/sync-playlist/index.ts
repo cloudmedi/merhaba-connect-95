@@ -1,10 +1,13 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { DeviceManager } from './deviceManager.ts';
+import { PlaylistHandler } from './playlistHandler.ts';
+import { WebSocketMessage } from './types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   console.log('Request received:', {
@@ -49,7 +52,7 @@ serve(async (req) => {
   console.log('Validating token in device_tokens table...');
   const { data: deviceToken, error: tokenError } = await supabase
     .from('device_tokens')
-    .select('token, status, mac_address')
+    .select('token, status')
     .eq('token', token)
     .in('status', ['active', 'used'])
     .single();
@@ -67,140 +70,28 @@ serve(async (req) => {
   const { socket, response } = Deno.upgradeWebSocket(req);
   console.log('WebSocket connection upgraded successfully');
 
-  // Bağlı cihazları takip etmek için bir Map
-  const connectedDevices = new Map();
+  const deviceManager = new DeviceManager();
+  const playlistHandler = new PlaylistHandler(supabase, deviceManager);
 
   socket.onopen = () => {
     console.log('WebSocket connection opened');
-    // Cihazı MAC adresi ile kaydet
-    connectedDevices.set(deviceToken.mac_address, socket);
+    deviceManager.addDevice(token, socket);
   };
 
   socket.onmessage = async (event) => {
     try {
       console.log('Received raw message:', event.data);
       
-      let data;
-      try {
-        data = JSON.parse(event.data);
-        console.log('Parsed message data:', data);
-      } catch (error) {
-        console.error('Failed to parse message:', error);
-        socket.send(JSON.stringify({
-          type: 'error',
-          payload: {
-            message: 'Invalid message format'
-          }
-        }));
-        return;
-      }
+      const data = JSON.parse(event.data) as WebSocketMessage;
+      console.log('Parsed message data:', data);
 
       if (!data.type || !data.payload) {
-        console.error('Invalid message structure');
-        socket.send(JSON.stringify({
-          type: 'error',
-          payload: {
-            message: 'Invalid message structure'
-          }
-        }));
-        return;
+        throw new Error('Invalid message structure');
       }
       
       if (data.type === 'sync_playlist') {
-        console.log('Processing playlist sync:', data.payload);
-        
-        const { playlistId, devices } = data.payload;
-        
-        if (!playlistId || !devices || !Array.isArray(devices)) {
-          console.error('Invalid playlist data:', { playlistId, devices });
-          socket.send(JSON.stringify({
-            type: 'error',
-            payload: {
-              message: 'Invalid playlist data'
-            }
-          }));
-          return;
-        }
-
-        try {
-          // Playlist verilerini getir
-          const { data: playlist, error: playlistError } = await supabase
-            .from('playlists')
-            .select(`
-              *,
-              playlist_songs (
-                position,
-                songs (
-                  id,
-                  title,
-                  artist,
-                  file_url,
-                  bunny_id
-                )
-              )
-            `)
-            .eq('id', playlistId)
-            .single();
-
-          if (playlistError || !playlist) {
-            throw new Error('Playlist not found');
-          }
-
-          // Playlist verilerini düzenle
-          const formattedPlaylist = {
-            id: playlist.id,
-            name: playlist.name,
-            songs: playlist.playlist_songs
-              .sort((a, b) => a.position - b.position)
-              .map(ps => ({
-                ...ps.songs,
-                file_url: ps.songs.bunny_id 
-                  ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
-                  : ps.songs.file_url
-              }))
-          };
-
-          // Her bir hedef cihaz için
-          for (const deviceId of devices) {
-            // Cihazın token'ını bul
-            const { data: targetDevice } = await supabase
-              .from('devices')
-              .select('token')
-              .eq('id', deviceId)
-              .single();
-
-            if (targetDevice?.token) {
-              // WebSocket bağlantısını bul
-              const targetSocket = connectedDevices.get(targetDevice.token);
-              if (targetSocket) {
-                console.log('Sending playlist to device:', deviceId);
-                targetSocket.send(JSON.stringify({
-                  type: 'sync_playlist',
-                  payload: {
-                    playlist: formattedPlaylist
-                  }
-                }));
-              }
-            }
-          }
-
-          // Gönderen tarafa başarı mesajı
-          socket.send(JSON.stringify({
-            type: 'sync_success',
-            payload: {
-              message: 'Playlist successfully synced',
-              deviceCount: devices.length
-            }
-          }));
-        } catch (error) {
-          console.error('Error processing playlist:', error);
-          socket.send(JSON.stringify({
-            type: 'error',
-            payload: {
-              message: error instanceof Error ? error.message : 'Unknown error occurred'
-            }
-          }));
-        }
+        const result = await playlistHandler.handlePlaylistSync(data, token);
+        socket.send(JSON.stringify(result));
       }
     } catch (error) {
       console.error('Error processing message:', error);
@@ -216,8 +107,7 @@ serve(async (req) => {
   socket.onerror = (e) => console.log('WebSocket error:', e);
   socket.onclose = () => {
     console.log('WebSocket connection closed');
-    // Bağlantı kapandığında cihazı listeden kaldır
-    connectedDevices.delete(deviceToken.mac_address);
+    deviceManager.removeDevice(token);
   };
 
   return response;
