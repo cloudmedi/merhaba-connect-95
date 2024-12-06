@@ -53,20 +53,17 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Formatted songs:', songs);
 
-      // Send playlist to each selected device via WebSocket
-      for (const deviceId of selectedDevices) {
-        console.log(`Sending playlist to device ${deviceId}`);
-        
-        const result = await window.electronAPI.syncPlaylist({
-          id: playlist.id,
-          name: playlist.name,
-          songs: songs
-        });
+      // Send playlist to device via WebSocket
+      const result = await window.electronAPI.syncPlaylist({
+        id: playlist.id,
+        name: playlist.name,
+        songs: songs
+      });
 
-        if (!result.success) {
-          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
-          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
-        }
+      if (!result.success) {
+        console.error('Failed to sync playlist:', result.error);
+        toast.error(`Playlist gönderilirken hata oluştu: ${result.error}`);
+        return;
       }
 
       toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);

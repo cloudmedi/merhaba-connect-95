@@ -14,8 +14,6 @@ export function setupOfflineHandlers(deviceId: string) {
 
     try {
       console.log('Starting playlist sync via WebSocket...');
-      
-      // WebSocket üzerinden playlist'i gönder
       const result = await wsManager.sendPlaylist(playlist);
       console.log('WebSocket sync result:', result);
 
