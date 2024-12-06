@@ -41,25 +41,6 @@ export class WebSocketManager {
     });
   }
 
-  private sendProgressUpdate(songId: string, progress: number) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log(`Sending progress update for song ${songId}: ${progress}%`);
-      this.ws.send(JSON.stringify({
-        type: 'download_progress',
-        payload: {
-          songId,
-          progress
-        }
-      }));
-      
-      // Send progress to renderer process
-      if (this.win?.webContents) {
-        console.log(`Sending progress to renderer: ${songId}, ${progress}%`);
-        this.win.webContents.send('download-progress', { songId, progress });
-      }
-    }
-  }
-
   private async initializeConnection(deviceToken: string) {
     try {
       console.log('Initializing WebSocket connection...');
@@ -104,6 +85,7 @@ export class WebSocketManager {
         
         // Send initial connection message
         if (this.ws?.readyState === WebSocket.OPEN) {
+          console.log('Sending initial connection message');
           this.ws.send(JSON.stringify({
             type: 'connect',
             payload: {
@@ -159,6 +141,33 @@ export class WebSocketManager {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
         setTimeout(() => this.connect(realToken), this.reconnectDelay);
       }
+    }
+  }
+
+  private sendProgressUpdate(songId: string, progress: number) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log(`Sending progress update for song ${songId}: ${progress}%`);
+      this.ws.send(JSON.stringify({
+        type: 'download_progress',
+        payload: {
+          songId,
+          progress
+        }
+      }));
+      
+      // Send progress to renderer process
+      if (this.win?.webContents) {
+        console.log(`Sending progress to renderer: ${songId}, ${progress}%`);
+        this.win.webContents.send('download-progress', { songId, progress });
+      }
+    }
+  }
+
+  public async disconnect() {
+    if (this.ws) {
+      console.log('Disconnecting WebSocket');
+      this.ws.close();
+      this.ws = null;
     }
   }
 }
