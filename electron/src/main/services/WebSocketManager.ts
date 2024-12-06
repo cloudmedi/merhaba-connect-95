@@ -1,5 +1,6 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
+import { supabase } from '../../integrations/supabase/client';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -9,8 +10,8 @@ export class WebSocketManager {
   private reconnectDelay: number = 5000;
   private win: BrowserWindow | null;
 
-  constructor(deviceToken: string, win: BrowserWindow | null) {
-    console.log('Initializing WebSocketManager with token:', deviceToken);
+  constructor(deviceId: string, win: BrowserWindow | null) {
+    console.log('Initializing WebSocketManager with deviceId:', deviceId);
     this.win = win;
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     
@@ -19,7 +20,28 @@ export class WebSocketManager {
       return;
     }
 
-    this.connect(deviceToken);
+    this.initializeConnection(deviceId);
+  }
+
+  private async initializeConnection(deviceId: string) {
+    try {
+      // Önce device token'ı al
+      const { data: deviceData, error: deviceError } = await supabase
+        .from('device_tokens')
+        .select('token')
+        .eq('mac_address', deviceId)
+        .single();
+
+      if (deviceError || !deviceData?.token) {
+        console.error('Error getting device token:', deviceError);
+        return;
+      }
+
+      console.log('Retrieved device token:', deviceData.token);
+      this.connect(deviceData.token);
+    } catch (error) {
+      console.error('Error initializing connection:', error);
+    }
   }
 
   private async connect(token: string) {
@@ -38,7 +60,6 @@ export class WebSocketManager {
         console.log('WebSocket connection opened successfully');
         this.reconnectAttempts = 0;
         
-        // Bağlantı başarılı olduğunda renderer'a bildir
         if (this.win) {
           this.win.webContents.send('websocket-connected');
         }
@@ -48,7 +69,6 @@ export class WebSocketManager {
         console.log('WebSocket message received:', data.toString());
         try {
           const parsedData = JSON.parse(data.toString());
-          // Mesajı renderer'a ilet
           if (this.win) {
             this.win.webContents.send('websocket-message', parsedData);
           }
@@ -100,7 +120,6 @@ export class WebSocketManager {
         }
       }));
 
-      // Mesaj gönderildiğinde renderer'a bildir
       if (this.win) {
         this.win.webContents.send('playlist-sent', playlist);
       }
