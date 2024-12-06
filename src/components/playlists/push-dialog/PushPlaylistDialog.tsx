@@ -76,6 +76,7 @@ export function PushPlaylistDialog({
     try {
       setIsSyncing(true);
       toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
+      console.log('Starting playlist push process...');
 
       // Get playlist details with songs
       const { data: playlist, error: playlistError } = await supabase
@@ -95,7 +96,12 @@ export function PushPlaylistDialog({
         .eq('id', playlistId)
         .single();
 
-      if (playlistError) throw playlistError;
+      if (playlistError) {
+        console.error('Error fetching playlist:', playlistError);
+        throw playlistError;
+      }
+
+      console.log('Fetched playlist data:', playlist);
 
       // Format songs data
       const songs = playlist.playlist_songs.map((ps: any) => ({
@@ -105,15 +111,19 @@ export function PushPlaylistDialog({
           : ps.songs.file_url
       }));
 
+      console.log('Formatted songs data:', songs);
+
       // Send playlist to each selected device
       for (const deviceId of selectedDevices) {
-        console.log(`Sending playlist to device ${deviceId}`);
+        console.log(`Attempting to sync playlist to device ${deviceId}`);
         
         const result = await window.electronAPI.syncPlaylist({
           id: playlist.id,
           name: playlist.name,
           songs: songs
         });
+
+        console.log(`Sync result for device ${deviceId}:`, result);
 
         if (!result.success) {
           console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
@@ -125,7 +135,7 @@ export function PushPlaylistDialog({
       onClose();
       setSelectedDevices([]);
     } catch (error: any) {
-      console.error('Error pushing playlist:', error);
+      console.error('Error in handlePush:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
     } finally {
       setIsSyncing(false);
@@ -152,6 +162,7 @@ export function PushPlaylistDialog({
             devices={filteredDevices}
             selectedDevices={selectedDevices}
             onToggleDevice={(deviceId) => {
+              console.log('Toggling device:', deviceId);
               setSelectedDevices(prev =>
                 prev.includes(deviceId)
                   ? prev.filter(id => id !== deviceId)

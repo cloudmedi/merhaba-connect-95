@@ -17,6 +17,7 @@ export class WebSocketManager {
   private win: BrowserWindow | null;
 
   constructor(deviceToken: string, win: BrowserWindow | null) {
+    console.log('Initializing WebSocketManager with token:', deviceToken);
     const fileSystem = new FileSystemManager(deviceToken);
     const downloadManager = new DownloadManager(fileSystem);
     this.downloadManager = downloadManager;
@@ -61,6 +62,7 @@ export class WebSocketManager {
 
   private async initializeConnection(deviceToken: string) {
     try {
+      console.log('Initializing WebSocket connection...');
       if (!this.supabaseClient) {
         throw new Error('Supabase client not initialized');
       }
@@ -103,14 +105,17 @@ export class WebSocketManager {
 
       this.ws.on('message', async (data) => {
         try {
+          console.log('Received WebSocket message:', data.toString());
           const message = JSON.parse(data.toString());
-          console.log('Received message:', message);
+          console.log('Parsed message:', message);
 
           if (message.type === 'sync_playlist') {
+            console.log('Processing sync_playlist message:', message.payload);
             const { playlist } = message.payload;
             const result = await this.playlistManager.syncPlaylist(playlist);
             
             if (this.ws?.readyState === WebSocket.OPEN) {
+              console.log('Sending sync result:', result);
               this.ws.send(JSON.stringify({
                 type: result.success ? 'sync_success' : 'sync_error',
                 payload: result.success ? {
@@ -121,7 +126,7 @@ export class WebSocketManager {
             }
           }
         } catch (error) {
-          console.error('Error processing message:', error);
+          console.error('Error processing WebSocket message:', error);
         }
       });
 
