@@ -31,11 +31,17 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  
-  if (authError || !user) {
+  // Validate device token
+  const { data: deviceToken, error: tokenError } = await supabase
+    .from('device_tokens')
+    .select('mac_address')
+    .eq('token', token)
+    .in('status', ['active', 'used'])
+    .single();
+
+  if (tokenError || !deviceToken) {
     return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
+      JSON.stringify({ error: 'Invalid or expired token' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

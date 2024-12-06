@@ -7,7 +7,6 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
   const handlePush = async (selectedDevices: string[]) => {
     console.log('handlePush started with devices:', selectedDevices);
-    console.log('Playlist ID:', playlistId);
     
     if (selectedDevices.length === 0) {
       console.log('No devices selected');
@@ -76,7 +75,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         throw new Error('Seçili cihazlar için geçerli token bulunamadı');
       }
 
-      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
         throw new Error('Supabase URL not found');
       }
