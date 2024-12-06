@@ -90,6 +90,7 @@ serve(async (req) => {
         return;
       }
 
+      // Veri yapısını kontrol et
       if (!data.type || !data.payload) {
         console.error('Invalid message structure - missing type or payload');
         socket.send(JSON.stringify({
@@ -104,10 +105,10 @@ serve(async (req) => {
       if (data.type === 'sync_playlist') {
         console.log('Processing playlist sync:', data.payload);
         
-        const { playlist, devices } = data.payload;
+        const { playlistId, devices } = data.payload;
         
-        if (!playlist || !playlist.id || !devices || !Array.isArray(devices)) {
-          console.error('Invalid playlist data or devices:', { playlist, devices });
+        if (!playlistId || !devices || !Array.isArray(devices)) {
+          console.error('Invalid playlist data or devices:', { playlistId, devices });
           socket.send(JSON.stringify({
             type: 'error',
             payload: {
@@ -118,15 +119,50 @@ serve(async (req) => {
         }
 
         try {
-          // Burada playlist sync işlemlerini gerçekleştir
-          console.log('Processing playlist with ID:', playlist.id);
-          console.log('Target devices:', devices);
+          // Playlist verilerini getir
+          const { data: playlist, error: playlistError } = await supabase
+            .from('playlists')
+            .select(`
+              *,
+              playlist_songs (
+                position,
+                songs (
+                  id,
+                  title,
+                  artist,
+                  file_url,
+                  bunny_id
+                )
+              )
+            `)
+            .eq('id', playlistId)
+            .single();
+
+          if (playlistError || !playlist) {
+            throw new Error('Playlist not found');
+          }
+
+          // Playlist verilerini düzenle
+          const formattedPlaylist = {
+            id: playlist.id,
+            name: playlist.name,
+            songs: playlist.playlist_songs
+              .sort((a, b) => a.position - b.position)
+              .map(ps => ({
+                ...ps.songs,
+                file_url: ps.songs.bunny_id 
+                  ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+                  : ps.songs.file_url
+              }))
+          };
+
+          console.log('Sending formatted playlist:', formattedPlaylist);
           
           // Başarılı yanıt gönder
           socket.send(JSON.stringify({
             type: 'sync_success',
             payload: {
-              playlistId: playlist.id,
+              playlist: formattedPlaylist,
               deviceCount: devices.length
             }
           }));
