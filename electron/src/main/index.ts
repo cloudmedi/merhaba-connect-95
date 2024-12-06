@@ -131,9 +131,25 @@ function createWindow() {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
     // In production, load from the correct path
-    const indexPath = path.join(__dirname, '../renderer/index.html');
+    const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
     console.log('Loading production index.html from:', indexPath);
-    win.loadFile(indexPath);
+    
+    // Check if the file exists
+    const fs = require('fs');
+    if (!fs.existsSync(indexPath)) {
+      console.error('index.html not found at:', indexPath);
+      // Try alternative path
+      const altPath = path.join(process.resourcesPath, 'app.asar', 'out', 'renderer', 'index.html');
+      console.log('Trying alternative path:', altPath);
+      if (fs.existsSync(altPath)) {
+        win.loadFile(altPath);
+      } else {
+        console.error('Could not find index.html in any location');
+        app.quit();
+      }
+    } else {
+      win.loadFile(indexPath);
+    }
   }
 }
 
