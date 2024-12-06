@@ -1,13 +1,20 @@
 import { supabase } from './client';
 
-export async function createDeviceToken(macAddress: string) {
+interface DeviceToken {
+  token: string;
+  status: 'active' | 'used' | 'expired';
+  expires_at: string;
+  mac_address: string;
+  system_info?: Record<string, any>;
+}
+
+export async function createDeviceToken(macAddress: string): Promise<DeviceToken> {
   try {
     console.log('Starting device token check for MAC:', macAddress);
     
-    // Sadece aktif tokeni kontrol et
     const { data: existingToken, error: checkError } = await supabase
       .from('device_tokens')
-      .select('*')  // Tüm alanları seç
+      .select('*')
       .eq('mac_address', macAddress)
       .eq('status', 'active')
       .maybeSingle();
@@ -17,7 +24,6 @@ export async function createDeviceToken(macAddress: string) {
       throw checkError;
     }
     
-    // Log token details
     if (existingToken) {
       console.log('Found existing token:', {
         token: existingToken.token,
@@ -25,12 +31,11 @@ export async function createDeviceToken(macAddress: string) {
         expires_at: existingToken.expires_at,
         mac_address: existingToken.mac_address
       });
-      return existingToken;
+      return existingToken as DeviceToken;
     }
 
     console.log('No existing token found, creating new one...');
 
-    // Yeni token oluştur
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
     const expirationDate = new Date();
     expirationDate.setFullYear(expirationDate.getFullYear() + 1);
@@ -58,7 +63,7 @@ export async function createDeviceToken(macAddress: string) {
       mac_address: tokenData.mac_address
     });
     
-    return tokenData;
+    return tokenData as DeviceToken;
   } catch (error) {
     console.error('Error in createDeviceToken:', error);
     throw error;

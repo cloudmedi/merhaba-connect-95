@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 interface TokenData {
   token: string;
   expires_at?: string;
+  status?: string;
+  mac_address?: string;
 }
 
 function App() {
@@ -38,10 +40,12 @@ function App() {
         setSystemInfo(sysInfo);
         console.log('System Info:', sysInfo);
 
-        const tokenData = await createDeviceToken(macAddress) as TokenData;
-        if (tokenData?.token) {
+        const tokenData = await createDeviceToken(macAddress);
+        if (tokenData && 'token' in tokenData) {
           setDeviceToken(tokenData.token);
           toast.success('Cihaz başarıyla kaydedildi');
+        } else {
+          throw new Error('Invalid token data received');
         }
 
         setIsLoading(false);
