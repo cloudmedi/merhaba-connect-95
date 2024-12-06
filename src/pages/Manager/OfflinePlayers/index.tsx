@@ -25,13 +25,14 @@ export default function OfflinePlayersPage() {
         device_id: device.id,
         last_sync_at: device.last_seen || new Date().toISOString(),
         sync_status: device.status === 'online' ? 'completed' : 'pending',
+        version: device.system_info?.version || 'Unknown',
         settings: {
           autoSync: true,
           syncInterval: 30,
           maxStorageSize: 1000,
-          ...(device.system_info as any)?.settings
+          ...(device.system_info?.settings || {})
         }
-      })) as OfflinePlayer[];
+      } as OfflinePlayer));
     }
   });
 

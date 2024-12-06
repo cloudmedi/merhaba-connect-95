@@ -18,6 +18,7 @@ export interface OfflinePlayer {
   device_id: string;
   last_sync_at: string;
   sync_status: 'pending' | 'syncing' | 'completed' | 'failed';
+  version?: string;
   settings: {
     autoSync?: boolean;
     syncInterval?: number;
