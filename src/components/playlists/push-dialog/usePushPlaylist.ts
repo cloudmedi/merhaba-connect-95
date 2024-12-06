@@ -21,6 +21,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
 
       // Get playlist details with songs
+      console.log('Fetching playlist details...');
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -56,6 +57,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       console.log('Formatted songs:', songs);
 
       // Get device tokens for selected devices
+      console.log('Fetching device tokens...');
       const { data: deviceTokens, error: tokenError } = await supabase
         .from('device_tokens')
         .select('token, mac_address')

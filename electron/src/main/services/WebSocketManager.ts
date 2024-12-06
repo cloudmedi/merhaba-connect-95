@@ -95,10 +95,10 @@ export class WebSocketManager {
         }
       });
 
-      this.ws.on('message', async (data) => {
+      this.ws.on('message', async (event) => {
         try {
-          console.log('Received WebSocket message:', data.toString());
-          const message = JSON.parse(data.toString());
+          console.log('Received WebSocket message:', event.toString());
+          const message = JSON.parse(event.toString());
           console.log('Parsed message:', message);
 
           if (message.type === 'sync_playlist') {
