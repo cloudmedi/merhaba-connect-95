@@ -7,6 +7,7 @@ import { DownloadManager } from './DownloadManager';
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private playlistManager: OfflinePlaylistManager;
+  private downloadManager: DownloadManager;
   private supabaseUrl: string;
   private supabaseClient: any;
   private reconnectAttempts: number = 0;
@@ -16,6 +17,7 @@ export class WebSocketManager {
   constructor(deviceToken: string) {
     const fileSystem = new FileSystemManager(deviceToken);
     const downloadManager = new DownloadManager(fileSystem);
+    this.downloadManager = downloadManager;
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
     
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -28,6 +30,23 @@ export class WebSocketManager {
 
     this.supabaseClient = createClient(this.supabaseUrl, supabaseKey);
     this.initializeConnection(deviceToken);
+
+    // Listen for download progress
+    this.downloadManager.on('progress', (songId: string, progress: number) => {
+      this.sendProgressUpdate(songId, progress);
+    });
+  }
+
+  private sendProgressUpdate(songId: string, progress: number) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: 'download_progress',
+        payload: {
+          songId,
+          progress
+        }
+      }));
+    }
   }
 
   private async initializeConnection(deviceToken: string) {

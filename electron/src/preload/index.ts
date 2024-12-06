@@ -13,5 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Offline functionality
   syncPlaylist: (playlist: any) => ipcRenderer.invoke('sync-playlist', playlist),
   getStorageStats: () => ipcRenderer.invoke('get-storage-stats'),
-  getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId)
+  getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId),
+  onDownloadProgress: (callback: (data: { songId: string, progress: number }) => void) => {
+    ipcRenderer.on('download-progress', (_event, data) => callback(data))
+  }
 })

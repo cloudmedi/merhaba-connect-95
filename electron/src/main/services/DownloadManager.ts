@@ -2,11 +2,13 @@ import fetch from 'node-fetch';
 import * as fs from 'fs-extra';
 import { FileSystemManager } from './FileSystemManager';
 import * as crypto from 'crypto';
+import { EventEmitter } from 'events';
 
-export class DownloadManager {
+export class DownloadManager extends EventEmitter {
   private downloadProgress: { [key: string]: number } = {};
 
   constructor(private fileSystem: FileSystemManager) {
+    super();
     console.log('DownloadManager initialized');
   }
 
@@ -40,9 +42,10 @@ export class DownloadManager {
         chunks.push(chunk);
         downloaded += chunk.length;
         
-        // Update progress
+        // Update progress and emit event
         const progress = (downloaded / contentLength) * 100;
         this.downloadProgress[songId] = progress;
+        this.emit('progress', songId, progress);
         console.log(`Download progress for song ${songId}: ${progress.toFixed(2)}% (${downloaded}/${contentLength} bytes)`);
       }
 
@@ -63,11 +66,13 @@ export class DownloadManager {
 
       // Clear progress after successful download
       delete this.downloadProgress[songId];
+      this.emit('progress', songId, 100);
 
       return { success: true, hash };
     } catch (error) {
       console.error(`Error downloading song ${songId}:`, error);
       delete this.downloadProgress[songId];
+      this.emit('progress', songId, 0);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
