@@ -45,6 +45,12 @@ export interface DeviceSchedule {
 export type DeviceCategory = 'player' | 'display' | 'controller';
 export type DeviceStatus = 'online' | 'offline';
 
+export interface DeviceBranch {
+  id: string;
+  name: string;
+  company_id?: string | null;
+}
+
 export interface Device {
   id: string;
   name: string;
@@ -60,9 +66,6 @@ export interface Device {
   location?: string | null;
   branch_id?: string | null;
   location_id?: string | null;
-  branches?: {
-    id: string;
-    name: string;
-    company_id: string | null;
-  } | null;
+  created_by?: string;
+  branches?: DeviceBranch | null;
 }

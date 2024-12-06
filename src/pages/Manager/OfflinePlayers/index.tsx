@@ -20,10 +20,11 @@ export default function OfflinePlayersPage() {
       
       if (error) throw error;
 
-      // Validate and convert the data to proper Device type
       return (data || []).map((device): OfflinePlayer => {
-        const systemInfo = device.system_info as Record<string, any>;
-        // Ensure category is a valid DeviceCategory
+        const systemInfo = typeof device.system_info === 'string' 
+          ? JSON.parse(device.system_info) 
+          : device.system_info || {};
+
         const category = validateDeviceCategory(device.category);
 
         return {
