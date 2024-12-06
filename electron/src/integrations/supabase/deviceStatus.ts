@@ -4,7 +4,7 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
   try {
     console.log('Starting device status update:', { deviceToken, status, systemInfo });
 
-    // First verify the token exists and is active or used
+    // First verify the token exists and is valid
     const { data: tokenData, error: tokenError } = await supabase
       .from('device_tokens')
       .select('*')
@@ -22,22 +22,6 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
     if (expirationDate < new Date()) {
       console.log('Token has expired, skipping status update');
       return null;
-    }
-
-    // If token is active, mark it as used when device comes online
-    if (tokenData.status === 'active' && status === 'online') {
-      const { error: tokenUpdateError } = await supabase
-        .from('device_tokens')
-        .update({ 
-          status: 'used',
-          last_system_update: new Date().toISOString()
-        })
-        .eq('token', deviceToken);
-
-      if (tokenUpdateError) {
-        console.error('Error updating token status:', tokenUpdateError);
-        return null;
-      }
     }
 
     // Update device status

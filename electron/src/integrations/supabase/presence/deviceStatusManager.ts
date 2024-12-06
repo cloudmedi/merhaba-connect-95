@@ -5,11 +5,12 @@ export class DeviceStatusManager {
 
   async updateStatus(deviceToken: string, status: 'online' | 'offline'): Promise<void> {
     try {
+      // Sadece device status'ünü güncelle, token status'üne dokunma
       const { error } = await this.supabase
-        .from('device_tokens')
+        .from('devices')
         .update({ 
-          status: status === 'online' ? 'used' : 'inactive',
-          last_system_update: new Date().toISOString()
+          status,
+          last_seen: new Date().toISOString()
         })
         .eq('token', deviceToken);
 
@@ -22,7 +23,7 @@ export class DeviceStatusManager {
 
   async verifyDevice(deviceToken: string): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('device_tokens')
         .select('status')
         .eq('token', deviceToken)
