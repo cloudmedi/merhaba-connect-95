@@ -101,7 +101,7 @@ async function initializeOfflineSupport() {
     console.log('Initializing WebSocket with deviceId:', deviceId);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
     
-    wsManager = new WebSocketManager(deviceId);
+    wsManager = new WebSocketManager(deviceId, win);
   } catch (error) {
     console.error('Error initializing offline support:', error);
   }
