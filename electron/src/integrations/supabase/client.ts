@@ -62,13 +62,13 @@ async function initSupabase() {
     console.log('Device token created/retrieved:', tokenData);
     currentDeviceToken = tokenData.token;
 
-    // Sadece token active ise presence manager'ı başlat
-    if (currentDeviceToken && tokenData.status === 'active') {
+    // Sadece token expired değilse presence manager'ı başlat
+    if (currentDeviceToken && tokenData.status !== 'expired') {
       console.log('Initializing presence manager with token:', currentDeviceToken);
       await presenceManager.initialize(currentDeviceToken);
       isInitialized = true;
     } else {
-      console.log('Token is not active, skipping presence manager initialization');
+      console.log('Token is expired, skipping presence manager initialization');
     }
 
     console.log('Supabase initialization completed successfully');
