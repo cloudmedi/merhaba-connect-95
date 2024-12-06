@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button";
 
-export interface DialogFooterProps {
+interface DialogFooterProps {
   selectedCount: number;
-  onCancel: () => void;
-  onPush: () => void;
   isSyncing: boolean;
+  onCancel: () => void;
+  onPush: (selectedDevices: string[]) => void;
+  selectedDevices: string[];
 }
 
 export function DialogFooter({ 
   selectedCount, 
+  isSyncing, 
   onCancel, 
-  onPush, 
-  isSyncing 
+  onPush,
+  selectedDevices 
 }: DialogFooterProps) {
   return (
     <div className="flex justify-between items-center">
@@ -19,11 +21,14 @@ export function DialogFooter({
         {selectedCount} cihaz seçildi
       </p>
       <div className="space-x-2">
-        <Button variant="outline" onClick={onCancel} disabled={isSyncing}>
+        <Button variant="outline" onClick={onCancel}>
           İptal
         </Button>
-        <Button onClick={onPush} disabled={selectedCount === 0 || isSyncing}>
-          {isSyncing ? 'Gönderiliyor...' : 'Cihazlara Gönder'}
+        <Button 
+          onClick={() => onPush(selectedDevices)} 
+          disabled={isSyncing}
+        >
+          {isSyncing ? "Gönderiliyor..." : "Cihazlara Gönder"}
         </Button>
       </div>
     </div>
