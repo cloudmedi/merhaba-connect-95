@@ -6,29 +6,32 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { OfflinePlayer } from "@/types/offline-player";
-import type { Device } from "@/pages/Manager/Devices/hooks/types";
+import type { Device, DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
 
 export default function OfflinePlayersPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<OfflinePlayer | null>(null);
+  
   const { data: devices, isLoading } = useQuery({
     queryKey: ['offline-devices'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('devices')
-        .select('*')
-        .eq('category', 'offline_player');
+        .select('*, branches(*)');
       
       if (error) throw error;
 
-      // Convert device data to OfflinePlayer type
-      return data.map((device: Device) => {
+      // Validate and convert the data to proper Device type
+      return (data || []).map((device): OfflinePlayer => {
         const systemInfo = device.system_info as Record<string, any>;
+        // Ensure category is a valid DeviceCategory
+        const category = validateDeviceCategory(device.category);
+
         return {
           id: device.id,
           name: device.name,
           branch_id: device.branch_id,
-          category: device.category,
-          status: device.status,
+          category,
+          status: device.status || 'offline',
           ip_address: device.ip_address,
           system_info: device.system_info,
           schedule: device.schedule,
@@ -48,16 +51,24 @@ export default function OfflinePlayersPage() {
             maxStorageSize: 1000,
             ...(systemInfo?.settings || {})
           },
-          devices: {
+          devices: device.branches ? {
             id: device.id,
             name: device.name,
             branch_id: device.branch_id || '',
-            status: device.status
-          }
-        } as OfflinePlayer;
+            status: device.status || 'offline'
+          } : undefined
+        };
       });
     }
   });
+
+  // Helper function to validate device category
+  const validateDeviceCategory = (category: string): DeviceCategory => {
+    const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
+    return validCategories.includes(category as DeviceCategory) 
+      ? (category as DeviceCategory) 
+      : 'player';
+  };
 
   const handleSync = async (playerId: string) => {
     toast.info("Syncing player...");
@@ -105,7 +116,7 @@ export default function OfflinePlayersPage() {
         .update({
           system_info: {
             ...selectedPlayer.system_info,
-            settings: settings
+            settings
           }
         })
         .eq('id', selectedPlayer.id);
@@ -142,12 +153,14 @@ export default function OfflinePlayersPage() {
         ))}
       </div>
 
-      <OfflinePlayerSettings
-        open={!!selectedPlayer}
-        onOpenChange={() => setSelectedPlayer(null)}
-        player={selectedPlayer!}
-        onSave={handleSettingsSave}
-      />
+      {selectedPlayer && (
+        <OfflinePlayerSettings
+          open={!!selectedPlayer}
+          onOpenChange={() => setSelectedPlayer(null)}
+          player={selectedPlayer}
+          onSave={handleSettingsSave}
+        />
+      )}
     </div>
   );
 }
