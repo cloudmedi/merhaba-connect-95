@@ -24,38 +24,27 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Basitleştirilmiş sorgu - sadece devices tablosundan veri çekiyoruz
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        return [];
-      }
-
+      console.log('Fetching all devices...');
       const { data, error } = await supabase
         .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name
-          )
-        `)
-        .eq('branches.company_id', userProfile.company_id);
+        .select('*');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching devices:', error);
+        throw error;
+      }
+
+      console.log('Fetched devices:', data);
       return data;
     },
   });
 
   const filteredDevices = devices.filter(device =>
-    device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    device.branches?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    device.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectAll = () => {
@@ -76,7 +65,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
       setIsSyncing(true);
       toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
 
-      // Get playlist details with songs
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -96,7 +84,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
 
       if (playlistError) throw playlistError;
 
-      // Format songs data
       const songs = playlist.playlist_songs.map((ps: any) => ({
         ...ps.songs,
         file_url: ps.songs.bunny_id 
@@ -104,7 +91,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
           : ps.songs.file_url
       }));
 
-      // Send playlist to each selected device
       for (const deviceId of selectedDevices) {
         console.log(`Sending playlist to device ${deviceId}`);
         
@@ -198,12 +184,6 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
                         </Badge>
                       </div>
                       <div className="flex items-center text-xs text-gray-500 space-x-2">
-                        {device.branches?.name && (
-                          <>
-                            <span>{device.branches.name}</span>
-                            <span>•</span>
-                          </>
-                        )}
                         <span>{device.category}</span>
                         {device.last_seen && (
                           <>
