@@ -19,89 +19,16 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    loadOfflinePlaylists();
-    // Her 2 saniyede bir indirme durumunu kontrol et
-    const interval = setInterval(checkAllDownloads, 2000);
-    return () => clearInterval(interval);
+    // WebSocket üzerinden gelen mesajları dinle
+    const handleDownloadProgress = (data: { songId: string, progress: number }) => {
+      setDownloadProgress(prev => ({
+        ...prev,
+        [data.songId]: data.progress
+      }));
+    };
+
+    window.electronAPI.onDownloadProgress(handleDownloadProgress);
   }, []);
-
-  const loadOfflinePlaylists = async () => {
-    try {
-      console.log('Loading offline playlists...');
-      setIsLoading(true);
-      const result = await window.electronAPI.getOfflinePlaylists();
-      console.log('Loaded playlists:', result);
-      setPlaylists(result);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error loading playlists:', error);
-      toast.error('Playlistler yüklenirken hata oluştu');
-      setIsLoading(false);
-    }
-  };
-
-  const checkAllDownloads = async () => {
-    // Tüm playlistlerdeki şarkıların indirme durumunu kontrol et
-    for (const playlist of playlists) {
-      if (playlist.songs) {
-        for (const song of playlist.songs) {
-          try {
-            console.log(`Checking download progress for song ${song.id}...`);
-            const progress = await window.electronAPI.getDownloadProgress(song.id);
-            console.log(`Download progress for song ${song.id}:`, progress);
-            setDownloadProgress(prev => ({
-              ...prev,
-              [song.id]: progress
-            }));
-          } catch (error) {
-            console.error(`Error checking download progress for song ${song.id}:`, error);
-          }
-        }
-      }
-    }
-  };
-
-  const handleSync = async (playlist: any) => {
-    try {
-      console.log('Starting sync for playlist:', playlist);
-      setSyncStatus(prev => ({
-        ...prev,
-        [playlist.id]: {
-          playlistId: playlist.id,
-          name: playlist.name,
-          progress: 0,
-          status: 'syncing'
-        }
-      }));
-
-      const result = await window.electronAPI.syncPlaylist(playlist);
-      console.log('Sync result:', result);
-      
-      if (result.success) {
-        setSyncStatus(prev => ({
-          ...prev,
-          [playlist.id]: {
-            ...prev[playlist.id],
-            progress: 100,
-            status: 'completed'
-          }
-        }));
-        toast.success(`${playlist.name} başarıyla senkronize edildi`);
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error('Sync error:', error);
-      setSyncStatus(prev => ({
-        ...prev,
-        [playlist.id]: {
-          ...prev[playlist.id],
-          status: 'error'
-        }
-      }));
-      toast.error(`${playlist.name} senkronizasyonu başarısız`);
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -121,22 +48,13 @@ export function PlaylistSync() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Offline Playlistler</span>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={loadOfflinePlaylists}
-            disabled={isLoading}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Yenile
-          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {playlists.length === 0 ? (
             <p className="text-center text-gray-500 py-8">
-              Henüz offline playlist bulunmuyor
+              WebSocket bağlantısı bekleniyor...
             </p>
           ) : (
             playlists.map((playlist) => (
@@ -158,16 +76,7 @@ export function PlaylistSync() {
                     value={syncStatus[playlist.id]?.progress} 
                     className="w-[100px]"
                   />
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleSync(playlist)}
-                    disabled={syncStatus[playlist.id]?.status === 'syncing'}
-                  >
-                    Senkronize Et
-                  </Button>
-                )}
+                ) : null}
               </div>
             ))
           )}
