@@ -4,16 +4,16 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
   try {
     console.log('Starting device status update:', { deviceToken, status, systemInfo });
 
-    // First verify the token exists and is active
+    // First verify the token exists and is active or used
     const { data: tokenData, error: tokenError } = await supabase
       .from('device_tokens')
       .select('*')
       .eq('token', deviceToken)
-      .eq('status', 'active')
+      .in('status', ['active', 'used'])
       .single();
 
     if (tokenError || !tokenData) {
-      console.log('Token not found or not active, skipping status update');
+      console.log('Token not found or invalid status:', tokenError);
       return null;
     }
 
@@ -24,7 +24,23 @@ export async function updateDeviceStatus(deviceToken: string, status: 'online' |
       return null;
     }
 
-    // Update device status directly in the database
+    // If token is active, mark it as used when device comes online
+    if (tokenData.status === 'active' && status === 'online') {
+      const { error: tokenUpdateError } = await supabase
+        .from('device_tokens')
+        .update({ 
+          status: 'used',
+          last_system_update: new Date().toISOString()
+        })
+        .eq('token', deviceToken);
+
+      if (tokenUpdateError) {
+        console.error('Error updating token status:', tokenUpdateError);
+        return null;
+      }
+    }
+
+    // Update device status
     const { data: updateData, error: updateError } = await supabase
       .from('devices')
       .update({
