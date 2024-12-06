@@ -3,7 +3,7 @@ import { supabase } from './client';
 interface DeviceToken {
   token: string;
   status: 'active' | 'used' | 'expired';
-  expires_at: string;
+  expires_at: string;  // This is explicitly defined as string now
   mac_address: string;
   system_info?: Record<string, any>;
 }
@@ -29,7 +29,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
     // Look for an active and non-expired token
     const activeToken = allTokens?.find(token => {
       const isActive = token.status === 'active';
-      const isNotExpired = new Date(token.expires_at) > new Date();
+      const isNotExpired = new Date(token.expires_at as string) > new Date();
       return isActive && isNotExpired;
     });
     
