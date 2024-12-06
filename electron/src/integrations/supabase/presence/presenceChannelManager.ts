@@ -5,11 +5,11 @@ export class PresenceChannelManager {
   private presenceChannel: RealtimeChannel | null = null;
   private isSubscribed = false;
   private lastTrackTime: number = 0;
-  private readonly MIN_TRACK_INTERVAL = 1000; // 1 saniye minimum izleme aralığı
+  private readonly MIN_TRACK_INTERVAL = 1000;
   private currentState: 'online' | 'offline' = 'offline';
   private stateUpdateTimeout: NodeJS.Timeout | null = null;
   private lastHeartbeatTime: number = Date.now();
-  private readonly OFFLINE_THRESHOLD = 10000; // 10 saniye eşiği
+  private readonly OFFLINE_THRESHOLD = 10000;
 
   constructor(
     private supabase: SupabaseClient,
@@ -18,6 +18,10 @@ export class PresenceChannelManager {
     private onStatusChange: (status: 'online' | 'offline') => Promise<void>
   ) {
     console.log('PresenceChannelManager initialized for device:', deviceToken);
+  }
+
+  getChannel(): RealtimeChannel | null {
+    return this.presenceChannel;
   }
 
   async setup(): Promise<void> {

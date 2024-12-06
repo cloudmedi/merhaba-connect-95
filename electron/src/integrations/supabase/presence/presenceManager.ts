@@ -66,14 +66,19 @@ export class PresenceManager {
       await this.updateDeviceStatus('online');
       this.lastStatus = 'online';
 
-      console.log('Creating HeartbeatManager');
-      this.heartbeatManager = new HeartbeatManager(
-        this.config.heartbeatInterval,
-        () => this.updatePresence()
-      );
-      
-      console.log('Starting heartbeat');
-      await this.heartbeatManager.start();
+      if (this.presenceChannelManager.getChannel()) {
+        console.log('Creating HeartbeatManager');
+        this.heartbeatManager = new HeartbeatManager(
+          this.presenceChannelManager.getChannel(),
+          deviceToken,
+          this.config.heartbeatInterval
+        );
+        
+        console.log('Starting heartbeat');
+        this.heartbeatManager.start();
+      } else {
+        console.error('Failed to create HeartbeatManager: channel not available');
+      }
 
       this.isInitialized = true;
       console.log('PresenceManager initialization completed');
