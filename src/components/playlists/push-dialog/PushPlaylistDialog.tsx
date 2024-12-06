@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { DeviceList } from "./DeviceList";
-import { usePushPlaylist } from "./usePushPlaylist";
+import { usePlaylistSync } from "@/hooks/usePlaylistSync";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ export function PushPlaylistDialog({
 }: PushPlaylistDialogProps) {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
+  const { isSyncing, handleSync } = usePlaylistSync(playlistId, playlistTitle);
 
   const handleSelectAll = (devices: string[]) => {
     if (selectedDevices.length === devices.length) {
@@ -37,6 +37,13 @@ export function PushPlaylistDialog({
         ? prev.filter(id => id !== deviceId)
         : [...prev, deviceId]
     );
+  };
+
+  const handlePush = async () => {
+    await handleSync(selectedDevices);
+    if (!isSyncing) {
+      onClose();
+    }
   };
 
   return (
@@ -80,7 +87,7 @@ export function PushPlaylistDialog({
               <Button variant="outline" onClick={onClose}>
                 İptal
               </Button>
-              <Button onClick={() => handlePush(selectedDevices)} disabled={isSyncing}>
+              <Button onClick={handlePush} disabled={isSyncing}>
                 {isSyncing ? "Gönderiliyor..." : "Cihazlara Gönder"}
               </Button>
             </div>
