@@ -1,16 +1,21 @@
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface DeviceInfo {
+  systemInfo?: Record<string, any>;
+  existingDevice?: any;
+}
 
 export function useDeviceVerification() {
   const [isVerifying, setIsVerifying] = useState(false);
 
-  const verifyTokenAndGetDeviceInfo = async (token: string) => {
+  const verifyTokenAndGetDeviceInfo = async (token: string): Promise<DeviceInfo | null> => {
     try {
       setIsVerifying(true);
       console.log('Verifying token:', token);
 
-      // First check if token exists and is valid
+      // First check if token exists and is active
       const { data: tokenData, error: tokenError } = await supabase
         .from('device_tokens')
         .select('*')
@@ -18,31 +23,60 @@ export function useDeviceVerification() {
         .single();
 
       if (tokenError) {
-        console.error('Token verification failed:', tokenError);
-        toast.error('Geçersiz cihaz tokeni');
+        console.error('Token verification error:', tokenError);
+        toast.error('Token doğrulanamadı');
         return null;
       }
 
       if (!tokenData) {
+        console.error('Token not found');
         toast.error('Token bulunamadı');
         return null;
       }
 
+      console.log('Found token:', tokenData);
+
+      // Check if token is already used
+      if (tokenData.status === 'used') {
+        console.error('Token already used');
+        toast.error('Bu token zaten kullanılmış');
+        return null;
+      }
+
       // Check if token is expired
-      if (new Date(tokenData.expires_at) < new Date()) {
+      const isExpired = new Date(tokenData.expires_at) < new Date();
+      if (isExpired) {
+        console.error('Token expired');
         toast.error('Token süresi dolmuş');
         return null;
       }
 
-      // Return device info regardless of token status
+      // Check if device already exists with this token
+      const { data: existingDevice } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('token', token)
+        .single();
+
+      // Update token status to used when device is created
+      if (!existingDevice) {
+        const { error: updateError } = await supabase
+          .from('device_tokens')
+          .update({ status: 'used' })
+          .eq('token', token);
+
+        if (updateError) {
+          console.error('Error updating token status:', updateError);
+        }
+      }
+
       return {
         systemInfo: tokenData.system_info,
-        existingDevice: null
+        existingDevice: existingDevice || null
       };
-
     } catch (error) {
-      console.error('Error in verifyTokenAndGetDeviceInfo:', error);
-      toast.error('Token doğrulama hatası');
+      console.error('Verification error:', error);
+      toast.error('Doğrulama sırasında bir hata oluştu');
       return null;
     } finally {
       setIsVerifying(false);
