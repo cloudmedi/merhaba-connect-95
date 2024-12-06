@@ -34,6 +34,7 @@ export class WebSocketManager {
         throw new Error('Supabase client not initialized');
       }
 
+      // Direkt olarak device token'ı kullanarak bağlantı kur
       const { data: tokenData, error } = await this.supabaseClient
         .from('device_tokens')
         .select('token')
@@ -53,14 +54,14 @@ export class WebSocketManager {
     }
   }
 
-  private async connect(realToken: string) {
+  private async connect(token: string) {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
         return;
       }
 
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${realToken}`;
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
@@ -79,7 +80,7 @@ export class WebSocketManager {
         this.reconnectAttempts++;
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connect(realToken), this.reconnectDelay);
+          setTimeout(() => this.connect(token), this.reconnectDelay);
         }
       });
     } catch (error) {
@@ -87,7 +88,7 @@ export class WebSocketManager {
       this.reconnectAttempts++;
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connect(realToken), this.reconnectDelay);
+        setTimeout(() => this.connect(token), this.reconnectDelay);
       }
     }
   }
