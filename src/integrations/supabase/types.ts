@@ -699,50 +699,6 @@ export type Database = {
           },
         ]
       }
-      offline_players: {
-        Row: {
-          created_at: string | null
-          device_id: string | null
-          id: string
-          last_sync_at: string | null
-          local_storage_path: string | null
-          settings: Json | null
-          sync_status: string | null
-          updated_at: string | null
-          version: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          device_id?: string | null
-          id?: string
-          last_sync_at?: string | null
-          local_storage_path?: string | null
-          settings?: Json | null
-          sync_status?: string | null
-          updated_at?: string | null
-          version?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          device_id?: string | null
-          id?: string
-          last_sync_at?: string | null
-          local_storage_path?: string | null
-          settings?: Json | null
-          sync_status?: string | null
-          updated_at?: string | null
-          version?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "offline_players_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "devices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       offline_playlists: {
         Row: {
           created_at: string | null
@@ -775,13 +731,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "offline_playlists_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "offline_players"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "offline_playlists_playlist_id_fkey"
             columns: ["playlist_id"]
@@ -830,13 +779,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "offline_songs_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "offline_players"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "offline_songs_song_id_fkey"
             columns: ["song_id"]
@@ -891,15 +833,7 @@ export type Database = {
           status?: string | null
           sync_type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "offline_sync_history_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "offline_players"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       playlist_assignments: {
         Row: {
