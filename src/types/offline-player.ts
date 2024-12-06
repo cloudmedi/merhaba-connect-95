@@ -1,18 +1,29 @@
+import type { Json } from "@/integrations/supabase/types";
+
 export interface OfflinePlayer {
   id: string;
+  name: string;
+  branch_id?: string;
+  category: string;
+  status: string;
+  ip_address?: string;
+  system_info: Json;
+  schedule: Json;
+  last_seen?: string;
+  token?: string;
+  location?: string;
+  location_id?: string;
+  created_at: string;
+  updated_at: string;
   device_id: string;
   last_sync_at: string;
   sync_status: 'pending' | 'syncing' | 'completed' | 'failed';
-  local_storage_path?: string;
-  version?: string;
   settings: {
     autoSync?: boolean;
     syncInterval?: number;
     maxStorageSize?: number;
     [key: string]: any;
   };
-  created_at: string;
-  updated_at: string;
   devices?: {
     id: string;
     name: string;

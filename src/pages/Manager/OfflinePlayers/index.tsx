@@ -18,22 +18,50 @@ export default function OfflinePlayersPage() {
         .eq('category', 'offline_player');
       
       if (error) throw error;
-      return data;
+
+      // Convert device data to OfflinePlayer type
+      return data.map(device => ({
+        ...device,
+        device_id: device.id,
+        last_sync_at: device.last_seen || new Date().toISOString(),
+        sync_status: device.status === 'online' ? 'completed' : 'pending',
+        settings: {
+          autoSync: true,
+          syncInterval: 30,
+          maxStorageSize: 1000,
+          ...(device.system_info as any)?.settings
+        }
+      })) as OfflinePlayer[];
     }
   });
 
   const handleSync = async (playerId: string) => {
     toast.info("Syncing player...");
     try {
-      const result = await window.electronAPI.syncPlaylist({
-        deviceId: playerId
-      });
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
       
-      if (result.success) {
-        toast.success("Sync completed successfully");
-      } else {
-        toast.error("Sync failed");
-      }
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          type: 'sync_device',
+          payload: { deviceId: playerId }
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const response = JSON.parse(event.data);
+        if (response.type === 'sync_complete') {
+          toast.success("Sync completed successfully");
+        } else if (response.type === 'sync_error') {
+          toast.error(`Sync failed: ${response.error}`);
+        }
+      };
+
+      ws.onerror = () => {
+        toast.error("Failed to establish connection");
+      };
     } catch (error) {
       console.error('Sync error:', error);
       toast.error("Failed to sync player");
@@ -50,7 +78,12 @@ export default function OfflinePlayersPage() {
     try {
       const { error } = await supabase
         .from('devices')
-        .update(settings)
+        .update({
+          system_info: {
+            ...selectedPlayer.system_info,
+            settings: settings
+          }
+        })
         .eq('id', selectedPlayer.id);
         
       if (error) throw error;
