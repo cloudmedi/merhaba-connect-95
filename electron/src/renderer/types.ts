@@ -38,9 +38,10 @@ declare global {
       onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
       getEnvVars: () => Promise<Record<string, string>>;
       syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
-      getOfflinePlaylists: () => Promise<any[]>;
       getStorageStats: () => Promise<{ used: number; total: number }>;
       getDownloadProgress: (songId: string) => Promise<number>;
+      onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
+      registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
     };
   }
 }
