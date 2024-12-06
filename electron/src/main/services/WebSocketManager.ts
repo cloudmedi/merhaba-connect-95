@@ -1,14 +1,9 @@
 import WebSocket from 'ws';
 import { createClient } from '@supabase/supabase-js';
-import { OfflinePlaylistManager } from './OfflinePlaylistManager';
-import { FileSystemManager } from './FileSystemManager';
-import { DownloadManager } from './DownloadManager';
 import { BrowserWindow } from 'electron';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
-  private playlistManager: OfflinePlaylistManager;
-  private downloadManager: DownloadManager;
   private supabaseUrl: string;
   private supabaseClient: any;
   private reconnectAttempts: number = 0;
@@ -18,10 +13,6 @@ export class WebSocketManager {
 
   constructor(deviceToken: string, win: BrowserWindow | null) {
     console.log('Initializing WebSocketManager with token:', deviceToken);
-    const fileSystem = new FileSystemManager(deviceToken);
-    const downloadManager = new DownloadManager(fileSystem);
-    this.downloadManager = downloadManager;
-    this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
     this.win = win;
 
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -34,11 +25,6 @@ export class WebSocketManager {
 
     this.supabaseClient = createClient(this.supabaseUrl, supabaseKey);
     this.initializeConnection(deviceToken);
-
-    // Listen for download progress
-    this.downloadManager.on('progress', (songId: string, progress: number) => {
-      this.sendProgressUpdate(songId, progress);
-    });
   }
 
   private async initializeConnection(deviceToken: string) {
@@ -52,7 +38,7 @@ export class WebSocketManager {
         .from('device_tokens')
         .select('token')
         .eq('mac_address', deviceToken)
-        .eq('status', 'active')
+        .in('status', ['active', 'used'])
         .single();
 
       if (error || !tokenData) {
@@ -82,60 +68,6 @@ export class WebSocketManager {
       this.ws.on('open', () => {
         console.log('WebSocket connection opened successfully');
         this.reconnectAttempts = 0;
-        
-        // Send initial connection message
-        if (this.ws?.readyState === WebSocket.OPEN) {
-          console.log('Sending initial connection message');
-          this.ws.send(JSON.stringify({
-            type: 'connect',
-            payload: {
-              token: realToken
-            }
-          }));
-        }
-      });
-
-      this.ws.on('message', async (event) => {
-        try {
-          console.log('Received WebSocket message:', event.toString());
-          const message = JSON.parse(event.toString());
-          console.log('Parsed message:', message);
-
-          if (message.type === 'sync_playlist') {
-            console.log('Processing sync_playlist message:', message.payload);
-            const { playlist } = message.payload;
-            const result = await this.playlistManager.syncPlaylist(playlist);
-            
-            if (this.ws?.readyState === WebSocket.OPEN) {
-              console.log('Sending sync result:', result);
-              this.ws.send(JSON.stringify({
-                type: result.success ? 'sync_success' : 'sync_error',
-                payload: result.success ? {
-                  token: realToken,
-                  playlistId: playlist.id
-                } : result.error
-              }));
-
-              // Send progress to renderer process
-              if (this.win?.webContents) {
-                console.log(`Sending sync result to renderer: ${playlist.id}`);
-                this.win.webContents.send('playlist-sync-result', { 
-                  playlistId: playlist.id,
-                  success: result.success,
-                  error: result.error
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error processing WebSocket message:', error);
-          if (this.ws?.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-              type: 'sync_error',
-              payload: error instanceof Error ? error.message : 'Unknown error occurred'
-            }));
-          }
-        }
       });
 
       this.ws.on('error', (error) => {
@@ -160,22 +92,28 @@ export class WebSocketManager {
     }
   }
 
-  private sendProgressUpdate(songId: string, progress: number) {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      console.log(`Sending progress update for song ${songId}: ${progress}%`);
+  public async sendPlaylist(playlist: any) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket connection not ready');
+      return { success: false, error: 'WebSocket connection not ready' };
+    }
+
+    try {
+      console.log('Sending playlist via WebSocket:', playlist);
       this.ws.send(JSON.stringify({
-        type: 'download_progress',
+        type: 'sync_playlist',
         payload: {
-          songId,
-          progress
+          playlist
         }
       }));
-      
-      // Send progress to renderer process
-      if (this.win?.webContents) {
-        console.log(`Sending progress to renderer: ${songId}, ${progress}%`);
-        this.win.webContents.send('download-progress', { songId, progress });
-      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending playlist:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
     }
   }
 

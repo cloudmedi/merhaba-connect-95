@@ -1,12 +1,8 @@
 import { ipcMain } from 'electron';
-import { FileSystemManager } from '../services/FileSystemManager';
-import { DownloadManager } from '../services/DownloadManager';
-import { OfflinePlaylistManager } from '../services/OfflinePlaylistManager';
+import { WebSocketManager } from '../services/WebSocketManager';
 
 export function setupOfflineHandlers(deviceId: string) {
-  const fileSystem = new FileSystemManager(deviceId);
-  const downloadManager = new DownloadManager(fileSystem);
-  const playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
+  const wsManager = new WebSocketManager(deviceId, null);
 
   ipcMain.handle('sync-playlist', async (_, playlist) => {
     console.log('Received sync request for playlist:', playlist);
@@ -17,9 +13,11 @@ export function setupOfflineHandlers(deviceId: string) {
     }
 
     try {
-      console.log('Starting playlist sync...');
-      const result = await playlistManager.syncPlaylist(playlist);
-      console.log('Playlist sync result:', result);
+      console.log('Starting playlist sync via WebSocket...');
+      
+      // WebSocket üzerinden playlist'i gönder
+      const result = await wsManager.sendPlaylist(playlist);
+      console.log('WebSocket sync result:', result);
 
       return result;
     } catch (error) {
@@ -29,13 +27,5 @@ export function setupOfflineHandlers(deviceId: string) {
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
     }
-  });
-
-  ipcMain.handle('get-storage-stats', async () => {
-    return await fileSystem.getStorageStats();
-  });
-
-  ipcMain.handle('get-download-progress', async (_, songId) => {
-    return downloadManager.getProgress(songId);
   });
 }
