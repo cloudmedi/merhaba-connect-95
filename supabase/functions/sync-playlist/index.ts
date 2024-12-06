@@ -7,12 +7,20 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Request received:', {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   const { token } = new URL(req.url).searchParams;
+  console.log('Token received:', token);
   
   if (!token) {
     console.error('Token is required');
@@ -23,7 +31,10 @@ serve(async (req) => {
   }
 
   const upgrade = req.headers.get('upgrade') || '';
+  console.log('Upgrade header:', upgrade);
+
   if (upgrade.toLowerCase() != 'websocket') {
+    console.error('Expected websocket upgrade');
     return new Response('Expected websocket upgrade', { status: 426 });
   }
 
@@ -33,12 +44,15 @@ serve(async (req) => {
   );
 
   // Validate device token
+  console.log('Validating token in device_tokens table...');
   const { data: deviceToken, error: tokenError } = await supabase
     .from('device_tokens')
-    .select('token')
+    .select('token, status')
     .eq('token', token)
     .in('status', ['active', 'used'])
     .single();
+
+  console.log('Token validation result:', { deviceToken, tokenError });
 
   if (tokenError || !deviceToken) {
     console.error('Invalid or expired token');
@@ -49,6 +63,7 @@ serve(async (req) => {
   }
 
   const { socket, response } = Deno.upgradeWebSocket(req);
+  console.log('WebSocket connection upgraded successfully');
 
   socket.onopen = () => {
     console.log('WebSocket connection opened');
@@ -56,17 +71,17 @@ serve(async (req) => {
 
   socket.onmessage = async (event) => {
     try {
+      console.log('Received message:', event.data);
       const data = JSON.parse(event.data);
       
       if (data.type === 'sync_playlist') {
-        const { playlist } = data.payload;
-        console.log(`Syncing playlist ${playlist.id}`);
+        console.log('Processing playlist sync:', data.payload);
         
         // Send success response
         socket.send(JSON.stringify({
           type: 'sync_success',
           payload: {
-            playlistId: playlist.id
+            playlistId: data.payload.playlist.id
           }
         }));
       }

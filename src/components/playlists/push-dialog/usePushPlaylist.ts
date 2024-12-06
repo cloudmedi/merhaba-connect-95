@@ -21,12 +21,16 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         .in('id', selectedDevices)
         .single();
 
+      console.log('Device data query result:', { deviceData, deviceError });
+
       if (deviceError || !deviceData?.token) {
+        console.error('Device token query error:', deviceError);
         throw new Error('Cihaz token\'ı bulunamadı');
       }
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
+        console.error('Supabase URL not found in env');
         throw new Error('Supabase URL not found');
       }
 
@@ -36,7 +40,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('WebSocket connection opened');
+        console.log('WebSocket connection opened, sending playlist data');
         ws.send(JSON.stringify({
           type: 'sync_playlist',
           payload: {
@@ -48,28 +52,36 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       ws.onmessage = (event) => {
         const response = JSON.parse(event.data);
-        console.log('WebSocket response:', response);
+        console.log('WebSocket response received:', response);
         
         if (response.type === 'sync_success') {
+          console.log('Sync successful:', response);
           toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
           onClose();
         } else if (response.type === 'error') {
+          console.error('Sync error:', response);
           toast.error(`Hata: ${response.payload.message}`);
         }
       };
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        console.log('WebSocket readyState:', ws.readyState);
+        console.log('WebSocket bufferedAmount:', ws.bufferedAmount);
         toast.error("Bağlantı hatası oluştu");
       };
 
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
         setIsSyncing(false);
       };
 
     } catch (error) {
-      console.error('Error syncing playlist:', error);
+      console.error('Error in handlePush:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
       setIsSyncing(false);
     }
