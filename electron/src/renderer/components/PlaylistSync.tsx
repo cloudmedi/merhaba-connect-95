@@ -19,15 +19,20 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    // WebSocket üzerinden gelen mesajları dinle
-    const handleDownloadProgress = (data: { songId: string, progress: number }) => {
+    console.log('Setting up download progress listener');
+    const cleanup = window.electronAPI.onDownloadProgress((data) => {
+      console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,
         [data.songId]: data.progress
       }));
-    };
+    });
 
-    window.electronAPI.onDownloadProgress(handleDownloadProgress);
+    // Cleanup subscription when component unmounts
+    return () => {
+      console.log('Cleaning up download progress listener');
+      cleanup();
+    };
   }, []);
 
   const getStatusIcon = (status: string) => {
