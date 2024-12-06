@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Json } from "@/integrations/supabase/types";
 
 interface DeviceInfo {
   systemInfo?: Record<string, any>;
   existingDevice?: any;
+}
+
+function isRecord(value: Json): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function useDeviceVerification() {
@@ -70,8 +75,11 @@ export function useDeviceVerification() {
         }
       }
 
+      // Ensure system_info is a valid object before returning
+      const systemInfo = isRecord(tokenData.system_info) ? tokenData.system_info : {};
+
       return {
-        systemInfo: tokenData.system_info,
+        systemInfo,
         existingDevice: existingDevice || null
       };
     } catch (error) {
