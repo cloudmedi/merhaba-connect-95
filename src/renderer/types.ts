@@ -42,6 +42,7 @@ declare global {
       getStorageStats: () => Promise<{ used: number; total: number }>;
       getDownloadProgress: (songId: string) => Promise<number>;
       onDownloadProgress: (callback: (data: { songId: string, progress: number }) => void) => void;
+      registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
     };
   }
 }

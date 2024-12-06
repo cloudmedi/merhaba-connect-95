@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId),
   onDownloadProgress: (callback: (data: { songId: string, progress: number }) => void) => {
     ipcRenderer.on('download-progress', (_event, data) => callback(data))
-  }
+  },
+  // Device registration
+  registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)
 })

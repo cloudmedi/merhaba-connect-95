@@ -176,3 +176,21 @@ app.on('activate', () => {
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
 ipcMain.handle('get-device-id', () => deviceId);
+ipcMain.handle('register-device', async (_event, deviceInfo) => {
+  try {
+    // Cihaz kaydını gerçekleştir
+    const token = deviceInfo.id.slice(0, 6).toUpperCase(); // Basit bir token oluştur
+    deviceId = deviceInfo.id;
+    
+    // WebSocket bağlantısını başlat
+    if (wsManager) {
+      await wsManager.disconnect();
+    }
+    wsManager = new WebSocketManager(deviceId);
+    
+    return { token };
+  } catch (error) {
+    console.error('Error registering device:', error);
+    throw error;
+  }
+});
