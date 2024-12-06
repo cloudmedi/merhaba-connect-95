@@ -26,44 +26,27 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
 
     console.log('Found tokens:', allTokens);
 
-    // Look for an active and non-expired token
-    const activeToken = allTokens?.find(token => {
-      const isActive = token.status === 'active';
-      const isNotExpired = new Date(token.expires_at as string) > new Date();
-      return isActive && isNotExpired;
-    });
-    
-    if (activeToken) {
-      console.log('Found existing active token:', {
-        token: activeToken.token,
-        status: activeToken.status,
-        expires_at: activeToken.expires_at,
-        mac_address: activeToken.mac_address
+    // If there are any existing tokens for this MAC address, return the most recent one
+    if (allTokens && allTokens.length > 0) {
+      const mostRecentToken = allTokens[0];
+      console.log('Using existing token:', {
+        token: mostRecentToken.token,
+        status: mostRecentToken.status,
+        expires_at: mostRecentToken.expires_at,
+        mac_address: mostRecentToken.mac_address
       });
 
       // Validate the token data structure
-      if (!activeToken.token || !activeToken.status || !activeToken.expires_at || !activeToken.mac_address) {
+      if (!mostRecentToken.token || !mostRecentToken.status || !mostRecentToken.expires_at || !mostRecentToken.mac_address) {
         throw new Error('Invalid token data structure');
       }
 
-      return activeToken as DeviceToken;
+      return mostRecentToken as DeviceToken;
     }
 
-    console.log('No valid active token found, creating new one...');
+    console.log('No tokens found for this MAC address, creating new one...');
 
-    // Deactivate all existing tokens for this MAC address
-    if (allTokens && allTokens.length > 0) {
-      const { error: updateError } = await supabase
-        .from('device_tokens')
-        .update({ status: 'expired' })
-        .eq('mac_address', macAddress);
-
-      if (updateError) {
-        console.error('Error deactivating old tokens:', updateError);
-      }
-    }
-
-    // Create new token
+    // Create new token only if no tokens exist for this MAC address
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
     const expirationDate = new Date();
     expirationDate.setFullYear(expirationDate.getFullYear() + 1);
