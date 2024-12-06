@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from './ui/progress';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { WebSocketMessage } from '../../types/electron';
 
 interface SyncStatus {
   playlistId: string;
@@ -19,8 +20,25 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up download progress listener');
-    const cleanup = window.electronAPI.onDownloadProgress((data) => {
+    console.log('Setting up WebSocket listeners');
+    const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
+      console.log('WebSocket message received:', data);
+      if (data.type === 'sync_playlist' && data.payload.playlist) {
+        const playlist = data.payload.playlist;
+        setPlaylists(prev => [...prev, playlist]);
+        setSyncStatus(prev => ({
+          ...prev,
+          [playlist.id]: {
+            playlistId: playlist.id,
+            name: playlist.name,
+            progress: 0,
+            status: 'syncing'
+          }
+        }));
+      }
+    });
+
+    const downloadCleanup = window.electronAPI.onDownloadProgress((data) => {
       console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,
@@ -28,10 +46,9 @@ export function PlaylistSync() {
       }));
     });
 
-    // Cleanup subscription when component unmounts
     return () => {
-      console.log('Cleaning up download progress listener');
       cleanup();
+      downloadCleanup();
     };
   }, []);
 
