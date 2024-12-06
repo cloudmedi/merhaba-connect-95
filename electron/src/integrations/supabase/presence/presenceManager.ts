@@ -3,6 +3,7 @@ import { PresenceConfig } from './types';
 import { DeviceStatusManager } from './deviceStatusManager';
 import { PresenceChannelManager } from './presenceChannelManager';
 import { HeartbeatManager } from './heartbeatManager';
+import { PresenceInitializer } from './presenceInitializer';
 
 export class PresenceManager {
   private deviceToken: string | null = null;
@@ -14,6 +15,7 @@ export class PresenceManager {
   private lastStatus: 'online' | 'offline' = 'offline';
   private missedHeartbeats = 0;
   private readonly MAX_MISSED_HEARTBEATS = 2;
+  private presenceInitializer: PresenceInitializer;
 
   constructor(private supabase: SupabaseClient, config: PresenceConfig = {}) {
     console.log('Initializing PresenceManager with config:', config);
@@ -24,6 +26,11 @@ export class PresenceManager {
     };
     
     this.deviceStatusManager = new DeviceStatusManager(supabase);
+    this.presenceInitializer = new PresenceInitializer(
+      supabase,
+      this.deviceStatusManager,
+      this.config
+    );
     console.log('PresenceManager constructed with config:', this.config);
   }
 
@@ -38,14 +45,6 @@ export class PresenceManager {
     this.missedHeartbeats = 0;
 
     try {
-      console.log('Verifying device token');
-      const isValidDevice = await this.deviceStatusManager.verifyDevice(deviceToken);
-      if (!isValidDevice) {
-        console.error('Invalid device token:', deviceToken);
-        return;
-      }
-
-      console.log('Creating PresenceChannelManager');
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
@@ -58,28 +57,13 @@ export class PresenceManager {
         }
       );
 
-      console.log('Setting up presence channel');
-      await this.presenceChannelManager.setup();
+      this.heartbeatManager = await this.presenceInitializer.initialize(
+        deviceToken,
+        this.presenceChannelManager,
+        (status) => this.updateDeviceStatus(status)
+      );
+
       this.setupCleanup();
-
-      console.log('Initial status update');
-      await this.updateDeviceStatus('online');
-      this.lastStatus = 'online';
-
-      if (this.presenceChannelManager.getChannel()) {
-        console.log('Creating HeartbeatManager');
-        this.heartbeatManager = new HeartbeatManager(
-          this.presenceChannelManager.getChannel(),
-          deviceToken,
-          this.config.heartbeatInterval
-        );
-        
-        console.log('Starting heartbeat');
-        this.heartbeatManager.start();
-      } else {
-        console.error('Failed to create HeartbeatManager: channel not available');
-      }
-
       this.isInitialized = true;
       console.log('PresenceManager initialization completed');
     } catch (error) {
@@ -122,34 +106,6 @@ export class PresenceManager {
         console.log('Too many missed heartbeats, marking device as offline');
         await this.deviceStatusManager.updateStatus(this.deviceToken, 'offline');
         this.lastStatus = 'offline';
-        await this.reconnect();
-      }
-    }
-  }
-
-  private async updatePresence(): Promise<void> {
-    if (!this.deviceToken || !this.presenceChannelManager) {
-      console.log('Cannot update presence: missing token or channel manager');
-      return;
-    }
-
-    try {
-      console.log('Updating presence status');
-      await this.presenceChannelManager.track('online');
-      this.missedHeartbeats = 0;
-      console.log('Presence status updated successfully');
-    } catch (error) {
-      console.error('Error updating presence:', {
-        error,
-        deviceToken: this.deviceToken,
-        timestamp: new Date().toISOString()
-      });
-      
-      this.missedHeartbeats++;
-      console.log(`Missed heartbeats: ${this.missedHeartbeats}/${this.MAX_MISSED_HEARTBEATS}`);
-      
-      if (this.missedHeartbeats >= this.MAX_MISSED_HEARTBEATS) {
-        console.log('Too many missed heartbeats, attempting to reconnect...');
         await this.reconnect();
       }
     }
