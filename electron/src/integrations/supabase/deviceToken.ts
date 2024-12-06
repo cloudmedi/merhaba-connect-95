@@ -3,7 +3,7 @@ import { supabase } from './client';
 interface DeviceToken {
   token: string;
   status: 'active' | 'used' | 'expired';
-  expires_at: string;  // This is explicitly defined as string now
+  expires_at: string;
   mac_address: string;
   system_info?: Record<string, any>;
 }
@@ -13,7 +13,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
     console.log('Checking existing tokens for MAC:', macAddress);
     
     // First check for ANY existing tokens for this MAC address
-    const { data: allTokens, error: checkError } = await supabase
+    const { data: existingTokens, error: checkError } = await supabase
       .from('device_tokens')
       .select('token, status, expires_at, mac_address, system_info')
       .eq('mac_address', macAddress)
@@ -24,11 +24,11 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
       throw checkError;
     }
 
-    console.log('Found tokens:', allTokens);
+    console.log('Found tokens:', existingTokens);
 
     // If there are any existing tokens for this MAC address, return the most recent one
-    if (allTokens && allTokens.length > 0) {
-      const mostRecentToken = allTokens[0];
+    if (existingTokens && existingTokens.length > 0) {
+      const mostRecentToken = existingTokens[0];
       console.log('Using existing token:', {
         token: mostRecentToken.token,
         status: mostRecentToken.status,
@@ -56,7 +56,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
       .insert({
         token,
         mac_address: macAddress,
-        status: 'active',
+        status: 'active', // Explicitly set status as active
         expires_at: expirationDate.toISOString(),
       })
       .select('token, status, expires_at, mac_address, system_info')
