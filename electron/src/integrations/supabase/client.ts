@@ -54,7 +54,7 @@ async function initSupabase() {
 
     console.log('Creating device token with MAC address:', macAddress);
     const tokenData = await createDeviceToken(macAddress);
-    if (!tokenData) {
+    if (!tokenData || !tokenData.token) {
       console.error('Failed to create/get device token');
       return supabase;
     }
@@ -62,9 +62,11 @@ async function initSupabase() {
     console.log('Device token created/retrieved:', tokenData);
     currentDeviceToken = tokenData.token;
 
-    console.log('Initializing presence manager with token:', currentDeviceToken);
-    await presenceManager.initialize(currentDeviceToken);
-    isInitialized = true;
+    if (currentDeviceToken) {
+      console.log('Initializing presence manager with token:', currentDeviceToken);
+      await presenceManager.initialize(currentDeviceToken);
+      isInitialized = true;
+    }
 
     console.log('Supabase initialization completed successfully');
     return supabase;

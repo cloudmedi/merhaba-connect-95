@@ -37,6 +37,10 @@ declare global {
       getMacAddress: () => Promise<string | null>;
       onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
       getEnvVars: () => Promise<Record<string, string>>;
+      syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
+      getOfflinePlaylists: () => Promise<any[]>;
+      getStorageStats: () => Promise<{ used: number; total: number }>;
+      getDownloadProgress: (songId: string) => Promise<number>;
     };
   }
 }

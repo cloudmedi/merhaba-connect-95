@@ -1,83 +1,75 @@
-export class HeartbeatManager {
-  private interval: NodeJS.Timeout | null = null;
-  private isRunning = false;
-  private consecutiveFailures = 0;
-  private readonly MAX_CONSECUTIVE_FAILURES = 2;
-  private lastHeartbeatTime: number = 0;
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-  constructor(
-    private intervalMs: number,
-    private onHeartbeat: () => Promise<void>
-  ) {
-    console.log('HeartbeatManager initialized with interval:', intervalMs, 'ms');
+interface HeartbeatError {
+  name: string;
+  message: string;
+  stack?: string;
+}
+
+export class HeartbeatManager {
+  private channel: RealtimeChannel;
+  private interval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: number;
+  private deviceToken: string;
+  private lastHeartbeat: Date | null = null;
+  private isActive: boolean = false;
+
+  constructor(channel: RealtimeChannel, deviceToken: string, heartbeatInterval: number = 5000) {
+    this.channel = channel;
+    this.deviceToken = deviceToken;
+    this.heartbeatInterval = heartbeatInterval;
   }
 
-  async start(): Promise<void> {
-    if (this.isRunning) {
-      console.log('Heartbeat already running, skipping start');
+  start() {
+    if (this.interval) {
       return;
     }
 
-    console.log('Starting heartbeat manager');
-    this.isRunning = true;
-    this.consecutiveFailures = 0;
-    this.lastHeartbeatTime = Date.now();
-    
-    if (this.interval) {
-      console.log('Clearing existing interval');
-      clearInterval(this.interval);
-    }
-
-    await this.sendHeartbeat();
-    
-    this.interval = setInterval(async () => {
-      if (this.isRunning) {
-        const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatTime;
-        console.log(`Time since last heartbeat: ${timeSinceLastHeartbeat}ms`);
-        await this.sendHeartbeat();
-      }
-    }, this.intervalMs);
-
-    console.log('Heartbeat interval started');
+    this.isActive = true;
+    this.sendHeartbeat();
+    this.interval = setInterval(() => this.sendHeartbeat(), this.heartbeatInterval);
   }
 
-  private async sendHeartbeat(): Promise<void> {
-    try {
-      console.log('Sending heartbeat...');
-      console.log('Current consecutive failures:', this.consecutiveFailures);
-      
-      const startTime = Date.now();
-      await this.onHeartbeat();
-      const endTime = Date.now();
-      
-      console.log(`Heartbeat successful! Took ${endTime - startTime}ms`);
-      this.lastHeartbeatTime = Date.now();
-      this.consecutiveFailures = 0;
-    } catch (error) {
-      this.consecutiveFailures++;
-      console.error('Heartbeat failed:', error);
-      console.error(`Consecutive failures: ${this.consecutiveFailures}/${this.MAX_CONSECUTIVE_FAILURES}`);
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
-
-      if (this.consecutiveFailures >= this.MAX_CONSECUTIVE_FAILURES) {
-        console.log('Too many consecutive heartbeat failures, stopping heartbeat');
-        this.stop();
-      }
-    }
-  }
-
-  stop(): void {
-    console.log('Stopping heartbeat manager');
-    this.isRunning = false;
+  stop() {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
     }
-    this.consecutiveFailures = 0;
-    console.log('Heartbeat manager stopped');
+    this.isActive = false;
+  }
+
+  private async sendHeartbeat() {
+    if (!this.isActive) {
+      return;
+    }
+
+    try {
+      const currentTime = new Date();
+      await this.channel.send({
+        type: 'broadcast',
+        event: 'heartbeat',
+        payload: {
+          deviceToken: this.deviceToken,
+          timestamp: currentTime.toISOString()
+        }
+      });
+      this.lastHeartbeat = currentTime;
+    } catch (error) {
+      const typedError = error as Error;
+      const heartbeatError: HeartbeatError = {
+        name: typedError.name || 'Unknown Error',
+        message: typedError.message || 'An unknown error occurred',
+        stack: typedError.stack
+      };
+      console.error('Heartbeat error:', heartbeatError);
+    }
+  }
+
+  getLastHeartbeat(): Date | null {
+    return this.lastHeartbeat;
+  }
+
+  isRunning(): boolean {
+    return this.isActive;
   }
 }

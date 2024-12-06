@@ -20,10 +20,8 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        // Initialize Supabase
         await initSupabase();
         
-        // Get MAC address
         const macAddress = await window.electronAPI.getMacAddress();
         console.log('MAC Address:', macAddress);
         
@@ -31,12 +29,10 @@ function App() {
           throw new Error('MAC adresi alınamadı');
         }
 
-        // Get system info
         const sysInfo = await window.electronAPI.getSystemInfo();
         setSystemInfo(sysInfo);
         console.log('System Info:', sysInfo);
 
-        // Get or create token
         const tokenData = await createDeviceToken(macAddress);
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
