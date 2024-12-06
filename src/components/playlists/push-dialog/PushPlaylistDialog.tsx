@@ -1,10 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { DeviceList } from "./DeviceList";
-import { SearchBar } from "./SearchBar";
-import { DialogFooter } from "./DialogFooter";
 import { usePushPlaylist } from "./usePushPlaylist";
 
 interface PushPlaylistDialogProps {
@@ -20,64 +19,19 @@ export function PushPlaylistDialog({
   playlistTitle, 
   playlistId 
 }: PushPlaylistDialogProps) {
-  console.log('PushPlaylistDialog rendered with:', { playlistId, playlistTitle, isOpen });
-  
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
 
-  const { data: devices = [], isLoading } = useQuery({
-    queryKey: ['devices'],
-    queryFn: async () => {
-      console.log('Fetching devices...');
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        console.log('No company ID found');
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name
-          )
-        `)
-        .eq('branches.company_id', userProfile.company_id);
-
-      if (error) {
-        console.error('Error fetching devices:', error);
-        throw error;
-      }
-      
-      console.log('Devices fetched:', data);
-      return data;
-    },
-  });
-
-  const filteredDevices = devices.filter(device =>
-    device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    device.branches?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSelectAll = () => {
-    console.log('Toggle select all clicked');
-    if (selectedDevices.length === filteredDevices.length) {
+  const handleSelectAll = (devices: string[]) => {
+    if (selectedDevices.length === devices.length) {
       setSelectedDevices([]);
     } else {
-      setSelectedDevices(filteredDevices.map(d => d.id));
+      setSelectedDevices(devices);
     }
   };
 
   const handleDeviceToggle = (deviceId: string) => {
-    console.log('Device toggled:', deviceId);
     setSelectedDevices(prev =>
       prev.includes(deviceId)
         ? prev.filter(id => id !== deviceId)
@@ -93,28 +47,44 @@ export function PushPlaylistDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectAll={handleSelectAll}
-            selectedCount={selectedDevices.length}
-            totalCount={filteredDevices.length}
-          />
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Cihaz ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => handleSelectAll(selectedDevices)}
+              className="whitespace-nowrap"
+            >
+              {selectedDevices.length === 0 ? "Tümünü Seç" : "Seçimi Kaldır"}
+            </Button>
+          </div>
 
           <DeviceList
-            devices={filteredDevices}
+            searchQuery={searchQuery}
             selectedDevices={selectedDevices}
             onToggleDevice={handleDeviceToggle}
-            isLoading={isLoading}
           />
 
-          <DialogFooter
-            selectedCount={selectedDevices.length}
-            isSyncing={isSyncing}
-            onCancel={onClose}
-            onPush={handlePush}
-            selectedDevices={selectedDevices}
-          />
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              {selectedDevices.length} cihaz seçildi
+            </p>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                İptal
+              </Button>
+              <Button onClick={() => handlePush(selectedDevices)} disabled={isSyncing}>
+                {isSyncing ? "Gönderiliyor..." : "Cihazlara Gönder"}
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

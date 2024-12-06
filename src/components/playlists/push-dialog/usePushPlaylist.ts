@@ -6,17 +6,15 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
   const handlePush = async (selectedDevices: string[]) => {
     if (selectedDevices.length === 0) {
-      console.log('No devices selected');
       toast.error("Lütfen en az bir cihaz seçin");
       return;
     }
 
     try {
       setIsSyncing(true);
-      console.log('Starting push process for playlist:', playlistId);
-      toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
+      console.log('Starting WebSocket sync for devices:', selectedDevices);
 
-      // Send playlist to device via WebSocket
+      // Send playlist to each selected device via WebSocket
       const result = await window.electronAPI.syncPlaylist({
         id: playlistId,
         name: playlistTitle,

@@ -2,10 +2,18 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
-import { PushDialogDevice } from "./types";
 
 interface DeviceItemProps {
-  device: PushDialogDevice;
+  device: {
+    id: string;
+    name: string;
+    status: string;
+    category?: string;
+    last_seen?: string;
+    branches?: {
+      name?: string;
+    };
+  };
   isSelected: boolean;
   onToggle: (deviceId: string) => void;
 }
@@ -16,7 +24,10 @@ export function DeviceItem({ device, isSelected, onToggle }: DeviceItemProps) {
       className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
       onClick={() => onToggle(device.id)}
     >
-      <Checkbox checked={isSelected} onCheckedChange={() => onToggle(device.id)} />
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={() => onToggle(device.id)}
+      />
       <div className="flex-1 space-y-1">
         <div className="flex items-center justify-between">
           <p className="font-medium text-sm">{device.name}</p>
