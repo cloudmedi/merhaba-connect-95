@@ -56,13 +56,13 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Formatted songs:', songs);
 
-      // Get device tokens for selected devices - UPDATED to include 'used' status
+      // Get device tokens for selected devices
       console.log('Fetching device tokens...');
       const { data: deviceTokens, error: tokenError } = await supabase
         .from('device_tokens')
         .select('token, mac_address')
         .in('mac_address', selectedDevices)
-        .in('status', ['active', 'used']);  // Changed to include both active and used tokens
+        .in('status', ['active', 'used']);
 
       if (tokenError) {
         console.error('Error fetching device tokens:', tokenError);
@@ -76,12 +76,17 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         throw new Error('Seçili cihazlar için geçerli token bulunamadı');
       }
 
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not found');
+      }
+
       // Send playlist to each selected device via WebSocket
       for (const device of deviceTokens) {
         console.log(`Initiating WebSocket connection for device ${device.mac_address}`);
         
         try {
-          const wsUrl = `${supabase.realtime.url}/functions/v1/sync-playlist?token=${device.token}`;
+          const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${device.token}`;
           console.log('Connecting to WebSocket URL:', wsUrl);
           
           const ws = new WebSocket(wsUrl);
