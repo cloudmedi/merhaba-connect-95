@@ -49,7 +49,7 @@ serve(async (req) => {
   console.log('Validating token in device_tokens table...');
   const { data: deviceToken, error: tokenError } = await supabase
     .from('device_tokens')
-    .select('token, status')
+    .select('token, status, mac_address')
     .eq('token', token)
     .in('status', ['active', 'used'])
     .single();
@@ -67,8 +67,13 @@ serve(async (req) => {
   const { socket, response } = Deno.upgradeWebSocket(req);
   console.log('WebSocket connection upgraded successfully');
 
+  // Bağlı cihazları takip etmek için bir Map
+  const connectedDevices = new Map();
+
   socket.onopen = () => {
     console.log('WebSocket connection opened');
+    // Cihazı MAC adresi ile kaydet
+    connectedDevices.set(deviceToken.mac_address, socket);
   };
 
   socket.onmessage = async (event) => {
@@ -90,9 +95,8 @@ serve(async (req) => {
         return;
       }
 
-      // Veri yapısını kontrol et
       if (!data.type || !data.payload) {
-        console.error('Invalid message structure - missing type or payload');
+        console.error('Invalid message structure');
         socket.send(JSON.stringify({
           type: 'error',
           payload: {
@@ -108,11 +112,11 @@ serve(async (req) => {
         const { playlistId, devices } = data.payload;
         
         if (!playlistId || !devices || !Array.isArray(devices)) {
-          console.error('Invalid playlist data or devices:', { playlistId, devices });
+          console.error('Invalid playlist data:', { playlistId, devices });
           socket.send(JSON.stringify({
             type: 'error',
             payload: {
-              message: 'Invalid playlist data or devices'
+              message: 'Invalid playlist data'
             }
           }));
           return;
@@ -156,13 +160,35 @@ serve(async (req) => {
               }))
           };
 
-          console.log('Sending formatted playlist:', formattedPlaylist);
-          
-          // Başarılı yanıt gönder
+          // Her bir hedef cihaz için
+          for (const deviceId of devices) {
+            // Cihazın token'ını bul
+            const { data: targetDevice } = await supabase
+              .from('devices')
+              .select('token')
+              .eq('id', deviceId)
+              .single();
+
+            if (targetDevice?.token) {
+              // WebSocket bağlantısını bul
+              const targetSocket = connectedDevices.get(targetDevice.token);
+              if (targetSocket) {
+                console.log('Sending playlist to device:', deviceId);
+                targetSocket.send(JSON.stringify({
+                  type: 'sync_playlist',
+                  payload: {
+                    playlist: formattedPlaylist
+                  }
+                }));
+              }
+            }
+          }
+
+          // Gönderen tarafa başarı mesajı
           socket.send(JSON.stringify({
             type: 'sync_success',
             payload: {
-              playlist: formattedPlaylist,
+              message: 'Playlist successfully synced',
               deviceCount: devices.length
             }
           }));
@@ -188,7 +214,11 @@ serve(async (req) => {
   };
 
   socket.onerror = (e) => console.log('WebSocket error:', e);
-  socket.onclose = () => console.log('WebSocket connection closed');
+  socket.onclose = () => {
+    console.log('WebSocket connection closed');
+    // Bağlantı kapandığında cihazı listeden kaldır
+    connectedDevices.delete(deviceToken.mac_address);
+  };
 
   return response;
 });
