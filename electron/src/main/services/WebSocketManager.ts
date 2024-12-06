@@ -37,10 +37,31 @@ export class WebSocketManager {
       this.ws.on('open', () => {
         console.log('WebSocket connection opened successfully');
         this.reconnectAttempts = 0;
+        
+        // Bağlantı başarılı olduğunda renderer'a bildir
+        if (this.win) {
+          this.win.webContents.send('websocket-connected');
+        }
+      });
+
+      this.ws.on('message', (data) => {
+        console.log('WebSocket message received:', data.toString());
+        try {
+          const parsedData = JSON.parse(data.toString());
+          // Mesajı renderer'a ilet
+          if (this.win) {
+            this.win.webContents.send('websocket-message', parsedData);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
       });
 
       this.ws.on('error', (error) => {
         console.error('WebSocket error:', error);
+        if (this.win) {
+          this.win.webContents.send('websocket-error', error.message);
+        }
       });
 
       this.ws.on('close', () => {
@@ -49,6 +70,9 @@ export class WebSocketManager {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`Attempting to reconnect in ${this.reconnectDelay}ms...`);
           setTimeout(() => this.connect(token), this.reconnectDelay);
+        }
+        if (this.win) {
+          this.win.webContents.send('websocket-disconnected');
         }
       });
     } catch (error) {
@@ -75,6 +99,11 @@ export class WebSocketManager {
           playlist
         }
       }));
+
+      // Mesaj gönderildiğinde renderer'a bildir
+      if (this.win) {
+        this.win.webContents.send('playlist-sent', playlist);
+      }
 
       return { success: true };
     } catch (error) {

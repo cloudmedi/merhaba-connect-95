@@ -21,5 +21,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('download-progress', handler);
     };
   },
+  // WebSocket events
+  onWebSocketMessage: (callback: (data: any) => void) => {
+    const handler = (_event: any, data: any) => callback(data);
+    ipcRenderer.on('websocket-message', handler);
+    return () => {
+      ipcRenderer.removeListener('websocket-message', handler);
+    };
+  },
+  onWebSocketConnected: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('websocket-connected', handler);
+    return () => {
+      ipcRenderer.removeListener('websocket-connected', handler);
+    };
+  },
+  onWebSocketError: (callback: (error: string) => void) => {
+    const handler = (_event: any, error: string) => callback(error);
+    ipcRenderer.on('websocket-error', handler);
+    return () => {
+      ipcRenderer.removeListener('websocket-error', handler);
+    };
+  },
   registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)
 })
