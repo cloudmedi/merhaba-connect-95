@@ -5,36 +5,12 @@ import { UserAvatar } from "./UserAvatar";
 import { UserStatus } from "./UserStatus";
 import { UserActions } from "./UserActions";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Calendar, PlayCircle } from "lucide-react";
 
 interface UserTableRowProps {
   user: User;
 }
 
 export function UserTableRow({ user }: UserTableRowProps) {
-  const { data: assignmentCounts } = useQuery({
-    queryKey: ['user-assignments', user.id],
-    queryFn: async () => {
-      const [playlistResult, scheduleResult] = await Promise.all([
-        supabase
-          .from('playlist_assignments')
-          .select('*', { count: 'exact' })
-          .eq('user_id', user.id),
-        supabase
-          .from('schedule_events')
-          .select('*', { count: 'exact' })
-          .eq('created_by', user.id)
-      ]);
-
-      return {
-        playlists: playlistResult.count || 0,
-        schedules: scheduleResult.count || 0
-      };
-    }
-  });
-
   const formatDate = (date: string | null | undefined) => {
     if (!date) return 'N/A';
     try {
@@ -55,21 +31,7 @@ export function UserTableRow({ user }: UserTableRowProps) {
         <UserAvatar user={user} />
       </TableCell>
       <TableCell className="p-4">{user.company?.name || 'N/A'}</TableCell>
-      <TableCell className="p-4">
-        <div className="flex flex-col gap-1">
-          <span>{user.role}</span>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <PlayCircle className="w-3 h-3" />
-              <span>{assignmentCounts?.playlists || 0} playlists</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>{assignmentCounts?.schedules || 0} schedules</span>
-            </div>
-          </div>
-        </div>
-      </TableCell>
+      <TableCell className="p-4">{user.role}</TableCell>
       <TableCell className="p-4">
         <UserStatus user={user} />
       </TableCell>
