@@ -33,19 +33,13 @@ export interface ElectronAPI {
       mac: string;
     }>;
   }>;
-  syncPlaylist: (playlist: {
-    id: string;
-    name: string;
-    songs: Array<{
-      id: string;
-      title: string;
-      artist?: string;
-      file_url: string;
-      bunny_id?: string;
-    }>;
-  }) => Promise<{ success: boolean; error?: string }>;
+  syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
+  onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
+  onWebSocketMessage: (callback: (data: any) => void) => () => void;
+  onWebSocketConnected: (callback: () => void) => () => void;
+  onWebSocketError: (callback: (error: string) => void) => () => void;
 }
 
 declare global {

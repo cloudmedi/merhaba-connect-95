@@ -5,6 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface WebSocketMessage {
+  type: string;
+  payload: {
+    playlist?: {
+      id: string;
+      name: string;
+      songs?: Array<{
+        id: string;
+        title: string;
+      }>;
+    };
+  };
+}
+
 interface SyncStatus {
   playlistId: string;
   name: string;
@@ -20,7 +34,7 @@ export function PlaylistSync() {
 
   useEffect(() => {
     console.log('Setting up WebSocket listeners');
-    const cleanup = window.electronAPI.onWebSocketMessage((data) => {
+    const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
       console.log('WebSocket message received:', data);
       if (data.type === 'sync_playlist' && data.payload.playlist) {
         const playlist = data.payload.playlist;
