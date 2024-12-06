@@ -5,24 +5,33 @@ import dotenv from 'dotenv'
 import { setupOfflineHandlers } from './ipc/offlineHandlers'
 import { WebSocketManager } from './services/WebSocketManager'
 
-// Load .env file
-dotenv.config({ path: path.join(__dirname, '../../../.env') })
-dotenv.config({ path: path.join(__dirname, '../../.env') })
+// Load .env file from project root and electron directory
+const envPaths = [
+  path.join(__dirname, '../../../.env'),
+  path.join(__dirname, '../../.env')
+];
+
+envPaths.forEach(envPath => {
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.warn(`Warning loading ${envPath}:`, result.error);
+  }
+});
 
 // Check environment variables
-const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL
-const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
-const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL
+const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
 if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing Supabase environment variables:', {
-    VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY
-  })
+  console.error('Missing required environment variables:', {
+    VITE_SUPABASE_URL: !!VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: !!VITE_SUPABASE_ANON_KEY
+  });
 }
 
-let win: BrowserWindow | null
-let deviceId: string | null = null
+let win: BrowserWindow | null;
+let deviceId: string | null = null;
 
 async function getMacAddress() {
   try {
@@ -79,18 +88,21 @@ async function getSystemInfo() {
 }
 
 async function initializeOfflineSupport() {
-  const macAddress = await getMacAddress();
-  if (macAddress) {
+  try {
+    const macAddress = await getMacAddress();
+    if (!macAddress) {
+      throw new Error('Could not get MAC address for device identification');
+    }
+
     deviceId = macAddress.replace(/:/g, '');
     setupOfflineHandlers(deviceId);
     
     console.log('Initializing WebSocket with deviceId:', deviceId);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
     
-    // WebSocket bağlantısını başlat
     new WebSocketManager(deviceId);
-  } else {
-    console.error('Could not get MAC address for device identification');
+  } catch (error) {
+    console.error('Error initializing offline support:', error);
   }
 }
 
@@ -112,33 +124,36 @@ function createWindow() {
     win.webContents.send('env-vars', {
       VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY
-    })
-  })
+    });
+  });
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
+    win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
+    // In production, load from the correct path
+    const indexPath = path.join(__dirname, '../renderer/index.html');
+    console.log('Loading production index.html from:', indexPath);
+    win.loadFile(indexPath);
   }
 }
 
 app.whenReady().then(async () => {
   await initializeOfflineSupport();
   createWindow();
-})
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
-    win = null
+    app.quit();
+    win = null;
   }
-})
+});
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    createWindow();
   }
-})
+});
 
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo);

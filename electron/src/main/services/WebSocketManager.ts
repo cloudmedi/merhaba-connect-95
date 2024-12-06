@@ -1,13 +1,14 @@
 import WebSocket from 'ws';
+import { createClient } from '@supabase/supabase-js';
 import { OfflinePlaylistManager } from './OfflinePlaylistManager';
 import { FileSystemManager } from './FileSystemManager';
 import { DownloadManager } from './DownloadManager';
-import { supabase } from '@supabase/supabase-js';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private playlistManager: OfflinePlaylistManager;
   private supabaseUrl: string;
+  private supabaseClient: any;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
@@ -18,20 +19,25 @@ export class WebSocketManager {
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
     
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
     
-    if (!this.supabaseUrl) {
-      console.error('VITE_SUPABASE_URL is not defined in environment variables');
+    if (!this.supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables');
       return;
     }
 
-    // Önce device_tokens tablosundan gerçek token'ı alalım
+    this.supabaseClient = createClient(this.supabaseUrl, supabaseKey);
     this.initializeConnection(deviceToken);
   }
 
   private async initializeConnection(deviceToken: string) {
     try {
+      if (!this.supabaseClient) {
+        throw new Error('Supabase client not initialized');
+      }
+
       // Device token'ı doğrula ve aktif token'ı al
-      const { data: tokenData, error } = await supabase
+      const { data: tokenData, error } = await this.supabaseClient
         .from('device_tokens')
         .select('token')
         .eq('mac_address', deviceToken)
@@ -44,7 +50,7 @@ export class WebSocketManager {
       }
 
       console.log('Found active device token:', tokenData.token);
-      this.connect(tokenData.token); // Gerçek token ile bağlan
+      this.connect(tokenData.token);
     } catch (error) {
       console.error('Error initializing connection:', error);
     }
@@ -57,7 +63,6 @@ export class WebSocketManager {
         return;
       }
 
-      // Artık gerçek device token'ı kullanıyoruz
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${realToken}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
