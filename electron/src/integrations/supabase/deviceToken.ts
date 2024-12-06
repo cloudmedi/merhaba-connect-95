@@ -42,7 +42,8 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
       }
 
       // Eğer token expired ise yeni token oluştur
-      if (mostRecentToken.status === 'expired' || new Date(mostRecentToken.expires_at) < new Date()) {
+      const expirationDate = new Date(mostRecentToken.expires_at);
+      if (mostRecentToken.status === 'expired' || expirationDate < new Date()) {
         console.log('Token expired, creating new one');
         return await createNewToken(macAddress);
       }
