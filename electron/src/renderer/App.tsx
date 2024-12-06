@@ -8,6 +8,11 @@ import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
 
+interface TokenData {
+  token: string;
+  expires_at?: string;
+}
+
 function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +38,7 @@ function App() {
         setSystemInfo(sysInfo);
         console.log('System Info:', sysInfo);
 
-        const tokenData = await createDeviceToken(macAddress);
+        const tokenData = await createDeviceToken(macAddress) as TokenData;
         if (tokenData?.token) {
           setDeviceToken(tokenData.token);
           toast.success('Cihaz başarıyla kaydedildi');

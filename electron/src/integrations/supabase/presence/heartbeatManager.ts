@@ -7,16 +7,16 @@ interface HeartbeatError {
 }
 
 export class HeartbeatManager {
-  private channel: RealtimeChannel;
   private interval: NodeJS.Timeout | null = null;
   private heartbeatInterval: number;
-  private deviceToken: string;
   private lastHeartbeat: Date | null = null;
   private isActive: boolean = false;
 
-  constructor(channel: RealtimeChannel, deviceToken: string, heartbeatInterval: number = 5000) {
-    this.channel = channel;
-    this.deviceToken = deviceToken;
+  constructor(
+    private channel: RealtimeChannel,
+    private deviceToken: string,
+    heartbeatInterval: number = 5000
+  ) {
     this.heartbeatInterval = heartbeatInterval;
   }
 
@@ -57,9 +57,9 @@ export class HeartbeatManager {
     } catch (error) {
       const typedError = error as Error;
       const heartbeatError: HeartbeatError = {
-        name: typedError.name || 'Unknown Error',
-        message: typedError.message || 'An unknown error occurred',
-        stack: typedError.stack
+        name: typedError?.name || 'Unknown Error',
+        message: typedError?.message || 'An unknown error occurred',
+        stack: typedError?.stack
       };
       console.error('Heartbeat error:', heartbeatError);
     }

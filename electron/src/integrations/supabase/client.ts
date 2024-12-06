@@ -54,7 +54,7 @@ async function initSupabase() {
 
     console.log('Creating device token with MAC address:', macAddress);
     const tokenData = await createDeviceToken(macAddress);
-    if (!tokenData || !tokenData.token) {
+    if (!tokenData || typeof tokenData.token !== 'string') {
       console.error('Failed to create/get device token');
       return supabase;
     }
