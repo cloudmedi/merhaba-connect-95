@@ -14,7 +14,6 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       setIsSyncing(true);
       console.log('Starting WebSocket sync for devices:', selectedDevices);
 
-      // Send playlist to each selected device via WebSocket
       const result = await window.electronAPI.syncPlaylist({
         id: playlistId,
         name: playlistTitle,

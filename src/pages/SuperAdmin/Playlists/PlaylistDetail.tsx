@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
+import { PushPlaylistDialog } from "@/components/playlists/push-dialog/PushPlaylistDialog";
 
 export function PlaylistDetail() {
   const { id } = useParams();

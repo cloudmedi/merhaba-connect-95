@@ -5,7 +5,6 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { DeviceRegistration } from './components/DeviceRegistration';
 import { SyncStatus } from './components/SyncStatus';
 import { PlaylistGrid } from './components/PlaylistGrid';
-import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,9 +14,8 @@ export function OfflinePlayerApp() {
   const [token, setToken] = useState<string | null>(null);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
-  const { isSyncing, syncPlaylists } = useOfflineSync(deviceId);
-
   useEffect(() => {
     // Check if device is already registered
     window.electronAPI.getDeviceId()
@@ -25,40 +23,36 @@ export function OfflinePlayerApp() {
         if (id) {
           setIsRegistered(true);
           setDeviceId(id);
-          fetchOfflinePlaylists(id);
+          fetchDevicePlaylists(id);
         }
       })
       .catch(console.error);
   }, []);
 
-  const fetchOfflinePlaylists = async (id: string) => {
+  const fetchDevicePlaylists = async (id: string) => {
     try {
-      const { data: offlinePlaylists, error } = await supabase
-        .from('offline_playlists')
+      const { data: devicePlaylists, error } = await supabase
+        .from('playlists')
         .select(`
           id,
-          sync_status,
-          last_synced_at,
-          playlist:playlists (
-            id,
-            name,
-            artwork_url,
-            songs:playlist_songs (
-              songs (
-                id,
-                title,
-                artist,
-                duration,
-                file_url,
-                bunny_id
-              )
+          name,
+          artwork_url,
+          songs:playlist_songs (
+            songs (
+              id,
+              title,
+              artist,
+              duration,
+              file_url,
+              bunny_id
             )
           )
         `)
-        .eq('device_id', id);
+        .eq('devices.id', id)
+        .order('created_at');
 
       if (error) throw error;
-      setPlaylists(offlinePlaylists || []);
+      setPlaylists(devicePlaylists || []);
     } catch (error) {
       console.error('Error fetching playlists:', error);
     }
@@ -76,12 +70,11 @@ export function OfflinePlayerApp() {
     setDeviceId(deviceInfo.id);
     setToken(result.token);
     toast.success(`Device registered successfully. Your token is: ${result.token}`);
-    await syncPlaylists();
   };
 
   const handlePlayPlaylist = (playlist: any) => {
     setCurrentPlaylist({
-      id: playlist.id, // Add playlist ID here
+      id: playlist.id,
       title: playlist.name,
       artwork: playlist.artwork_url,
       songs: playlist.songs.map((ps: any) => ({
@@ -133,7 +126,7 @@ export function OfflinePlayerApp() {
       {currentPlaylist && (
         <MusicPlayer
           playlist={{
-            id: currentPlaylist.id, // Add playlist ID here
+            id: currentPlaylist.id,
             title: currentPlaylist.title,
             artwork: currentPlaylist.artwork,
             songs: currentPlaylist.songs

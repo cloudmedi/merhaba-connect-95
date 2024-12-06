@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
-import { PushPlaylistDialog } from "@/components/playlists/PushPlaylistDialog";
+import { PushPlaylistDialog } from "@/components/playlists/push-dialog/PushPlaylistDialog";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
 import { toast } from "sonner";

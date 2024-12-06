@@ -1,18 +1,43 @@
 import { useState } from "react";
-import { useOfflinePlayers } from "@/hooks/useOfflinePlayers";
+import { useQuery } from "@tanstack/react-query";
 import { OfflinePlayerCard } from "@/components/devices/offline-player/OfflinePlayerCard";
 import { OfflinePlayerSettings } from "@/components/devices/offline-player/OfflinePlayerSettings";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type { OfflinePlayer } from "@/types/offline-player";
 
 export default function OfflinePlayersPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<OfflinePlayer | null>(null);
-  const { offlinePlayers, isLoading, updatePlayerSettings } = useOfflinePlayers();
+  const { data: devices, isLoading } = useQuery({
+    queryKey: ['offline-devices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('category', 'offline_player');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const handleSync = async (playerId: string) => {
     toast.info("Syncing player...");
-    // Sync logic will be implemented later
+    try {
+      const result = await window.electronAPI.syncPlaylist({
+        deviceId: playerId
+      });
+      
+      if (result.success) {
+        toast.success("Sync completed successfully");
+      } else {
+        toast.error("Sync failed");
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error("Failed to sync player");
+    }
   };
 
   const handleSettingsOpen = (player: OfflinePlayer) => {
@@ -23,12 +48,17 @@ export default function OfflinePlayersPage() {
     if (!selectedPlayer) return;
     
     try {
-      await updatePlayerSettings.mutateAsync({
-        playerId: selectedPlayer.id,
-        settings
-      });
+      const { error } = await supabase
+        .from('devices')
+        .update(settings)
+        .eq('id', selectedPlayer.id);
+        
+      if (error) throw error;
+      
+      toast.success("Settings updated successfully");
       setSelectedPlayer(null);
     } catch (error) {
+      console.error('Settings update error:', error);
       toast.error("Failed to update settings");
     }
   };
@@ -45,7 +75,7 @@ export default function OfflinePlayersPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {offlinePlayers?.map((player) => (
+        {devices?.map((player) => (
           <OfflinePlayerCard
             key={player.id}
             player={player}
