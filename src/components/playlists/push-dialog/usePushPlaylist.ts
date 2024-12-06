@@ -6,8 +6,6 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
   const [isSyncing, setIsSyncing] = useState(false);
 
   const handlePush = async (selectedDevices: string[]) => {
-    console.log('handlePush started with devices:', selectedDevices);
-    
     if (selectedDevices.length === 0) {
       console.log('No devices selected');
       toast.error("Lütfen en az bir cihaz seçin");
@@ -55,96 +53,28 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Formatted songs:', songs);
 
-      // Get device tokens for selected devices
-      console.log('Fetching device tokens...');
-      const { data: deviceTokens, error: tokenError } = await supabase
-        .from('device_tokens')
-        .select('token, mac_address')
-        .in('mac_address', selectedDevices)
-        .in('status', ['active', 'used']);
-
-      if (tokenError) {
-        console.error('Error fetching device tokens:', tokenError);
-        throw tokenError;
-      }
-
-      console.log('Device tokens:', deviceTokens);
-
-      if (!deviceTokens || deviceTokens.length === 0) {
-        console.error('No valid device tokens found');
-        throw new Error('Seçili cihazlar için geçerli token bulunamadı');
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL not found');
-      }
-
       // Send playlist to each selected device via WebSocket
-      for (const device of deviceTokens) {
-        console.log(`Initiating WebSocket connection for device ${device.mac_address}`);
+      for (const deviceId of selectedDevices) {
+        console.log(`Sending playlist to device ${deviceId}`);
         
-        try {
-          const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${device.token}`;
-          console.log('Connecting to WebSocket URL:', wsUrl);
-          
-          const ws = new WebSocket(wsUrl);
+        const result = await window.electronAPI.syncPlaylist({
+          id: playlist.id,
+          name: playlist.name,
+          songs: songs
+        });
 
-          ws.onopen = () => {
-            console.log(`WebSocket connected for device ${device.mac_address}`);
-            ws.send(JSON.stringify({
-              type: 'sync_playlist',
-              payload: {
-                deviceId: device.mac_address,
-                playlist: {
-                  id: playlist.id,
-                  name: playlist.name,
-                  songs: songs
-                }
-              }
-            }));
-          };
-
-          ws.onmessage = (event) => {
-            console.log(`Received WebSocket message for device ${device.mac_address}:`, event.data);
-            const response = JSON.parse(event.data);
-            
-            if (response.type === 'sync_error') {
-              console.error(`Sync error for device ${device.mac_address}:`, response.payload);
-              toast.error(`${device.mac_address} cihazına gönderilirken hata oluştu: ${response.payload}`);
-            }
-          };
-
-          ws.onerror = (error) => {
-            console.error(`WebSocket error for device ${device.mac_address}:`, error);
-            toast.error(`${device.mac_address} cihazı ile bağlantı hatası`);
-          };
-
-          // Wait for the WebSocket connection to complete
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              reject(new Error('WebSocket connection timeout'));
-            }, 10000);
-
-            ws.onclose = () => {
-              clearTimeout(timeout);
-              resolve(true);
-            };
-          });
-
-        } catch (wsError) {
-          console.error(`WebSocket error for device ${device.mac_address}:`, wsError);
-          toast.error(`${device.mac_address} cihazına bağlanılamadı`);
+        if (!result.success) {
+          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
+          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
         }
       }
 
       toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
     } catch (error: any) {
-      console.error('Push error:', error);
-      toast.error(error.message || "Playlist gönderilirken bir hata oluştu");
+      console.error('Error pushing playlist:', error);
+      toast.error("Playlist gönderilirken bir hata oluştu");
     } finally {
-      console.log('Push process completed');
       setIsSyncing(false);
     }
   };
