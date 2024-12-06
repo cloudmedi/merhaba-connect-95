@@ -32,6 +32,7 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 
 let win: BrowserWindow | null;
 let deviceId: string | null = null;
+let wsManager: WebSocketManager | null = null;
 
 async function getMacAddress() {
   try {
@@ -100,7 +101,7 @@ async function initializeOfflineSupport() {
     console.log('Initializing WebSocket with deviceId:', deviceId);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
     
-    new WebSocketManager(deviceId);
+    wsManager = new WebSocketManager(deviceId);
   } catch (error) {
     console.error('Error initializing offline support:', error);
   }

@@ -36,7 +36,6 @@ export class WebSocketManager {
         throw new Error('Supabase client not initialized');
       }
 
-      // Device token'ı doğrula ve aktif token'ı al
       const { data: tokenData, error } = await this.supabaseClient
         .from('device_tokens')
         .select('token')
@@ -69,7 +68,7 @@ export class WebSocketManager {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.on('open', () => {
-        console.log('WebSocket connection opened successfully with token:', realToken);
+        console.log('WebSocket connection opened successfully');
         this.reconnectAttempts = 0;
       });
 
@@ -84,7 +83,7 @@ export class WebSocketManager {
             
             if (this.ws?.readyState === WebSocket.OPEN) {
               this.ws.send(JSON.stringify({
-                type: result.success ? 'sync_success' : 'error',
+                type: result.success ? 'sync_success' : 'sync_error',
                 payload: result.success ? {
                   token: realToken,
                   playlistId: playlist.id

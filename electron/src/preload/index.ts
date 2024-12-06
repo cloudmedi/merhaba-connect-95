@@ -12,7 +12,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }),
   // Offline functionality
   syncPlaylist: (playlist: any) => ipcRenderer.invoke('sync-playlist', playlist),
-  getOfflinePlaylists: () => ipcRenderer.invoke('get-offline-playlists'),
   getStorageStats: () => ipcRenderer.invoke('get-storage-stats'),
   getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId)
 })
