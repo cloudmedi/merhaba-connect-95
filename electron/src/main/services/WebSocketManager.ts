@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { OfflinePlaylistManager } from './OfflinePlaylistManager';
 import { FileSystemManager } from './FileSystemManager';
 import { DownloadManager } from './DownloadManager';
+import { BrowserWindow } from 'electron';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -13,13 +14,15 @@ export class WebSocketManager {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
+  private win: BrowserWindow | null;
 
-  constructor(deviceToken: string) {
+  constructor(deviceToken: string, win: BrowserWindow | null) {
     const fileSystem = new FileSystemManager(deviceToken);
     const downloadManager = new DownloadManager(fileSystem);
     this.downloadManager = downloadManager;
     this.playlistManager = new OfflinePlaylistManager(fileSystem, downloadManager);
-    
+    this.win = win;
+
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
     
@@ -46,6 +49,11 @@ export class WebSocketManager {
           progress
         }
       }));
+      
+      // Send progress to renderer process
+      if (this.win?.webContents) {
+        this.win.webContents.send('download-progress', { songId, progress });
+      }
     }
   }
 
