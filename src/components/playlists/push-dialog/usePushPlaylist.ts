@@ -56,13 +56,13 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Formatted songs:', songs);
 
-      // Get device tokens for selected devices
+      // Get device tokens for selected devices - UPDATED to include 'used' status
       console.log('Fetching device tokens...');
       const { data: deviceTokens, error: tokenError } = await supabase
         .from('device_tokens')
         .select('token, mac_address')
         .in('mac_address', selectedDevices)
-        .eq('status', 'active');
+        .in('status', ['active', 'used']);  // Changed to include both active and used tokens
 
       if (tokenError) {
         console.error('Error fetching device tokens:', tokenError);
@@ -70,6 +70,11 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       }
 
       console.log('Device tokens:', deviceTokens);
+
+      if (!deviceTokens || deviceTokens.length === 0) {
+        console.error('No valid device tokens found');
+        throw new Error('Seçili cihazlar için geçerli token bulunamadı');
+      }
 
       // Send playlist to each selected device via WebSocket
       for (const device of deviceTokens) {
@@ -133,7 +138,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       onClose();
     } catch (error: any) {
       console.error('Push error:', error);
-      toast.error("Playlist gönderilirken bir hata oluştu");
+      toast.error(error.message || "Playlist gönderilirken bir hata oluştu");
     } finally {
       console.log('Push process completed');
       setIsSyncing(false);
