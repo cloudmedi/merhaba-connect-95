@@ -15,12 +15,24 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       setIsSyncing(true);
       console.log('Starting WebSocket sync for devices:', selectedDevices);
 
+      const { data: deviceData, error: deviceError } = await supabase
+        .from('devices')
+        .select('token')
+        .in('id', selectedDevices)
+        .single();
+
+      if (deviceError || !deviceData?.token) {
+        throw new Error('Cihaz token\'ı bulunamadı');
+      }
+
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
         throw new Error('Supabase URL not found');
       }
 
-      const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
+      const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceData.token}`;
+      console.log('Connecting to WebSocket:', wsUrl);
+      
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -40,6 +52,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         
         if (response.type === 'sync_success') {
           toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
+          onClose();
         } else if (response.type === 'error') {
           toast.error(`Hata: ${response.payload.message}`);
         }
