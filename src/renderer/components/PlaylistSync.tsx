@@ -21,6 +21,7 @@ export function PlaylistSync() {
   useEffect(() => {
     // Subscribe to download progress updates
     const cleanup = window.electronAPI.onDownloadProgress((data) => {
+      console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,
         [data.songId]: data.progress
