@@ -76,19 +76,73 @@ serve(async (req) => {
 
   socket.onmessage = async (event) => {
     try {
-      console.log('Received message:', event.data);
-      const data = JSON.parse(event.data);
+      console.log('Received raw message:', event.data);
+      
+      // Parse and validate message structure
+      let data;
+      try {
+        data = JSON.parse(event.data);
+        console.log('Parsed message data:', data);
+      } catch (error) {
+        console.error('Failed to parse message:', error);
+        socket.send(JSON.stringify({
+          type: 'error',
+          payload: {
+            message: 'Invalid message format'
+          }
+        }));
+        return;
+      }
+
+      // Validate message structure
+      if (!data.type || !data.payload) {
+        console.error('Invalid message structure - missing type or payload');
+        socket.send(JSON.stringify({
+          type: 'error',
+          payload: {
+            message: 'Invalid message structure'
+          }
+        }));
+        return;
+      }
       
       if (data.type === 'sync_playlist') {
         console.log('Processing playlist sync:', data.payload);
         
-        // Send success response
-        socket.send(JSON.stringify({
-          type: 'sync_success',
-          payload: {
-            playlistId: data.payload.playlist.id
-          }
-        }));
+        // Validate playlist data
+        const playlist = data.payload.playlist;
+        if (!playlist || !playlist.id) {
+          console.error('Invalid playlist data:', playlist);
+          socket.send(JSON.stringify({
+            type: 'error',
+            payload: {
+              message: 'Invalid playlist data'
+            }
+          }));
+          return;
+        }
+
+        // Process the playlist
+        try {
+          // Here you would add your playlist processing logic
+          console.log('Processing playlist with ID:', playlist.id);
+          
+          // Send success response
+          socket.send(JSON.stringify({
+            type: 'sync_success',
+            payload: {
+              playlistId: playlist.id
+            }
+          }));
+        } catch (error) {
+          console.error('Error processing playlist:', error);
+          socket.send(JSON.stringify({
+            type: 'error',
+            payload: {
+              message: error instanceof Error ? error.message : 'Unknown error occurred'
+            }
+          }));
+        }
       }
     } catch (error) {
       console.error('Error processing message:', error);
