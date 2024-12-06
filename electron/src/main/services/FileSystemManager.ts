@@ -29,37 +29,22 @@ export class FileSystemManager {
     });
   }
 
-  getPlaylistsDir(): string {
-    return path.join(this.baseDir, 'playlists');
-  }
-
-  async readPlaylistsInfo(): Promise<any[]> {
-    const playlistsDir = this.getPlaylistsDir();
-    console.log('Reading playlists from:', playlistsDir);
+  async savePlaylistInfo(playlistId: string, data: any): Promise<void> {
+    const filePath = path.join(this.baseDir, 'playlists', `${playlistId}.json`);
+    console.log('Saving playlist info to:', filePath);
+    console.log('Playlist data:', data);
     
     try {
-      const files = await fs.readdir(playlistsDir);
-      console.log('Found playlist files:', files);
+      await fs.writeJson(filePath, data, { spaces: 2 });
+      console.log('Playlist info saved successfully');
       
-      const playlists = await Promise.all(
-        files
-          .filter(file => file.endsWith('.json'))
-          .map(async file => {
-            const filePath = path.join(playlistsDir, file);
-            try {
-              const data = await fs.readJson(filePath);
-              console.log('Read playlist data:', data);
-              return data;
-            } catch (error) {
-              console.error('Error reading playlist file:', file, error);
-              return null;
-            }
-          })
-      );
-
-      return playlists.filter(p => p !== null);
+      const exists = await fs.pathExists(filePath);
+      if (exists) {
+        const stats = await fs.stat(filePath);
+        console.log(`Playlist info file size: ${stats.size} bytes`);
+      }
     } catch (error) {
-      console.error('Error reading playlists directory:', error);
+      console.error('Error saving playlist info:', error);
       throw error;
     }
   }
@@ -97,43 +82,33 @@ export class FileSystemManager {
     }
   }
 
-  async savePlaylistInfo(playlistId: string, data: any): Promise<void> {
-    const filePath = path.join(this.baseDir, 'playlists', `${playlistId}.json`);
-    console.log('Saving playlist info to:', filePath);
-    console.log('Playlist data:', data);
+  async readPlaylistsInfo(): Promise<any[]> {
+    const playlistsDir = path.join(this.baseDir, 'playlists');
+    console.log('Reading playlists from:', playlistsDir);
     
     try {
-      await fs.writeJson(filePath, data, { spaces: 2 });
-      console.log('Playlist info saved successfully');
+      const files = await fs.readdir(playlistsDir);
+      console.log('Found playlist files:', files);
       
-      const exists = await fs.pathExists(filePath);
-      if (exists) {
-        const stats = await fs.stat(filePath);
-        console.log(`Playlist info file size: ${stats.size} bytes`);
-      }
-    } catch (error) {
-      console.error('Error saving playlist info:', error);
-      throw error;
-    }
-  }
+      const playlists = await Promise.all(
+        files
+          .filter(file => file.endsWith('.json'))
+          .map(async file => {
+            const filePath = path.join(playlistsDir, file);
+            try {
+              const data = await fs.readJson(filePath);
+              console.log('Read playlist data:', data);
+              return data;
+            } catch (error) {
+              console.error('Error reading playlist file:', file, error);
+              return null;
+            }
+          })
+      );
 
-  async saveMetadata(songId: string, metadata: any): Promise<void> {
-    const filePath = path.join(this.baseDir, 'metadata', `${songId}.json`);
-    console.log('Saving metadata to:', filePath);
-    console.log('Metadata:', metadata);
-    
-    try {
-      await fs.writeJson(filePath, metadata, { spaces: 2 });
-      console.log('Metadata saved successfully');
-      
-      // Dosya varlığını ve boyutunu kontrol et
-      const exists = await fs.pathExists(filePath);
-      if (exists) {
-        const stats = await fs.stat(filePath);
-        console.log(`Metadata file size: ${stats.size} bytes`);
-      }
+      return playlists.filter(p => p !== null);
     } catch (error) {
-      console.error('Error saving metadata:', error);
+      console.error('Error reading playlists directory:', error);
       throw error;
     }
   }
@@ -168,7 +143,6 @@ export class FileSystemManager {
         used += stats.size;
       }
 
-      console.log('Storage stats:', { used, total: await this.getDiskSpace() });
       return {
         used,
         total: await this.getDiskSpace()
