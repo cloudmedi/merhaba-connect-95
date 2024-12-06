@@ -34,7 +34,9 @@ export function PushPlaylistDialog({
         .eq('id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      if (!userProfile?.company_id) return [];
+      if (!userProfile?.company_id) {
+        return [];
+      }
 
       const { data, error } = await supabase
         .from('devices')
@@ -103,59 +105,29 @@ export function PushPlaylistDialog({
           : ps.songs.file_url
       }));
 
-      // WebSocket bağlantısını kur
-      const { data: { session } } = await supabase.auth.getSession();
-      const ws = new WebSocket(
-        `${process.env.SUPABASE_URL}/functions/v1/sync-playlist?token=${session?.access_token}`
-      );
-
-      ws.onopen = async () => {
-        console.log('WebSocket connection opened');
+      // Send playlist to each selected device
+      for (const deviceId of selectedDevices) {
+        console.log(`Sending playlist to device ${deviceId}`);
         
-        // Her cihaz için senkronizasyon mesajı gönder
-        for (const deviceId of selectedDevices) {
-          console.log(`Sending playlist to device ${deviceId}`);
-          
-          ws.send(JSON.stringify({
-            type: 'sync_playlist',
-            payload: {
-              deviceId,
-              playlist: {
-                id: playlist.id,
-                name: playlist.name,
-                songs: songs
-              }
-            }
-          }));
+        const result = await window.electronAPI.syncPlaylist({
+          id: playlist.id,
+          name: playlist.name,
+          songs: songs
+        });
+
+        if (!result.success) {
+          console.error(`Failed to sync playlist to device ${deviceId}:`, result.error);
+          toast.error(`${deviceId} cihazına gönderilirken hata oluştu: ${result.error}`);
         }
-      };
+      }
 
-      ws.onmessage = (event) => {
-        const response = JSON.parse(event.data);
-        console.log('Received response:', response);
-
-        if (response.type === 'sync_success') {
-          toast.success(`Playlist ${response.payload.deviceId} cihazına başarıyla gönderildi`);
-        } else if (response.type === 'error') {
-          toast.error(`Hata: ${response.payload}`);
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        toast.error('Bağlantı hatası oluştu');
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        setIsSyncing(false);
-        onClose();
-        setSelectedDevices([]);
-      };
-
+      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
+      onClose();
+      setSelectedDevices([]);
     } catch (error: any) {
       console.error('Error pushing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
+    } finally {
       setIsSyncing(false);
     }
   };
@@ -192,7 +164,7 @@ export function PushPlaylistDialog({
           <DialogFooter
             selectedCount={selectedDevices.length}
             isSyncing={isSyncing}
-            onClose={onClose}
+            onCancel={onClose}
             onPush={handlePush}
           />
         </div>

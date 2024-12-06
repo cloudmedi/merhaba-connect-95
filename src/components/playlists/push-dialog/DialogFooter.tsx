@@ -1,13 +1,18 @@
 import { Button } from "@/components/ui/button";
 
-interface DialogFooterProps {
+export interface DialogFooterProps {
   selectedCount: number;
   onCancel: () => void;
   onPush: () => void;
   isSyncing: boolean;
 }
 
-export function DialogFooter({ selectedCount, onCancel, onPush, isSyncing }: DialogFooterProps) {
+export function DialogFooter({ 
+  selectedCount, 
+  onCancel, 
+  onPush, 
+  isSyncing 
+}: DialogFooterProps) {
   return (
     <div className="flex justify-between items-center">
       <p className="text-sm text-gray-500">
