@@ -115,10 +115,26 @@ export class WebSocketManager {
                   playlistId: playlist.id
                 } : result.error
               }));
+
+              // Send progress to renderer process
+              if (this.win?.webContents) {
+                console.log(`Sending sync result to renderer: ${playlist.id}`);
+                this.win.webContents.send('playlist-sync-result', { 
+                  playlistId: playlist.id,
+                  success: result.success,
+                  error: result.error
+                });
+              }
             }
           }
         } catch (error) {
           console.error('Error processing WebSocket message:', error);
+          if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+              type: 'sync_error',
+              payload: error instanceof Error ? error.message : 'Unknown error occurred'
+            }));
+          }
         }
       });
 

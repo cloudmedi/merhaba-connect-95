@@ -71,21 +71,61 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       console.log('Device tokens:', deviceTokens);
 
-      // Send playlist to each selected device
+      // Send playlist to each selected device via WebSocket
       for (const device of deviceTokens) {
-        console.log(`Sending playlist to device ${device.mac_address}`);
+        console.log(`Initiating WebSocket connection for device ${device.mac_address}`);
         
-        const result = await window.electronAPI.syncPlaylist({
-          id: playlist.id,
-          name: playlist.name,
-          songs: songs
-        });
+        try {
+          const wsUrl = `${supabase.realtime.url}/functions/v1/sync-playlist?token=${device.token}`;
+          console.log('Connecting to WebSocket URL:', wsUrl);
+          
+          const ws = new WebSocket(wsUrl);
 
-        console.log(`Sync result for device ${device.mac_address}:`, result);
+          ws.onopen = () => {
+            console.log(`WebSocket connected for device ${device.mac_address}`);
+            ws.send(JSON.stringify({
+              type: 'sync_playlist',
+              payload: {
+                deviceId: device.mac_address,
+                playlist: {
+                  id: playlist.id,
+                  name: playlist.name,
+                  songs: songs
+                }
+              }
+            }));
+          };
 
-        if (!result.success) {
-          console.error(`Failed to sync playlist to device ${device.mac_address}:`, result.error);
-          toast.error(`${device.mac_address} cihazına gönderilirken hata oluştu: ${result.error}`);
+          ws.onmessage = (event) => {
+            console.log(`Received WebSocket message for device ${device.mac_address}:`, event.data);
+            const response = JSON.parse(event.data);
+            
+            if (response.type === 'sync_error') {
+              console.error(`Sync error for device ${device.mac_address}:`, response.payload);
+              toast.error(`${device.mac_address} cihazına gönderilirken hata oluştu: ${response.payload}`);
+            }
+          };
+
+          ws.onerror = (error) => {
+            console.error(`WebSocket error for device ${device.mac_address}:`, error);
+            toast.error(`${device.mac_address} cihazı ile bağlantı hatası`);
+          };
+
+          // Wait for the WebSocket connection to complete
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('WebSocket connection timeout'));
+            }, 10000);
+
+            ws.onclose = () => {
+              clearTimeout(timeout);
+              resolve(true);
+            };
+          });
+
+        } catch (wsError) {
+          console.error(`WebSocket error for device ${device.mac_address}:`, wsError);
+          toast.error(`${device.mac_address} cihazına bağlanılamadı`);
         }
       }
 
