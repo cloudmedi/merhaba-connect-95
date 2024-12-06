@@ -24,14 +24,30 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Basitleştirilmiş sorgu - sadece devices tablosundan veri çekiyoruz
+  // Kullanıcıya ait cihazları getiren sorgu
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      console.log('Fetching all devices...');
+      console.log('Fetching devices for current user...');
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
+        console.log('No user found');
+        return [];
+      }
+
+      console.log('User ID:', userData.user.id);
+      
       const { data, error } = await supabase
         .from('devices')
-        .select('*');
+        .select(`
+          *,
+          branches (
+            id,
+            name
+          )
+        `)
+        .eq('created_by', userData.user.id);
 
       if (error) {
         console.error('Error fetching devices:', error);
@@ -39,12 +55,13 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
       }
 
       console.log('Fetched devices:', data);
-      return data;
+      return data || [];
     },
   });
 
   const filteredDevices = devices.filter(device =>
-    device.name.toLowerCase().includes(searchQuery.toLowerCase())
+    device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (device.branches?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSelectAll = () => {
