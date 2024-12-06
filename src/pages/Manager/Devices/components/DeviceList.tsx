@@ -2,6 +2,7 @@ import { Device } from "../hooks/types";
 import { DeviceListItem } from "./DeviceListItem";
 import { toast } from "sonner";
 import { useDevices } from "../hooks/useDevices";
+import { useDeviceMutations } from "../hooks/useDeviceMutations";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
@@ -15,7 +16,7 @@ interface DeviceListProps {
 const ITEMS_PER_PAGE = 10;
 
 export function DeviceList({ devices }: DeviceListProps) {
-  const { deleteDevice } = useDevices();
+  const { deleteDevice } = useDeviceMutations();
   const [displayedDevices, setDisplayedDevices] = useState<Device[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);

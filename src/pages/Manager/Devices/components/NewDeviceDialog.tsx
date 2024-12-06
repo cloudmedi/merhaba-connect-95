@@ -7,12 +7,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useDevices } from "../hooks/useDevices";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useDeviceVerification } from "./device-verification/useDeviceVerification";
 import { DeviceForm } from "./device-verification/DeviceForm";
 import { DeviceSystemInfo } from "../hooks/types";
+import { useDeviceMutations } from "../hooks/useDeviceMutations";
 
 interface NewDeviceDialogProps {
   open: boolean;
@@ -25,8 +24,8 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
   const [location, setLocation] = useState("");
   const [token, setToken] = useState("");
   const [ipAddress, setIpAddress] = useState("");
-  const { createDevice } = useDevices();
   const { isVerifying, verifyTokenAndGetDeviceInfo, markTokenAsUsed } = useDeviceVerification();
+  const { createDevice } = useDeviceMutations();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +57,7 @@ export function NewDeviceDialog({ open, onOpenChange }: NewDeviceDialogProps) {
       console.log('Creating device with data:', newDevice);
       await createDevice.mutateAsync(newDevice);
       
-      // Cihaz başarıyla oluşturulduktan sonra token'ı used olarak işaretle
+      // Mark token as used after device is successfully created
       await markTokenAsUsed(token);
       
       toast.success('Cihaz başarıyla eklendi');
