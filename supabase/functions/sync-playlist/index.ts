@@ -15,6 +15,7 @@ serve(async (req) => {
   const { token } = new URL(req.url).searchParams;
   
   if (!token) {
+    console.error('Token is required');
     return new Response(
       JSON.stringify({ error: 'Token is required' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -34,12 +35,13 @@ serve(async (req) => {
   // Validate device token
   const { data: deviceToken, error: tokenError } = await supabase
     .from('device_tokens')
-    .select('mac_address')
+    .select('token')
     .eq('token', token)
     .in('status', ['active', 'used'])
     .single();
 
   if (tokenError || !deviceToken) {
+    console.error('Invalid or expired token');
     return new Response(
       JSON.stringify({ error: 'Invalid or expired token' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -57,14 +59,13 @@ serve(async (req) => {
       const data = JSON.parse(event.data);
       
       if (data.type === 'sync_playlist') {
-        const { deviceId, playlist } = data.payload;
-        console.log(`Syncing playlist ${playlist.id} to device ${deviceId}`);
+        const { playlist } = data.payload;
+        console.log(`Syncing playlist ${playlist.id}`);
         
         // Send success response
         socket.send(JSON.stringify({
           type: 'sync_success',
           payload: {
-            deviceId,
             playlistId: playlist.id
           }
         }));

@@ -1,11 +1,9 @@
 import WebSocket from 'ws';
-import { createClient } from '@supabase/supabase-js';
 import { BrowserWindow } from 'electron';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private supabaseUrl: string;
-  private supabaseClient: any;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
@@ -14,44 +12,14 @@ export class WebSocketManager {
   constructor(deviceToken: string, win: BrowserWindow | null) {
     console.log('Initializing WebSocketManager with token:', deviceToken);
     this.win = win;
-
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
     
-    if (!this.supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase environment variables');
+    if (!this.supabaseUrl) {
+      console.error('Missing Supabase URL');
       return;
     }
 
-    this.supabaseClient = createClient(this.supabaseUrl, supabaseKey);
-    this.initializeConnection(deviceToken);
-  }
-
-  private async initializeConnection(deviceToken: string) {
-    try {
-      console.log('Initializing WebSocket connection...');
-      if (!this.supabaseClient) {
-        throw new Error('Supabase client not initialized');
-      }
-
-      // Direkt olarak device token'ı kullanarak bağlantı kur
-      const { data: tokenData, error } = await this.supabaseClient
-        .from('device_tokens')
-        .select('token')
-        .eq('mac_address', deviceToken)
-        .in('status', ['active', 'used'])
-        .single();
-
-      if (error || !tokenData) {
-        console.error('Could not find active device token:', error);
-        return;
-      }
-
-      console.log('Found active device token:', tokenData.token);
-      this.connect(tokenData.token);
-    } catch (error) {
-      console.error('Error initializing connection:', error);
-    }
+    this.connect(deviceToken);
   }
 
   private async connect(token: string) {
