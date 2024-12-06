@@ -23,7 +23,7 @@ export class DeviceStatusManager {
 
   async verifyDevice(deviceToken: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('device_tokens')
         .select('status')
         .eq('token', deviceToken)

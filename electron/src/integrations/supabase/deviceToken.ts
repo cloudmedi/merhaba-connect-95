@@ -28,7 +28,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
 
     // If there are any existing tokens for this MAC address, return the most recent one
     if (existingTokens && existingTokens.length > 0) {
-      const mostRecentToken = existingTokens[0];
+      const mostRecentToken = existingTokens[0] as DeviceToken;
       console.log('Using existing token:', {
         token: mostRecentToken.token,
         status: mostRecentToken.status,
@@ -48,7 +48,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
         return await createNewToken(macAddress);
       }
 
-      return mostRecentToken as DeviceToken;
+      return mostRecentToken;
     }
 
     return await createNewToken(macAddress);
