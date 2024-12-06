@@ -42,6 +42,7 @@ export class WebSocketManager {
 
   private sendProgressUpdate(songId: string, progress: number) {
     if (this.ws?.readyState === WebSocket.OPEN) {
+      console.log(`Sending progress update for song ${songId}: ${progress}%`);
       this.ws.send(JSON.stringify({
         type: 'download_progress',
         payload: {
@@ -52,6 +53,7 @@ export class WebSocketManager {
       
       // Send progress to renderer process
       if (this.win?.webContents) {
+        console.log(`Sending progress to renderer: ${songId}, ${progress}%`);
         this.win.webContents.send('download-progress', { songId, progress });
       }
     }
