@@ -8,29 +8,36 @@ import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, PlayCircle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserTableRowProps {
   user: User;
 }
 
 export function UserTableRow({ user }: UserTableRowProps) {
-  const { data: assignmentCounts } = useQuery({
+  const { data: assignments } = useQuery({
     queryKey: ['user-assignments', user.id],
     queryFn: async () => {
       const [playlistResult, scheduleResult] = await Promise.all([
         supabase
           .from('playlist_assignments')
-          .select('*', { count: 'exact' })
+          .select(`
+            playlist_id,
+            playlists (
+              id,
+              name
+            )
+          `)
           .eq('user_id', user.id),
         supabase
           .from('schedule_events')
-          .select('*', { count: 'exact' })
+          .select('id, title')
           .eq('created_by', user.id)
       ]);
 
       return {
-        playlists: playlistResult.count || 0,
-        schedules: scheduleResult.count || 0
+        playlists: playlistResult.data || [],
+        schedules: scheduleResult.data || []
       };
     }
   });
@@ -59,13 +66,35 @@ export function UserTableRow({ user }: UserTableRowProps) {
         <div className="flex flex-col gap-1">
           <span>{user.role}</span>
           <div className="flex items-center gap-2 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <PlayCircle className="w-3 h-3" />
-              <span>{assignmentCounts?.playlists || 0} playlists</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <PlayCircle className="w-3 h-3" />
+                <span>{assignments?.playlists.length || 0} playlists</span>
+              </div>
+              {assignments?.playlists.length > 0 && (
+                <ScrollArea className="h-20 w-48 rounded-md border p-2">
+                  {assignments.playlists.map((pa: any) => (
+                    <div key={pa.playlist_id} className="text-xs py-1">
+                      {pa.playlists?.name}
+                    </div>
+                  ))}
+                </ScrollArea>
+              )}
             </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>{assignmentCounts?.schedules || 0} schedules</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>{assignments?.schedules.length || 0} schedules</span>
+              </div>
+              {assignments?.schedules.length > 0 && (
+                <ScrollArea className="h-20 w-48 rounded-md border p-2">
+                  {assignments.schedules.map((schedule) => (
+                    <div key={schedule.id} className="text-xs py-1">
+                      {schedule.title}
+                    </div>
+                  ))}
+                </ScrollArea>
+              )}
             </div>
           </div>
         </div>
