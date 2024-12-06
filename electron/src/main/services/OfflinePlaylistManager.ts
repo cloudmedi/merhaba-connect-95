@@ -23,21 +23,6 @@ export class OfflinePlaylistManager {
     console.log('OfflinePlaylistManager initialized');
   }
 
-  async getOfflinePlaylists() {
-    try {
-      const playlistsDir = await this.fileSystem.getPlaylistsDir();
-      console.log('Reading playlists from directory:', playlistsDir);
-      
-      const playlists = await this.fileSystem.readPlaylistsInfo();
-      console.log('Retrieved playlists:', playlists);
-      
-      return playlists;
-    } catch (error) {
-      console.error('Error getting offline playlists:', error);
-      throw error;
-    }
-  }
-
   async syncPlaylist(playlist: Playlist): Promise<{ success: boolean; error?: string }> {
     try {
       console.log(`Starting sync for playlist ${playlist.id} - ${playlist.name}`);
@@ -53,17 +38,6 @@ export class OfflinePlaylistManager {
         console.error('No songs in playlist');
         return { success: false, error: 'No songs in playlist' };
       }
-
-      // Save playlist info locally
-      await this.fileSystem.savePlaylistInfo(playlist.id, {
-        id: playlist.id,
-        name: playlist.name,
-        songs: playlist.songs.map(s => ({
-          id: s.id,
-          title: s.title,
-          artist: s.artist
-        }))
-      });
 
       let totalSongs = playlist.songs.length;
       let downloadedSongs = 0;
@@ -101,14 +75,6 @@ export class OfflinePlaylistManager {
             errors.push(`Failed to download ${song.title}: ${result.error}`);
             continue;
           }
-
-          await this.fileSystem.saveMetadata(song.id, {
-            id: song.id,
-            title: song.title,
-            artist: song.artist,
-            hash: result.hash,
-            downloadedAt: new Date().toISOString()
-          });
         }
         downloadedSongs++;
         console.log(`Progress: ${downloadedSongs}/${totalSongs} songs`);

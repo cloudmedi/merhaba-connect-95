@@ -17,8 +17,7 @@ export class FileSystemManager {
   private initializeDirectories() {
     const dirs = [
       path.join(this.baseDir, 'songs'),
-      path.join(this.baseDir, 'playlists'),
-      path.join(this.baseDir, 'metadata')
+      path.join(this.baseDir, 'playlists')
     ];
 
     dirs.forEach(dir => {
@@ -27,26 +26,6 @@ export class FileSystemManager {
         console.log('Created directory:', dir);
       }
     });
-  }
-
-  async savePlaylistInfo(playlistId: string, data: any): Promise<void> {
-    const filePath = path.join(this.baseDir, 'playlists', `${playlistId}.json`);
-    console.log('Saving playlist info to:', filePath);
-    console.log('Playlist data:', data);
-    
-    try {
-      await fs.writeJson(filePath, data, { spaces: 2 });
-      console.log('Playlist info saved successfully');
-      
-      const exists = await fs.pathExists(filePath);
-      if (exists) {
-        const stats = await fs.stat(filePath);
-        console.log(`Playlist info file size: ${stats.size} bytes`);
-      }
-    } catch (error) {
-      console.error('Error saving playlist info:', error);
-      throw error;
-    }
   }
 
   async saveSong(songId: string, songBuffer: Buffer): Promise<string> {
@@ -78,37 +57,6 @@ export class FileSystemManager {
       return hash;
     } catch (error) {
       console.error('Error saving song:', error);
-      throw error;
-    }
-  }
-
-  async readPlaylistsInfo(): Promise<any[]> {
-    const playlistsDir = path.join(this.baseDir, 'playlists');
-    console.log('Reading playlists from:', playlistsDir);
-    
-    try {
-      const files = await fs.readdir(playlistsDir);
-      console.log('Found playlist files:', files);
-      
-      const playlists = await Promise.all(
-        files
-          .filter(file => file.endsWith('.json'))
-          .map(async file => {
-            const filePath = path.join(playlistsDir, file);
-            try {
-              const data = await fs.readJson(filePath);
-              console.log('Read playlist data:', data);
-              return data;
-            } catch (error) {
-              console.error('Error reading playlist file:', file, error);
-              return null;
-            }
-          })
-      );
-
-      return playlists.filter(p => p !== null);
-    } catch (error) {
-      console.error('Error reading playlists directory:', error);
       throw error;
     }
   }
