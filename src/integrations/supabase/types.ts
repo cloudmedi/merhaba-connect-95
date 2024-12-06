@@ -409,6 +409,7 @@ export type Database = {
           branch_id: string | null
           category: string
           created_at: string | null
+          created_by: string | null
           id: string
           ip_address: string | null
           last_seen: string | null
@@ -425,6 +426,7 @@ export type Database = {
           branch_id?: string | null
           category: string
           created_at?: string | null
+          created_by?: string | null
           id?: string
           ip_address?: string | null
           last_seen?: string | null
@@ -441,6 +443,7 @@ export type Database = {
           branch_id?: string | null
           category?: string
           created_at?: string | null
+          created_by?: string | null
           id?: string
           ip_address?: string | null
           last_seen?: string | null

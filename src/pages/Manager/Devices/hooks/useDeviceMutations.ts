@@ -8,6 +8,11 @@ export const useDeviceMutations = () => {
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('devices')
         .insert({
@@ -15,7 +20,8 @@ export const useDeviceMutations = () => {
           last_seen: new Date().toISOString(),
           ip_address: window.location.hostname,
           system_info: device.system_info || {},
-          schedule: device.schedule || {}
+          schedule: device.schedule || {},
+          created_by: userData.user.id
         })
         .select(`
           *,
