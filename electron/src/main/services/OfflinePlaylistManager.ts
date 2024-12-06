@@ -23,6 +23,21 @@ export class OfflinePlaylistManager {
     console.log('OfflinePlaylistManager initialized');
   }
 
+  async getOfflinePlaylists() {
+    try {
+      const playlistsDir = await this.fileSystem.getPlaylistsDir();
+      console.log('Reading playlists from directory:', playlistsDir);
+      
+      const playlists = await this.fileSystem.readPlaylistsInfo();
+      console.log('Retrieved playlists:', playlists);
+      
+      return playlists;
+    } catch (error) {
+      console.error('Error getting offline playlists:', error);
+      throw error;
+    }
+  }
+
   async syncPlaylist(playlist: Playlist): Promise<{ success: boolean; error?: string }> {
     try {
       console.log(`Starting sync for playlist ${playlist.id} - ${playlist.name}`);

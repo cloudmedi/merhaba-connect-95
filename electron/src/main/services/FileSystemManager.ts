@@ -29,20 +29,52 @@ export class FileSystemManager {
     });
   }
 
+  getPlaylistsDir(): string {
+    return path.join(this.baseDir, 'playlists');
+  }
+
+  async readPlaylistsInfo(): Promise<any[]> {
+    const playlistsDir = this.getPlaylistsDir();
+    console.log('Reading playlists from:', playlistsDir);
+    
+    try {
+      const files = await fs.readdir(playlistsDir);
+      console.log('Found playlist files:', files);
+      
+      const playlists = await Promise.all(
+        files
+          .filter(file => file.endsWith('.json'))
+          .map(async file => {
+            const filePath = path.join(playlistsDir, file);
+            try {
+              const data = await fs.readJson(filePath);
+              console.log('Read playlist data:', data);
+              return data;
+            } catch (error) {
+              console.error('Error reading playlist file:', file, error);
+              return null;
+            }
+          })
+      );
+
+      return playlists.filter(p => p !== null);
+    } catch (error) {
+      console.error('Error reading playlists directory:', error);
+      throw error;
+    }
+  }
+
   async saveSong(songId: string, songBuffer: Buffer): Promise<string> {
     const filePath = this.getSongPath(songId);
     console.log('Saving song to:', filePath);
     
     try {
-      // Ensure directory exists
       await fs.ensureDir(path.dirname(filePath));
       console.log('Ensured directory exists:', path.dirname(filePath));
 
-      // Write file
       await fs.writeFile(filePath, songBuffer);
       console.log('Successfully wrote file');
 
-      // Verify file was written
       const exists = await fs.pathExists(filePath);
       if (!exists) {
         throw new Error('File was not written successfully');
@@ -51,7 +83,6 @@ export class FileSystemManager {
       const hash = this.calculateFileHash(songBuffer);
       console.log('Song saved successfully with hash:', hash);
       
-      // Check file size
       const stats = await fs.stat(filePath);
       console.log(`Saved file size: ${stats.size} bytes`);
       
@@ -75,7 +106,6 @@ export class FileSystemManager {
       await fs.writeJson(filePath, data, { spaces: 2 });
       console.log('Playlist info saved successfully');
       
-      // Dosya varlığını ve boyutunu kontrol et
       const exists = await fs.pathExists(filePath);
       if (exists) {
         const stats = await fs.stat(filePath);
