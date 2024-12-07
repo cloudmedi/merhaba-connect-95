@@ -4,7 +4,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Device } from "../hooks/types";
-import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2 } from "lucide-react";
+import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2, PlayCircle, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +41,9 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
     return <Monitor className="h-4 w-4 text-gray-400" />;
   };
 
+  const currentSchedule = device.schedule_device_assignments?.[0]?.schedule?.title;
+  const currentPlaylist = device.playlist_assignments?.[0]?.playlist?.name;
+
   const handleSave = async (updatedDevice: Partial<Device>) => {
     try {
       const { error } = await supabase
@@ -65,6 +68,22 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
         <div>
           <p className="font-medium text-gray-900">{device.name}</p>
           <p className="text-sm text-gray-500">{device.branches?.name || 'Şube atanmamış'}</p>
+          {(currentPlaylist || currentSchedule) && (
+            <div className="mt-1 flex items-center gap-4 text-xs text-gray-600">
+              {currentPlaylist && (
+                <div className="flex items-center gap-1">
+                  <PlayCircle className="h-3 w-3" />
+                  <span>{currentPlaylist}</span>
+                </div>
+              )}
+              {currentSchedule && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>{currentSchedule}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </TableCell>
       <TableCell>
