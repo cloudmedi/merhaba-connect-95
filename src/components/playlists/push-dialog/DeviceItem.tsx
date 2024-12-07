@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { PlayCircle, Calendar } from "lucide-react";
 
 interface DeviceItemProps {
   device: {
@@ -13,12 +14,25 @@ interface DeviceItemProps {
     branches?: {
       name?: string;
     };
+    schedule_device_assignments?: Array<{
+      schedule?: {
+        title?: string;
+      };
+    }>;
+    playlist_assignments?: Array<{
+      playlist?: {
+        name?: string;
+      };
+    }>;
   };
   isSelected: boolean;
   onToggle: (deviceId: string) => void;
 }
 
 export function DeviceItem({ device, isSelected, onToggle }: DeviceItemProps) {
+  const currentSchedule = device.schedule_device_assignments?.[0]?.schedule?.title;
+  const currentPlaylist = device.playlist_assignments?.[0]?.playlist?.name;
+
   return (
     <div
       className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-accent cursor-pointer"
@@ -55,6 +69,22 @@ export function DeviceItem({ device, isSelected, onToggle }: DeviceItemProps) {
             </>
           )}
         </div>
+        {(currentPlaylist || currentSchedule) && (
+          <div className="mt-2 flex items-center gap-4 text-xs text-gray-600">
+            {currentPlaylist && (
+              <div className="flex items-center gap-1">
+                <PlayCircle className="h-3 w-3" />
+                <span>{currentPlaylist}</span>
+              </div>
+            )}
+            {currentSchedule && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>{currentSchedule}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

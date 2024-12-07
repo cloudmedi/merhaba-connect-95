@@ -30,6 +30,18 @@ export function DeviceList({ searchQuery, selectedDevices, onToggleDevice }: Dev
           branches (
             id,
             name
+          ),
+          schedule_device_assignments (
+            schedule:schedule_events (
+              id,
+              title
+            )
+          ),
+          playlist_assignments (
+            playlist:playlists (
+              id,
+              name
+            )
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
