@@ -1,7 +1,7 @@
 import React from 'react';
 import { SystemInfo } from '@/types/electron';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Cpu, HardDrive, Memory, Network, Server } from 'lucide-react';
+import { Cpu, HardDrive, Database, Network, Server } from 'lucide-react';
 
 interface DeviceInfoProps {
   systemInfo: SystemInfo;
@@ -32,7 +32,7 @@ export function DeviceInfo({ systemInfo }: DeviceInfoProps) {
 
         <div className="space-y-2">
           <h3 className="flex items-center gap-2 font-medium">
-            <Memory className="w-4 h-4" />
+            <Database className="w-4 h-4" />
             Memory
           </h3>
           <div className="text-sm text-gray-600 space-y-1">
