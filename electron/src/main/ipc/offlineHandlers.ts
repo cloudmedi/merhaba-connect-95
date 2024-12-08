@@ -1,15 +1,15 @@
 import { ipcMain } from 'electron';
 import { WebSocketManager } from '../services/WebSocketManager';
 
-export function setupOfflineHandlers(deviceId: string) {
-  const wsManager = new WebSocketManager(deviceId, null);
+export function setupOfflineHandlers(token: string) {
+  const wsManager = new WebSocketManager(token, null);
 
   ipcMain.handle('sync-playlist', async (_, playlist) => {
     console.log('Received sync request for playlist:', playlist);
     
-    if (!deviceId) {
-      console.error('No device ID available');
-      return { success: false, error: 'No device ID available' };
+    if (!token) {
+      console.error('No token available');
+      return { success: false, error: 'No token available' };
     }
 
     try {

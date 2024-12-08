@@ -1,6 +1,5 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
-import { supabase } from '../../integrations/supabase/client';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -10,8 +9,8 @@ export class WebSocketManager {
   private reconnectDelay: number = 5000;
   private win: BrowserWindow | null;
 
-  constructor(deviceId: string, win: BrowserWindow | null) {
-    console.log('Initializing WebSocketManager with deviceId:', deviceId);
+  constructor(token: string, win: BrowserWindow | null) {
+    console.log('Initializing WebSocketManager with token');
     this.win = win;
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     
@@ -20,30 +19,10 @@ export class WebSocketManager {
       return;
     }
 
-    this.initializeConnection(deviceId);
+    this.connect(token);
   }
 
-  private async initializeConnection(deviceId: string) {
-    try {
-      const { data: deviceData, error: deviceError } = await supabase
-        .from('device_tokens')
-        .select('token')
-        .eq('mac_address', deviceId)
-        .single();
-
-      if (deviceError || !deviceData?.token) {
-        console.error('Error getting device token:', deviceError);
-        return;
-      }
-
-      console.log('Retrieved device token:', deviceData.token);
-      this.connect(deviceData.token);
-    } catch (error) {
-      console.error('Error initializing connection:', error);
-    }
-  }
-
-  private async connect(token: string) {
+  private connect(token: string) {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');

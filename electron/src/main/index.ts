@@ -90,18 +90,13 @@ async function getSystemInfo() {
 
 async function initializeOfflineSupport() {
   try {
-    const macAddress = await getMacAddress();
-    if (!macAddress) {
-      throw new Error('Could not get MAC address for device identification');
-    }
-
-    deviceId = macAddress.replace(/:/g, '');
-    setupOfflineHandlers(deviceId);
+    // Device token'ı doğrudan al
+    const deviceToken = 'your_device_token'; // Bu token'ı uygun şekilde almalısınız
     
-    console.log('Initializing WebSocket with deviceId:', deviceId);
+    console.log('Initializing WebSocket with token:', deviceToken);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
     
-    wsManager = new WebSocketManager(deviceId, win);
+    setupOfflineHandlers(deviceToken);
   } catch (error) {
     console.error('Error initializing offline support:', error);
   }
