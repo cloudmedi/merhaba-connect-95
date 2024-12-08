@@ -1,4 +1,4 @@
-export interface SystemInfo {
+interface SystemInfo {
   cpu: {
     manufacturer: string;
     brand: string;
@@ -29,7 +29,7 @@ export interface SystemInfo {
   }>;
 }
 
-export interface WebSocketMessage {
+interface WebSocketMessage {
   type: string;
   payload: {
     playlist?: {
@@ -46,24 +46,26 @@ export interface WebSocketMessage {
   };
 }
 
+interface ElectronAPI {
+  getSystemInfo: () => Promise<SystemInfo>;
+  getDeviceId: () => Promise<string>;
+  getMacAddress: () => Promise<string | null>;
+  onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
+  getEnvVars: () => Promise<Record<string, string>>;
+  syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
+  getStorageStats: () => Promise<{ used: number; total: number }>;
+  getDownloadProgress: (songId: string) => Promise<number>;
+  onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
+  onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
+  onWebSocketConnected: (callback: () => void) => () => void;
+  onWebSocketError: (callback: (error: string) => void) => () => void;
+  registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
+}
+
 declare global {
   interface Window {
-    electronAPI: {
-      getSystemInfo: () => Promise<SystemInfo>;
-      getDeviceId: () => Promise<string>;
-      getMacAddress: () => Promise<string | null>;
-      onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
-      getEnvVars: () => Promise<Record<string, string>>;
-      syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
-      getStorageStats: () => Promise<{ used: number; total: number }>;
-      getDownloadProgress: (songId: string) => Promise<number>;
-      onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
-      onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
-      onWebSocketConnected: (callback: () => void) => () => void;
-      onWebSocketError: (callback: (error: string) => void) => () => void;
-      registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
-    };
+    electronAPI: ElectronAPI;
   }
 }
 
-export {};
+export type { SystemInfo, WebSocketMessage, ElectronAPI };
