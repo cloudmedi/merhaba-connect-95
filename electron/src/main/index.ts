@@ -31,7 +31,6 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 }
 
 let win: BrowserWindow | null;
-let deviceId: string | null = null;
 let wsManager: WebSocketManager | null = null;
 
 async function getMacAddress() {
@@ -90,11 +89,15 @@ async function getSystemInfo() {
 
 async function initializeOfflineSupport() {
   try {
-    // Device token'ı doğrudan al
     const deviceToken = 'your_device_token'; // Bu token'ı uygun şekilde almalısınız
     
     console.log('Initializing WebSocket with token:', deviceToken);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
+    
+    if (wsManager) {
+      await wsManager.disconnect();
+    }
+    wsManager = new WebSocketManager(deviceToken, win);
     
     setupOfflineHandlers(deviceToken);
   } catch (error) {
@@ -126,15 +129,12 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    // In production, load from the correct path
     const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
     console.log('Loading production index.html from:', indexPath);
     
-    // Check if the file exists
     const fs = require('fs');
     if (!fs.existsSync(indexPath)) {
       console.error('index.html not found at:', indexPath);
-      // Try alternative path
       const altPath = path.join(process.resourcesPath, 'app.asar', 'out', 'renderer', 'index.html');
       console.log('Trying alternative path:', altPath);
       if (fs.existsSync(altPath)) {
@@ -170,20 +170,21 @@ app.on('activate', () => {
 // IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
-ipcMain.handle('get-device-id', () => deviceId);
+ipcMain.handle('get-device-id', () => deviceToken);
 ipcMain.handle('register-device', async (_event, deviceInfo) => {
   try {
-    // Cihaz kaydını gerçekleştir
-    const token = deviceInfo.id.slice(0, 6).toUpperCase(); // Basit bir token oluştur
-    deviceId = deviceInfo.id;
+    const token = deviceInfo.token;
+    if (!token) {
+      throw new Error('No token provided');
+    }
     
     // WebSocket bağlantısını başlat
     if (wsManager) {
       await wsManager.disconnect();
     }
-    wsManager = new WebSocketManager(deviceId);
+    wsManager = new WebSocketManager(token, win);
     
-    return { token };
+    return { success: true };
   } catch (error) {
     console.error('Error registering device:', error);
     throw error;

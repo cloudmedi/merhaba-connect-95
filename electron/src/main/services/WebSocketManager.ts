@@ -10,7 +10,7 @@ export class WebSocketManager {
   private win: BrowserWindow | null;
 
   constructor(token: string, win: BrowserWindow | null) {
-    console.log('Initializing WebSocketManager with token');
+    console.log('Initializing WebSocketManager with token:', token);
     this.win = win;
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     
@@ -29,10 +29,15 @@ export class WebSocketManager {
         return;
       }
 
+      // URL'i düzelttik
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
       
-      this.ws = new WebSocket(wsUrl);
+      this.ws = new WebSocket(wsUrl, {
+        headers: {
+          'apikey': process.env.VITE_SUPABASE_ANON_KEY || ''
+        }
+      });
 
       this.ws.on('open', () => {
         console.log('WebSocket connection opened successfully');
