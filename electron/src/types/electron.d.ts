@@ -59,7 +59,19 @@ interface ElectronAPI {
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onWebSocketConnected: (callback: () => void) => () => void;
   onWebSocketError: (callback: (error: string) => void) => () => void;
+  onPlaylistReceived: (callback: (playlist: PlaylistData) => void) => () => void;
   registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
+}
+
+interface PlaylistData {
+  id: string;
+  name: string;
+  songs?: Array<{
+    id: string;
+    title: string;
+    artist?: string;
+    duration?: number;
+  }>;
 }
 
 declare global {
@@ -68,4 +80,4 @@ declare global {
   }
 }
 
-export type { SystemInfo, WebSocketMessage, ElectronAPI };
+export type { SystemInfo, WebSocketMessage, ElectronAPI, PlaylistData };

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@ui/card';
+import { Progress } from './ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
+import type { PlaylistData } from '../../types/electron';
 
 interface SyncStatus {
   playlistId: string;
@@ -16,7 +17,7 @@ interface DownloadProgressData {
 }
 
 export function PlaylistSync() {
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
   const [syncStatus, setSyncStatus] = useState<Record<string, SyncStatus>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
@@ -24,16 +25,13 @@ export function PlaylistSync() {
   useEffect(() => {
     console.log('Setting up WebSocket listeners');
     
-    // WebSocket mesaj dinleyicisi
     const messageCleanup = window.electronAPI.onWebSocketMessage((data) => {
       console.log('WebSocket message received:', data);
     });
 
-    // Playlist alındığında tetiklenecek dinleyici
-    const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist) => {
+    const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist: PlaylistData) => {
       console.log('Playlist received:', playlist);
       setPlaylists(prev => {
-        // Playlist zaten varsa güncelle, yoksa ekle
         const exists = prev.some(p => p.id === playlist.id);
         if (exists) {
           return prev.map(p => p.id === playlist.id ? playlist : p);
@@ -52,7 +50,6 @@ export function PlaylistSync() {
       }));
     });
 
-    // İndirme ilerlemesi dinleyicisi
     const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
       console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
@@ -60,7 +57,6 @@ export function PlaylistSync() {
         [data.songId]: data.progress
       }));
 
-      // İndirme tamamlandığında playlist durumunu güncelle
       if (data.progress === 100) {
         setSyncStatus(prev => {
           const playlistId = Object.keys(prev).find(key => 
