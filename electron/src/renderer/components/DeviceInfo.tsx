@@ -1,64 +1,80 @@
 import React from 'react';
-import { SystemInfo } from '../types';
+import type { SystemInfo } from '../../types/electron';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Cpu, HardDrive, Database, Network, Server } from 'lucide-react';
 
 interface DeviceInfoProps {
   systemInfo: SystemInfo;
 }
 
-function formatBytes(bytes: number): string {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return '0 Byte';
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${Math.round(bytes / Math.pow(1024, i))} ${sizes[i]}`;
-}
-
 export function DeviceInfo({ systemInfo }: DeviceInfoProps) {
   return (
-    <>
-      <h1 className="text-3xl font-bold text-gray-900">Sistem Bilgileri</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">CPU</h2>
-          <div className="space-y-2">
-            <p><span className="font-medium">Üretici:</span> {systemInfo.cpu.manufacturer}</p>
-            <p><span className="font-medium">Model:</span> {systemInfo.cpu.brand}</p>
-            <p><span className="font-medium">Hız:</span> {systemInfo.cpu.speed} GHz</p>
-            <p><span className="font-medium">Çekirdek Sayısı:</span> {systemInfo.cpu.cores}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Server className="w-5 h-5" />
+          System Information
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <h3 className="flex items-center gap-2 font-medium">
+            <Cpu className="w-4 h-4" />
+            CPU
+          </h3>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>Manufacturer: {systemInfo.cpu.manufacturer}</p>
+            <p>Brand: {systemInfo.cpu.brand}</p>
+            <p>Speed: {systemInfo.cpu.speed} GHz</p>
+            <p>Cores: {systemInfo.cpu.cores}</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Bellek</h2>
-          <div className="space-y-2">
-            <p><span className="font-medium">Toplam:</span> {formatBytes(systemInfo.memory.total)}</p>
-            <p><span className="font-medium">Kullanılan:</span> {formatBytes(systemInfo.memory.used)}</p>
-            <p><span className="font-medium">Boş:</span> {formatBytes(systemInfo.memory.free)}</p>
+        <div className="space-y-2">
+          <h3 className="flex items-center gap-2 font-medium">
+            <Database className="w-4 h-4" />
+            Memory
+          </h3>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>Total: {Math.round(systemInfo.memory.total / 1024 / 1024 / 1024)} GB</p>
+            <p>Free: {Math.round(systemInfo.memory.free / 1024 / 1024 / 1024)} GB</p>
+            <p>Used: {Math.round(systemInfo.memory.used / 1024 / 1024 / 1024)} GB</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">İşletim Sistemi</h2>
-          <div className="space-y-2">
-            <p><span className="font-medium">Platform:</span> {systemInfo.os.platform}</p>
-            <p><span className="font-medium">Dağıtım:</span> {systemInfo.os.distro}</p>
-            <p><span className="font-medium">Sürüm:</span> {systemInfo.os.release}</p>
-            <p><span className="font-medium">Mimari:</span> {systemInfo.os.arch}</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Ağ Arayüzleri</h2>
-          <div className="space-y-4">
-            {systemInfo.network.map((net, index) => (
-              <div key={index} className="border-b pb-2 last:border-0">
-                <p><span className="font-medium">Arayüz:</span> {net.iface}</p>
-                <p><span className="font-medium">IP:</span> {net.ip4}</p>
-                <p><span className="font-medium">MAC:</span> {net.mac}</p>
+        <div className="space-y-2">
+          <h3 className="flex items-center gap-2 font-medium">
+            <HardDrive className="w-4 h-4" />
+            Storage
+          </h3>
+          <div className="text-sm text-gray-600 space-y-1">
+            {systemInfo.disk.map((disk, index) => (
+              <div key={index} className="border-b pb-2 last:border-0 last:pb-0">
+                <p>Filesystem: {disk.fs}</p>
+                <p>Size: {Math.round(disk.size / 1024 / 1024 / 1024)} GB</p>
+                <p>Used: {Math.round(disk.used / 1024 / 1024 / 1024)} GB</p>
+                <p>Available: {Math.round(disk.available / 1024 / 1024 / 1024)} GB</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
-    </>
+
+        <div className="space-y-2">
+          <h3 className="flex items-center gap-2 font-medium">
+            <Network className="w-4 h-4" />
+            Network
+          </h3>
+          <div className="text-sm text-gray-600 space-y-1">
+            {systemInfo.network.map((net: { iface: string; ip4: string; mac: string }, index: number) => (
+              <div key={index} className="border-b pb-2 last:border-0 last:pb-0">
+                <p>Interface: {net.iface}</p>
+                <p>IPv4: {net.ip4}</p>
+                <p>MAC: {net.mac}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -3,10 +3,11 @@ import './App.css';
 import { initSupabase } from '../integrations/supabase/client';
 import { createDeviceToken } from '../integrations/supabase/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
-import { SystemInfo } from './components/SystemInfo';
+import type { SystemInfo } from '../types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
+import { DeviceInfo } from './components/DeviceInfo';
 
 interface TokenData {
   token: string;
@@ -19,7 +20,7 @@ function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [systemInfo, setSystemInfo] = useState<any>(null);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
@@ -85,7 +86,7 @@ function App() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <TokenDisplay token={deviceToken} />
-        <SystemInfo info={systemInfo} />
+        {systemInfo && <DeviceInfo systemInfo={systemInfo} />}
         <PlaylistSync />
       </div>
     </div>
