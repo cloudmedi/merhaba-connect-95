@@ -65,11 +65,11 @@ export class WebSocketManager {
       });
 
       this.ws.on('message', (data) => {
-        console.log('WebSocket message received:', data.toString());
+        console.log('Raw WebSocket message received:', data.toString());
         try {
           const parsedData = JSON.parse(data.toString());
+          console.log('Parsed WebSocket message:', parsedData);
           
-          // Özellikle playlist sync mesajlarını kontrol et
           if (parsedData.type === 'sync_playlist' && parsedData.payload.playlist) {
             console.log('Playlist sync message received:', parsedData.payload.playlist);
             if (this.win) {
@@ -77,7 +77,6 @@ export class WebSocketManager {
             }
           }
           
-          // Diğer mesajları da ilet
           if (this.win) {
             this.win.webContents.send('websocket-message', parsedData);
           }

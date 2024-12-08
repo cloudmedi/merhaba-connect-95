@@ -30,7 +30,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     };
   },
   onPlaylistReceived: (callback: (playlist: any) => void) => {
-    const handler = (_event: any, playlist: any) => callback(playlist);
+    const handler = (_event: any, playlist: any) => {
+      console.log('Playlist received in preload:', playlist);
+      callback(playlist);
+    };
     ipcRenderer.on('playlist-received', handler);
     return () => {
       ipcRenderer.removeListener('playlist-received', handler);
