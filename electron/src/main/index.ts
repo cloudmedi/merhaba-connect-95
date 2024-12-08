@@ -32,6 +32,7 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 
 let win: BrowserWindow | null;
 let wsManager: WebSocketManager | null = null;
+let deviceToken: string | null = null;
 
 async function getMacAddress() {
   try {
@@ -89,7 +90,10 @@ async function getSystemInfo() {
 
 async function initializeOfflineSupport() {
   try {
-    const deviceToken = 'your_device_token'; // Bu token'ı uygun şekilde almalısınız
+    if (!deviceToken) {
+      console.error('No device token available');
+      return;
+    }
     
     console.log('Initializing WebSocket with token:', deviceToken);
     console.log('Using Supabase URL:', VITE_SUPABASE_URL);
@@ -150,7 +154,6 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  await initializeOfflineSupport();
   createWindow();
 });
 
@@ -171,18 +174,21 @@ app.on('activate', () => {
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
 ipcMain.handle('get-device-id', () => deviceToken);
+
 ipcMain.handle('register-device', async (_event, deviceInfo) => {
   try {
-    const token = deviceInfo.token;
-    if (!token) {
+    if (!deviceInfo || !deviceInfo.token) {
       throw new Error('No token provided');
     }
+    
+    deviceToken = deviceInfo.token;
+    console.log('Device registered with token:', deviceToken);
     
     // WebSocket bağlantısını başlat
     if (wsManager) {
       await wsManager.disconnect();
     }
-    wsManager = new WebSocketManager(token, win);
+    wsManager = new WebSocketManager(deviceToken, win);
     
     return { success: true };
   } catch (error) {
