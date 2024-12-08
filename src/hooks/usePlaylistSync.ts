@@ -1,9 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 
 export function usePlaylistSync(playlistId: string, playlistTitle: string) {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    const setupWebSocket = async () => {
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (!supabaseUrl) {
+          throw new Error('Supabase URL not found');
+        }
+
+        const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
+        console.log('Connecting to WebSocket:', wsUrl);
+        
+        const newWs = new WebSocket(wsUrl);
+
+        newWs.onopen = () => {
+          console.log('WebSocket connection opened');
+          toast.success('WebSocket bağlantısı kuruldu');
+        };
+
+        newWs.onmessage = (event) => {
+          console.log('WebSocket message received:', event.data);
+          try {
+            const response = JSON.parse(event.data);
+            if (response.type === 'sync_success') {
+              toast.success(`Playlist başarıyla senkronize edildi`);
+            } else if (response.type === 'error') {
+              toast.error(`Hata: ${response.payload.message}`);
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket response:', error);
+            toast.error("Beklenmeyen bir yanıt alındı");
+          }
+        };
+
+        newWs.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          toast.error("Bağlantı hatası oluştu");
+        };
+
+        newWs.onclose = () => {
+          console.log('WebSocket connection closed');
+          toast.error("WebSocket bağlantısı kapandı");
+          // Try to reconnect after a delay
+          setTimeout(setupWebSocket, 5000);
+        };
+
+        setWs(newWs);
+      } catch (error) {
+        console.error('Error setting up WebSocket:', error);
+        toast.error("WebSocket bağlantısı kurulamadı");
+      }
+    };
+
+    setupWebSocket();
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []);
 
   const handleSync = async (selectedDevices: string[]) => {
     if (selectedDevices.length === 0) {
@@ -42,19 +104,7 @@ export function usePlaylistSync(playlistId: string, playlistTitle: string) {
           : ps.songs.file_url
       }));
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL not found');
-      }
-
-      const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
-      console.log('Connecting to WebSocket:', wsUrl);
-      
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('WebSocket connection opened, sending playlist data');
-        // Edge Function'ın beklediği formatta veri gönderiyoruz
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: 'sync_playlist',
           payload: {
@@ -66,32 +116,9 @@ export function usePlaylistSync(playlistId: string, playlistTitle: string) {
             devices: selectedDevices
           }
         }));
-      };
-
-      ws.onmessage = (event) => {
-        console.log('WebSocket response received:', event.data);
-        try {
-          const response = JSON.parse(event.data);
-          if (response.type === 'sync_success') {
-            toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
-          } else if (response.type === 'error') {
-            toast.error(`Hata: ${response.payload.message}`);
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket response:', error);
-          toast.error("Beklenmeyen bir yanıt alındı");
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        toast.error("Bağlantı hatası oluştu");
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        setIsSyncing(false);
-      };
+      } else {
+        throw new Error('WebSocket bağlantısı hazır değil');
+      }
 
     } catch (error) {
       console.error('Error syncing playlist:', error);

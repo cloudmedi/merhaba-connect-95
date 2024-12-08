@@ -7,7 +7,10 @@ export class WebSocketManager {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 5000;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
   private win: BrowserWindow | null;
+  private messageQueue: any[] = [];
+  private isConnecting: boolean = false;
 
   constructor(token: string, win: BrowserWindow | null) {
     console.log('WebSocketManager: Initializing with token:', token);
@@ -24,10 +27,17 @@ export class WebSocketManager {
       return;
     }
 
-    this.connect(token);
+    this.initializeWebSocket(token);
   }
 
-  private connect(token: string) {
+  private initializeWebSocket(token: string) {
+    if (this.isConnecting) {
+      console.log('WebSocketManager: Connection already in progress');
+      return;
+    }
+
+    this.isConnecting = true;
+
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('WebSocketManager: Max reconnection attempts reached');
@@ -45,144 +55,141 @@ export class WebSocketManager {
         }
       });
 
-      this.ws.on('open', () => {
-        console.log('WebSocketManager: Connection opened successfully');
-        console.log('WebSocketManager: Ready State:', this.ws?.readyState);
-        this.reconnectAttempts = 0;
-        
-        if (this.win) {
-          console.log('WebSocketManager: Sending websocket-connected event to renderer');
-          this.win.webContents.send('websocket-connected');
-        } else {
-          console.warn('WebSocketManager: Window reference not available for websocket-connected event');
-        }
-      });
+      this.setupWebSocketListeners();
 
-      this.ws.on('message', (data) => {
-        console.log('WebSocketManager: Raw message received:', data.toString());
-        try {
-          const parsedData = JSON.parse(data.toString());
-          console.log('WebSocketManager: Parsed message:', parsedData);
-          
-          if (parsedData.type === 'sync_playlist' && parsedData.payload.playlist) {
-            console.log('WebSocketManager: Playlist sync message received:', parsedData.payload.playlist);
-            if (this.win) {
-              console.log('WebSocketManager: Sending playlist to renderer');
-              this.win.webContents.send('playlist-received', parsedData.payload.playlist);
-            } else {
-              console.warn('WebSocketManager: Window reference not available for playlist-received event');
-            }
-          }
-          
-          if (this.win) {
-            console.log('WebSocketManager: Sending websocket message to renderer');
-            this.win.webContents.send('websocket-message', parsedData);
-          } else {
-            console.warn('WebSocketManager: Window reference not available for websocket-message event');
-          }
-        } catch (error) {
-          console.error('WebSocketManager: Error parsing message:', error);
-          console.error('WebSocketManager: Raw message that failed:', data.toString());
-        }
-      });
-
-      this.ws.on('error', (error) => {
-        console.error('WebSocketManager: WebSocket error:', error);
-        console.error('WebSocketManager: Error details:', {
-          message: error.message,
-          type: error.type,
-          code: error.code,
-          target: error.target
-        });
-        
-        if (this.win) {
-          this.win.webContents.send('websocket-error', error.message);
-        }
-      });
-
-      this.ws.on('close', (code, reason) => {
-        console.log('WebSocketManager: Connection closed', {
-          code,
-          reason: reason.toString(),
-          wasClean: code === 1000,
-          reconnectAttempts: this.reconnectAttempts
-        });
-        
-        this.reconnectAttempts++;
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          console.log(`WebSocketManager: Attempting to reconnect in ${this.reconnectDelay}ms...`);
-          setTimeout(() => this.connect(token), this.reconnectDelay);
-        }
-        
-        if (this.win) {
-          this.win.webContents.send('websocket-disconnected');
-        }
-      });
     } catch (error) {
       console.error('WebSocketManager: Error creating connection:', error);
-      console.error('WebSocketManager: Stack trace:', error.stack);
-      
-      this.reconnectAttempts++;
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        console.log(`WebSocketManager: Attempting to reconnect in ${this.reconnectDelay}ms...`);
-        setTimeout(() => this.connect(token), this.reconnectDelay);
-      }
+      this.handleReconnect(token);
     }
   }
 
-  public async sendPlaylist(playlist: any) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error('WebSocketManager: Connection not ready', {
-        wsExists: !!this.ws,
-        readyState: this.ws?.readyState,
-        expectedState: WebSocket.OPEN
+  private setupWebSocketListeners() {
+    if (!this.ws) return;
+
+    this.ws.on('open', () => {
+      console.log('WebSocketManager: Connection opened successfully');
+      this.isConnecting = false;
+      this.reconnectAttempts = 0;
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+
+      // Send any queued messages
+      while (this.messageQueue.length > 0) {
+        const message = this.messageQueue.shift();
+        this.sendMessage(message);
+      }
+      
+      if (this.win) {
+        console.log('WebSocketManager: Sending websocket-connected event to renderer');
+        this.win.webContents.send('websocket-connected');
+      }
+    });
+
+    this.ws.on('message', (data) => {
+      console.log('WebSocketManager: Raw message received:', data.toString());
+      try {
+        const parsedData = JSON.parse(data.toString());
+        console.log('WebSocketManager: Parsed message:', parsedData);
+        
+        if (parsedData.type === 'sync_playlist' && parsedData.payload.playlist) {
+          console.log('WebSocketManager: Playlist sync message received:', parsedData.payload.playlist);
+          if (this.win) {
+            console.log('WebSocketManager: Sending playlist to renderer');
+            this.win.webContents.send('playlist-received', parsedData.payload.playlist);
+          }
+        }
+        
+        if (this.win) {
+          console.log('WebSocketManager: Sending websocket message to renderer');
+          this.win.webContents.send('websocket-message', parsedData);
+        }
+      } catch (error) {
+        console.error('WebSocketManager: Error parsing message:', error);
+      }
+    });
+
+    this.ws.on('error', (error) => {
+      console.error('WebSocketManager: WebSocket error:', error);
+      if (this.win) {
+        this.win.webContents.send('websocket-error', error.message);
+      }
+    });
+
+    this.ws.on('close', (code, reason) => {
+      console.log('WebSocketManager: Connection closed', {
+        code,
+        reason: reason.toString(),
+        wasClean: code === 1000
       });
-      return { success: false, error: 'WebSocket connection not ready' };
+      
+      this.isConnecting = false;
+      if (this.win) {
+        this.win.webContents.send('websocket-disconnected');
+      }
+
+      // Attempt to reconnect unless this was a clean closure
+      if (code !== 1000) {
+        this.handleReconnect(this.getStoredToken());
+      }
+    });
+
+    // Setup ping/pong for connection health check
+    setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.ping();
+      }
+    }, 30000);
+  }
+
+  private handleReconnect(token: string) {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+
+    this.reconnectAttempts++;
+    console.log(`WebSocketManager: Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    
+    this.reconnectTimeout = setTimeout(() => {
+      this.initializeWebSocket(token);
+    }, this.reconnectDelay * Math.min(this.reconnectAttempts, 5));
+  }
+
+  private getStoredToken(): string {
+    // Implement token storage/retrieval logic here
+    return '';
+  }
+
+  public sendMessage(message: any) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.log('WebSocketManager: Connection not ready, queueing message');
+      this.messageQueue.push(message);
+      return;
     }
 
     try {
-      console.log('WebSocketManager: Sending playlist:', playlist);
-      const message = JSON.stringify({
-        type: 'sync_playlist',
-        payload: {
-          playlist
-        }
-      });
       console.log('WebSocketManager: Sending message:', message);
-      
-      this.ws.send(message);
-
-      if (this.win) {
-        console.log('WebSocketManager: Notifying renderer of playlist sent');
-        this.win.webContents.send('playlist-sent', playlist);
-      } else {
-        console.warn('WebSocketManager: Window reference not available for playlist-sent event');
-      }
-
-      return { success: true };
+      this.ws.send(JSON.stringify(message));
     } catch (error) {
-      console.error('WebSocketManager: Error sending playlist:', error);
-      console.error('WebSocketManager: Stack trace:', error.stack);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
+      console.error('WebSocketManager: Error sending message:', error);
+      this.messageQueue.push(message);
     }
   }
 
   public async disconnect() {
     if (this.ws) {
       console.log('WebSocketManager: Disconnecting');
-      console.log('WebSocketManager: Current state before disconnect:', {
-        readyState: this.ws.readyState,
-        reconnectAttempts: this.reconnectAttempts
-      });
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
       
-      this.ws.close();
+      this.ws.close(1000, 'Client disconnecting');
       this.ws = null;
+      this.reconnectAttempts = 0;
+      this.messageQueue = [];
       console.log('WebSocketManager: Disconnected successfully');
-    } else {
-      console.log('WebSocketManager: No active connection to disconnect');
     }
   }
 }
