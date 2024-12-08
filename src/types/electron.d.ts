@@ -68,4 +68,4 @@ declare global {
   }
 }
 
-export type { SystemInfo, WebSocketMessage, ElectronAPI };
+export {};
