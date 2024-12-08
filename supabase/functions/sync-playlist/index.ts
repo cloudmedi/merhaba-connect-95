@@ -23,7 +23,7 @@ serve(async (req) => {
 
   const url = new URL(req.url);
   const token = url.searchParams.get('token');
-  console.log('Token received:', token);
+  console.log('Received token:', token);
   
   if (!token) {
     console.error('Token is required');
@@ -52,7 +52,7 @@ serve(async (req) => {
   console.log('Validating token in device_tokens table...');
   const { data: deviceTokens, error: tokenError } = await supabase
     .from('device_tokens')
-    .select('token, status')
+    .select('token, status, expires_at')
     .eq('token', token)
     .in('status', ['active', 'used']);
 
@@ -66,11 +66,24 @@ serve(async (req) => {
     );
   }
 
-  // Check if we found any matching tokens
   if (!deviceTokens || deviceTokens.length === 0) {
     console.error('Invalid or expired token');
     return new Response(
       JSON.stringify({ error: 'Invalid or expired token' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Check if token is expired
+  const tokenData = deviceTokens[0];
+  const expirationDate = new Date(tokenData.expires_at);
+  if (expirationDate < new Date()) {
+    console.error('Token has expired:', {
+      expirationDate,
+      currentDate: new Date()
+    });
+    return new Response(
+      JSON.stringify({ error: 'Token has expired' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

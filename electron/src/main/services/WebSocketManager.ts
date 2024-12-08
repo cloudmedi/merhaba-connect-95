@@ -29,13 +29,14 @@ export class WebSocketManager {
         return;
       }
 
-      // URL'i düzelttik
       const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
+      console.log('Using token:', token);
       
       this.ws = new WebSocket(wsUrl, {
         headers: {
-          'apikey': process.env.VITE_SUPABASE_ANON_KEY || ''
+          'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
+          'Authorization': `Bearer ${token}`
         }
       });
 
