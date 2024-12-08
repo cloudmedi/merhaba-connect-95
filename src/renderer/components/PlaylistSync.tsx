@@ -2,13 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import { WebSocketMessage } from '../../types/electron';
+import { WebSocketMessage } from '@/types/electron';
 
 interface SyncStatus {
   playlistId: string;
   name: string;
   progress: number;
   status: 'pending' | 'syncing' | 'completed' | 'error';
+}
+
+interface DownloadProgressData {
+  songId: string;
+  progress: number;
 }
 
 export function PlaylistSync() {
@@ -36,7 +41,7 @@ export function PlaylistSync() {
       }
     });
 
-    const downloadCleanup = window.electronAPI.onDownloadProgress((data) => {
+    const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
       console.log('Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,

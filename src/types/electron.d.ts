@@ -38,8 +38,6 @@ export interface WebSocketMessage {
       songs?: Array<{
         id: string;
         title: string;
-        artist?: string;
-        file_url?: string;
       }>;
     };
     message?: string;
@@ -67,3 +65,5 @@ declare global {
     };
   }
 }
+
+export {};
