@@ -29,6 +29,25 @@ export interface SystemInfo {
   }>;
 }
 
+export interface WebSocketMessage {
+  type: string;
+  payload: {
+    playlist?: {
+      id: string;
+      name: string;
+      songs?: Array<{
+        id: string;
+        title: string;
+        artist?: string;
+        file_url?: string;
+      }>;
+    };
+    message?: string;
+    error?: string;
+    status?: 'online' | 'offline';
+  };
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -41,6 +60,9 @@ declare global {
       getStorageStats: () => Promise<{ used: number; total: number }>;
       getDownloadProgress: (songId: string) => Promise<number>;
       onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
+      onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
+      onWebSocketConnected: (callback: () => void) => () => void;
+      onWebSocketError: (callback: (error: string) => void) => () => void;
       registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
     };
   }
