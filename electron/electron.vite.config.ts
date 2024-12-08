@@ -44,8 +44,8 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve('src'),
-        '@renderer': path.resolve('src/renderer')
+        '@': path.resolve(__dirname, '../src'),
+        '@renderer': path.resolve(__dirname, 'src/renderer')
       }
     }
   }
