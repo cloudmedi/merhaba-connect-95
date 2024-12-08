@@ -50,16 +50,24 @@ serve(async (req) => {
   );
 
   console.log('Validating token in device_tokens table...');
-  const { data: deviceToken, error: tokenError } = await supabase
+  const { data: deviceTokens, error: tokenError } = await supabase
     .from('device_tokens')
     .select('token, status')
     .eq('token', token)
-    .in('status', ['active', 'used'])
-    .single();
+    .in('status', ['active', 'used']);
 
-  console.log('Token validation result:', { deviceToken, tokenError });
+  console.log('Token validation result:', { deviceTokens, tokenError });
 
-  if (tokenError || !deviceToken) {
+  if (tokenError) {
+    console.error('Token validation error:', tokenError);
+    return new Response(
+      JSON.stringify({ error: 'Token validation failed' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Check if we found any matching tokens
+  if (!deviceTokens || deviceTokens.length === 0) {
     console.error('Invalid or expired token');
     return new Response(
       JSON.stringify({ error: 'Invalid or expired token' }),
