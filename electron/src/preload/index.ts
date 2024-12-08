@@ -29,6 +29,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('websocket-message', handler);
     };
   },
+  onPlaylistReceived: (callback: (playlist: any) => void) => {
+    const handler = (_event: any, playlist: any) => callback(playlist);
+    ipcRenderer.on('playlist-received', handler);
+    return () => {
+      ipcRenderer.removeListener('playlist-received', handler);
+    };
+  },
   onWebSocketConnected: (callback: () => void) => {
     const handler = () => callback();
     ipcRenderer.on('websocket-connected', handler);

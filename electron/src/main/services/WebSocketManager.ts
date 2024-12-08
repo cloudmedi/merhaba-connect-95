@@ -25,7 +25,6 @@ export class WebSocketManager {
 
   private async initializeConnection(deviceId: string) {
     try {
-      // Önce device token'ı al
       const { data: deviceData, error: deviceError } = await supabase
         .from('device_tokens')
         .select('token')
@@ -69,6 +68,16 @@ export class WebSocketManager {
         console.log('WebSocket message received:', data.toString());
         try {
           const parsedData = JSON.parse(data.toString());
+          
+          // Özellikle playlist sync mesajlarını kontrol et
+          if (parsedData.type === 'sync_playlist' && parsedData.payload.playlist) {
+            console.log('Playlist sync message received:', parsedData.payload.playlist);
+            if (this.win) {
+              this.win.webContents.send('playlist-received', parsedData.payload.playlist);
+            }
+          }
+          
+          // Diğer mesajları da ilet
           if (this.win) {
             this.win.webContents.send('websocket-message', parsedData);
           }
