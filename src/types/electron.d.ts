@@ -16,12 +16,6 @@ interface SystemInfo {
     release: string;
     arch: string;
   };
-  disk: Array<{
-    fs: string;
-    size: number;
-    used: number;
-    available: number;
-  }>;
   network: Array<{
     iface: string;
     ip4: string;
