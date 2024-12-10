@@ -4,3 +4,8 @@ export interface PresenceConfig {
 }
 
 export type DeviceStatus = 'online' | 'offline';
+
+export interface DevicePresenceState {
+  token: string;
+  online_at: string;
+}

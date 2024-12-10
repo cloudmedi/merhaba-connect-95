@@ -26,7 +26,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
     console.log('Found tokens:', existingTokens);
 
     if (existingTokens && existingTokens.length > 0) {
-      const mostRecentToken = existingTokens[0];
+      const mostRecentToken = existingTokens[0] as DeviceToken;
       console.log('Using existing token:', mostRecentToken);
 
       if (!mostRecentToken.token || !mostRecentToken.status || !mostRecentToken.expires_at || !mostRecentToken.mac_address) {
@@ -61,7 +61,7 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
     .insert({
       token,
       mac_address: macAddress,
-      status: 'active',
+      status: 'active' as const,
       expires_at: expirationDate.toISOString(),
     })
     .select('token, status, expires_at, mac_address, system_info')

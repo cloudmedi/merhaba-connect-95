@@ -7,7 +7,6 @@ import { PresenceInitializer } from './presenceInitializer';
 
 export class PresenceManager {
   private deviceToken: string | null = null;
-  private deviceId: string | null = null;
   private deviceStatusManager: DeviceStatusManager;
   private presenceChannelManager: PresenceChannelManager | null = null;
   private heartbeatManager: HeartbeatManager | null = null;
@@ -56,13 +55,11 @@ export class PresenceManager {
         throw new Error('Failed to get device ID from token');
       }
 
-      this.deviceId = tokenData.device_id;
       this.missedHeartbeats = 0;
 
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
-        this.deviceId,
         this.config,
         async (status) => {
           console.log('Status change callback triggered:', status);
@@ -74,9 +71,8 @@ export class PresenceManager {
 
       this.heartbeatManager = await this.presenceInitializer.initialize(
         deviceToken,
-        this.deviceId,
         this.presenceChannelManager,
-        (status) => this.updateDeviceStatus(status)
+        async (status: 'online' | 'offline') => this.updateDeviceStatus(status)
       );
 
       this.setupCleanup();
@@ -86,7 +82,6 @@ export class PresenceManager {
       console.error('Error initializing presence:', {
         error,
         deviceToken,
-        deviceId: this.deviceId,
         timestamp: new Date().toISOString()
       });
       await this.reconnect();
@@ -94,8 +89,8 @@ export class PresenceManager {
   }
 
   private async updateDeviceStatus(status: 'online' | 'offline'): Promise<void> {
-    if (!this.deviceToken || !this.deviceId) {
-      console.log('No device token or ID available for status update');
+    if (!this.deviceToken) {
+      console.log('No device token available for status update');
       return;
     }
     
@@ -103,18 +98,16 @@ export class PresenceManager {
       console.log('Updating device status:', {
         status,
         deviceToken: this.deviceToken,
-        deviceId: this.deviceId,
         timestamp: new Date().toISOString()
       });
       
-      await this.deviceStatusManager.updateStatus(this.deviceToken, this.deviceId, status);
+      await this.deviceStatusManager.updateStatus(this.deviceToken, status);
       console.log(`Device status successfully updated to ${status}`);
     } catch (error) {
       console.error('Error updating device status:', {
         error,
         status,
         deviceToken: this.deviceToken,
-        deviceId: this.deviceId,
         timestamp: new Date().toISOString()
       });
       
@@ -123,7 +116,7 @@ export class PresenceManager {
       
       if (this.missedHeartbeats >= this.MAX_MISSED_HEARTBEATS) {
         console.log('Too many missed heartbeats, marking device as offline');
-        await this.deviceStatusManager.updateStatus(this.deviceToken, this.deviceId, 'offline');
+        await this.deviceStatusManager.updateStatus(this.deviceToken, 'offline');
         this.lastStatus = 'offline';
         await this.reconnect();
       }
@@ -164,13 +157,12 @@ export class PresenceManager {
       console.log('Stopped heartbeat');
     }
     
-    if (this.presenceChannelManager && this.deviceToken && this.deviceId) {
+    if (this.presenceChannelManager && this.deviceToken) {
       await this.updateDeviceStatus('offline');
       await this.presenceChannelManager.cleanup();
     }
 
     this.deviceToken = null;
-    this.deviceId = null;
     this.presenceChannelManager = null;
     this.isInitialized = false;
     this.lastStatus = 'offline';
