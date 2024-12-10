@@ -31,8 +31,8 @@ if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
 }
 
 let win: BrowserWindow | null;
-let wsManager: WebSocketManager | null = null;
 let deviceToken: string | null = null;
+let wsManager: WebSocketManager | null = null;
 
 async function getMacAddress() {
   try {
@@ -194,7 +194,7 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     deviceToken = deviceInfo.token;
     console.log('Device token stored in main process:', deviceToken);
     
-    // Initialize WebSocket connection
+    // Initialize WebSocket connection with new manager
     if (wsManager) {
       await wsManager.disconnect();
     }

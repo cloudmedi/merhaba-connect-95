@@ -1,71 +1,115 @@
+import { BrowserWindow } from 'electron';
 import WebSocket from 'ws';
+import { REALTIME_CHANNEL_PREFIX } from '../../types/events';
 
 export class WebSocketConnectionManager {
-  private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 5000;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
-  private isConnecting: boolean = false;
+  private ws: WebSocket | null = null;
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 5;
+  private readonly reconnectDelay = 3000;
+  private isConnecting = false;
 
   constructor(
+    private deviceToken: string,
+    private win: BrowserWindow | null,
     private supabaseUrl: string,
-    private onConnectionEstablished: (ws: WebSocket) => void,
-    private onConnectionFailed: () => void
+    private supabaseKey: string
   ) {}
 
-  connect(token: string) {
+  async connect() {
     if (this.isConnecting) {
-      console.log('WebSocketConnectionManager: Connection already in progress');
+      console.log('Connection attempt already in progress');
       return;
     }
 
     this.isConnecting = true;
-    console.log('WebSocketConnectionManager: Starting WebSocket initialization');
 
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('WebSocketConnectionManager: Max reconnection attempts reached');
+        console.error('Max reconnection attempts reached');
+        this.notifyRenderer('connection-failed');
         return;
       }
 
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${token}`;
-      console.log('WebSocketConnectionManager: Connecting to URL:', wsUrl);
-      console.log('WebSocketConnectionManager: Connection attempt:', this.reconnectAttempts + 1);
+      const channelName = `${REALTIME_CHANNEL_PREFIX}${this.deviceToken}`;
+      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/realtime/v1/websocket?apikey=${this.supabaseKey}&vsn=1.0.0`;
       
-      const ws = new WebSocket(wsUrl, {
-        headers: {
-          'apikey': process.env.VITE_SUPABASE_ANON_KEY || '',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      console.log('Connecting to WebSocket:', wsUrl);
+      console.log('Channel name:', channelName);
 
-      this.onConnectionEstablished(ws);
+      this.ws = new WebSocket(wsUrl);
+
+      this.ws.onopen = () => {
+        console.log('WebSocket connection established');
+        this.reconnectAttempts = 0;
+        this.isConnecting = false;
+        this.notifyRenderer('connected');
+
+        // Join the channel
+        const joinMessage = {
+          topic: channelName,
+          event: "phx_join",
+          payload: {},
+          ref: Date.now()
+        };
+        
+        this.ws?.send(JSON.stringify(joinMessage));
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data.toString());
+          console.log('WebSocket message received:', data);
+
+          if (data.event === "phx_reply" && data.payload.status === "ok") {
+            console.log('Successfully joined channel:', channelName);
+          }
+
+          this.notifyRenderer('message', data);
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.handleConnectionError();
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        this.handleConnectionError();
+      };
 
     } catch (error) {
-      console.error('WebSocketConnectionManager: Error creating connection:', error);
-      this.handleReconnect(token);
+      console.error('Error creating WebSocket connection:', error);
+      this.handleConnectionError();
     }
   }
 
-  private handleReconnect(token: string) {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-
+  private handleConnectionError() {
+    this.isConnecting = false;
     this.reconnectAttempts++;
-    console.log(`WebSocketConnectionManager: Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-    
-    this.reconnectTimeout = setTimeout(() => {
-      this.connect(token);
-    }, this.reconnectDelay * Math.min(this.reconnectAttempts, 5));
+    this.notifyRenderer('disconnected');
+
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      console.log(`Reconnecting in ${this.reconnectDelay}ms... (Attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.connect(), this.reconnectDelay);
+    }
   }
 
-  resetConnection() {
+  private notifyRenderer(status: 'connected' | 'disconnected' | 'connection-failed' | 'message', data?: any) {
+    if (this.win) {
+      this.win.webContents.send(`websocket-${status}`, data);
+    }
+  }
+
+  disconnect() {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
     this.isConnecting = false;
     this.reconnectAttempts = 0;
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
   }
 }
