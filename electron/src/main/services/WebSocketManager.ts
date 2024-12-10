@@ -1,6 +1,8 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
 
+const CHANNEL_PREFIX = 'device_';
+
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectInterval: NodeJS.Timeout | null = null;
@@ -41,7 +43,7 @@ export class WebSocketManager {
         this.isConnected = true;
 
         // Subscribe to device-specific channel
-        const channelName = `device_${this.deviceToken}`;
+        const channelName = `${CHANNEL_PREFIX}${this.deviceToken}`;
         console.log('Subscribing to channel:', channelName);
         
         const joinMessage = {
