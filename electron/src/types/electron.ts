@@ -16,6 +16,17 @@ export interface SystemInfo {
     release: string;
     arch: string;
   };
+  disk: Array<{
+    fs: string;
+    size: number;
+    used: number;
+    available: number;
+  }>;
+  network: Array<{
+    iface: string;
+    ip4: string;
+    mac: string;
+  }>;
 }
 
 export interface WebSocketMessage {
@@ -41,7 +52,7 @@ export interface ElectronAPI {
   getMacAddress: () => Promise<string>;
   onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
   getEnvVars: () => Promise<Record<string, string>>;
-  syncPlaylist: (playlist: any) => Promise<void>;
+  syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
@@ -49,3 +60,11 @@ export interface ElectronAPI {
   onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
   registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
+
+export {};

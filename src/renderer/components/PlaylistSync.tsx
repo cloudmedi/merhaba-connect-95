@@ -38,6 +38,19 @@ export function PlaylistSync() {
             status: 'syncing'
           }
         }));
+
+        // Send playlist to main process for syncing
+        window.electronAPI.syncPlaylist(playlist)
+          .then(result => {
+            if (result.success) {
+              console.log('Playlist synced successfully');
+            } else {
+              console.error('Failed to sync playlist:', result.error);
+            }
+          })
+          .catch(error => {
+            console.error('Error syncing playlist:', error);
+          });
       }
     });
 
