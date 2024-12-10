@@ -7,7 +7,7 @@ import { DialogHeader } from "./DialogHeader";
 import { usePushPlaylist } from "./usePushPlaylist";
 import { useDeviceQuery } from "./useDeviceQuery";
 import { toast } from "sonner";
-import type { Device, DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
+import type { Device, DeviceCategory, DeviceStatus } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -24,6 +24,14 @@ const validateDeviceCategory = (category: string): DeviceCategory => {
     : 'player'; // Default to 'player' if invalid category
 };
 
+// Helper function to validate device status
+const validateDeviceStatus = (status: string): DeviceStatus => {
+  const validStatuses: DeviceStatus[] = ['online', 'offline'];
+  return validStatuses.includes(status as DeviceStatus)
+    ? (status as DeviceStatus)
+    : 'offline'; // Default to 'offline' if invalid status
+};
+
 export function PushPlaylistDialog({ 
   isOpen, 
   onClose, 
@@ -38,7 +46,8 @@ export function PushPlaylistDialog({
   // Transform and validate device data
   const devices: Device[] = rawDevices.map(device => ({
     ...device,
-    category: validateDeviceCategory(device.category)
+    category: validateDeviceCategory(device.category),
+    status: validateDeviceStatus(device.status)
   }));
 
   const filteredDevices = devices.filter(device =>
