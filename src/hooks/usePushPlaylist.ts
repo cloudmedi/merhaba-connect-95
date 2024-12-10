@@ -49,23 +49,26 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         if (!token) continue;
 
         const channelName = `realtime:device_${token}`;
-        const channel = supabase.channel(channelName);
+        console.log('Sending to channel:', channelName);
         
-        console.log(`Sending playlist to channel: ${channelName}`);
+        const channel = supabase.channel(channelName);
+        console.log('Channel created:', channel);
         
         await channel.subscribe(async (status) => {
+          console.log('Channel subscription status:', status);
+          
           if (status === 'SUBSCRIBED') {
             const message = {
               type: PLAYLIST_SYNC_EVENT,
-              payload: {
-                playlist: {
-                  id: playlist.id,
-                  name: playlist.name,
-                  songs: songs
-                }
+              playlist: {
+                id: playlist.id,
+                name: playlist.name,
+                songs: songs
               }
             };
 
+            console.log('Sending message:', JSON.stringify(message, null, 2));
+            
             await channel.send({
               type: 'broadcast',
               event: 'broadcast',

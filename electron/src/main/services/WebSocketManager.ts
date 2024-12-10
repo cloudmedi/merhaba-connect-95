@@ -64,12 +64,14 @@ export class WebSocketManager {
 
       this.ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data.toString());
-          console.log('WebSocket message received:', JSON.stringify(data, null, 2));
+          console.log('Raw WebSocket message received:', event.data);
+          const data = JSON.parse(event.data);
+          console.log('Parsed WebSocket message:', JSON.stringify(data, null, 2));
 
           // Broadcast mesajlarını işle
           if (data.event === "broadcast" && data.payload) {
             const payload = data.payload;
+            console.log('Broadcast payload:', payload);
             
             if (payload.type === PLAYLIST_SYNC_EVENT && payload.playlist) {
               console.log('Playlist sync message received:', payload.playlist);
@@ -78,6 +80,16 @@ export class WebSocketManager {
               }
             } else if (payload.type === HEARTBEAT_EVENT) {
               console.log('Heartbeat received:', payload);
+            }
+          }
+
+          // Kanal durumunu kontrol et
+          if (data.event === "phx_reply") {
+            console.log('Phoenix reply:', data);
+            if (data.payload.status === "ok") {
+              console.log('Channel subscription successful');
+            } else {
+              console.error('Channel subscription failed:', data.payload);
             }
           }
         } catch (error) {
