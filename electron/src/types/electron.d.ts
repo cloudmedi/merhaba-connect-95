@@ -62,3 +62,9 @@ export interface ElectronAPI {
   onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
   registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
