@@ -1,12 +1,38 @@
 export interface SystemInfo {
-  cpu: string;
-  memory: string;
-  os: string;
+  cpu: {
+    manufacturer: string;
+    brand: string;
+    speed: number;
+    cores: number;
+  };
+  memory: {
+    total: number;
+    free: number;
+    used: number;
+  };
+  os: {
+    platform: string;
+    distro: string;
+    release: string;
+    arch: string;
+  };
 }
 
 export interface WebSocketMessage {
   type: string;
-  payload: any;
+  payload: {
+    playlist?: {
+      id: string;
+      name: string;
+      songs?: Array<{
+        id: string;
+        title: string;
+      }>;
+    };
+    message?: string;
+    error?: string;
+    status?: 'online' | 'offline';
+  };
 }
 
 export interface ElectronAPI {
@@ -16,16 +42,10 @@ export interface ElectronAPI {
   onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
   getEnvVars: () => Promise<Record<string, string>>;
   syncPlaylist: (playlist: any) => Promise<void>;
-  getStorageStats: () => Promise<any>;
+  getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onPlaylistReceived: (callback: (playlist: any) => void) => () => void;
-  registerDevice: (deviceInfo: any) => Promise<void>;
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI;
-  }
+  registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
