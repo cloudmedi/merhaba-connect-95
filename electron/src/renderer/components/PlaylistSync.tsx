@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from './ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import { PLAYLIST_SYNC_EVENT } from '../../../src/integrations/supabase/presence/types';
+import { PLAYLIST_SYNC_EVENT } from '../types/events';
 
 interface SyncStatus {
   playlistId: string;
