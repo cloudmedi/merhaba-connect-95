@@ -12,8 +12,9 @@ export class WebSocketManager {
   private isConnected: boolean = false;
 
   constructor(private token: string, private win: BrowserWindow | null) {
-    console.log('WebSocketManager: Constructor called with token:', token);
-    console.log('WebSocketManager: Window reference:', win ? 'exists' : 'null');
+    console.log('=== WebSocketManager: Constructor called ===');
+    console.log('Token:', token);
+    console.log('Window reference:', win ? 'exists' : 'null');
     
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     if (!supabaseUrl) {
@@ -37,23 +38,23 @@ export class WebSocketManager {
   }
 
   private startConnectionCheck() {
-    console.log('WebSocketManager: Starting connection check interval');
+    console.log('=== WebSocketManager: Starting connection check interval ===');
     this.reconnectInterval = setInterval(() => {
-      console.log('WebSocketManager: Checking connection status:', this.isConnected);
+      console.log('Connection status check - Connected:', this.isConnected);
       if (!this.isConnected) {
-        console.log('WebSocketManager: Connection lost, attempting to reconnect');
+        console.log('Connection lost, attempting to reconnect');
         this.initializeWebSocket();
       }
     }, 30000);
   }
 
   private initializeWebSocket() {
-    console.log('WebSocketManager: Initializing WebSocket connection');
+    console.log('=== WebSocketManager: Initializing WebSocket connection ===');
     this.connectionManager.connect(this.token);
   }
 
   private handleConnectionEstablished(ws: WebSocket) {
-    console.log('WebSocketManager: Connection established successfully');
+    console.log('=== WebSocketManager: Connection established successfully ===');
     this.ws = ws;
     this.isConnected = true;
     this.eventHandlers = new WebSocketEventHandlers(
@@ -61,46 +62,46 @@ export class WebSocketManager {
       this.win,
       this.messageQueue,
       () => {
-        console.log('WebSocketManager: Connection reset requested');
+        console.log('Connection reset requested');
         this.connectionManager.resetConnection();
         this.isConnected = true;
       }
     );
     this.eventHandlers.setupEventHandlers();
 
-    // Process any queued messages
     if (this.messageQueue.length > 0) {
-      console.log('WebSocketManager: Processing queued messages:', this.messageQueue.length);
+      console.log('Processing queued messages:', this.messageQueue.length);
     }
   }
 
   private handleConnectionFailed() {
-    console.error('WebSocketManager: Connection failed');
+    console.error('=== WebSocketManager: Connection failed ===');
     this.isConnected = false;
   }
 
   public sendMessage(message: any) {
-    console.log('WebSocketManager: Attempting to send message:', message);
+    console.log('=== WebSocketManager: Attempting to send message ===');
+    console.log('Message:', JSON.stringify(message, null, 2));
     this.messageQueue.push(message);
     
     if (this.ws?.readyState === WebSocket.OPEN && this.eventHandlers) {
-      console.log('WebSocketManager: Connection is open, sending queued messages');
+      console.log('Connection is open, sending queued messages');
       while (this.messageQueue.length > 0) {
         const nextMessage = this.messageQueue.shift();
         this.eventHandlers.sendMessage(nextMessage);
       }
     } else {
-      console.log('WebSocketManager: Connection not ready, message queued');
-      console.log('WebSocketManager: Current WebSocket state:', this.ws?.readyState);
+      console.log('Connection not ready, message queued');
+      console.log('Current WebSocket state:', this.ws?.readyState);
       if (!this.isConnected) {
-        console.log('WebSocketManager: Attempting to reconnect...');
+        console.log('Attempting to reconnect...');
         this.initializeWebSocket();
       }
     }
   }
 
   public async disconnect() {
-    console.log('WebSocketManager: Disconnecting');
+    console.log('=== WebSocketManager: Disconnecting ===');
     if (this.reconnectInterval) {
       clearInterval(this.reconnectInterval);
       this.reconnectInterval = null;
@@ -111,9 +112,9 @@ export class WebSocketManager {
       this.eventHandlers = null;
       this.messageQueue = [];
       this.isConnected = false;
-      console.log('WebSocketManager: Disconnected successfully');
+      console.log('Disconnected successfully');
     } else {
-      console.log('WebSocketManager: No active connection to disconnect');
+      console.log('No active connection to disconnect');
     }
   }
 }

@@ -13,19 +13,25 @@ export class PlaylistHandler {
 
   async handlePlaylistSync(data: WebSocketMessage, senderToken: string) {
     try {
-      console.log('Handling playlist sync:', data);
+      console.log('=== PlaylistHandler: Starting playlist sync ===');
+      console.log('Received data:', JSON.stringify(data, null, 2));
+      console.log('Sender token:', senderToken);
       
       if (!data.payload || !data.payload.devices) {
+        console.error('Missing devices in payload');
         throw new Error('Missing devices in payload');
       }
 
       const { playlist, devices } = data.payload;
+      console.log('Target devices:', devices);
       
       if (!playlist || !playlist.id || !Array.isArray(devices) || devices.length === 0) {
+        console.error('Invalid playlist data structure:', playlist);
         throw new Error('Invalid playlist data structure');
       }
 
       // Playlist verilerini getir
+      console.log('Fetching playlist data for ID:', playlist.id);
       const { data: playlistData, error: playlistError } = await this.supabase
         .from('playlists')
         .select(`
@@ -49,6 +55,8 @@ export class PlaylistHandler {
         throw new Error('Playlist not found');
       }
 
+      console.log('Playlist data fetched successfully');
+
       // Playlist verilerini düzenle
       const formattedPlaylist = {
         id: playlistData.id,
@@ -63,33 +71,52 @@ export class PlaylistHandler {
           }))
       };
 
-      console.log('Formatted playlist:', formattedPlaylist);
+      console.log('Formatted playlist:', JSON.stringify(formattedPlaylist, null, 2));
 
       // Her hedef cihaza gönder
+      let successCount = 0;
+      let errorCount = 0;
+
       for (const deviceToken of devices) {
+        console.log(`Attempting to send playlist to device: ${deviceToken}`);
         const targetSocket = this.deviceManager.getDeviceSocket(deviceToken);
+        
         if (targetSocket) {
-          console.log('Sending playlist to device:', deviceToken);
-          targetSocket.send(JSON.stringify({
-            type: 'sync_playlist',
-            payload: {
-              playlist: formattedPlaylist
-            }
-          }));
+          console.log('Device socket found, sending playlist...');
+          try {
+            const message = JSON.stringify({
+              type: 'sync_playlist',
+              payload: {
+                playlist: formattedPlaylist
+              }
+            });
+            console.log('Sending message:', message);
+            targetSocket.send(message);
+            successCount++;
+            console.log('Playlist sent successfully to device:', deviceToken);
+          } catch (error) {
+            console.error('Error sending to device:', deviceToken, error);
+            errorCount++;
+          }
         } else {
           console.warn('Device not connected:', deviceToken);
+          errorCount++;
         }
       }
+
+      console.log(`Sync complete. Success: ${successCount}, Errors: ${errorCount}`);
 
       return {
         type: 'sync_success',
         payload: {
           message: 'Playlist successfully synced',
-          deviceCount: devices.length
+          deviceCount: devices.length,
+          successCount,
+          errorCount
         }
       };
     } catch (error) {
-      console.error('Error processing playlist:', error);
+      console.error('Error in handlePlaylistSync:', error);
       return {
         type: 'sync_error',
         payload: {
