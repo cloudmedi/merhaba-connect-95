@@ -7,20 +7,15 @@ import { DeviceList } from "./DeviceList";
 import { DialogFooter } from "./DialogFooter";
 import { toast } from "sonner";
 import { useDeviceQuery } from "./useDeviceQuery";
-
-interface PushPlaylistDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  playlistTitle: string;
-  playlistId: string;
-}
+import type { PushDialogProps } from "./types";
+import type { DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
 
 export function PushPlaylistDialog({ 
   isOpen, 
   onClose, 
   playlistTitle, 
   playlistId 
-}: PushPlaylistDialogProps) {
+}: PushDialogProps) {
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePlaylistSync(playlistId);
@@ -92,6 +87,7 @@ export function PushPlaylistDialog({
 
           <DialogFooter
             selectedCount={selectedTokens.length}
+            selectedTokens={selectedTokens}
             isSyncing={isSyncing}
             onCancel={onClose}
             onPush={handleDevicePush}
