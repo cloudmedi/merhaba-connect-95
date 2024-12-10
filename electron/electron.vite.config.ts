@@ -10,7 +10,7 @@ export default defineConfig({
         external: [
           'dotenv', 
           'systeminformation', 
-          '@supabase/supabase-js', // Supabase'i external olarak ekledik
+          '@supabase/supabase-js', 
           'uuid', 
           'sonner',
           'node-fetch',
@@ -38,7 +38,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        }
+        },
+        external: ['@supabase/supabase-js']
       }
     },
     plugins: [react()],
