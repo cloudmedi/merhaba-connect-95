@@ -20,8 +20,10 @@
       "@/*": ["../src/*"],
       "@renderer/*": ["src/renderer/*"],
       "@components/*": ["../src/components/*"],
-      "@ui/*": ["../src/components/ui/*"]
-    }
+      "@ui/*": ["../src/components/ui/*"],
+      "@lib/*": ["../src/lib/*"]
+    },
+    "types": ["react", "react-dom"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

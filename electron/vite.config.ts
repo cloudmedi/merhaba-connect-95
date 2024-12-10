@@ -17,7 +17,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "../src"),
       "@renderer": path.resolve(__dirname, "./src/renderer"),
       "@components": path.resolve(__dirname, "../src/components"),
-      "@ui": path.resolve(__dirname, "../src/components/ui")
+      "@ui": path.resolve(__dirname, "../src/components/ui"),
+      "@lib": path.resolve(__dirname, "../src/lib")
     },
   },
 }));

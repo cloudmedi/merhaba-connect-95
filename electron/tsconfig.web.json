@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "src/renderer"
+    "src/renderer",
+    "../src/components",
+    "../src/lib"
   ],
   "compilerOptions": {
     "composite": true,
@@ -11,7 +13,8 @@
       "@/*": ["../src/*"],
       "@renderer/*": ["src/renderer/*"],
       "@components/*": ["../src/components/*"],
-      "@ui/*": ["../src/components/ui/*"]
+      "@ui/*": ["../src/components/ui/*"],
+      "@lib/*": ["../src/lib/*"]
     }
   }
 }
