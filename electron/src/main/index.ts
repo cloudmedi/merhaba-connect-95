@@ -100,32 +100,27 @@ async function createWindow() {
     }
   });
 
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
+  // Determine if we're in development or production
+  if (process.env.VITE_DEV_SERVER_URL) {
+    console.log('Loading development URL:', process.env.VITE_DEV_SERVER_URL);
+    win.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
+    // Production - load from built files
     const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
     console.log('Loading production index.html from:', indexPath);
     
-    const fs = require('fs');
-    if (!fs.existsSync(indexPath)) {
-      console.error('index.html not found at:', indexPath);
+    try {
+      await win.loadFile(indexPath);
+    } catch (error) {
+      console.error('Error loading index.html:', error);
       const altPath = path.join(process.resourcesPath, 'app.asar', 'out', 'renderer', 'index.html');
       console.log('Trying alternative path:', altPath);
-      if (fs.existsSync(altPath)) {
-        win.loadFile(altPath);
-      } else {
-        console.error('Could not find index.html in any location');
-        app.quit();
-      }
-    } else {
-      win.loadFile(indexPath);
+      await win.loadFile(altPath);
     }
   }
 }
 
-app.whenReady().then(async () => {
-  createWindow();
-});
+app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
