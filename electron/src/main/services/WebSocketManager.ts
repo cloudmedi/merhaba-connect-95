@@ -8,6 +8,8 @@ export class WebSocketManager {
   private eventHandlers: WebSocketEventHandlers | null = null;
   private connectionManager: WebSocketConnectionManager;
   private messageQueue: any[] = [];
+  private reconnectInterval: NodeJS.Timeout | null = null;
+  private isConnected: boolean = false;
 
   constructor(private token: string, private win: BrowserWindow | null) {
     console.log('WebSocketManager: Constructor called with token:', token);
@@ -31,25 +33,43 @@ export class WebSocketManager {
     );
 
     this.initializeWebSocket();
+    this.startConnectionCheck();
+  }
+
+  private startConnectionCheck() {
+    this.reconnectInterval = setInterval(() => {
+      console.log('WebSocketManager: Checking connection status');
+      if (!this.isConnected) {
+        console.log('WebSocketManager: Connection lost, attempting to reconnect');
+        this.initializeWebSocket();
+      }
+    }, 30000); // Her 30 saniyede bir kontrol et
   }
 
   private initializeWebSocket() {
+    console.log('WebSocketManager: Initializing WebSocket connection');
     this.connectionManager.connect(this.token);
   }
 
   private handleConnectionEstablished(ws: WebSocket) {
+    console.log('WebSocketManager: Connection established');
     this.ws = ws;
+    this.isConnected = true;
     this.eventHandlers = new WebSocketEventHandlers(
       ws,
       this.win,
       this.messageQueue,
-      () => this.connectionManager.resetConnection()
+      () => {
+        this.connectionManager.resetConnection();
+        this.isConnected = true;
+      }
     );
     this.eventHandlers.setupEventHandlers();
   }
 
   private handleConnectionFailed() {
     console.error('WebSocketManager: Connection failed');
+    this.isConnected = false;
   }
 
   public sendMessage(message: any) {
@@ -57,22 +77,32 @@ export class WebSocketManager {
     this.messageQueue.push(message);
     
     if (this.ws?.readyState === WebSocket.OPEN && this.eventHandlers) {
+      console.log('WebSocketManager: Connection is open, sending queued messages');
       while (this.messageQueue.length > 0) {
         const nextMessage = this.messageQueue.shift();
         this.eventHandlers.sendMessage(nextMessage);
       }
     } else {
       console.log('WebSocketManager: Connection not ready, message queued');
+      if (!this.isConnected) {
+        console.log('WebSocketManager: Attempting to reconnect...');
+        this.initializeWebSocket();
+      }
     }
   }
 
   public async disconnect() {
     console.log('WebSocketManager: Disconnecting');
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+      this.reconnectInterval = null;
+    }
     if (this.ws) {
       this.ws.close(1000, 'Client disconnecting');
       this.ws = null;
       this.eventHandlers = null;
       this.messageQueue = [];
+      this.isConnected = false;
       console.log('WebSocketManager: Disconnected successfully');
     } else {
       console.log('WebSocketManager: No active connection to disconnect');

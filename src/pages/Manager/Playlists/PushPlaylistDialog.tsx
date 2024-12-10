@@ -28,7 +28,7 @@ export function PushPlaylistDialog({ isOpen, onClose, playlistTitle, playlistId 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      console.log('Fetching devices for current user...');
+      console.log('Fetching devices...');
       const { data: userData } = await supabase.auth.getUser();
       
       if (!userData.user) {

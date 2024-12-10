@@ -16,6 +16,7 @@ serve(async (req) => {
 
   const upgrade = req.headers.get('upgrade') || '';
   if (upgrade.toLowerCase() != 'websocket') {
+    console.log('Expected websocket upgrade, got:', upgrade);
     return new Response('Expected websocket upgrade', { status: 426, headers: corsHeaders });
   }
 
@@ -30,6 +31,8 @@ serve(async (req) => {
   let isAuthenticated = false;
   let userToken: string | null = null;
 
+  console.log('New WebSocket connection attempt');
+
   socket.onopen = () => {
     console.log('WebSocket connection opened');
   };
@@ -40,9 +43,11 @@ serve(async (req) => {
       console.log('Received message:', data);
 
       if (data.type === 'authenticate') {
+        console.log('Authentication attempt with token:', data.payload.token);
         const { data: { user }, error } = await supabase.auth.getUser(data.payload.token);
         
         if (error || !user) {
+          console.error('Authentication failed:', error);
           socket.send(JSON.stringify({
             type: 'error',
             payload: { message: 'Authentication failed' }
@@ -50,6 +55,7 @@ serve(async (req) => {
           return;
         }
 
+        console.log('User authenticated successfully:', user.id);
         isAuthenticated = true;
         userToken = data.payload.token;
         socket.send(JSON.stringify({ type: 'auth_success' }));
@@ -57,6 +63,7 @@ serve(async (req) => {
       }
 
       if (!isAuthenticated) {
+        console.error('Unauthenticated request received');
         socket.send(JSON.stringify({
           type: 'error',
           payload: { message: 'Not authenticated' }
@@ -65,7 +72,9 @@ serve(async (req) => {
       }
 
       if (data.type === 'sync_playlist') {
+        console.log('Processing playlist sync request');
         const result = await playlistHandler.handlePlaylistSync(data, userToken);
+        console.log('Playlist sync result:', result);
         socket.send(JSON.stringify(result));
       }
     } catch (error) {
@@ -79,7 +88,7 @@ serve(async (req) => {
     }
   };
 
-  socket.onerror = (e) => console.log('WebSocket error:', e);
+  socket.onerror = (e) => console.error('WebSocket error:', e);
   socket.onclose = () => {
     console.log('WebSocket connection closed');
     if (userToken) {
