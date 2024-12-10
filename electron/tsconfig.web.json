@@ -1,23 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "src/renderer",
-    "../src/components",
-    "../src/lib",
-    "../src/hooks",
-    "../src/utils",
-    "../src/types"
+    "src/renderer"
   ],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["../src/*"],
-      "@renderer/*": ["src/renderer/*"],
-      "@components/*": ["../src/components/*"],
-      "@ui/*": ["../src/components/ui/*"],
-      "@lib/*": ["../src/lib/*"]
+      "@/*": ["src/*"],
+      "@renderer/*": ["src/renderer/*"]
     }
   }
 }

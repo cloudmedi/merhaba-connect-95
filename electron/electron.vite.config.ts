@@ -21,10 +21,7 @@ export default defineConfig({
           'lucide-react',
           'bufferutil',
           'utf-8-validate',
-          'ws',
-          '@radix-ui/react-progress',
-          'react',
-          'react-dom'
+          'ws'
         ]
       }
     }
@@ -41,17 +38,15 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        }
+        },
+        external: ['@supabase/supabase-js']
       }
     },
     plugins: [react()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '../src'),
-        '@renderer': path.resolve(__dirname, 'src/renderer'),
-        '@components': path.resolve(__dirname, '../src/components'),
-        '@ui': path.resolve(__dirname, '../src/components/ui'),
-        '@lib': path.resolve(__dirname, '../src/lib')
+        '@renderer': path.resolve(__dirname, 'src/renderer')
       }
     }
   }

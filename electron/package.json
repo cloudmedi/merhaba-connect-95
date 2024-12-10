@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
-    "@radix-ui/react-progress": "latest",
     "@supabase/supabase-js": "^2.39.3",
     "clsx": "^2.1.0",
     "dotenv": "^16.4.7",

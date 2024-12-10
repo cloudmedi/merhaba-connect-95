@@ -18,12 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["../src/*"],
-      "@renderer/*": ["src/renderer/*"],
-      "@components/*": ["../src/components/*"],
-      "@ui/*": ["../src/components/ui/*"],
-      "@lib/*": ["../src/lib/*"]
-    },
-    "types": ["react", "react-dom", "node"]
+      "@renderer/*": ["src/renderer/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
