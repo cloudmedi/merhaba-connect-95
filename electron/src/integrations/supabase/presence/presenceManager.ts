@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { PresenceConfig } from './types';
+import { PresenceConfig, DeviceStatus } from './types';
 import { DeviceStatusManager } from './deviceStatusManager';
 import { PresenceChannelManager } from './presenceChannelManager';
 import { HeartbeatManager } from './heartbeatManager';
@@ -12,7 +12,7 @@ export class PresenceManager {
   private heartbeatManager: HeartbeatManager | null = null;
   private config: Required<PresenceConfig>;
   private isInitialized = false;
-  private lastStatus: 'online' | 'offline' = 'offline';
+  private lastStatus: DeviceStatus = 'offline';
   private missedHeartbeats = 0;
   private readonly MAX_MISSED_HEARTBEATS = 2;
   private presenceInitializer: PresenceInitializer;
@@ -44,24 +44,13 @@ export class PresenceManager {
     this.deviceToken = deviceToken;
 
     try {
-      // Get device ID from token
-      const { data: tokenData, error: tokenError } = await this.supabase
-        .from('device_tokens')
-        .select('device_id')
-        .eq('token', deviceToken)
-        .single();
-
-      if (tokenError || !tokenData?.device_id) {
-        throw new Error('Failed to get device ID from token');
-      }
-
       this.missedHeartbeats = 0;
 
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
         this.config,
-        async (status) => {
+        async (status: DeviceStatus) => {
           console.log('Status change callback triggered:', status);
           await this.updateDeviceStatus(status);
           this.lastStatus = status;
@@ -72,7 +61,7 @@ export class PresenceManager {
       this.heartbeatManager = await this.presenceInitializer.initialize(
         deviceToken,
         this.presenceChannelManager,
-        async (status: 'online' | 'offline') => this.updateDeviceStatus(status)
+        async (status: DeviceStatus) => await this.updateDeviceStatus(status)
       );
 
       this.setupCleanup();
@@ -88,7 +77,7 @@ export class PresenceManager {
     }
   }
 
-  private async updateDeviceStatus(status: 'online' | 'offline'): Promise<void> {
+  private async updateDeviceStatus(status: DeviceStatus): Promise<void> {
     if (!this.deviceToken) {
       console.log('No device token available for status update');
       return;

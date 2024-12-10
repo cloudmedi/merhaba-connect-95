@@ -1,17 +1,19 @@
 import { SupabaseClient } from '@supabase/supabase-js';
+import { DeviceStatus } from './types';
 
 export class DeviceStatusManager {
   constructor(private supabase: SupabaseClient) {}
 
-  async updateStatus(deviceToken: string, deviceId: string, status: 'online' | 'offline'): Promise<void> {
+  async updateStatus(deviceToken: string, status: DeviceStatus): Promise<void> {
     try {
+      console.log('Updating device status:', { deviceToken, status });
       const { error } = await this.supabase
         .from('devices')
         .update({ 
           status,
           last_seen: new Date().toISOString()
         })
-        .eq('id', deviceId);
+        .eq('token', deviceToken);
 
       if (error) throw error;
     } catch (error) {
@@ -24,7 +26,7 @@ export class DeviceStatusManager {
     try {
       const { data, error } = await this.supabase
         .from('device_tokens')
-        .select('status, device_id')
+        .select('status')
         .eq('token', deviceToken)
         .single();
 
