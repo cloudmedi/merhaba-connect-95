@@ -8,8 +8,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@renderer/*": ["src/renderer/*"]
+      "@/*": ["../src/*"],
+      "@renderer/*": ["src/renderer/*"],
+      "@components/*": ["../src/components/*"],
+      "@ui/*": ["../src/components/ui/*"]
     }
   }
 }
