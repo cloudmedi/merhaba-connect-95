@@ -1,46 +1,34 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
 import { WebSocketEventHandlers } from './WebSocketEventHandlers';
-import { WebSocketConnectionManager } from './WebSocketConnectionManager';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
   private eventHandlers: WebSocketEventHandlers | null = null;
-  private connectionManager: WebSocketConnectionManager;
   private messageQueue: any[] = [];
   private reconnectInterval: NodeJS.Timeout | null = null;
   private isConnected: boolean = false;
+  private supabaseUrl: string;
+  private supabaseKey: string;
 
-  constructor(private token: string, private win: BrowserWindow | null) {
-    console.log('=== WebSocketManager: Constructor called ===');
-    console.log('Token:', token);
-    console.log('Window reference:', win ? 'exists' : 'null');
+  constructor(private deviceToken: string, private win: BrowserWindow | null) {
+    console.log('WebSocketManager: Initializing with device token:', deviceToken);
     
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-    if (!supabaseUrl) {
-      console.error('WebSocketManager: Missing Supabase URL');
+    this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+    this.supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+    
+    if (!this.supabaseUrl || !this.supabaseKey) {
+      console.error('WebSocketManager: Missing Supabase credentials');
       return;
     }
-
-    if (!token) {
-      console.error('WebSocketManager: No token provided');
-      return;
-    }
-
-    this.connectionManager = new WebSocketConnectionManager(
-      supabaseUrl,
-      this.handleConnectionEstablished.bind(this),
-      this.handleConnectionFailed.bind(this)
-    );
 
     this.initializeWebSocket();
     this.startConnectionCheck();
   }
 
   private startConnectionCheck() {
-    console.log('=== WebSocketManager: Starting connection check interval ===');
+    console.log('WebSocketManager: Starting connection check interval');
     this.reconnectInterval = setInterval(() => {
-      console.log('Connection status check - Connected:', this.isConnected);
       if (!this.isConnected) {
         console.log('Connection lost, attempting to reconnect');
         this.initializeWebSocket();
@@ -49,72 +37,72 @@ export class WebSocketManager {
   }
 
   private initializeWebSocket() {
-    console.log('=== WebSocketManager: Initializing WebSocket connection ===');
-    this.connectionManager.connect(this.token);
-  }
+    try {
+      // Supabase Realtime WebSocket URL'ini oluştur
+      const wsUrl = `wss://${this.supabaseUrl.replace('https://', '')}/realtime/v1/websocket?apikey=${this.supabaseKey}&vsn=1.0.0`;
+      console.log('WebSocketManager: Connecting to:', wsUrl);
 
-  private handleConnectionEstablished(ws: WebSocket) {
-    console.log('=== WebSocketManager: Connection established successfully ===');
-    this.ws = ws;
-    this.isConnected = true;
-    this.eventHandlers = new WebSocketEventHandlers(
-      ws,
-      this.win,
-      this.messageQueue,
-      () => {
-        console.log('Connection reset requested');
-        this.connectionManager.resetConnection();
+      this.ws = new WebSocket(wsUrl);
+
+      this.ws.onopen = () => {
+        console.log('WebSocketManager: Connection established');
         this.isConnected = true;
-      }
-    );
-    this.eventHandlers.setupEventHandlers();
 
-    if (this.messageQueue.length > 0) {
-      console.log('Processing queued messages:', this.messageQueue.length);
-    }
-  }
+        // Playlist sync kanalına abone ol
+        const joinMessage = {
+          topic: `realtime:playlist_sync`,
+          event: "phx_join",
+          payload: { device_token: this.deviceToken },
+          ref: Date.now()
+        };
+        
+        this.ws?.send(JSON.stringify(joinMessage));
+      };
 
-  private handleConnectionFailed() {
-    console.error('=== WebSocketManager: Connection failed ===');
-    this.isConnected = false;
-  }
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data.toString());
+          console.log('WebSocketManager: Received message:', data);
 
-  public sendMessage(message: any) {
-    console.log('=== WebSocketManager: Attempting to send message ===');
-    console.log('Message:', JSON.stringify(message, null, 2));
-    this.messageQueue.push(message);
-    
-    if (this.ws?.readyState === WebSocket.OPEN && this.eventHandlers) {
-      console.log('Connection is open, sending queued messages');
-      while (this.messageQueue.length > 0) {
-        const nextMessage = this.messageQueue.shift();
-        this.eventHandlers.sendMessage(nextMessage);
-      }
-    } else {
-      console.log('Connection not ready, message queued');
-      console.log('Current WebSocket state:', this.ws?.readyState);
-      if (!this.isConnected) {
-        console.log('Attempting to reconnect...');
-        this.initializeWebSocket();
-      }
+          // Kanal mesajlarını işle
+          if (data.event === "broadcast" && data.payload?.deviceId === this.deviceToken) {
+            console.log('Processing playlist sync message for device:', this.deviceToken);
+            
+            if (this.win) {
+              this.win.webContents.send('playlist-received', data.payload.playlist);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocketManager: Connection error:', error);
+        this.isConnected = false;
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocketManager: Connection closed');
+        this.isConnected = false;
+      };
+
+    } catch (error) {
+      console.error('Error initializing WebSocket:', error);
+      this.isConnected = false;
     }
   }
 
   public async disconnect() {
-    console.log('=== WebSocketManager: Disconnecting ===');
+    console.log('WebSocketManager: Disconnecting');
     if (this.reconnectInterval) {
       clearInterval(this.reconnectInterval);
       this.reconnectInterval = null;
     }
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnecting');
+      this.ws.close();
       this.ws = null;
-      this.eventHandlers = null;
-      this.messageQueue = [];
       this.isConnected = false;
-      console.log('Disconnected successfully');
-    } else {
-      console.log('No active connection to disconnect');
     }
   }
 }

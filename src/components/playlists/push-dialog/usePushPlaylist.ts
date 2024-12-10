@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
-import { useWebSocketConnection } from '@/hooks/useWebSocketConnection';
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
-  const { sendMessage } = useWebSocketConnection();
 
   const handlePush = async (selectedDevices: string[]) => {
     if (selectedDevices.length === 0) {
@@ -15,9 +13,8 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
     try {
       setIsSyncing(true);
-      console.log('Starting WebSocket sync for devices:', selectedDevices);
+      console.log('Starting playlist sync for devices:', selectedDevices);
 
-      // Playlist verilerini çek
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .select(`
@@ -44,21 +41,35 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
           : ps.songs.file_url
       }));
 
-      // WebSocket üzerinden playlist'i gönder
-      sendMessage({
-        type: 'sync_playlist',
-        payload: {
-          playlist: {
-            id: playlist.id,
-            name: playlist.name,
-            songs: songs
-          },
-          devices: selectedDevices
+      // Supabase Realtime kanalı üzerinden yayın yap
+      const channel = supabase.channel('playlist_sync');
+      
+      await channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Broadcasting playlist to devices:', selectedDevices);
+          
+          // Her cihaz için ayrı mesaj gönder
+          for (const deviceId of selectedDevices) {
+            await channel.send({
+              type: 'broadcast',
+              event: 'playlist_sync',
+              payload: {
+                deviceId,
+                playlist: {
+                  id: playlist.id,
+                  name: playlist.name,
+                  songs: songs
+                }
+              }
+            });
+          }
+          
+          toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderiliyor`);
+          channel.unsubscribe();
+          onClose();
         }
       });
 
-      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderiliyor`);
-      onClose();
     } catch (error) {
       console.error('Error syncing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");

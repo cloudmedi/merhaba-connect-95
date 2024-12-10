@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from './ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import type { PlaylistData } from '../../types/electron';
 
 interface SyncStatus {
   playlistId: string;
@@ -17,28 +16,20 @@ interface DownloadProgressData {
 }
 
 export function PlaylistSync() {
-  const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
   const [syncStatus, setSyncStatus] = useState<Record<string, SyncStatus>>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     console.log('PlaylistSync: Component mounted');
     
-    const messageCleanup = window.electronAPI.onWebSocketMessage((data) => {
-      console.log('PlaylistSync: WebSocket message received:', data);
-    });
-
-    const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist: PlaylistData) => {
+    const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist: any) => {
       console.log('PlaylistSync: Playlist received:', playlist);
       setPlaylists(prev => {
-        console.log('PlaylistSync: Current playlists:', prev);
         const exists = prev.some(p => p.id === playlist.id);
         if (exists) {
-          console.log('PlaylistSync: Updating existing playlist');
           return prev.map(p => p.id === playlist.id ? playlist : p);
         }
-        console.log('PlaylistSync: Adding new playlist');
         return [...prev, playlist];
       });
       
@@ -54,7 +45,7 @@ export function PlaylistSync() {
     });
 
     const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
-      console.log('PlaylistSync: Download progress update received:', data);
+      console.log('PlaylistSync: Download progress update:', data);
       setDownloadProgress(prev => ({
         ...prev,
         [data.songId]: data.progress
@@ -66,7 +57,6 @@ export function PlaylistSync() {
             prev[key].status === 'syncing'
           );
           if (playlistId) {
-            console.log('PlaylistSync: Marking playlist as completed:', playlistId);
             return {
               ...prev,
               [playlistId]: {
@@ -82,7 +72,6 @@ export function PlaylistSync() {
 
     return () => {
       console.log('PlaylistSync: Component unmounting');
-      messageCleanup();
       playlistCleanup();
       downloadCleanup();
     };
@@ -112,7 +101,7 @@ export function PlaylistSync() {
         <div className="space-y-4">
           {playlists.length === 0 ? (
             <p className="text-center text-gray-500 py-8">
-              WebSocket bağlantısı bekleniyor...
+              Playlist senkronizasyonu bekleniyor...
             </p>
           ) : (
             playlists.map((playlist) => (
@@ -129,12 +118,12 @@ export function PlaylistSync() {
                     </p>
                   </div>
                 </div>
-                {syncStatus[playlist.id]?.status === 'syncing' ? (
+                {syncStatus[playlist.id]?.status === 'syncing' && (
                   <Progress 
                     value={syncStatus[playlist.id]?.progress} 
                     className="w-[100px]"
                   />
-                ) : null}
+                )}
               </div>
             ))
           )}
