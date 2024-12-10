@@ -1,9 +1,9 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
-import path from 'node:path'
-import * as si from 'systeminformation'
-import dotenv from 'dotenv'
-import { setupOfflineHandlers } from './ipc/offlineHandlers'
-import { WebSocketManager } from './services/WebSocketManager'
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'node:path';
+import * as si from 'systeminformation';
+import dotenv from 'dotenv';
+import { setupOfflineHandlers } from './ipc/offlineHandlers';
+import { WebSocketManager } from './services/WebSocketManager';
 
 // Load .env file from project root and electron directory
 const envPaths = [
@@ -96,7 +96,6 @@ async function initializeOfflineSupport() {
     }
     
     console.log('Initializing WebSocket with token:', deviceToken);
-    console.log('Using Supabase URL:', VITE_SUPABASE_URL);
     
     if (wsManager) {
       await wsManager.disconnect();
@@ -194,13 +193,11 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     deviceToken = deviceInfo.token;
     console.log('Device token stored in main process:', deviceToken);
     
-    // Initialize WebSocket connection with new manager
     if (wsManager) {
       await wsManager.disconnect();
     }
     wsManager = new WebSocketManager(deviceToken, win);
     
-    // Notify renderer process about token update
     if (win) {
       win.webContents.send('device-token-update', deviceToken);
     }
