@@ -10,7 +10,7 @@ export default defineConfig({
         external: [
           'dotenv', 
           'systeminformation', 
-          '@supabase/supabase-js', 
+          '@supabase/supabase-js', // Supabase'i external olarak ekledik
           'uuid', 
           'sonner',
           'node-fetch',
