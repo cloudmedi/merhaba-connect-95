@@ -39,10 +39,15 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
         return await createNewToken(macAddress);
       }
 
+      // Update devices table with the token
+      await updateDeviceToken(mostRecentToken.token, macAddress);
+
       return mostRecentToken;
     }
 
-    return await createNewToken(macAddress);
+    const newToken = await createNewToken(macAddress);
+    await updateDeviceToken(newToken.token, macAddress);
+    return newToken;
   } catch (error) {
     console.error('Error in createDeviceToken:', error);
     throw error;
@@ -77,6 +82,22 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
   }
 
   console.log('Created new token:', tokenData);
-  
   return tokenData as DeviceToken;
+}
+
+async function updateDeviceToken(token: string, macAddress: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('devices')
+      .update({ token })
+      .eq('mac_address', macAddress);
+
+    if (error) {
+      console.error('Error updating device token:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in updateDeviceToken:', error);
+    throw error;
+  }
 }
