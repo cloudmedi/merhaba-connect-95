@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as si from 'systeminformation';
 import dotenv from 'dotenv';
 import { WebSocketManager } from './services/WebSocketManager';
-import { FileSystemManager } from './services/FileSystemManager';
+import { handlePlaylistSync } from './handlers/playlistHandlers';
 
 // Load .env files
 const envPaths = [
@@ -136,14 +136,10 @@ app.on('activate', () => {
   }
 });
 
-// Update IPC handlers
+// IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
-ipcMain.handle('get-device-id', () => {
-  console.log('Getting device ID, current token:', deviceToken);
-  return deviceToken;
-});
-
+ipcMain.handle('get-device-id', () => deviceToken);
 ipcMain.handle('register-device', async (_event, deviceInfo) => {
   try {
     console.log('Registering device with info:', deviceInfo);
@@ -171,60 +167,5 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
   }
 });
 
-// Update sync-playlist handler with improved logging and error handling
-ipcMain.handle('sync-playlist', async (_event, playlist) => {
-  console.log('Received playlist sync request:', JSON.stringify(playlist, null, 2));
-  
-  if (!deviceToken) {
-    console.error('No device token available');
-    return { success: false, error: 'No device token available' };
-  }
-
-  try {
-    // Initialize FileSystemManager for handling local storage
-    const fileSystemManager = new FileSystemManager(deviceToken);
-    console.log('FileSystemManager initialized');
-
-    // Download and store songs
-    for (const song of playlist.songs) {
-      console.log(`Processing song: ${song.title}`);
-      
-      const songExists = await fileSystemManager.songExists(song.id);
-      if (!songExists) {
-        console.log(`Downloading song ${song.id} from ${song.file_url}`);
-        const songUrl = song.bunny_id 
-          ? `https://cloud-media.b-cdn.net/${song.bunny_id}`
-          : song.file_url;
-          
-        // Update song URL to local path after download
-        const localPath = fileSystemManager.getSongPath(song.id);
-        song.file_url = `file://${localPath}`;
-        
-        if (win) {
-          win.webContents.send('download-progress', {
-            songId: song.id,
-            progress: 0
-          });
-        }
-      } else {
-        console.log(`Song ${song.id} already exists locally`);
-        const localPath = fileSystemManager.getSongPath(song.id);
-        song.file_url = `file://${localPath}`;
-      }
-    }
-
-    // Send updated playlist with local file paths back to renderer
-    if (win) {
-      console.log('Sending updated playlist to renderer:', playlist);
-      win.webContents.send('playlist-updated', playlist);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error syncing playlist:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
-  }
-});
+// Playlist sync handler
+ipcMain.handle('sync-playlist', handlePlaylistSync);

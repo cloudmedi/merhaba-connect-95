@@ -14,8 +14,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     console.log('Syncing playlist in preload:', playlist);
     return ipcRenderer.invoke('sync-playlist', playlist);
   },
-  getStorageStats: () => ipcRenderer.invoke('get-storage-stats'),
-  getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId),
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => {
     console.log('Setting up download progress listener');
     const handler = (_event: any, data: any) => {
@@ -26,18 +24,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => {
       console.log('Removing download progress listener');
       ipcRenderer.removeListener('download-progress', handler);
-    };
-  },
-  onWebSocketMessage: (callback: (data: any) => void) => {
-    console.log('Setting up WebSocket message listener');
-    const handler = (_event: any, data: any) => {
-      console.log('WebSocket message received in preload:', data);
-      callback(data);
-    };
-    ipcRenderer.on('websocket-message', handler);
-    return () => {
-      console.log('Removing WebSocket message listener');
-      ipcRenderer.removeListener('websocket-message', handler);
     };
   },
   onPlaylistUpdated: (callback: (playlist: any) => void) => {

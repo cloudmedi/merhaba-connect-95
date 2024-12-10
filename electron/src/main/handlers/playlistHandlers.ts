@@ -1,5 +1,7 @@
 import { BrowserWindow } from 'electron';
 import { FileSystemManager } from '../services/FileSystemManager';
+import { DownloadManager } from '../services/DownloadManager';
+import { OfflinePlaylistManager } from '../services/OfflinePlaylistManager';
 
 export async function handlePlaylistSync(event: Electron.IpcMainInvokeEvent, playlist: any) {
   console.log('Received playlist sync request:', JSON.stringify(playlist, null, 2));
@@ -17,37 +19,27 @@ export async function handlePlaylistSync(event: Electron.IpcMainInvokeEvent, pla
     }
 
     const fileSystemManager = new FileSystemManager(deviceToken);
-    console.log('FileSystemManager initialized');
+    const downloadManager = new DownloadManager(fileSystemManager);
+    const offlineManager = new OfflinePlaylistManager(fileSystemManager, downloadManager);
 
-    // Download and store songs
-    for (const song of playlist.songs) {
-      console.log(`Processing song: ${song.title}`);
-      
-      try {
-        const songExists = await fileSystemManager.songExists(song.id);
-        if (!songExists) {
-          console.log(`Downloading song ${song.id} from ${song.file_url}`);
-          const songUrl = song.bunny_id 
-            ? `https://cloud-media.b-cdn.net/${song.bunny_id}`
-            : song.file_url;
-            
-          await fileSystemManager.downloadSong(song.id, songUrl);
-        }
-        
-        // Update song URL to local path
-        song.file_url = fileSystemManager.getLocalUrl(song.id);
-        console.log(`Updated song URL to: ${song.file_url}`);
-        
-      } catch (error) {
-        console.error(`Error processing song ${song.id}:`, error);
-      }
+    console.log('Starting playlist sync process...');
+    const result = await offlineManager.syncPlaylist(playlist);
+
+    if (result.success) {
+      // Update playlist with local file paths
+      const updatedPlaylist = {
+        ...playlist,
+        songs: playlist.songs.map((song: any) => ({
+          ...song,
+          file_url: fileSystemManager.getLocalUrl(song.id)
+        }))
+      };
+
+      console.log('Sending updated playlist to renderer:', updatedPlaylist);
+      win.webContents.send('playlist-updated', updatedPlaylist);
     }
 
-    // Send updated playlist with local file paths back to renderer
-    console.log('Sending updated playlist to renderer:', playlist);
-    win.webContents.send('playlist-updated', playlist);
-
-    return { success: true };
+    return result;
   } catch (error) {
     console.error('Error syncing playlist:', error);
     return { 
