@@ -32,12 +32,6 @@ export const useDeviceQueries = () => {
             name,
             company_id
           ),
-          schedule_device_assignments (
-            schedule:schedule_events (
-              id,
-              title
-            )
-          ),
           playlist_assignments (
             playlist:playlists (
               id,
