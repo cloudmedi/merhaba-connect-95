@@ -33,14 +33,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
       if (playlistError) throw playlistError;
 
-      const songs = playlist.playlist_songs.map((ps: any) => ({
-        ...ps.songs,
-        file_url: ps.songs.bunny_id 
-          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
-          : ps.songs.file_url
-      }));
-
-      // Get device tokens
+      // Get device tokens for the selected device IDs
       const { data: devices } = await supabase
         .from('devices')
         .select('token')
@@ -50,17 +43,27 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         throw new Error('Device tokens could not be retrieved');
       }
 
-      // Send to each device
-      for (const device of devices) {
-        if (!device.token) continue;
+      const deviceTokens = devices.map(device => device.token).filter(Boolean);
+      console.log('Retrieved device tokens:', deviceTokens);
 
-        const channel = supabase.channel(`device_${device.token}`);
+      const songs = playlist.playlist_songs.map((ps: any) => ({
+        ...ps.songs,
+        file_url: ps.songs.bunny_id 
+          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+          : ps.songs.file_url
+      }));
+
+      // Send to each device using tokens
+      for (const token of deviceTokens) {
+        if (!token) continue;
+
+        const channel = supabase.channel(`device_${token}`);
         
         await channel.send({
           type: 'broadcast',
           event: 'sync_playlist',
           payload: {
-            deviceToken: device.token,
+            deviceToken: token,
             playlist: {
               id: playlist.id,
               name: playlist.name,

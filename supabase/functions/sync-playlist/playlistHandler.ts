@@ -23,14 +23,14 @@ export class PlaylistHandler {
       }
 
       const { playlist, devices } = data.payload;
-      console.log('Target devices:', devices);
+      console.log('Target device tokens:', devices);
       
       if (!playlist || !playlist.id || !Array.isArray(devices) || devices.length === 0) {
         console.error('Invalid playlist data structure:', playlist);
         throw new Error('Invalid playlist data structure');
       }
 
-      // Playlist verilerini getir
+      // Get playlist data
       console.log('Fetching playlist data for ID:', playlist.id);
       const { data: playlistData, error: playlistError } = await this.supabase
         .from('playlists')
@@ -57,7 +57,7 @@ export class PlaylistHandler {
 
       console.log('Playlist data fetched successfully');
 
-      // Playlist verilerini düzenle
+      // Format playlist data
       const formattedPlaylist = {
         id: playlistData.id,
         name: playlistData.name,
@@ -73,12 +73,12 @@ export class PlaylistHandler {
 
       console.log('Formatted playlist:', JSON.stringify(formattedPlaylist, null, 2));
 
-      // Her hedef cihaza gönder
+      // Send to each target device using device tokens
       let successCount = 0;
       let errorCount = 0;
 
       for (const deviceToken of devices) {
-        console.log(`Attempting to send playlist to device: ${deviceToken}`);
+        console.log(`Attempting to send playlist to device with token: ${deviceToken}`);
         const targetSocket = this.deviceManager.getDeviceSocket(deviceToken);
         
         if (targetSocket) {
@@ -93,9 +93,9 @@ export class PlaylistHandler {
             console.log('Sending message:', message);
             targetSocket.send(message);
             successCount++;
-            console.log('Playlist sent successfully to device:', deviceToken);
+            console.log('Playlist sent successfully to device token:', deviceToken);
           } catch (error) {
-            console.error('Error sending to device:', deviceToken, error);
+            console.error('Error sending to device token:', deviceToken, error);
             errorCount++;
           }
         } else {
