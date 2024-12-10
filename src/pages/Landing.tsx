@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
 import { AudioPreview } from "@/components/landing/AudioPreview";
 import { PlayCircle, Users } from "lucide-react";
+import { useHeroPlaylists } from "@/components/landing/hooks/useHeroPlaylists";
+import type { PreviewPlaylist } from "@/components/landing/types";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -30,43 +32,7 @@ export default function Landing() {
     }
   });
 
-  const { data: playlists } = useQuery({
-    queryKey: ['hero-playlists'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          playlist_songs (
-            position,
-            songs (
-              id,
-              title,
-              artist,
-              file_url,
-              bunny_id
-            )
-          )
-        `)
-        .eq('is_catalog', true)
-        .limit(8);
-      
-      if (error) throw error;
-
-      // Şarkı URL'lerini düzenle
-      return data.map(playlist => ({
-        ...playlist,
-        songs: playlist.playlist_songs
-          .sort((a, b) => a.position - b.position)
-          .map(ps => ({
-            ...ps.songs,
-            file_url: ps.songs.bunny_id 
-              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
-              : ps.songs.file_url
-          }))
-      }));
-    }
-  });
+  const { data: playlists } = useHeroPlaylists();
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,7 +58,7 @@ export default function Landing() {
     }
   };
 
-  const handlePlaylistPlay = (playlist: any) => {
+  const handlePlaylistPlay = (playlist: PreviewPlaylist) => {
     if (currentPlayingId === playlist.id) {
       setIsPlaying(false);
       setCurrentPlayingId(null);
@@ -153,7 +119,7 @@ export default function Landing() {
           />
           {currentPlayingId && isPlaying && (
             <AudioPreview
-              playlist={playlists.find(p => p.id === currentPlayingId)}
+              playlist={playlists.find(p => p.id === currentPlayingId)!}
               onPreviewEnd={handlePreviewEnd}
             />
           )}

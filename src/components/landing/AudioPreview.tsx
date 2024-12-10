@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import type { PreviewPlaylist } from "./types";
 
 interface AudioPreviewProps {
-  playlist: any;
+  playlist: PreviewPlaylist;
   onPreviewEnd: () => void;
 }
 
@@ -11,8 +12,15 @@ export function AudioPreview({ playlist, onPreviewEnd }: AudioPreviewProps) {
   const fadeTimeout = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
+    if (!playlist.songs || playlist.songs.length === 0) {
+      console.warn('No songs available in playlist:', playlist.id);
+      onPreviewEnd();
+      return;
+    }
+
     const audio = new Audio();
     audioRef.current = audio;
+    audio.volume = 1;
 
     const handleTimeUpdate = () => {
       if (audio.currentTime >= 15 && !fadeTimeout.current) {
@@ -30,10 +38,24 @@ export function AudioPreview({ playlist, onPreviewEnd }: AudioPreviewProps) {
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', (e) => {
+      console.error('Audio error:', e);
+      handleEnded(); // Hata durumunda sonraki şarkıya geç
+    });
 
-    // Start playing the current song
-    audio.src = playlist.songs[currentSongIndex].file_url;
-    audio.play().catch(console.error);
+    // Mevcut şarkıyı çal
+    const currentSong = playlist.songs[currentSongIndex];
+    if (currentSong?.file_url) {
+      console.log('Playing song:', currentSong.title, 'URL:', currentSong.file_url);
+      audio.src = currentSong.file_url;
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        handleEnded();
+      });
+    } else {
+      console.error('Invalid song data:', currentSong);
+      handleEnded();
+    }
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
@@ -50,10 +72,12 @@ export function AudioPreview({ playlist, onPreviewEnd }: AudioPreviewProps) {
     if (!audioRef.current) return;
 
     const audio = audioRef.current;
+    let volume = 1;
     const fadeInterval = setInterval(() => {
-      if (audio.volume > 0.1) {
-        audio.volume = Math.max(0, audio.volume - 0.1);
-      } else {
+      volume = Math.max(0, volume - 0.1);
+      audio.volume = volume;
+
+      if (volume <= 0) {
         clearInterval(fadeInterval);
         audio.pause();
         if (currentSongIndex < playlist.songs.length - 1) {
@@ -69,5 +93,5 @@ export function AudioPreview({ playlist, onPreviewEnd }: AudioPreviewProps) {
     }, 1000);
   };
 
-  return null; // This is an invisible component that handles audio
+  return null;
 }
