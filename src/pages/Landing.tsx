@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
 import { 
   Music2, 
   Calendar, 
@@ -17,18 +17,8 @@ import {
   BarChart3, 
   Building2,
   PlayCircle,
-  Users,
-  Play,
-  Pause
+  Users
 } from "lucide-react";
-
-interface Playlist {
-  id: string;
-  name: string;
-  description: string | null;
-  artwork_url: string | null;
-  is_hero: boolean;
-}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -170,53 +160,15 @@ export default function Landing() {
 
       {/* Playlist Preview Section */}
       {playlists && playlists.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Örnek Playlist Koleksiyonu
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              İşletmenize özel hazırlanmış profesyonel müzik listelerimizden örnekler
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {playlists.map((playlist: Playlist) => (
-              <Card key={playlist.id} className="group relative overflow-hidden hover:shadow-lg transition-all duration-300">
-                <div className="aspect-square relative overflow-hidden">
-                  <img 
-                    src={playlist.artwork_url || "/placeholder.svg"} 
-                    alt={playlist.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white hover:text-white/90"
-                      onClick={() => {
-                        setCurrentPlayingId(playlist.id);
-                        setIsPlaying(!isPlaying);
-                      }}
-                    >
-                      {currentPlayingId === playlist.id && isPlaying ? (
-                        <Pause className="h-12 w-12" />
-                      ) : (
-                        <Play className="h-12 w-12" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{playlist.name}</h3>
-                  {playlist.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2">{playlist.description}</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <PlaylistGrid
+          playlists={playlists}
+          currentPlayingId={currentPlayingId}
+          isPlaying={isPlaying}
+          onPlay={(playlist) => {
+            setCurrentPlayingId(playlist.id);
+            setIsPlaying(!isPlaying);
+          }}
+        />
       )}
 
       {/* Features Grid */}
@@ -232,15 +184,16 @@ export default function Landing() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature) => (
-            <Card key={feature.title} className="border-none shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
-                  <feature.icon className={`h-6 w-6 ${feature.color}`} />
-                </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                <CardDescription>{feature.description}</CardDescription>
-              </CardHeader>
-            </Card>
+            <div 
+              key={feature.title} 
+              className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
+                <feature.icon className={`h-6 w-6 ${feature.color}`} />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+              <p className="text-gray-600">{feature.description}</p>
+            </div>
           ))}
         </div>
       </div>
