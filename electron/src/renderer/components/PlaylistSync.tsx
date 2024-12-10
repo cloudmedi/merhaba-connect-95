@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from './ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import type { WebSocketMessage } from '@/types/electron';
-import { currentDeviceToken } from '@/integrations/supabase/client';
 
 interface SyncStatus {
   playlistId: string;
@@ -23,7 +22,7 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up WebSocket listeners with token:', currentDeviceToken);
+    console.log('Setting up WebSocket listeners');
     
     const setupWebSocketListeners = async () => {
       const deviceToken = await window.electronAPI.getDeviceId();

@@ -5,7 +5,7 @@ import { PresenceManager } from './presence/presenceManager';
 let supabase: ReturnType<typeof createClient>;
 let presenceManager: PresenceManager;
 let isInitialized = false;
-let currentDeviceToken: string | null = null;
+export let currentDeviceToken: string | null = null;  // Export edildi
 
 async function initSupabase() {
   if (isInitialized) {
@@ -66,7 +66,6 @@ async function initSupabase() {
     await (window as any).electronAPI.registerDevice({ token: currentDeviceToken });
     console.log('Device registered with main process');
 
-    // Sadece token expired değilse presence manager'ı başlat
     if (currentDeviceToken && tokenData.status !== 'expired') {
       console.log('Initializing presence manager with token:', currentDeviceToken);
       await presenceManager.initialize(currentDeviceToken);
@@ -83,4 +82,4 @@ async function initSupabase() {
   }
 }
 
-export { supabase, initSupabase, currentDeviceToken };
+export { supabase, initSupabase };
