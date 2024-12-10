@@ -8,7 +8,7 @@ export class WebSocketManager {
   private messageQueue: any[] = [];
 
   constructor(private deviceToken: string, private win: BrowserWindow | null) {
-    console.log('WebSocketManager: Initializing', { deviceToken });
+    console.log('WebSocketManager: Initializing with token:', deviceToken);
     
     if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
       console.error('WebSocketManager: Missing Supabase configuration');
@@ -41,8 +41,11 @@ export class WebSocketManager {
         this.isConnected = true;
 
         // Subscribe to device-specific channel
+        const channelName = `device_${this.deviceToken}`;
+        console.log('Subscribing to channel:', channelName);
+        
         const joinMessage = {
-          topic: `realtime:device_${this.deviceToken}`,
+          topic: `realtime:${channelName}`,
           event: "phx_join",
           payload: { 
             device_token: this.deviceToken,
@@ -51,8 +54,8 @@ export class WebSocketManager {
           ref: Date.now()
         };
         
+        console.log('Sending join message:', JSON.stringify(joinMessage, null, 2));
         this.ws?.send(JSON.stringify(joinMessage));
-        console.log('Channel join message sent:', joinMessage);
 
         // Process any queued messages
         while (this.messageQueue.length > 0) {
@@ -64,17 +67,22 @@ export class WebSocketManager {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data.toString());
-          console.log('WebSocket message received:', data);
+          console.log('WebSocket message received:', JSON.stringify(data, null, 2));
 
           if (data.event === "broadcast" && data.payload?.playlist) {
-            console.log('Playlist sync message received:', data.payload);
+            console.log('Playlist sync message received:', JSON.stringify(data.payload, null, 2));
             
             if (this.win) {
+              console.log('Sending playlist to renderer process');
               this.win.webContents.send('playlist-received', {
                 playlist: data.payload.playlist,
                 status: 'success'
               });
+            } else {
+              console.warn('No window reference available to send playlist');
             }
+          } else {
+            console.log('Received non-playlist message:', data.event);
           }
         } catch (error) {
           console.error('Error processing message:', error);
@@ -113,6 +121,8 @@ export class WebSocketManager {
   }
 
   public async sendMessage(message: any) {
+    console.log('Attempting to send message:', JSON.stringify(message, null, 2));
+    
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.log('Connection not ready, queueing message');
       this.messageQueue.push(message);
@@ -120,8 +130,9 @@ export class WebSocketManager {
     }
 
     try {
-      console.log('Sending message:', message);
+      console.log('Sending message through WebSocket');
       this.ws.send(JSON.stringify(message));
+      console.log('Message sent successfully');
     } catch (error) {
       console.error('Error sending message:', error);
       this.messageQueue.push(message);
