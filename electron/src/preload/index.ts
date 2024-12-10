@@ -15,41 +15,63 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getStorageStats: () => ipcRenderer.invoke('get-storage-stats'),
   getDownloadProgress: (songId: string) => ipcRenderer.invoke('get-download-progress', songId),
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => {
-    const handler = (_event: any, data: any) => callback(data);
+    console.log('Setting up download progress listener');
+    const handler = (_event: any, data: any) => {
+      console.log('Download progress received:', data);
+      callback(data);
+    };
     ipcRenderer.on('download-progress', handler);
     return () => {
+      console.log('Removing download progress listener');
       ipcRenderer.removeListener('download-progress', handler);
     };
   },
   // WebSocket events
   onWebSocketMessage: (callback: (data: any) => void) => {
-    const handler = (_event: any, data: any) => callback(data);
+    console.log('Setting up WebSocket message listener');
+    const handler = (_event: any, data: any) => {
+      console.log('WebSocket message received in preload:', data);
+      callback(data);
+    };
     ipcRenderer.on('websocket-message', handler);
     return () => {
+      console.log('Removing WebSocket message listener');
       ipcRenderer.removeListener('websocket-message', handler);
     };
   },
   onPlaylistReceived: (callback: (playlist: any) => void) => {
+    console.log('Setting up playlist received listener');
     const handler = (_event: any, playlist: any) => {
       console.log('Playlist received in preload:', playlist);
       callback(playlist);
     };
     ipcRenderer.on('playlist-received', handler);
     return () => {
+      console.log('Removing playlist received listener');
       ipcRenderer.removeListener('playlist-received', handler);
     };
   },
   onWebSocketConnected: (callback: () => void) => {
-    const handler = () => callback();
+    console.log('Setting up WebSocket connected listener');
+    const handler = () => {
+      console.log('WebSocket connected event received');
+      callback();
+    };
     ipcRenderer.on('websocket-connected', handler);
     return () => {
+      console.log('Removing WebSocket connected listener');
       ipcRenderer.removeListener('websocket-connected', handler);
     };
   },
   onWebSocketError: (callback: (error: string) => void) => {
-    const handler = (_event: any, error: string) => callback(error);
+    console.log('Setting up WebSocket error listener');
+    const handler = (_event: any, error: string) => {
+      console.log('WebSocket error received:', error);
+      callback(error);
+    };
     ipcRenderer.on('websocket-error', handler);
     return () => {
+      console.log('Removing WebSocket error listener');
       ipcRenderer.removeListener('websocket-error', handler);
     };
   },

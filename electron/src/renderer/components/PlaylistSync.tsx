@@ -23,19 +23,22 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up WebSocket listeners');
+    console.log('PlaylistSync: Component mounted');
     
     const messageCleanup = window.electronAPI.onWebSocketMessage((data) => {
-      console.log('WebSocket message received:', data);
+      console.log('PlaylistSync: WebSocket message received:', data);
     });
 
     const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist: PlaylistData) => {
-      console.log('Playlist received:', playlist);
+      console.log('PlaylistSync: Playlist received:', playlist);
       setPlaylists(prev => {
+        console.log('PlaylistSync: Current playlists:', prev);
         const exists = prev.some(p => p.id === playlist.id);
         if (exists) {
+          console.log('PlaylistSync: Updating existing playlist');
           return prev.map(p => p.id === playlist.id ? playlist : p);
         }
+        console.log('PlaylistSync: Adding new playlist');
         return [...prev, playlist];
       });
       
@@ -51,7 +54,7 @@ export function PlaylistSync() {
     });
 
     const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
-      console.log('Download progress update received:', data);
+      console.log('PlaylistSync: Download progress update received:', data);
       setDownloadProgress(prev => ({
         ...prev,
         [data.songId]: data.progress
@@ -63,6 +66,7 @@ export function PlaylistSync() {
             prev[key].status === 'syncing'
           );
           if (playlistId) {
+            console.log('PlaylistSync: Marking playlist as completed:', playlistId);
             return {
               ...prev,
               [playlistId]: {
@@ -77,6 +81,7 @@ export function PlaylistSync() {
     });
 
     return () => {
+      console.log('PlaylistSync: Component unmounting');
       messageCleanup();
       playlistCleanup();
       downloadCleanup();

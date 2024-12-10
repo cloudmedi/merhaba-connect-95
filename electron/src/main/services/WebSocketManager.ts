@@ -13,7 +13,8 @@ export class WebSocketManager {
   private isConnecting: boolean = false;
 
   constructor(token: string, win: BrowserWindow | null) {
-    console.log('WebSocketManager: Initializing with token:', token);
+    console.log('WebSocketManager: Constructor called with token:', token);
+    console.log('WebSocketManager: Window reference:', win ? 'exists' : 'null');
     this.win = win;
     this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     
@@ -37,6 +38,7 @@ export class WebSocketManager {
     }
 
     this.isConnecting = true;
+    console.log('WebSocketManager: Starting WebSocket initialization');
 
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
@@ -64,10 +66,14 @@ export class WebSocketManager {
   }
 
   private setupWebSocketListeners() {
-    if (!this.ws) return;
+    if (!this.ws) {
+      console.error('WebSocketManager: WebSocket instance is null');
+      return;
+    }
 
     this.ws.on('open', () => {
       console.log('WebSocketManager: Connection opened successfully');
+      console.log('WebSocketManager: Window reference status:', this.win ? 'exists' : 'null');
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       if (this.reconnectTimeout) {
@@ -78,12 +84,15 @@ export class WebSocketManager {
       // Send any queued messages
       while (this.messageQueue.length > 0) {
         const message = this.messageQueue.shift();
+        console.log('WebSocketManager: Sending queued message:', message);
         this.sendMessage(message);
       }
       
       if (this.win) {
         console.log('WebSocketManager: Sending websocket-connected event to renderer');
         this.win.webContents.send('websocket-connected');
+      } else {
+        console.warn('WebSocketManager: Cannot send connected event - no window reference');
       }
     });
 
@@ -98,12 +107,16 @@ export class WebSocketManager {
           if (this.win) {
             console.log('WebSocketManager: Sending playlist to renderer');
             this.win.webContents.send('playlist-received', parsedData.payload.playlist);
+          } else {
+            console.warn('WebSocketManager: Cannot send playlist - no window reference');
           }
         }
         
         if (this.win) {
           console.log('WebSocketManager: Sending websocket message to renderer');
           this.win.webContents.send('websocket-message', parsedData);
+        } else {
+          console.warn('WebSocketManager: Cannot send message - no window reference');
         }
       } catch (error) {
         console.error('WebSocketManager: Error parsing message:', error);
@@ -129,16 +142,16 @@ export class WebSocketManager {
         this.win.webContents.send('websocket-disconnected');
       }
 
-      // Attempt to reconnect unless this was a clean closure
       if (code !== 1000) {
+        console.log('WebSocketManager: Unclean close, attempting reconnect');
         this.handleReconnect(this.getStoredToken());
       }
     });
 
-    // Setup ping/pong for connection health check
     setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.ws.ping();
+        console.log('WebSocketManager: Ping sent');
       }
     }, 30000);
   }
@@ -162,6 +175,8 @@ export class WebSocketManager {
   }
 
   public sendMessage(message: any) {
+    console.log('WebSocketManager: Attempting to send message:', message);
+    
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.log('WebSocketManager: Connection not ready, queueing message');
       this.messageQueue.push(message);
@@ -178,8 +193,8 @@ export class WebSocketManager {
   }
 
   public async disconnect() {
+    console.log('WebSocketManager: Disconnecting');
     if (this.ws) {
-      console.log('WebSocketManager: Disconnecting');
       if (this.reconnectTimeout) {
         clearTimeout(this.reconnectTimeout);
         this.reconnectTimeout = null;
@@ -190,6 +205,8 @@ export class WebSocketManager {
       this.reconnectAttempts = 0;
       this.messageQueue = [];
       console.log('WebSocketManager: Disconnected successfully');
+    } else {
+      console.log('WebSocketManager: No active connection to disconnect');
     }
   }
 }
