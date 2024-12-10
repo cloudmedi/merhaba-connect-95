@@ -21,7 +21,7 @@ export function PushPlaylistDialog({
   playlistTitle, 
   playlistId 
 }: PushPlaylistDialogProps) {
-  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+  const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
   const { data: devices = [], isLoading } = useDeviceQuery();
@@ -32,23 +32,23 @@ export function PushPlaylistDialog({
   );
 
   const handleSelectAll = () => {
-    if (selectedDevices.length === filteredDevices.length) {
-      setSelectedDevices([]);
+    if (selectedTokens.length === filteredDevices.length) {
+      setSelectedTokens([]);
     } else {
-      setSelectedDevices(filteredDevices.map(d => d.id));
+      setSelectedTokens(filteredDevices.map(d => d.token).filter(Boolean) as string[]);
     }
   };
 
   const handleDevicePush = async () => {
-    if (selectedDevices.length === 0) {
+    if (selectedTokens.length === 0) {
       toast.error("Lütfen en az bir cihaz seçin");
       return;
     }
 
     try {
-      const result = await handlePush(selectedDevices);
+      const result = await handlePush(selectedTokens);
       if (result.success) {
-        toast.success(`Playlist ${selectedDevices.length} cihaza başarıyla gönderildi`);
+        toast.success(`Playlist ${selectedTokens.length} cihaza başarıyla gönderildi`);
         onClose();
       } else {
         toast.error(result.error || "Playlist gönderilirken bir hata oluştu");
@@ -69,29 +69,31 @@ export function PushPlaylistDialog({
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onSelectAll={handleSelectAll}
-            selectedCount={selectedDevices.length}
+            selectedCount={selectedTokens.length}
             totalCount={filteredDevices.length}
           />
 
           <DeviceList
             isLoading={isLoading}
             devices={filteredDevices}
-            selectedDevices={selectedDevices}
-            onToggleDevice={(deviceId) => {
-              setSelectedDevices(prev =>
-                prev.includes(deviceId)
-                  ? prev.filter(id => id !== deviceId)
-                  : [...prev, deviceId]
-              );
+            selectedTokens={selectedTokens}
+            onToggleDevice={(token) => {
+              if (token) {
+                setSelectedTokens(prev =>
+                  prev.includes(token)
+                    ? prev.filter(t => t !== token)
+                    : [...prev, token]
+                );
+              }
             }}
           />
 
           <DialogFooter
-            selectedCount={selectedDevices.length}
+            selectedCount={selectedTokens.length}
             isSyncing={isSyncing}
             onCancel={onClose}
             onPush={handleDevicePush}
-            selectedDevices={selectedDevices}
+            selectedTokens={selectedTokens}
           />
         </div>
       </DialogContent>

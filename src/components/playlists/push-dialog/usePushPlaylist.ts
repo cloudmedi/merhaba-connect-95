@@ -5,14 +5,14 @@ import { toast } from "sonner";
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const handlePush = async (selectedDevices: string[]) => {
-    if (selectedDevices.length === 0) {
+  const handlePush = async (deviceTokens: string[]) => {
+    if (deviceTokens.length === 0) {
       return { success: false, error: "Lütfen en az bir cihaz seçin" };
     }
 
     try {
       setIsSyncing(true);
-      console.log('Starting playlist sync for devices:', selectedDevices);
+      console.log('Starting playlist sync for device tokens:', deviceTokens);
 
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
@@ -32,19 +32,6 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         .single();
 
       if (playlistError) throw playlistError;
-
-      // Get device tokens for the selected device IDs
-      const { data: devices } = await supabase
-        .from('devices')
-        .select('token')
-        .in('id', selectedDevices);
-
-      if (!devices) {
-        throw new Error('Device tokens could not be retrieved');
-      }
-
-      const deviceTokens = devices.map(device => device.token).filter(Boolean);
-      console.log('Retrieved device tokens:', deviceTokens);
 
       const songs = playlist.playlist_songs.map((ps: any) => ({
         ...ps.songs,

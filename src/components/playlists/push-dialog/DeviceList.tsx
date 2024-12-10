@@ -1,28 +1,19 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Device } from "@/pages/Manager/Devices/hooks/types";
 import { DeviceItem } from "./DeviceItem";
 
-export interface DeviceListProps {
+interface DeviceListProps {
+  devices: Device[];
+  selectedTokens: string[];
+  onToggleDevice: (token: string | undefined) => void;
   isLoading: boolean;
-  devices: Array<{
-    id: string;
-    name: string;
-    status: string;
-    category?: string;
-    last_seen?: string;
-    token?: string;
-    branches?: {
-      name?: string;
-    };
-  }>;
-  selectedDevices: string[];
-  onToggleDevice: (deviceId: string) => void;
 }
 
 export function DeviceList({ 
-  isLoading, 
   devices, 
-  selectedDevices, 
-  onToggleDevice 
+  selectedTokens, 
+  onToggleDevice,
+  isLoading 
 }: DeviceListProps) {
   return (
     <ScrollArea className="h-[400px] rounded-md border p-4">
@@ -36,8 +27,8 @@ export function DeviceList({
             <DeviceItem
               key={device.id}
               device={device}
-              isSelected={selectedDevices.includes(device.id)}
-              onToggle={() => onToggleDevice(device.id)}
+              isSelected={selectedTokens.includes(device.token || '')}
+              onToggle={() => onToggleDevice(device.token)}
             />
           ))}
         </div>
