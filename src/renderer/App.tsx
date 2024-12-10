@@ -3,7 +3,7 @@ import './App.css';
 import { supabase } from '../integrations/supabase/client';
 import { createDeviceToken } from '../integrations/supabase/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
-import type { SystemInfo } from '../types/electron';
+import type { SystemInfo } from './types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
