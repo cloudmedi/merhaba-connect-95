@@ -7,7 +7,7 @@ import { DialogHeader } from "./DialogHeader";
 import { usePushPlaylist } from "./usePushPlaylist";
 import { useDeviceQuery } from "./useDeviceQuery";
 import { toast } from "sonner";
-import type { Device, DeviceCategory, DeviceStatus } from "@/pages/Manager/Devices/hooks/types";
+import type { Device, DeviceCategory, DeviceStatus, DeviceSystemInfo } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ const validateDeviceCategory = (category: string): DeviceCategory => {
   const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
   return validCategories.includes(category as DeviceCategory) 
     ? (category as DeviceCategory) 
-    : 'player'; // Default to 'player' if invalid category
+    : 'player';
 };
 
 // Helper function to validate device status
@@ -29,7 +29,31 @@ const validateDeviceStatus = (status: string): DeviceStatus => {
   const validStatuses: DeviceStatus[] = ['online', 'offline'];
   return validStatuses.includes(status as DeviceStatus)
     ? (status as DeviceStatus)
-    : 'offline'; // Default to 'offline' if invalid status
+    : 'offline';
+};
+
+// Helper function to validate and transform system info
+const validateSystemInfo = (systemInfo: any): DeviceSystemInfo => {
+  if (!systemInfo) return {};
+  
+  // If it's a string, try to parse it
+  if (typeof systemInfo === 'string') {
+    try {
+      systemInfo = JSON.parse(systemInfo);
+    } catch {
+      return {};
+    }
+  }
+
+  // Ensure the object has the correct shape
+  return {
+    version: systemInfo.version || undefined,
+    cpu: systemInfo.cpu || undefined,
+    memory: systemInfo.memory || undefined,
+    os: systemInfo.os || undefined,
+    network: Array.isArray(systemInfo.network) ? systemInfo.network : undefined,
+    health: systemInfo.health || undefined
+  };
 };
 
 export function PushPlaylistDialog({ 
@@ -47,7 +71,8 @@ export function PushPlaylistDialog({
   const devices: Device[] = rawDevices.map(device => ({
     ...device,
     category: validateDeviceCategory(device.category),
-    status: validateDeviceStatus(device.status)
+    status: validateDeviceStatus(device.status),
+    system_info: validateSystemInfo(device.system_info)
   }));
 
   const filteredDevices = devices.filter(device =>
