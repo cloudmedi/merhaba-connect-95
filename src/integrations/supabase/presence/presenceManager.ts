@@ -50,7 +50,7 @@ export class PresenceManager {
         this.supabase,
         deviceToken,
         this.config,
-        async (status) => {
+        async (status: DeviceStatus) => {
           console.log('Status change callback triggered:', status);
           await this.updateDeviceStatus(status);
           this.lastStatus = status;

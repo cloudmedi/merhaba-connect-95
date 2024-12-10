@@ -28,12 +28,6 @@ export class PresenceChannelManager {
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('Leave event:', key, leftPresences);
-      })
-      .on('broadcast', { event: 'sync_playlist' }, async (payload) => {
-        console.log('Received playlist sync message:', payload);
-        if (payload.deviceToken === this.deviceToken) {
-          console.log('Processing playlist for device:', this.deviceToken);
-        }
       });
 
     await this.channel.subscribe(async (status) => {
