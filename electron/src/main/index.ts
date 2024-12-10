@@ -91,7 +91,7 @@ async function getSystemInfo() {
 async function initializeOfflineSupport() {
   try {
     if (!deviceToken) {
-      console.error('No device token available');
+      console.error('No device token available for offline support');
       return;
     }
     
@@ -128,6 +128,11 @@ function createWindow() {
       VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY
     });
+
+    // Send stored device token if available
+    if (deviceToken) {
+      win.webContents.send('device-token-update', deviceToken);
+    }
   });
 
   if (VITE_DEV_SERVER_URL) {
@@ -170,25 +175,35 @@ app.on('activate', () => {
   }
 });
 
-// IPC handlers
+// Update IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
-ipcMain.handle('get-device-id', () => deviceToken);
+ipcMain.handle('get-device-id', () => {
+  console.log('Getting device ID, current token:', deviceToken);
+  return deviceToken;
+});
 
 ipcMain.handle('register-device', async (_event, deviceInfo) => {
   try {
+    console.log('Registering device with info:', deviceInfo);
+    
     if (!deviceInfo || !deviceInfo.token) {
       throw new Error('No token provided');
     }
     
     deviceToken = deviceInfo.token;
-    console.log('Device registered with token:', deviceToken);
+    console.log('Device token stored in main process:', deviceToken);
     
-    // WebSocket bağlantısını başlat
+    // Initialize WebSocket connection
     if (wsManager) {
       await wsManager.disconnect();
     }
     wsManager = new WebSocketManager(deviceToken, win);
+    
+    // Notify renderer process about token update
+    if (win) {
+      win.webContents.send('device-token-update', deviceToken);
+    }
     
     return { success: true };
   } catch (error) {

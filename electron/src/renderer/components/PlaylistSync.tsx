@@ -3,9 +3,7 @@ import { Progress } from './ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import type { WebSocketMessage } from '@/types/electron';
-
-const CHANNEL_PREFIX = 'device_presence';
-const EVENT_TYPE = 'sync_playlist';
+import { currentDeviceToken } from '@/integrations/supabase/client';
 
 interface SyncStatus {
   playlistId: string;
@@ -25,21 +23,23 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up WebSocket listeners');
+    console.log('Setting up WebSocket listeners with token:', currentDeviceToken);
     
     const setupWebSocketListeners = async () => {
       const deviceToken = await window.electronAPI.getDeviceId();
+      console.log('Retrieved device token from main process:', deviceToken);
+      
       if (!deviceToken) {
         console.error('No device token available');
         return;
       }
 
-      console.log('Subscribing to channel:', `${CHANNEL_PREFIX}_${deviceToken}`);
+      console.log('Subscribing to channel:', `device_${deviceToken}`);
       
       const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
         console.log('WebSocket message received:', data);
         
-        if (data.type === EVENT_TYPE && data.payload.playlist) {
+        if (data.type === 'sync_playlist' && data.payload.playlist) {
           const playlist = data.payload.playlist;
           console.log('New playlist received:', playlist);
           
@@ -65,29 +65,10 @@ export function PlaylistSync() {
 
       const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
         console.log('Download progress update received:', data);
-        
         setDownloadProgress(prev => ({
           ...prev,
           [data.songId]: data.progress
         }));
-
-        if (data.progress === 100) {
-          setSyncStatus(prev => {
-            const playlistId = Object.keys(prev).find(key => 
-              prev[key].status === 'syncing'
-            );
-            if (playlistId) {
-              return {
-                ...prev,
-                [playlistId]: {
-                  ...prev[playlistId],
-                  status: 'completed'
-                }
-              };
-            }
-            return prev;
-          });
-        }
       });
 
       return () => {

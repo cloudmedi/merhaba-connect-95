@@ -62,6 +62,10 @@ async function initSupabase() {
     console.log('Device token created/retrieved:', tokenData);
     currentDeviceToken = tokenData.token;
 
+    // Register device with main process
+    await (window as any).electronAPI.registerDevice({ token: currentDeviceToken });
+    console.log('Device registered with main process');
+
     // Sadece token expired değilse presence manager'ı başlat
     if (currentDeviceToken && tokenData.status !== 'expired') {
       console.log('Initializing presence manager with token:', currentDeviceToken);
@@ -79,4 +83,4 @@ async function initSupabase() {
   }
 }
 
-export { supabase, initSupabase };
+export { supabase, initSupabase, currentDeviceToken };
