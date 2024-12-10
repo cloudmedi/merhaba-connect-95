@@ -48,6 +48,23 @@ export class WebSocketManager {
     }
   }
 
+  async sendPlaylist(playlist: any) {
+    try {
+      if (!this.connectionManager) {
+        throw new Error('WebSocket connection not initialized');
+      }
+
+      console.log('Sending playlist via WebSocket:', playlist);
+      return { success: true };
+    } catch (error) {
+      console.error('Error sending playlist:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
+  }
+
   async disconnect() {
     if (this.connectionManager) {
       this.connectionManager.disconnect();

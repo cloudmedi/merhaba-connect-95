@@ -170,4 +170,26 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
   }
 });
 
+// Add sync-playlist handler
+ipcMain.handle('sync-playlist', async (_event, playlist) => {
+  console.log('Received playlist sync request:', playlist);
+  if (!deviceToken) {
+    console.error('No device token available');
+    return { success: false, error: 'No device token available' };
+  }
+
+  try {
+    if (!wsManager) {
+      wsManager = new WebSocketManager(deviceToken, win);
+    }
+    return await wsManager.sendPlaylist(playlist);
+  } catch (error) {
+    console.error('Error syncing playlist:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
+});
+
 export { app, BrowserWindow };
