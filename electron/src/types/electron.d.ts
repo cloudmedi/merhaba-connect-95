@@ -59,7 +59,7 @@ interface ElectronAPI {
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onWebSocketConnected: (callback: () => void) => () => void;
   onWebSocketError: (callback: (error: string) => void) => () => void;
-  registerDevice: (deviceInfo: { id: string; name: string; type: string }) => Promise<{ token: string }>;
+  registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
 
 declare global {

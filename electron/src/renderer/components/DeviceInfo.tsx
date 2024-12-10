@@ -1,6 +1,6 @@
 import React from 'react';
 import type { SystemInfo } from '../../types/electron';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Cpu, HardDrive, Database, Network, Server } from 'lucide-react';
 
 interface DeviceInfoProps {
