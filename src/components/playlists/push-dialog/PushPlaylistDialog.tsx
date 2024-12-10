@@ -1,20 +1,33 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useState } from "react";
-import { DeviceList } from "./DeviceList";
+import React, { useState } from 'react';
 import { SearchBar } from "./SearchBar";
+import { DeviceList } from "./DeviceList";
 import { DialogFooter } from "./DialogFooter";
 import { DialogHeader } from "./DialogHeader";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { usePushPlaylist } from "./usePushPlaylist";
 import { useDeviceQuery } from "./useDeviceQuery";
 import { toast } from "sonner";
-import type { Device, DeviceCategory, DeviceStatus, DeviceSystemInfo } from "@/pages/Manager/Devices/hooks/types";
+import type { Device, DeviceCategory, DeviceStatus, DeviceSystemInfo, DeviceSchedule } from "@/pages/Manager/Devices/hooks/types";
 
-interface PushPlaylistDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  playlistTitle: string;
-  playlistId: string;
-}
+// Helper function to validate device schedule
+const validateDeviceSchedule = (schedule: any): DeviceSchedule => {
+  if (!schedule) return {};
+  
+  // If it's a string, try to parse it
+  if (typeof schedule === 'string') {
+    try {
+      schedule = JSON.parse(schedule);
+    } catch {
+      return {};
+    }
+  }
+
+  return {
+    powerOn: schedule.powerOn || undefined,
+    powerOff: schedule.powerOff || undefined,
+    ...schedule
+  };
+};
 
 // Helper function to validate device category
 const validateDeviceCategory = (category: string): DeviceCategory => {
@@ -32,11 +45,10 @@ const validateDeviceStatus = (status: string): DeviceStatus => {
     : 'offline';
 };
 
-// Helper function to validate and transform system info
+// Helper function to validate system info
 const validateSystemInfo = (systemInfo: any): DeviceSystemInfo => {
   if (!systemInfo) return {};
   
-  // If it's a string, try to parse it
   if (typeof systemInfo === 'string') {
     try {
       systemInfo = JSON.parse(systemInfo);
@@ -45,7 +57,6 @@ const validateSystemInfo = (systemInfo: any): DeviceSystemInfo => {
     }
   }
 
-  // Ensure the object has the correct shape
   return {
     version: systemInfo.version || undefined,
     cpu: systemInfo.cpu || undefined,
@@ -61,7 +72,12 @@ export function PushPlaylistDialog({
   onClose, 
   playlistTitle, 
   playlistId 
-}: PushPlaylistDialogProps) {
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  playlistTitle: string;
+  playlistId: string;
+}) {
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
@@ -72,7 +88,8 @@ export function PushPlaylistDialog({
     ...device,
     category: validateDeviceCategory(device.category),
     status: validateDeviceStatus(device.status),
-    system_info: validateSystemInfo(device.system_info)
+    system_info: validateSystemInfo(device.system_info),
+    schedule: validateDeviceSchedule(device.schedule)
   }));
 
   const filteredDevices = devices.filter(device =>
@@ -113,7 +130,6 @@ export function PushPlaylistDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader title="Push Playlist" />
-
         <div className="space-y-4">
           <SearchBar 
             searchQuery={searchQuery}

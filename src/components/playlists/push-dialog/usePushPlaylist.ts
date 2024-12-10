@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const CHANNEL_PREFIX = 'device_presence';
-const EVENT_TYPE = 'sync_playlist';
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -54,9 +53,10 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         await channel.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
             await channel.send({
-              type: EVENT_TYPE,
+              type: 'broadcast',
               event: 'broadcast',
               payload: {
+                type: 'sync_playlist',
                 deviceToken: token,
                 playlist: {
                   id: playlist.id,
