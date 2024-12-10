@@ -1,35 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Progress } from '../components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { RefreshCw, Music, Check, AlertCircle, Play } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
 import { AudioPlayer } from './AudioPlayer';
-
-interface SyncStatus {
-  playlistId: string;
-  name: string;
-  progress: number;
-  status: 'pending' | 'syncing' | 'completed' | 'error';
-}
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  file_url: string;
-  bunny_id?: string;
-}
-
-interface Playlist {
-  id: string;
-  name: string;
-  songs: Song[];
-}
-
-interface DownloadProgressData {
-  songId: string;
-  progress: number;
-}
+import { PlaylistList } from './playlist/PlaylistList';
+import { DownloadProgress } from './playlist/DownloadProgress';
+import type { Playlist, SyncStatus, DownloadProgressData } from '../types/playlist';
 
 export function PlaylistSync() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -49,28 +25,18 @@ export function PlaylistSync() {
         const playlist = data.payload.playlist;
         console.log('New playlist received:', playlist);
         
-        setPlaylists(prev => {
-          const exists = prev.some(p => p.id === playlist.id);
-          if (exists) {
-            return prev.map(p => p.id === playlist.id ? playlist : p);
-          }
-          return [...prev, playlist];
-        });
-
-        setSyncStatus(prev => ({
-          ...prev,
-          [playlist.id]: {
-            playlistId: playlist.id,
-            name: playlist.name,
-            progress: 0,
-            status: 'syncing'
-          }
-        }));
-
-        // Otomatik olarak yeni gelen playlist'i çal
-        setCurrentPlaylist(playlist);
-        setCurrentSongIndex(0);
-        setIsPlaying(true);
+        // Send playlist to main process for syncing
+        window.electronAPI.syncPlaylist(playlist)
+          .then(result => {
+            if (result.success) {
+              console.log('Playlist synced successfully');
+            } else {
+              console.error('Failed to sync playlist:', result.error);
+            }
+          })
+          .catch(error => {
+            console.error('Error syncing playlist:', error);
+          });
       }
     });
 
@@ -82,13 +48,33 @@ export function PlaylistSync() {
       }));
     });
 
+    // Listen for updated playlist with local file paths
+    const playlistUpdateCleanup = window.electronAPI.onPlaylistUpdated((playlist: Playlist) => {
+      console.log('Received updated playlist with local paths:', playlist);
+      setPlaylists(prev => {
+        const exists = prev.some(p => p.id === playlist.id);
+        if (exists) {
+          return prev.map(p => p.id === playlist.id ? playlist : p);
+        }
+        return [...prev, playlist];
+      });
+      
+      // Automatically start playing new playlists
+      if (!currentPlaylist) {
+        setCurrentPlaylist(playlist);
+        setCurrentSongIndex(0);
+        setIsPlaying(true);
+      }
+    });
+
     return () => {
       cleanup();
       downloadCleanup();
+      playlistUpdateCleanup();
     };
-  }, []);
+  }, [currentPlaylist]);
 
-  const handlePlayClick = (playlist: Playlist) => {
+  const handlePlaylistSelect = (playlist: Playlist) => {
     setCurrentPlaylist(playlist);
     setCurrentSongIndex(0);
     setIsPlaying(true);
@@ -106,72 +92,18 @@ export function PlaylistSync() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Check className="w-4 h-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'syncing':
-        return <RefreshCw className="w-4 h-4 animate-spin" />;
-      default:
-        return <Music className="w-4 h-4" />;
-    }
-  };
-
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Offline Playlistler</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {playlists.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">
-                WebSocket bağlantısı bekleniyor...
-              </p>
-            ) : (
-              playlists.map((playlist) => (
-                <div 
-                  key={playlist.id} 
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(syncStatus[playlist.id]?.status)}
-                    <div>
-                      <h3 className="font-medium">{playlist.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {playlist.songs?.length || 0} şarkı
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {syncStatus[playlist.id]?.status === 'syncing' ? (
-                      <Progress 
-                        value={syncStatus[playlist.id]?.progress} 
-                        className="w-[100px]"
-                      />
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handlePlayClick(playlist)}
-                        className="flex items-center gap-2"
-                      >
-                        <Play className="w-4 h-4" />
-                        Çal
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <PlaylistList 
+        playlists={playlists}
+        syncStatus={syncStatus}
+        onPlaylistSelect={handlePlaylistSelect}
+        currentPlaylistId={currentPlaylist?.id}
+      />
+
+      {Object.keys(downloadProgress).length > 0 && (
+        <DownloadProgress progress={downloadProgress} />
+      )}
 
       {currentPlaylist && currentPlaylist.songs[currentSongIndex] && (
         <Card className="bg-gray-900 text-white">
@@ -193,25 +125,6 @@ export function PlaylistSync() {
                 autoPlay={isPlaying}
                 onPlayStateChange={setIsPlaying}
               />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {Object.keys(downloadProgress).length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <h4 className="font-medium mb-4">İndirme Durumu</h4>
-            <div className="space-y-2">
-              {Object.entries(downloadProgress).map(([songId, progress]) => (
-                <div key={songId} className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Şarkı ID: {songId}</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  <Progress value={progress} className="h-1" />
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>
