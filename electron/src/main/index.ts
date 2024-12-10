@@ -2,10 +2,9 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import * as si from 'systeminformation';
 import dotenv from 'dotenv';
-import { setupOfflineHandlers } from './ipc/offlineHandlers';
 import { WebSocketManager } from './services/WebSocketManager';
 
-// Load .env file from project root and electron directory
+// Load .env files
 const envPaths = [
   path.join(__dirname, '../../../.env'),
   path.join(__dirname, '../../.env')
@@ -17,18 +16,6 @@ envPaths.forEach(envPath => {
     console.warn(`Warning loading ${envPath}:`, result.error);
   }
 });
-
-// Check environment variables
-const VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
-
-if (!VITE_SUPABASE_URL || !VITE_SUPABASE_ANON_KEY) {
-  console.error('Missing required environment variables:', {
-    VITE_SUPABASE_URL: !!VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: !!VITE_SUPABASE_ANON_KEY
-  });
-}
 
 let win: BrowserWindow | null;
 let deviceToken: string | null = null;
@@ -88,27 +75,7 @@ async function getSystemInfo() {
   }
 }
 
-async function initializeOfflineSupport() {
-  try {
-    if (!deviceToken) {
-      console.error('No device token available for offline support');
-      return;
-    }
-    
-    console.log('Initializing WebSocket with token:', deviceToken);
-    
-    if (wsManager) {
-      await wsManager.disconnect();
-    }
-    wsManager = new WebSocketManager(deviceToken, win);
-    
-    setupOfflineHandlers(deviceToken);
-  } catch (error) {
-    console.error('Error initializing offline support:', error);
-  }
-}
-
-function createWindow() {
+async function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -118,17 +85,16 @@ function createWindow() {
       webSecurity: true,
       preload: path.join(__dirname, '../preload/index.js')
     }
-  })
+  });
 
   win.webContents.on('did-finish-load', () => {
     if (!win) return;
     
     win.webContents.send('env-vars', {
-      VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY
     });
 
-    // Send stored device token if available
     if (deviceToken) {
       win.webContents.send('device-token-update', deviceToken);
     }
@@ -208,3 +174,5 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     throw error;
   }
 });
+
+export { app, BrowserWindow };

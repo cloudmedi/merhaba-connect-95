@@ -45,11 +45,23 @@ export class WebSocketConnectionManager {
         this.isConnecting = false;
         this.notifyRenderer('connected');
 
-        // Join the channel
+        // Join the channel and subscribe to device status changes
         const joinMessage = {
           topic: channelName,
           event: "phx_join",
-          payload: {},
+          payload: {
+            config: {
+              broadcast: {
+                self: true
+              },
+              postgres_changes: [{
+                event: '*',
+                schema: 'public',
+                table: 'devices',
+                filter: `token=eq.${this.deviceToken}`
+              }]
+            }
+          },
           ref: Date.now()
         };
         
