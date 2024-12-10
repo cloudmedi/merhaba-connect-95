@@ -14,9 +14,9 @@ export default defineConfig(({ mode }) => ({
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "../src"),
       "@renderer": path.resolve(__dirname, "./src/renderer"),
-      "@components": path.resolve(__dirname, "./src/components"),
+      "@components": path.resolve(__dirname, "../src/components"),
     },
   },
 }));
