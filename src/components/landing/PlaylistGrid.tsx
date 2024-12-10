@@ -22,7 +22,7 @@ export function PlaylistGrid({
           Örnek Playlist Koleksiyonu
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          İşletmenize özel hazırlanmış profesyonel müzik listelerimizden örnekler
+          İşletmenizin atmosferini zenginleştirecek profesyonel müzik listeleri
         </p>
       </div>
 

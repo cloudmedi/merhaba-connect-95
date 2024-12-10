@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
+import { AudioPreview } from "@/components/landing/AudioPreview";
 import { 
   Music2, 
   Calendar, 
@@ -45,7 +46,17 @@ export default function Landing() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('playlists')
-        .select('*')
+        .select(`
+          *,
+          songs:playlist_songs(
+            songs(
+              id,
+              title,
+              artist,
+              file_url
+            )
+          )
+        `)
         .eq('is_catalog', true)
         .limit(8);
       if (error) throw error;
@@ -77,50 +88,21 @@ export default function Landing() {
     }
   };
 
-  const features = [
-    {
-      title: "Playlist Yönetimi",
-      description: "Müzik listelerinizi kolayca oluşturun, düzenleyin ve yönetin. Şarkıları türe, ruh haline ve kategorilere göre organize edin.",
-      icon: Music2,
-      color: "text-purple-500",
-      bgColor: "bg-purple-100"
-    },
-    {
-      title: "Zamanlama Kontrolü",
-      description: "Farklı zaman ve lokasyonlar için müzik çalma planları oluşturun. Tekrarlayan programlar ayarlayın.",
-      icon: Calendar,
-      color: "text-blue-500",
-      bgColor: "bg-blue-100"
-    },
-    {
-      title: "Cihaz Yönetimi",
-      description: "Tüm müzik cihazlarınızı tek bir merkezden izleyin ve kontrol edin.",
-      icon: Monitor,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-100"
-    },
-    {
-      title: "Duyuru Sistemi",
-      description: "Şarkılar arasında veya programlı zamanlarda çalacak duyurular oluşturun ve yönetin.",
-      icon: Bell,
-      color: "text-amber-500",
-      bgColor: "bg-amber-100"
-    },
-    {
-      title: "Gerçek Zamanlı Analitikler",
-      description: "Çalma sayılarını, popüler şarkıları ve cihaz performans metriklerini takip edin.",
-      icon: BarChart3,
-      color: "text-indigo-500",
-      bgColor: "bg-indigo-100"
-    },
-    {
-      title: "Çoklu Şube Desteği",
-      description: "Birden fazla lokasyondaki müzik sistemini, şubeye özel ayarlarla yönetin.",
-      icon: Building2,
-      color: "text-rose-500",
-      bgColor: "bg-rose-100"
+  const handlePlaylistPlay = (playlist: any) => {
+    if (currentPlayingId === playlist.id) {
+      setIsPlaying(false);
+      setCurrentPlayingId(null);
+    } else {
+      setCurrentPlayingId(playlist.id);
+      setIsPlaying(true);
     }
-  ];
+  };
+
+  const handlePreviewEnd = () => {
+    setIsPlaying(false);
+    setCurrentPlayingId(null);
+    setIsRegisterOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -160,65 +142,21 @@ export default function Landing() {
 
       {/* Playlist Preview Section */}
       {playlists && playlists.length > 0 && (
-        <PlaylistGrid
-          playlists={playlists}
-          currentPlayingId={currentPlayingId}
-          isPlaying={isPlaying}
-          onPlay={(playlist) => {
-            setCurrentPlayingId(playlist.id);
-            setIsPlaying(!isPlaying);
-          }}
-        />
+        <>
+          <PlaylistGrid
+            playlists={playlists}
+            currentPlayingId={currentPlayingId}
+            isPlaying={isPlaying}
+            onPlay={handlePlaylistPlay}
+          />
+          {currentPlayingId && isPlaying && (
+            <AudioPreview
+              playlist={playlists.find(p => p.id === currentPlayingId)}
+              onPreviewEnd={handlePreviewEnd}
+            />
+          )}
+        </>
       )}
-
-      {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Kapsamlı Yönetim Özellikleri
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            İşletmenizin müzik sistemini yönetmek için ihtiyacınız olan her şey tek bir yerde
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature) => (
-            <div 
-              key={feature.title} 
-              className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
-            >
-              <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
-                <feature.icon className={`h-6 w-6 ${feature.color}`} />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-[#6E59A5] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">
-              İşletmenizin Müziğini Dönüştürmeye Hazır mısınız?
-            </h2>
-            <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-              Platformumuzu kullanan binlerce işletmeye katılın ve müşterileriniz için mükemmel atmosferi yaratın.
-            </p>
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={() => setIsRegisterOpen(true)}
-              className="bg-white text-[#6E59A5] hover:bg-gray-100"
-            >
-              Hemen Başlayın
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Register Dialog */}
       <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
