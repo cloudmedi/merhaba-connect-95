@@ -32,7 +32,55 @@ export default function Landing() {
     }
   });
 
-  const { data: playlists } = useHeroPlaylists();
+  const { data: playlists } = useQuery({
+    queryKey: ['landing-playlists'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('playlists')
+        .select(`
+          id,
+          name,
+          artwork_url,
+          genre:genres(name),
+          mood:moods(name),
+          playlist_songs!inner (
+            position,
+            songs (
+              id,
+              title,
+              artist,
+              file_url,
+              bunny_id
+            )
+          )
+        `)
+        .eq('is_catalog', true)
+        .limit(8);
+
+      if (error) {
+        console.error('Error fetching playlists:', error);
+        throw error;
+      }
+
+      return data?.map(playlist => ({
+        id: playlist.id,
+        title: playlist.name,
+        artwork_url: playlist.artwork_url,
+        genre: playlist.genre?.name || 'Çeşitli',
+        mood: playlist.mood?.name || 'Çeşitli',
+        songs: playlist.playlist_songs
+          .sort((a, b) => a.position - b.position)
+          .map(ps => ({
+            id: ps.songs.id,
+            title: ps.songs.title,
+            artist: ps.songs.artist || 'Bilinmeyen Sanatçı',
+            file_url: ps.songs.bunny_id 
+              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}` 
+              : ps.songs.file_url
+          }))
+      }));
+    }
+  });
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -54,6 +102,7 @@ export default function Landing() {
       toast.success('Kaydınız başarıyla alındı. En kısa sürede sizinle iletişime geçeceğiz.');
       setIsRegisterOpen(false);
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
