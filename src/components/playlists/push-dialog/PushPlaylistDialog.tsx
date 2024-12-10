@@ -1,12 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DeviceList } from "./DeviceList";
 import { SearchBar } from "./SearchBar";
 import { DialogFooter } from "./DialogFooter";
 import { usePushPlaylist } from "./usePushPlaylist";
+import { useDeviceQuery } from "./useDeviceQuery";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -24,34 +23,7 @@ export function PushPlaylistDialog({
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
-
-  const { data: devices = [], isLoading } = useQuery({
-    queryKey: ['devices'],
-    queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      
-      if (!userData.user) {
-        return [];
-      }
-      
-      const { data, error } = await supabase
-        .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name
-          )
-        `)
-        .eq('created_by', userData.user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      return data || [];
-    },
-  });
+  const { data: devices = [], isLoading } = useDeviceQuery();
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -64,6 +36,15 @@ export function PushPlaylistDialog({
     } else {
       setSelectedDevices(filteredDevices.map(d => d.id));
     }
+  };
+
+  const handleDevicePush = async () => {
+    if (selectedDevices.length === 0) {
+      toast.error("Lütfen en az bir cihaz seçin");
+      return;
+    }
+
+    await handlePush(selectedDevices);
   };
 
   return (
@@ -98,7 +79,7 @@ export function PushPlaylistDialog({
             selectedCount={selectedDevices.length}
             isSyncing={isSyncing}
             onCancel={onClose}
-            onPush={handlePush}
+            onPush={handleDevicePush}
             selectedDevices={selectedDevices}
           />
         </div>

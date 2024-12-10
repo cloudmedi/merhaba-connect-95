@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DeviceItem } from "./DeviceItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useDeviceQuery } from "./useDeviceQuery";
 
 interface DeviceListProps {
   searchQuery: string;
@@ -10,46 +11,7 @@ interface DeviceListProps {
 }
 
 export function DeviceList({ searchQuery, selectedDevices, onToggleDevice }: DeviceListProps) {
-  const { data: devices = [], isLoading } = useQuery({
-    queryKey: ['devices'],
-    queryFn: async () => {
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!userProfile?.company_id) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name
-          ),
-          schedule_device_assignments (
-            schedule:schedule_events (
-              id,
-              title
-            )
-          ),
-          playlist_assignments (
-            playlist:playlists (
-              id,
-              name
-            )
-          )
-        `)
-        .eq('branches.company_id', userProfile.company_id);
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: devices = [], isLoading } = useDeviceQuery();
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
