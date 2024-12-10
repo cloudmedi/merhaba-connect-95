@@ -7,6 +7,7 @@ export class PresenceChannelManager {
   constructor(
     private supabase: SupabaseClient,
     private deviceToken: string,
+    private deviceId: string,
     private config: Required<PresenceConfig>,
     private onStatusChange: (status: 'online' | 'offline') => Promise<void>
   ) {}
@@ -31,6 +32,7 @@ export class PresenceChannelManager {
       if (status === 'SUBSCRIBED') {
         await this.channel?.track({
           token: this.deviceToken,
+          device_id: this.deviceId,
           online_at: new Date().toISOString()
         });
       }

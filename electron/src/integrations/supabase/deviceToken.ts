@@ -6,16 +6,16 @@ interface DeviceToken {
   expires_at: string;
   mac_address: string;
   system_info?: Record<string, any>;
+  device_id?: string;
 }
 
 export async function createDeviceToken(macAddress: string): Promise<DeviceToken> {
   try {
     console.log('Checking existing tokens for MAC:', macAddress);
     
-    // First check for ANY existing tokens for this MAC address
     const { data: existingTokens, error: checkError } = await supabase
       .from('device_tokens')
-      .select('token, status, expires_at, mac_address, system_info')
+      .select('token, status, expires_at, mac_address, system_info, device_id')
       .eq('mac_address', macAddress)
       .order('created_at', { ascending: false });
 
@@ -26,22 +26,14 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
 
     console.log('Found tokens:', existingTokens);
 
-    // If there are any existing tokens for this MAC address, return the most recent one
     if (existingTokens && existingTokens.length > 0) {
       const mostRecentToken = existingTokens[0] as DeviceToken;
-      console.log('Using existing token:', {
-        token: mostRecentToken.token,
-        status: mostRecentToken.status,
-        expires_at: mostRecentToken.expires_at,
-        mac_address: mostRecentToken.mac_address
-      });
+      console.log('Using existing token:', mostRecentToken);
 
-      // Validate the token data structure
       if (!mostRecentToken.token || !mostRecentToken.status || !mostRecentToken.expires_at || !mostRecentToken.mac_address) {
         throw new Error('Invalid token data structure');
       }
 
-      // Eğer token expired ise yeni token oluştur
       const expirationDate = new Date(mostRecentToken.expires_at);
       if (mostRecentToken.status === 'expired' || expirationDate < new Date()) {
         console.log('Token expired, creating new one');
@@ -65,6 +57,22 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
   const expirationDate = new Date();
   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
+  const { data: deviceData, error: deviceError } = await supabase
+    .from('devices')
+    .insert({
+      name: `Device-${token}`,
+      mac_address: macAddress,
+      category: 'player',
+      status: 'offline'
+    })
+    .select('id')
+    .single();
+
+  if (deviceError) {
+    console.error('Error creating device:', deviceError);
+    throw deviceError;
+  }
+
   const { data: tokenData, error: tokenError } = await supabase
     .from('device_tokens')
     .insert({
@@ -72,8 +80,9 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
       mac_address: macAddress,
       status: 'active',
       expires_at: expirationDate.toISOString(),
+      device_id: deviceData.id
     })
-    .select('token, status, expires_at, mac_address, system_info')
+    .select('token, status, expires_at, mac_address, system_info, device_id')
     .single();
 
   if (tokenError) {
@@ -85,12 +94,7 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
     throw new Error('Failed to create valid token data');
   }
 
-  console.log('Created new token:', {
-    token: tokenData.token,
-    status: tokenData.status,
-    expires_at: tokenData.expires_at,
-    mac_address: tokenData.mac_address
-  });
+  console.log('Created new token:', tokenData);
   
   return tokenData as DeviceToken;
 }

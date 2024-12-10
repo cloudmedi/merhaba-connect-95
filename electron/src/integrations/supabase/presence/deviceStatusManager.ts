@@ -3,16 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export class DeviceStatusManager {
   constructor(private supabase: SupabaseClient) {}
 
-  async updateStatus(deviceToken: string, status: 'online' | 'offline'): Promise<void> {
+  async updateStatus(deviceToken: string, deviceId: string, status: 'online' | 'offline'): Promise<void> {
     try {
-      // Sadece device status'ünü güncelle, token status'üne dokunma
       const { error } = await this.supabase
         .from('devices')
         .update({ 
           status,
           last_seen: new Date().toISOString()
         })
-        .eq('token', deviceToken);
+        .eq('id', deviceId);
 
       if (error) throw error;
     } catch (error) {
@@ -31,7 +30,6 @@ export class DeviceStatusManager {
 
       if (error) throw error;
       
-      // Hem active hem de used durumundaki token'ları kabul et
       return data?.status === 'active' || data?.status === 'used';
     } catch (error) {
       console.error('Error verifying device:', error);
