@@ -6,6 +6,7 @@ export class DeviceStatusManager {
 
   async updateStatus(deviceToken: string, status: DeviceStatus): Promise<void> {
     try {
+      console.log('Updating device status:', { deviceToken, status });
       const { error } = await this.supabase
         .from('devices')
         .update({ 
