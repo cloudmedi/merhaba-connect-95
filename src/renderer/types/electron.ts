@@ -1,1 +1,1 @@
-export type { SystemInfo, WebSocketMessage, ElectronAPI } from '../../types/electron';
+export type { SystemInfo, WebSocketMessage, ElectronAPI } from '../../../electron/src/types/electron';
