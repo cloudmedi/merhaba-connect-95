@@ -1,128 +1,56 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { app } from 'electron';
-import * as path from 'path';
-import * as fs from 'fs-extra';
-import * as crypto from 'crypto';
+import fetch from 'node-fetch';
 
 export class FileSystemManager {
-  private readonly baseDir: string;
-  private readonly deviceId: string;
+  private basePath: string;
 
-  constructor(deviceId: string) {
-    this.deviceId = deviceId;
-    this.baseDir = path.join(app.getPath('userData'), 'offline-music', deviceId);
-    this.initializeDirectories();
-    console.log('FileSystemManager initialized with base directory:', this.baseDir);
+  constructor(deviceToken: string) {
+    this.basePath = path.join(app.getPath('userData'), 'songs', deviceToken);
+    fs.ensureDirSync(this.basePath);
   }
 
-  private initializeDirectories() {
-    const dirs = [
-      path.join(this.baseDir, 'songs'),
-      path.join(this.baseDir, 'playlists')
-    ];
-
-    dirs.forEach(dir => {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        console.log('Created directory:', dir);
-      }
-    });
-  }
-
-  async saveSong(songId: string, songBuffer: Buffer): Promise<string> {
+  async downloadSong(songId: string, url: string): Promise<string> {
     const filePath = this.getSongPath(songId);
-    console.log('Saving song to:', filePath);
+    
+    if (await this.songExists(songId)) {
+      console.log(`Song ${songId} already exists at ${filePath}`);
+      return filePath;
+    }
+
+    console.log(`Downloading song ${songId} from ${url} to ${filePath}`);
     
     try {
-      await fs.ensureDir(path.dirname(filePath));
-      console.log('Ensured directory exists:', path.dirname(filePath));
-
-      await fs.writeFile(filePath, songBuffer);
-      console.log('Successfully wrote file');
-
-      const exists = await fs.pathExists(filePath);
-      if (!exists) {
-        throw new Error('File was not written successfully');
-      }
-
-      const hash = this.calculateFileHash(songBuffer);
-      console.log('Song saved successfully with hash:', hash);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
-      const stats = await fs.stat(filePath);
-      console.log(`Saved file size: ${stats.size} bytes`);
+      const buffer = await response.buffer();
+      await fs.writeFile(filePath, buffer);
       
-      if (stats.size === 0) {
-        throw new Error('Saved file is empty');
-      }
-      
-      return hash;
+      console.log(`Successfully downloaded song ${songId}`);
+      return filePath;
     } catch (error) {
-      console.error('Error saving song:', error);
+      console.error(`Error downloading song ${songId}:`, error);
       throw error;
     }
-  }
-
-  getSongPath(songId: string): string {
-    return path.join(this.baseDir, 'songs', `song_${songId}.mp3`);
   }
 
   async songExists(songId: string): Promise<boolean> {
     const filePath = this.getSongPath(songId);
-    const exists = fs.existsSync(filePath);
-    console.log(`Checking if song ${songId} exists at ${filePath}:`, exists);
-    if (exists) {
-      const stats = await fs.stat(filePath);
-      console.log(`Existing song file size: ${stats.size} bytes`);
-    }
-    return exists;
-  }
-
-  private calculateFileHash(buffer: Buffer): string {
-    return crypto.createHash('sha256').update(buffer).digest('hex');
-  }
-
-  async getStorageStats(): Promise<{ used: number; total: number }> {
-    const songDir = path.join(this.baseDir, 'songs');
-    let used = 0;
-
     try {
-      const files = await fs.readdir(songDir);
-      for (const file of files) {
-        const stats = await fs.stat(path.join(songDir, file));
-        used += stats.size;
-      }
-
-      return {
-        used,
-        total: await this.getDiskSpace()
-      };
-    } catch (error) {
-      console.error('Error getting storage stats:', error);
-      throw error;
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
     }
   }
 
-  private async getDiskSpace(): Promise<number> {
-    // Default to 1GB if we can't get disk space
-    return 1024 * 1024 * 1024;
+  getSongPath(songId: string): string {
+    return path.join(this.basePath, `${songId}.mp3`);
   }
 
-  async cleanup(keepSongIds: string[]): Promise<void> {
-    const songDir = path.join(this.baseDir, 'songs');
-    console.log('Starting cleanup. Keeping songs:', keepSongIds);
-    
-    try {
-      const files = await fs.readdir(songDir);
-      for (const file of files) {
-        const songId = file.replace('song_', '').replace('.mp3', '');
-        if (!keepSongIds.includes(songId)) {
-          console.log('Removing unused song:', file);
-          await fs.unlink(path.join(songDir, file));
-        }
-      }
-      console.log('Cleanup completed');
-    } catch (error) {
-      console.error('Error during cleanup:', error);
-      throw error;
-    }
+  getLocalUrl(songId: string): string {
+    return `file://${this.getSongPath(songId)}`;
   }
 }

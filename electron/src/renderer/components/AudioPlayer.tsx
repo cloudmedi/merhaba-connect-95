@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '../components/ui/button';
-import { Progress } from '../components/ui/progress';
+import { Button } from './ui/button';
+import { Progress } from './ui/progress';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 
 interface AudioPlayerProps {
@@ -40,12 +40,30 @@ export function AudioPlayer({
       }
     };
 
+    const handleError = (e: ErrorEvent) => {
+      console.error('Audio error:', e);
+      setIsPlaying(false);
+      onPlayStateChange?.(false);
+    };
+
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
-    audio.src = audioUrl;
+    // Normalize file URL for Electron
+    const normalizedUrl = audioUrl.startsWith('file://') 
+      ? audioUrl.replace('file://', '') 
+      : audioUrl;
+
+    console.log('Loading audio from URL:', normalizedUrl);
+    audio.src = normalizedUrl;
+
     if (autoPlay) {
-      audio.play().catch(console.error);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
       setIsPlaying(true);
       onPlayStateChange?.(true);
     }
@@ -53,6 +71,7 @@ export function AudioPlayer({
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
       audio.pause();
       audio.src = '';
     };
@@ -64,7 +83,11 @@ export function AudioPlayer({
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(console.error);
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        onPlayStateChange?.(false);
+      });
     }
     
     setIsPlaying(!isPlaying);
@@ -89,7 +112,7 @@ export function AudioPlayer({
       <div className="flex items-center justify-center gap-4">
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={onPrevious}
           disabled={!onPrevious}
           className="text-white hover:text-white/80"
@@ -99,7 +122,7 @@ export function AudioPlayer({
 
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={togglePlay}
           className="text-white hover:text-white/80"
         >
@@ -112,7 +135,7 @@ export function AudioPlayer({
 
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={onNext}
           disabled={!onNext}
           className="text-white hover:text-white/80"
