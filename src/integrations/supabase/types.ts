@@ -511,6 +511,50 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          branch_count: number
+          company_name: string
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          message: string | null
+          phone: string
+          sector_id: string | null
+        }
+        Insert: {
+          branch_count: number
+          company_name: string
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          message?: string | null
+          phone: string
+          sector_id?: string | null
+        }
+        Update: {
+          branch_count?: number
+          company_name?: string
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          sector_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licenses: {
         Row: {
           created_at: string | null
@@ -1093,6 +1137,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sectors: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       song_play_history: {
         Row: {
