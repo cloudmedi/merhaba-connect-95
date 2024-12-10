@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Progress } from '../components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
+import type { WebSocketMessage } from '@/types/electron';
 
 interface SyncStatus {
   playlistId: string;
@@ -21,36 +22,45 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('PlaylistSync: Component mounted');
+    console.log('PlaylistSync: WebSocket dinleyicileri ayarlanıyor');
     
-    const playlistCleanup = window.electronAPI.onPlaylistReceived((playlist: any) => {
-      console.log('PlaylistSync: Playlist received:', playlist);
-      setPlaylists(prev => {
-        const exists = prev.some(p => p.id === playlist.id);
-        if (exists) {
-          return prev.map(p => p.id === playlist.id ? playlist : p);
-        }
-        return [...prev, playlist];
-      });
+    const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
+      console.log('WebSocket mesajı alındı:', data);
       
-      setSyncStatus(prev => ({
-        ...prev,
-        [playlist.id]: {
-          playlistId: playlist.id,
-          name: playlist.name,
-          progress: 0,
-          status: 'syncing'
-        }
-      }));
+      if (data.type === 'sync_playlist' && data.payload.playlist) {
+        const playlist = data.payload.playlist;
+        console.log('Yeni playlist alındı:', playlist);
+        
+        setPlaylists(prev => {
+          // Eğer playlist zaten varsa güncelle, yoksa ekle
+          const exists = prev.some(p => p.id === playlist.id);
+          if (exists) {
+            return prev.map(p => p.id === playlist.id ? playlist : p);
+          }
+          return [...prev, playlist];
+        });
+
+        setSyncStatus(prev => ({
+          ...prev,
+          [playlist.id]: {
+            playlistId: playlist.id,
+            name: playlist.name,
+            progress: 0,
+            status: 'syncing'
+          }
+        }));
+      }
     });
 
     const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
-      console.log('PlaylistSync: Download progress update:', data);
+      console.log('İndirme durumu güncellendi:', data);
+      
       setDownloadProgress(prev => ({
         ...prev,
         [data.songId]: data.progress
       }));
 
+      // İndirme tamamlandığında playlist durumunu güncelle
       if (data.progress === 100) {
         setSyncStatus(prev => {
           const playlistId = Object.keys(prev).find(key => 
@@ -71,8 +81,7 @@ export function PlaylistSync() {
     });
 
     return () => {
-      console.log('PlaylistSync: Component unmounting');
-      playlistCleanup();
+      cleanup();
       downloadCleanup();
     };
   }, []);
