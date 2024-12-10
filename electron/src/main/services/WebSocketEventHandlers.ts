@@ -101,7 +101,7 @@ export class WebSocketEventHandlers {
     }, 30000);
   }
 
-  private sendMessage(message: any) {
+  public sendMessage(message: any) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.log('WebSocketEventHandlers: Connection not ready, queueing message');
       this.messageQueue.push(message);

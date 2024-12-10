@@ -37,13 +37,14 @@ export class WebSocketManager {
   }
 
   private startConnectionCheck() {
+    console.log('WebSocketManager: Starting connection check interval');
     this.reconnectInterval = setInterval(() => {
-      console.log('WebSocketManager: Checking connection status');
+      console.log('WebSocketManager: Checking connection status:', this.isConnected);
       if (!this.isConnected) {
         console.log('WebSocketManager: Connection lost, attempting to reconnect');
         this.initializeWebSocket();
       }
-    }, 30000); // Her 30 saniyede bir kontrol et
+    }, 30000);
   }
 
   private initializeWebSocket() {
@@ -52,7 +53,7 @@ export class WebSocketManager {
   }
 
   private handleConnectionEstablished(ws: WebSocket) {
-    console.log('WebSocketManager: Connection established');
+    console.log('WebSocketManager: Connection established successfully');
     this.ws = ws;
     this.isConnected = true;
     this.eventHandlers = new WebSocketEventHandlers(
@@ -60,11 +61,17 @@ export class WebSocketManager {
       this.win,
       this.messageQueue,
       () => {
+        console.log('WebSocketManager: Connection reset requested');
         this.connectionManager.resetConnection();
         this.isConnected = true;
       }
     );
     this.eventHandlers.setupEventHandlers();
+
+    // Process any queued messages
+    if (this.messageQueue.length > 0) {
+      console.log('WebSocketManager: Processing queued messages:', this.messageQueue.length);
+    }
   }
 
   private handleConnectionFailed() {
@@ -84,6 +91,7 @@ export class WebSocketManager {
       }
     } else {
       console.log('WebSocketManager: Connection not ready, message queued');
+      console.log('WebSocketManager: Current WebSocket state:', this.ws?.readyState);
       if (!this.isConnected) {
         console.log('WebSocketManager: Attempting to reconnect...');
         this.initializeWebSocket();
