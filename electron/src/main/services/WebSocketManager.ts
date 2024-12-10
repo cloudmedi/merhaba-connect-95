@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
-import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT, HEARTBEAT_EVENT } from '../../types/events';
+import { PLAYLIST_SYNC_EVENT, HEARTBEAT_EVENT } from '../../types/events';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -41,22 +41,21 @@ export class WebSocketManager {
         console.log('WebSocket connection established');
         this.isConnected = true;
 
-        const channelName = `${REALTIME_CHANNEL_PREFIX}${this.deviceToken}`;
+        // Doğru kanal formatını kullanarak subscribe oluyoruz
+        const channelName = `realtime:device_${this.deviceToken}`;
         console.log('Subscribing to channel:', channelName);
         
         const joinMessage = {
           topic: channelName,
           event: "phx_join",
-          payload: { 
-            device_token: this.deviceToken,
-            timestamp: new Date().toISOString()
-          },
+          payload: {},
           ref: Date.now()
         };
         
         console.log('Sending join message:', JSON.stringify(joinMessage, null, 2));
         this.ws?.send(JSON.stringify(joinMessage));
 
+        // Bekleyen mesajları gönder
         while (this.messageQueue.length > 0) {
           const message = this.messageQueue.shift();
           this.sendMessage(message);
@@ -68,16 +67,16 @@ export class WebSocketManager {
           const data = JSON.parse(event.data.toString());
           console.log('WebSocket message received:', JSON.stringify(data, null, 2));
 
+          // Broadcast mesajlarını işle
           if (data.event === "broadcast" && data.payload) {
             const payload = data.payload;
             
-            // Gelen mesajın içindeki asıl payload'ı kontrol ediyoruz
-            if (payload.type === PLAYLIST_SYNC_EVENT && payload.payload?.playlist) {
-              console.log('Playlist sync message received:', payload.payload.playlist);
+            if (payload.type === PLAYLIST_SYNC_EVENT && payload.playlist) {
+              console.log('Playlist sync message received:', payload.playlist);
               if (this.win) {
-                this.win.webContents.send('playlist-received', payload.payload.playlist);
+                this.win.webContents.send('playlist-received', payload.playlist);
               }
-            } else if (payload.event === HEARTBEAT_EVENT) {
+            } else if (payload.type === HEARTBEAT_EVENT) {
               console.log('Heartbeat received:', payload);
             }
           }
@@ -110,8 +109,16 @@ export class WebSocketManager {
     }
 
     try {
-      console.log('Sending message through WebSocket:', JSON.stringify(message, null, 2));
-      this.ws.send(JSON.stringify(message));
+      const channelName = `realtime:device_${this.deviceToken}`;
+      const broadcastMessage = {
+        topic: channelName,
+        event: "broadcast",
+        payload: message,
+        ref: Date.now()
+      };
+
+      console.log('Sending message through WebSocket:', JSON.stringify(broadcastMessage, null, 2));
+      this.ws.send(JSON.stringify(broadcastMessage));
     } catch (error) {
       console.error('Error sending message:', error);
       this.messageQueue.push(message);

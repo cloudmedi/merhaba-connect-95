@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT } from "@/integrations/supabase/presence/types";
+import { PLAYLIST_SYNC_EVENT } from "@/integrations/supabase/presence/types";
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -44,18 +44,17 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         bunny_id: ps.songs.bunny_id
       }));
 
-      // Send to each device using tokens
+      // Her cihaz için broadcast mesajı gönder
       for (const token of deviceTokens) {
         if (!token) continue;
 
-        const channelName = `${REALTIME_CHANNEL_PREFIX}${token}`;
+        const channelName = `realtime:device_${token}`;
         const channel = supabase.channel(channelName);
         
         console.log(`Sending playlist to channel: ${channelName}`);
         
         await channel.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            // Electron'un beklediği formatta mesaj gönderiyoruz
             const message = {
               type: PLAYLIST_SYNC_EVENT,
               payload: {
@@ -67,8 +66,6 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
               }
             };
 
-            console.log('Sending message:', message);
-            
             await channel.send({
               type: 'broadcast',
               event: 'broadcast',
