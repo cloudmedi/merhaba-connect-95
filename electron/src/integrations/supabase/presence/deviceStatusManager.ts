@@ -30,6 +30,8 @@ export class DeviceStatusManager {
         .single();
 
       if (error) throw error;
+      
+      // Hem active hem de used durumundaki token'ları kabul et
       return data?.status === 'active' || data?.status === 'used';
     } catch (error) {
       console.error('Error verifying device:', error);
