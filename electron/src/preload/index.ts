@@ -10,7 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getEnvVars: () => new Promise((resolve) => {
     ipcRenderer.once('env-vars', (_event, vars) => resolve(vars));
   }),
-  // Offline functionality
   syncPlaylist: (playlist: any) => {
     console.log('Syncing playlist in preload:', playlist);
     return ipcRenderer.invoke('sync-playlist', playlist);
@@ -41,16 +40,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('websocket-message', handler);
     };
   },
-  onPlaylistReceived: (callback: (playlist: any) => void) => {
-    console.log('Setting up playlist received listener');
+  onPlaylistUpdated: (callback: (playlist: any) => void) => {
+    console.log('Setting up playlist updated listener');
     const handler = (_event: any, playlist: any) => {
-      console.log('Playlist received in preload:', playlist);
+      console.log('Playlist updated in preload:', playlist);
       callback(playlist);
     };
-    ipcRenderer.on('playlist-received', handler);
+    ipcRenderer.on('playlist-updated', handler);
     return () => {
-      console.log('Removing playlist received listener');
-      ipcRenderer.removeListener('playlist-received', handler);
+      console.log('Removing playlist updated listener');
+      ipcRenderer.removeListener('playlist-updated', handler);
     };
   },
   registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)

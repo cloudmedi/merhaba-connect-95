@@ -1,12 +1,17 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Progress } from '../ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import type { Playlist, SyncStatus } from '../../types/playlist';
 
 interface PlaylistListProps {
-  playlists: Playlist[];
-  syncStatus: Record<string, SyncStatus>;
-  onPlaylistSelect: (playlist: Playlist) => void;
+  playlists: any[];
+  syncStatus: Record<string, {
+    playlistId: string;
+    name: string;
+    progress: number;
+    status: 'pending' | 'syncing' | 'completed' | 'error';
+  }>;
+  onPlaylistSelect?: (playlist: any) => void;
   currentPlaylistId?: string;
 }
 
@@ -47,7 +52,7 @@ export function PlaylistList({
                 className={`flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors ${
                   currentPlaylistId === playlist.id ? 'bg-purple-50' : ''
                 }`}
-                onClick={() => onPlaylistSelect(playlist)}
+                onClick={() => onPlaylistSelect?.(playlist)}
               >
                 <div className="flex items-center gap-3">
                   {getStatusIcon(syncStatus[playlist.id]?.status)}

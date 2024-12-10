@@ -59,6 +59,7 @@ export interface ElectronAPI {
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onWebSocketConnected: (callback: () => void) => () => void;
   onWebSocketError: (callback: (error: string) => void) => () => void;
+  onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
   registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
 
