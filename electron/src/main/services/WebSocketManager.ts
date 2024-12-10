@@ -68,12 +68,15 @@ export class WebSocketManager {
           const data = JSON.parse(event.data.toString());
           console.log('WebSocket message received:', JSON.stringify(data, null, 2));
 
-          if (data.event === "broadcast") {
+          if (data.event === "broadcast" && data.payload) {
             const payload = data.payload;
             
-            if (payload.type === PLAYLIST_SYNC_EVENT && this.win) {
-              console.log('Playlist sync message received:', payload);
-              this.win.webContents.send('playlist-received', payload.playlist);
+            // Gelen mesajın içindeki asıl payload'ı kontrol ediyoruz
+            if (payload.type === PLAYLIST_SYNC_EVENT && payload.payload?.playlist) {
+              console.log('Playlist sync message received:', payload.payload.playlist);
+              if (this.win) {
+                this.win.webContents.send('playlist-received', payload.payload.playlist);
+              }
             } else if (payload.event === HEARTBEAT_EVENT) {
               console.log('Heartbeat received:', payload);
             }
