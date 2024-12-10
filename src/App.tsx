@@ -1,101 +1,31 @@
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
-import Index from "./pages/Index";
-import Manager from "./pages/Manager";
-import Devices from "./pages/Manager/Devices";
-import Schedule from "./pages/Manager/Schedule";
-import Settings from "./pages/Manager/Settings";
-import { AuthProvider } from "@/hooks/useAuth";
-import ManagerLogin from "./pages/Manager/Auth/Login";
-import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
-import SuperAdmin from "./pages/SuperAdmin";
-import Announcements from "./pages/Manager/Announcements";
-import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
-import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Home } from './pages/Home';
+import { Manager } from './pages/Manager';
+import { SuperAdmin } from './pages/SuperAdmin';
+import { NotFound } from './pages/NotFound';
 
-// Lazy load the PlaylistDetail component
-const PlaylistDetail = lazy(() => import("./pages/Manager/Playlists/PlaylistDetail").then(module => ({
-  default: module.PlaylistDetail
-})));
-
-const queryClient = new QueryClient();
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute
+      gcTime: 1000 * 60 * 5, // 5 minutes
+      retry: 2,
+    },
   },
-  {
-    path: "/manager/login",
-    element: (
-      <AuthProvider>
-        <ManagerLogin />
-      </AuthProvider>
-    ),
-  },
-  {
-    path: "/super-admin/login",
-    element: (
-      <AuthProvider>
-        <SuperAdminLogin />
-      </AuthProvider>
-    ),
-  },
-  {
-    path: "/manager",
-    element: (
-      <AuthProvider>
-        <Manager />
-      </AuthProvider>
-    ),
-    children: [
-      {
-        path: "devices",
-        element: <Devices />,
-      },
-      {
-        path: "schedule",
-        element: <Schedule />,
-      },
-      {
-        path: "announcements",
-        element: <Announcements />,
-      },
-      {
-        path: "playlists/:id",
-        element: (
-          <Suspense fallback={<PlaylistDetailLoader />}>
-            <PlaylistDetail />
-          </Suspense>
-        ),
-      },
-      {
-        path: "playlists/category/:categoryId",
-        element: <CategoryPlaylists />,
-      },
-      {
-        path: "settings/*",
-        element: <Settings />,
-      },
-    ],
-  },
-  {
-    path: "/super-admin/*",
-    element: (
-      <AuthProvider>
-        <SuperAdmin />
-      </AuthProvider>
-    ),
-  },
-]);
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/manager/*" element={<Manager />} />
+          <Route path="/super-admin/*" element={<SuperAdmin />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
     </QueryClientProvider>
   );
 }

@@ -64,7 +64,8 @@ export function PushPlaylistDialog({
           />
 
           <DeviceList
-            searchQuery={searchQuery}
+            isLoading={isLoading}
+            devices={filteredDevices}
             selectedDevices={selectedDevices}
             onToggleDevice={(deviceId) => {
               setSelectedDevices(prev =>
@@ -80,7 +81,6 @@ export function PushPlaylistDialog({
             isSyncing={isSyncing}
             onCancel={onClose}
             onPush={handleDevicePush}
-            selectedDevices={selectedDevices}
           />
         </div>
       </DialogContent>

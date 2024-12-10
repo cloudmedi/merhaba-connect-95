@@ -15,7 +15,6 @@ export function useDeviceQuery() {
 
       console.log('User ID:', userData.user.id);
       
-      // Sadece kullanıcının oluşturduğu cihazları getir
       const { data, error } = await supabase
         .from('devices')
         .select(`
@@ -35,5 +34,8 @@ export function useDeviceQuery() {
       console.log('Fetched devices:', data);
       return data || [];
     },
+    staleTime: 1000 * 60, // 1 minute
+    gcTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 }
