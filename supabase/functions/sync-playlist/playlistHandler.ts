@@ -13,9 +13,15 @@ export class PlaylistHandler {
 
   async handlePlaylistSync(data: WebSocketMessage, senderToken: string) {
     try {
+      console.log('Handling playlist sync:', data);
+      
+      if (!data.payload || !data.payload.playlist || !data.payload.devices) {
+        throw new Error('Invalid playlist data structure');
+      }
+
       const { playlistId, devices } = data.payload;
       
-      if (!playlistId || !devices) {
+      if (!playlistId || !Array.isArray(devices) || devices.length === 0) {
         throw new Error('Invalid playlist data');
       }
 
@@ -39,6 +45,7 @@ export class PlaylistHandler {
         .single();
 
       if (playlistError || !playlist) {
+        console.error('Playlist fetch error:', playlistError);
         throw new Error('Playlist not found');
       }
 
@@ -56,6 +63,8 @@ export class PlaylistHandler {
           }))
       };
 
+      console.log('Formatted playlist:', formattedPlaylist);
+
       // Her hedef cihaza gönder
       for (const deviceToken of devices) {
         const targetSocket = this.deviceManager.getDeviceSocket(deviceToken);
@@ -67,6 +76,8 @@ export class PlaylistHandler {
               playlist: formattedPlaylist
             }
           }));
+        } else {
+          console.warn('Device not connected:', deviceToken);
         }
       }
 

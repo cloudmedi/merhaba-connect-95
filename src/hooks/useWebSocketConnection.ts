@@ -46,13 +46,16 @@ export function useWebSocketConnection() {
             
             switch (data.type) {
               case 'auth_success':
-                toast.success('WebSocket connection authenticated');
+                console.log('WebSocket authenticated successfully');
                 break;
               case 'sync_success':
                 toast.success('Playlist sync successful');
                 break;
-              case 'error':
-                toast.error(data.payload.message || 'An error occurred');
+              case 'sync_error':
+                toast.error(data.payload.message || 'Playlist sync failed');
+                break;
+              case 'presence_update':
+                console.log('Device presence updated:', data.payload);
                 break;
               default:
                 console.log('Unhandled message type:', data.type);
@@ -89,11 +92,24 @@ export function useWebSocketConnection() {
   }, []);
 
   const sendMessage = (message: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
-    } else {
+    if (!wsRef.current) {
+      console.error('WebSocket not initialized');
+      toast.error('WebSocket connection not ready');
+      return;
+    }
+
+    if (wsRef.current.readyState !== WebSocket.OPEN) {
       console.error('WebSocket is not connected');
-      toast.error('WebSocket is not connected');
+      toast.error('WebSocket connection lost');
+      return;
+    }
+
+    try {
+      console.log('Sending WebSocket message:', message);
+      wsRef.current.send(JSON.stringify(message));
+    } catch (error) {
+      console.error('Error sending WebSocket message:', error);
+      toast.error('Failed to send message');
     }
   };
 
