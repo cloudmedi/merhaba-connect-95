@@ -1,10 +1,12 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { DeviceList } from "./DeviceList";
 import { SearchBar } from "./SearchBar";
 import { DialogFooter } from "./DialogFooter";
+import { DialogHeader } from "./DialogHeader";
 import { usePushPlaylist } from "./usePushPlaylist";
 import { useDeviceQuery } from "./useDeviceQuery";
+import { toast } from "sonner";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -38,15 +40,29 @@ export function PushPlaylistDialog({
   };
 
   const handleDevicePush = async () => {
-    await handlePush(selectedDevices);
+    if (selectedDevices.length === 0) {
+      toast.error("Lütfen en az bir cihaz seçin");
+      return;
+    }
+
+    try {
+      const result = await handlePush(selectedDevices);
+      if (result.success) {
+        toast.success(`Playlist ${selectedDevices.length} cihaza başarıyla gönderildi`);
+        onClose();
+      } else {
+        toast.error(result.error || "Playlist gönderilirken bir hata oluştu");
+      }
+    } catch (error) {
+      console.error('Push error:', error);
+      toast.error("İşlem sırasında bir hata oluştu");
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Push Playlist</DialogTitle>
-        </DialogHeader>
+        <DialogHeader title="Push Playlist" />
 
         <div className="space-y-4">
           <SearchBar 
@@ -75,7 +91,6 @@ export function PushPlaylistDialog({
             isSyncing={isSyncing}
             onCancel={onClose}
             onPush={handleDevicePush}
-            selectedDevices={selectedDevices}
           />
         </div>
       </DialogContent>

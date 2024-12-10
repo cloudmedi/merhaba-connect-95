@@ -5,19 +5,13 @@ export class WebSocketManager {
   private ws: WebSocket | null = null;
   private reconnectInterval: NodeJS.Timeout | null = null;
   private isConnected: boolean = false;
-  private supabaseUrl: string;
-  private supabaseKey: string;
-  private deviceToken: string;
+  private messageQueue: any[] = [];
 
-  constructor(deviceToken: string, private win: BrowserWindow | null) {
-    console.log('WebSocketManager: Başlatılıyor', { deviceToken });
+  constructor(private deviceToken: string, private win: BrowserWindow | null) {
+    console.log('WebSocketManager: Initializing', { deviceToken });
     
-    this.deviceToken = deviceToken;
-    this.supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-    this.supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-    
-    if (!this.supabaseUrl || !this.supabaseKey) {
-      console.error('WebSocketManager: Supabase bilgileri eksik');
+    if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
+      console.error('WebSocketManager: Missing Supabase configuration');
       return;
     }
 
@@ -26,10 +20,10 @@ export class WebSocketManager {
   }
 
   private startConnectionCheck() {
-    console.log('Bağlantı kontrol döngüsü başlatılıyor');
+    console.log('Starting connection check loop');
     this.reconnectInterval = setInterval(() => {
       if (!this.isConnected) {
-        console.log('Bağlantı koptu, yeniden bağlanılıyor...');
+        console.log('Connection lost, attempting to reconnect...');
         this.initializeWebSocket();
       }
     }, 30000);
@@ -37,16 +31,16 @@ export class WebSocketManager {
 
   private initializeWebSocket() {
     try {
-      const wsUrl = `${this.supabaseUrl.replace('https://', 'wss://')}/realtime/v1/websocket?apikey=${this.supabaseKey}&vsn=1.0.0`;
-      console.log('WebSocket bağlantısı başlatılıyor:', wsUrl);
+      const wsUrl = `${process.env.VITE_SUPABASE_URL.replace('https://', 'wss://')}/realtime/v1/websocket?apikey=${process.env.VITE_SUPABASE_ANON_KEY}&vsn=1.0.0`;
+      console.log('Initializing WebSocket connection:', wsUrl);
 
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('WebSocket bağlantısı kuruldu');
+        console.log('WebSocket connection established');
         this.isConnected = true;
 
-        // Cihaza özel kanala abone ol
+        // Subscribe to device-specific channel
         const joinMessage = {
           topic: `realtime:device_${this.deviceToken}`,
           event: "phx_join",
@@ -58,45 +52,84 @@ export class WebSocketManager {
         };
         
         this.ws?.send(JSON.stringify(joinMessage));
-        console.log('Kanal katılım mesajı gönderildi:', joinMessage);
+        console.log('Channel join message sent:', joinMessage);
+
+        // Process any queued messages
+        while (this.messageQueue.length > 0) {
+          const message = this.messageQueue.shift();
+          this.sendMessage(message);
+        }
       };
 
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data.toString());
-          console.log('WebSocket mesajı alındı:', data);
+          console.log('WebSocket message received:', data);
 
-          if (data.event === "broadcast" && 
-              data.payload?.deviceToken === this.deviceToken) {
-            console.log('Playlist sync mesajı alındı:', data.payload);
+          if (data.event === "broadcast" && data.payload?.playlist) {
+            console.log('Playlist sync message received:', data.payload);
             
             if (this.win) {
-              this.win.webContents.send('playlist-received', data.payload.playlist);
+              this.win.webContents.send('playlist-received', {
+                playlist: data.payload.playlist,
+                status: 'success'
+              });
             }
           }
         } catch (error) {
-          console.error('Mesaj işleme hatası:', error);
+          console.error('Error processing message:', error);
+          if (this.win) {
+            this.win.webContents.send('sync-error', {
+              error: 'Failed to process received message'
+            });
+          }
         }
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket hatası:', error);
+        console.error('WebSocket error:', error);
         this.isConnected = false;
+        if (this.win) {
+          this.win.webContents.send('sync-error', {
+            error: 'WebSocket connection error'
+          });
+        }
       };
 
       this.ws.onclose = () => {
-        console.log('WebSocket bağlantısı kapandı');
+        console.log('WebSocket connection closed');
         this.isConnected = false;
+        if (this.win) {
+          this.win.webContents.send('sync-status', {
+            status: 'disconnected'
+          });
+        }
       };
 
     } catch (error) {
-      console.error('WebSocket başlatma hatası:', error);
+      console.error('Error initializing WebSocket:', error);
       this.isConnected = false;
     }
   }
 
+  public async sendMessage(message: any) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.log('Connection not ready, queueing message');
+      this.messageQueue.push(message);
+      return;
+    }
+
+    try {
+      console.log('Sending message:', message);
+      this.ws.send(JSON.stringify(message));
+    } catch (error) {
+      console.error('Error sending message:', error);
+      this.messageQueue.push(message);
+    }
+  }
+
   public async disconnect() {
-    console.log('WebSocket kapatılıyor');
+    console.log('Disconnecting WebSocket');
     if (this.reconnectInterval) {
       clearInterval(this.reconnectInterval);
       this.reconnectInterval = null;

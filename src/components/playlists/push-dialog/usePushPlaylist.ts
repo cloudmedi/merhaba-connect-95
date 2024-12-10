@@ -7,13 +7,12 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
   const handlePush = async (selectedDevices: string[]) => {
     if (selectedDevices.length === 0) {
-      toast.error("Lütfen en az bir cihaz seçin");
-      return;
+      return { success: false, error: "Lütfen en az bir cihaz seçin" };
     }
 
     try {
       setIsSyncing(true);
-      toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
+      console.log('Starting playlist sync for devices:', selectedDevices);
 
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
@@ -41,21 +40,23 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
           : ps.songs.file_url
       }));
 
-      // Seçili cihazların token'larını al
+      // Get device tokens
       const { data: devices } = await supabase
         .from('devices')
         .select('token')
         .in('id', selectedDevices);
 
-      if (!devices) throw new Error('Cihaz token\'ları alınamadı');
+      if (!devices) {
+        throw new Error('Device tokens could not be retrieved');
+      }
 
-      // Her cihaz için playlist'i gönder
+      // Send to each device
       for (const device of devices) {
         if (!device.token) continue;
 
         const channel = supabase.channel(`device_${device.token}`);
         
-        channel.send({
+        await channel.send({
           type: 'broadcast',
           event: 'sync_playlist',
           payload: {
@@ -69,12 +70,13 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         });
       }
 
-      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
-      onClose();
-
+      return { success: true };
     } catch (error: any) {
       console.error('Error pushing playlist:', error);
-      toast.error("Playlist gönderilirken bir hata oluştu");
+      return { 
+        success: false, 
+        error: error.message || "Playlist gönderilirken bir hata oluştu" 
+      };
     } finally {
       setIsSyncing(false);
     }
