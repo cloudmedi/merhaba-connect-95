@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
 import { AuthProvider } from '@/hooks/useAuth';
@@ -19,6 +20,10 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <Landing />,
+  },
+  {
+    path: "/dashboard",
     element: <Index />,
   },
   {
