@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Computer } from "lucide-react";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -60,17 +60,24 @@ export function OfflinePlayerApp() {
   };
 
   const handleRegister = async () => {
-    const deviceInfo = {
-      id: crypto.randomUUID(),
-      name: 'Offline Player',
-      type: 'desktop'
-    };
+    try {
+      // First get a device token
+      const deviceToken = await window.electronAPI.getDeviceId();
+      if (!deviceToken) {
+        throw new Error("Could not generate device token");
+      }
 
-    const result = await window.electronAPI.registerDevice(deviceInfo);
-    setIsRegistered(true);
-    setDeviceId(deviceInfo.id);
-    setToken(result.token);
-    toast.success(`Device registered successfully. Your token is: ${result.token}`);
+      // Register device with the token
+      await window.electronAPI.registerDevice({ token: deviceToken });
+      
+      setIsRegistered(true);
+      setDeviceId(deviceToken);
+      setToken(deviceToken);
+      toast.success(`Device registered successfully. Your token is: ${deviceToken}`);
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error("Failed to register device");
+    }
   };
 
   const handlePlayPlaylist = (playlist: any) => {

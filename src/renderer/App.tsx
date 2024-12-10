@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { initSupabase } from '../integrations/supabase/client';
+import { supabase, initSupabase } from '../integrations/supabase/client';
 import { createDeviceToken } from '../integrations/supabase/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
 import type { SystemInfo } from '../../electron/src/types/electron';
@@ -28,7 +28,6 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        // Initialize Supabase client
         await initSupabase();
         
         const macAddress = await window.electronAPI.getMacAddress();
