@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 
-interface DialogFooterProps {
+export interface DialogFooterProps {
   selectedCount: number;
   isSyncing: boolean;
   onCancel: () => void;
-  onPush: (selectedDevices: string[]) => void;
+  onPush: () => Promise<void>;
   selectedDevices: string[];
 }
 
@@ -25,8 +25,8 @@ export function DialogFooter({
           İptal
         </Button>
         <Button 
-          onClick={() => onPush(selectedDevices)} 
-          disabled={isSyncing}
+          onClick={onPush} 
+          disabled={isSyncing || selectedDevices.length === 0}
         >
           {isSyncing ? "Gönderiliyor..." : "Cihazlara Gönder"}
         </Button>

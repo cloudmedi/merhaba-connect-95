@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Home } from './pages/Home';
-import { Manager } from './pages/Manager';
-import { SuperAdmin } from './pages/SuperAdmin';
-import { NotFound } from './pages/NotFound';
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import Index from "./pages/Index";
+import Manager from "./pages/Manager";
+import SuperAdmin from "./pages/SuperAdmin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,17 +15,26 @@ const queryClient = new QueryClient({
   },
 });
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/manager/*",
+    element: <Manager />,
+  },
+  {
+    path: "/super-admin/*",
+    element: <SuperAdmin />,
+  },
+]);
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/manager/*" element={<Manager />} />
-          <Route path="/super-admin/*" element={<SuperAdmin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+      <RouterProvider router={router} />
+      <Toaster />
     </QueryClientProvider>
   );
 }
