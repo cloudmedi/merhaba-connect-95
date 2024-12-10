@@ -10,16 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
 import { AudioPreview } from "@/components/landing/AudioPreview";
-import { 
-  Music2, 
-  Calendar, 
-  Bell, 
-  Monitor, 
-  BarChart3, 
-  Building2,
-  PlayCircle,
-  Users
-} from "lucide-react";
+import { PlayCircle, Users } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -27,7 +18,6 @@ export default function Landing() {
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Sektörleri getir
   const { data: sectors } = useQuery({
     queryKey: ['sectors'],
     queryFn: async () => {
@@ -40,7 +30,6 @@ export default function Landing() {
     }
   });
 
-  // Hero playlistleri getir
   const { data: playlists } = useQuery({
     queryKey: ['hero-playlists'],
     queryFn: async () => {
@@ -48,19 +37,34 @@ export default function Landing() {
         .from('playlists')
         .select(`
           *,
-          songs:playlist_songs(
-            songs(
+          playlist_songs (
+            position,
+            songs (
               id,
               title,
               artist,
-              file_url
+              file_url,
+              bunny_id
             )
           )
         `)
         .eq('is_catalog', true)
         .limit(8);
+      
       if (error) throw error;
-      return data;
+
+      // Şarkı URL'lerini düzenle
+      return data.map(playlist => ({
+        ...playlist,
+        songs: playlist.playlist_songs
+          .sort((a, b) => a.position - b.position)
+          .map(ps => ({
+            ...ps.songs,
+            file_url: ps.songs.bunny_id 
+              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+              : ps.songs.file_url
+          }))
+      }));
     }
   });
 
@@ -106,7 +110,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-blue-100 opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -140,7 +143,6 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Playlist Preview Section */}
       {playlists && playlists.length > 0 && (
         <>
           <PlaylistGrid
@@ -158,7 +160,6 @@ export default function Landing() {
         </>
       )}
 
-      {/* Register Dialog */}
       <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
