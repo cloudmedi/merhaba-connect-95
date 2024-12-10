@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
 import { AudioPreview } from "@/components/landing/AudioPreview";
 import { PlayCircle, Users } from "lucide-react";
-import { useHeroPlaylists } from "@/components/landing/hooks/useHeroPlaylists";
+import { usePublicPlaylists } from "@/components/landing/hooks/usePublicPlaylists";
 import type { PreviewPlaylist } from "@/components/landing/types";
 
 export default function Landing() {
@@ -32,55 +32,7 @@ export default function Landing() {
     }
   });
 
-  const { data: playlists } = useQuery({
-    queryKey: ['landing-playlists'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          artwork_url,
-          genre:genres(name),
-          mood:moods(name),
-          playlist_songs!inner (
-            position,
-            songs (
-              id,
-              title,
-              artist,
-              file_url,
-              bunny_id
-            )
-          )
-        `)
-        .eq('is_catalog', true)
-        .limit(8);
-
-      if (error) {
-        console.error('Error fetching playlists:', error);
-        throw error;
-      }
-
-      return data?.map(playlist => ({
-        id: playlist.id,
-        title: playlist.name,
-        artwork_url: playlist.artwork_url,
-        genre: playlist.genre?.name || 'Çeşitli',
-        mood: playlist.mood?.name || 'Çeşitli',
-        songs: playlist.playlist_songs
-          .sort((a, b) => a.position - b.position)
-          .map(ps => ({
-            id: ps.songs.id,
-            title: ps.songs.title,
-            artist: ps.songs.artist || 'Bilinmeyen Sanatçı',
-            file_url: ps.songs.bunny_id 
-              ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}` 
-              : ps.songs.file_url
-          }))
-      }));
-    }
-  });
+  const { data: playlists } = usePublicPlaylists();
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
