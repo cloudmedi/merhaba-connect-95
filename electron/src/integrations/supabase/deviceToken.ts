@@ -6,7 +6,6 @@ interface DeviceToken {
   expires_at: string;
   mac_address: string;
   system_info?: Record<string, any>;
-  device_id?: string;
 }
 
 export async function createDeviceToken(macAddress: string): Promise<DeviceToken> {
@@ -15,7 +14,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
     
     const { data: existingTokens, error: checkError } = await supabase
       .from('device_tokens')
-      .select('token, status, expires_at, mac_address, system_info, device_id')
+      .select('token, status, expires_at, mac_address, system_info')
       .eq('mac_address', macAddress)
       .order('created_at', { ascending: false });
 
@@ -27,7 +26,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
     console.log('Found tokens:', existingTokens);
 
     if (existingTokens && existingTokens.length > 0) {
-      const mostRecentToken = existingTokens[0] as DeviceToken;
+      const mostRecentToken = existingTokens[0];
       console.log('Using existing token:', mostRecentToken);
 
       if (!mostRecentToken.token || !mostRecentToken.status || !mostRecentToken.expires_at || !mostRecentToken.mac_address) {
@@ -57,24 +56,6 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
   const expirationDate = new Date();
   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
-  // First create a device
-  const { data: deviceData, error: deviceError } = await supabase
-    .from('devices')
-    .insert({
-      name: `Device-${token}`,
-      mac_address: macAddress,
-      category: 'player',
-      status: 'offline'
-    })
-    .select('id')
-    .single();
-
-  if (deviceError) {
-    console.error('Error creating device:', deviceError);
-    throw deviceError;
-  }
-
-  // Then create token and associate it with the device
   const { data: tokenData, error: tokenError } = await supabase
     .from('device_tokens')
     .insert({
@@ -82,9 +63,8 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
       mac_address: macAddress,
       status: 'active',
       expires_at: expirationDate.toISOString(),
-      device_id: deviceData.id
     })
-    .select('token, status, expires_at, mac_address, system_info, device_id')
+    .select('token, status, expires_at, mac_address, system_info')
     .single();
 
   if (tokenError) {
