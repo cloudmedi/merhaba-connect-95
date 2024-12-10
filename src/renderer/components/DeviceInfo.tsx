@@ -1,5 +1,5 @@
 import React from 'react';
-import { SystemInfo } from '@/types/electron';
+import type { SystemInfo } from '../../../electron/src/types/electron';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Cpu, HardDrive, Database, Network, Server } from 'lucide-react';
 

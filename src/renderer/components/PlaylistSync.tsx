@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import { WebSocketMessage } from '@/types/electron';
+import type { WebSocketMessage } from '../../../electron/src/types/electron';
 
 interface SyncStatus {
   playlistId: string;

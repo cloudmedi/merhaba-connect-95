@@ -1,4 +1,4 @@
-interface SystemInfo {
+export interface SystemInfo {
   cpu: {
     manufacturer: string;
     brand: string;
@@ -29,7 +29,7 @@ interface SystemInfo {
   }>;
 }
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
   type: string;
   payload: {
     playlist?: {
@@ -46,7 +46,7 @@ interface WebSocketMessage {
   };
 }
 
-interface ElectronAPI {
+export interface ElectronAPI {
   getSystemInfo: () => Promise<SystemInfo>;
   getDeviceId: () => Promise<string>;
   getMacAddress: () => Promise<string | null>;
@@ -67,5 +67,3 @@ declare global {
     electronAPI: ElectronAPI;
   }
 }
-
-export type { SystemInfo, WebSocketMessage, ElectronAPI };
