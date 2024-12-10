@@ -44,6 +44,8 @@ export class PresenceManager {
     this.deviceToken = deviceToken;
 
     try {
+      this.missedHeartbeats = 0;
+
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
@@ -59,7 +61,7 @@ export class PresenceManager {
       this.heartbeatManager = await this.presenceInitializer.initialize(
         deviceToken,
         this.presenceChannelManager,
-        (status: DeviceStatus) => this.updateDeviceStatus(status)
+        async (status: DeviceStatus) => this.updateDeviceStatus(status)
       );
 
       this.setupCleanup();
