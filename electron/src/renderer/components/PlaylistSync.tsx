@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '../components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 import { AudioPlayer } from './AudioPlayer';
 
 interface SyncStatus {
