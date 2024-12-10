@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { PresenceConfig } from './types';
+import { PresenceConfig } from '../types';
 import { DeviceStatusManager } from './deviceStatusManager';
 import { PresenceChannelManager } from './presenceChannelManager';
 import { HeartbeatManager } from './heartbeatManager';
