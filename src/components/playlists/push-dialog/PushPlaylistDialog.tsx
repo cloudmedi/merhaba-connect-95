@@ -7,6 +7,7 @@ import { DialogHeader } from "./DialogHeader";
 import { usePushPlaylist } from "./usePushPlaylist";
 import { useDeviceQuery } from "./useDeviceQuery";
 import { toast } from "sonner";
+import type { Device, DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
 
 interface PushPlaylistDialogProps {
   isOpen: boolean;
@@ -14,6 +15,14 @@ interface PushPlaylistDialogProps {
   playlistTitle: string;
   playlistId: string;
 }
+
+// Helper function to validate device category
+const validateDeviceCategory = (category: string): DeviceCategory => {
+  const validCategories: DeviceCategory[] = ['player', 'display', 'controller'];
+  return validCategories.includes(category as DeviceCategory) 
+    ? (category as DeviceCategory) 
+    : 'player'; // Default to 'player' if invalid category
+};
 
 export function PushPlaylistDialog({ 
   isOpen, 
@@ -24,7 +33,13 @@ export function PushPlaylistDialog({
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { isSyncing, handlePush } = usePushPlaylist(playlistId, playlistTitle, onClose);
-  const { data: devices = [], isLoading } = useDeviceQuery();
+  const { data: rawDevices = [], isLoading } = useDeviceQuery();
+
+  // Transform and validate device data
+  const devices: Device[] = rawDevices.map(device => ({
+    ...device,
+    category: validateDeviceCategory(device.category)
+  }));
 
   const filteredDevices = devices.filter(device =>
     device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,7 +50,7 @@ export function PushPlaylistDialog({
     if (selectedTokens.length === filteredDevices.length) {
       setSelectedTokens([]);
     } else {
-      setSelectedTokens(filteredDevices.map(d => d.token).filter(Boolean) as string[]);
+      setSelectedTokens(filteredDevices.map(d => d.token || '').filter(Boolean));
     }
   };
 
@@ -46,6 +61,7 @@ export function PushPlaylistDialog({
     }
 
     try {
+      console.log('Starting playlist sync for device tokens:', selectedTokens);
       const result = await handlePush(selectedTokens);
       if (result.success) {
         toast.success(`Playlist ${selectedTokens.length} cihaza başarıyla gönderildi`);
