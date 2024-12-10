@@ -38,5 +38,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('playlist-updated', handler);
     };
   },
+  onWebSocketMessage: (callback: (data: any) => void) => {
+    console.log('Setting up WebSocket message listener');
+    const handler = (_event: any, data: any) => {
+      console.log('WebSocket message received in preload:', data);
+      callback(data);
+    };
+    ipcRenderer.on('websocket-message', handler);
+    return () => {
+      console.log('Removing WebSocket message listener');
+      ipcRenderer.removeListener('websocket-message', handler);
+    };
+  },
   registerDevice: (deviceInfo: any) => ipcRenderer.invoke('register-device', deviceInfo)
 });
