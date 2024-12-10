@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const CHANNEL_PREFIX = 'device_';
+import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT } from "@/integrations/supabase/presence/types";
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -46,7 +45,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       for (const token of deviceTokens) {
         if (!token) continue;
 
-        const channelName = `${CHANNEL_PREFIX}${token}`;
+        const channelName = `${REALTIME_CHANNEL_PREFIX}${token}`;
         const channel = supabase.channel(channelName);
         
         console.log(`Sending playlist to channel: ${channelName}`);
@@ -57,8 +56,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
               type: 'broadcast',
               event: 'broadcast',
               payload: {
-                type: 'sync_playlist',
-                deviceToken: token,
+                type: PLAYLIST_SYNC_EVENT,
                 playlist: {
                   id: playlist.id,
                   name: playlist.name,

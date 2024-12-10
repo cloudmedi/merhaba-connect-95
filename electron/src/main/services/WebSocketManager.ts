@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
-
-const CHANNEL_PREFIX = 'device_';
+import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT, HEARTBEAT_EVENT } from '../../../src/integrations/supabase/presence/types';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -42,12 +41,11 @@ export class WebSocketManager {
         console.log('WebSocket connection established');
         this.isConnected = true;
 
-        // Subscribe to device-specific channel
-        const channelName = `${CHANNEL_PREFIX}${this.deviceToken}`;
+        const channelName = `${REALTIME_CHANNEL_PREFIX}${this.deviceToken}`;
         console.log('Subscribing to channel:', channelName);
         
         const joinMessage = {
-          topic: `realtime:${channelName}`,
+          topic: channelName,
           event: "phx_join",
           payload: { 
             device_token: this.deviceToken,
@@ -59,7 +57,6 @@ export class WebSocketManager {
         console.log('Sending join message:', JSON.stringify(joinMessage, null, 2));
         this.ws?.send(JSON.stringify(joinMessage));
 
-        // Process any queued messages
         while (this.messageQueue.length > 0) {
           const message = this.messageQueue.shift();
           this.sendMessage(message);
@@ -71,49 +68,29 @@ export class WebSocketManager {
           const data = JSON.parse(event.data.toString());
           console.log('WebSocket message received:', JSON.stringify(data, null, 2));
 
-          if (data.event === "broadcast" && data.payload?.playlist) {
-            console.log('Playlist sync message received:', JSON.stringify(data.payload, null, 2));
+          if (data.event === "broadcast") {
+            const payload = data.payload;
             
-            if (this.win) {
-              console.log('Sending playlist to renderer process');
-              this.win.webContents.send('playlist-received', {
-                playlist: data.payload.playlist,
-                status: 'success'
-              });
-            } else {
-              console.warn('No window reference available to send playlist');
+            if (payload.type === PLAYLIST_SYNC_EVENT && this.win) {
+              console.log('Playlist sync message received:', payload);
+              this.win.webContents.send('playlist-received', payload.playlist);
+            } else if (payload.event === HEARTBEAT_EVENT) {
+              console.log('Heartbeat received:', payload);
             }
-          } else {
-            console.log('Received non-playlist message:', data.event);
           }
         } catch (error) {
           console.error('Error processing message:', error);
-          if (this.win) {
-            this.win.webContents.send('sync-error', {
-              error: 'Failed to process received message'
-            });
-          }
         }
       };
 
       this.ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         this.isConnected = false;
-        if (this.win) {
-          this.win.webContents.send('sync-error', {
-            error: 'WebSocket connection error'
-          });
-        }
       };
 
       this.ws.onclose = () => {
         console.log('WebSocket connection closed');
         this.isConnected = false;
-        if (this.win) {
-          this.win.webContents.send('sync-status', {
-            status: 'disconnected'
-          });
-        }
       };
 
     } catch (error) {
@@ -123,8 +100,6 @@ export class WebSocketManager {
   }
 
   public async sendMessage(message: any) {
-    console.log('Attempting to send message:', JSON.stringify(message, null, 2));
-    
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.log('Connection not ready, queueing message');
       this.messageQueue.push(message);
@@ -132,9 +107,8 @@ export class WebSocketManager {
     }
 
     try {
-      console.log('Sending message through WebSocket');
+      console.log('Sending message through WebSocket:', JSON.stringify(message, null, 2));
       this.ws.send(JSON.stringify(message));
-      console.log('Message sent successfully');
     } catch (error) {
       console.error('Error sending message:', error);
       this.messageQueue.push(message);

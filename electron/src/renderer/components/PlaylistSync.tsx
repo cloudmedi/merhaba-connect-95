@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from './ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import type { WebSocketMessage } from '../../types/electron';
+import { PLAYLIST_SYNC_EVENT } from '../../../src/integrations/supabase/presence/types';
 
 interface SyncStatus {
   playlistId: string;
@@ -22,61 +22,47 @@ export function PlaylistSync() {
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    console.log('Setting up WebSocket listeners');
+    console.log('Setting up playlist sync listeners');
     
-    const setupWebSocketListeners = async () => {
-      const deviceToken = await window.electronAPI.getDeviceId();
-      console.log('Retrieved device token from main process:', deviceToken);
+    const cleanup = window.electronAPI.onWebSocketMessage((data: any) => {
+      console.log('WebSocket message received:', data);
       
-      if (!deviceToken) {
-        console.error('No device token available');
-        return;
-      }
-
-      console.log('Subscribing to channel:', `device_${deviceToken}`);
-      
-      const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
-        console.log('WebSocket message received:', data);
+      if (data.type === PLAYLIST_SYNC_EVENT && data.payload?.playlist) {
+        const playlist = data.payload.playlist;
+        console.log('New playlist received:', playlist);
         
-        if (data.type === 'sync_playlist' && data.payload.playlist) {
-          const playlist = data.payload.playlist;
-          console.log('New playlist received:', playlist);
-          
-          setPlaylists(prev => {
-            const exists = prev.some(p => p.id === playlist.id);
-            if (exists) {
-              return prev.map(p => p.id === playlist.id ? playlist : p);
-            }
-            return [...prev, playlist];
-          });
+        setPlaylists(prev => {
+          const exists = prev.some(p => p.id === playlist.id);
+          if (exists) {
+            return prev.map(p => p.id === playlist.id ? playlist : p);
+          }
+          return [...prev, playlist];
+        });
 
-          setSyncStatus(prev => ({
-            ...prev,
-            [playlist.id]: {
-              playlistId: playlist.id,
-              name: playlist.name,
-              progress: 0,
-              status: 'syncing'
-            }
-          }));
-        }
-      });
-
-      const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
-        console.log('Download progress update received:', data);
-        setDownloadProgress(prev => ({
+        setSyncStatus(prev => ({
           ...prev,
-          [data.songId]: data.progress
+          [playlist.id]: {
+            playlistId: playlist.id,
+            name: playlist.name,
+            progress: 0,
+            status: 'syncing'
+          }
         }));
-      });
+      }
+    });
 
-      return () => {
-        cleanup();
-        downloadCleanup();
-      };
+    const downloadCleanup = window.electronAPI.onDownloadProgress((data: DownloadProgressData) => {
+      console.log('Download progress update received:', data);
+      setDownloadProgress(prev => ({
+        ...prev,
+        [data.songId]: data.progress
+      }));
+    });
+
+    return () => {
+      cleanup();
+      downloadCleanup();
     };
-
-    setupWebSocketListeners();
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -103,7 +89,7 @@ export function PlaylistSync() {
         <div className="space-y-4">
           {playlists.length === 0 ? (
             <p className="text-center text-gray-500 py-8">
-              Playlist senkronizasyonu bekleniyor...
+              WebSocket bağlantısı bekleniyor...
             </p>
           ) : (
             playlists.map((playlist) => (
@@ -120,12 +106,12 @@ export function PlaylistSync() {
                     </p>
                   </div>
                 </div>
-                {syncStatus[playlist.id]?.status === 'syncing' && (
+                {syncStatus[playlist.id]?.status === 'syncing' ? (
                   <Progress 
                     value={syncStatus[playlist.id]?.progress} 
                     className="w-[100px]"
                   />
-                )}
+                ) : null}
               </div>
             ))
           )}
