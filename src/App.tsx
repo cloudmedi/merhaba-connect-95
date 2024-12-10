@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
+import { AuthProvider } from '@/hooks/useAuth';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,8 +34,10 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster />
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
