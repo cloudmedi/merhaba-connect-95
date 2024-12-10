@@ -10,38 +10,13 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Request received:', {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers.entries())
-  });
-
   if (req.method === 'OPTIONS') {
-    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
-  const url = new URL(req.url);
-  const token = url.searchParams.get('token');
-  console.log('Received token:', token);
-  
-  if (!token) {
-    console.error('Token is required');
-    return new Response(
-      JSON.stringify({ error: 'Token is required' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
   const upgrade = req.headers.get('upgrade') || '';
-  console.log('Upgrade header:', upgrade);
-
   if (upgrade.toLowerCase() != 'websocket') {
-    console.error('Expected websocket upgrade');
-    return new Response('Expected websocket upgrade', { 
-      status: 426,
-      headers: corsHeaders
-    });
+    return new Response('Expected websocket upgrade', { status: 426, headers: corsHeaders });
   }
 
   const supabase = createClient(
@@ -49,70 +24,48 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 
-  console.log('Validating token in device_tokens table...');
-  const { data: deviceTokens, error: tokenError } = await supabase
-    .from('device_tokens')
-    .select('token, status, expires_at')
-    .eq('token', token)
-    .in('status', ['active', 'used']);
-
-  console.log('Token validation result:', { deviceTokens, tokenError });
-
-  if (tokenError) {
-    console.error('Token validation error:', tokenError);
-    return new Response(
-      JSON.stringify({ error: 'Token validation failed' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
-  if (!deviceTokens || deviceTokens.length === 0) {
-    console.error('Invalid or expired token');
-    return new Response(
-      JSON.stringify({ error: 'Invalid or expired token' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
-  // Check if token is expired
-  const tokenData = deviceTokens[0];
-  const expirationDate = new Date(tokenData.expires_at);
-  if (expirationDate < new Date()) {
-    console.error('Token has expired:', {
-      expirationDate,
-      currentDate: new Date()
-    });
-    return new Response(
-      JSON.stringify({ error: 'Token has expired' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
   const { socket, response } = Deno.upgradeWebSocket(req);
-  console.log('WebSocket connection upgraded successfully');
-
   const deviceManager = new DeviceManager();
   const playlistHandler = new PlaylistHandler(supabase, deviceManager);
+  let isAuthenticated = false;
+  let userToken: string | null = null;
 
   socket.onopen = () => {
     console.log('WebSocket connection opened');
-    deviceManager.addDevice(token, socket);
-    deviceManager.broadcastPresenceUpdate(token, 'online');
   };
 
   socket.onmessage = async (event) => {
     try {
-      console.log('Received raw message:', event.data);
-      
       const data = JSON.parse(event.data) as WebSocketMessage;
-      console.log('Parsed message data:', data);
+      console.log('Received message:', data);
 
-      if (!data.type || !data.payload) {
-        throw new Error('Invalid message structure');
+      if (data.type === 'authenticate') {
+        const { data: { user }, error } = await supabase.auth.getUser(data.payload.token);
+        
+        if (error || !user) {
+          socket.send(JSON.stringify({
+            type: 'error',
+            payload: { message: 'Authentication failed' }
+          }));
+          return;
+        }
+
+        isAuthenticated = true;
+        userToken = data.payload.token;
+        socket.send(JSON.stringify({ type: 'auth_success' }));
+        return;
       }
-      
+
+      if (!isAuthenticated) {
+        socket.send(JSON.stringify({
+          type: 'error',
+          payload: { message: 'Not authenticated' }
+        }));
+        return;
+      }
+
       if (data.type === 'sync_playlist') {
-        const result = await playlistHandler.handlePlaylistSync(data, token);
+        const result = await playlistHandler.handlePlaylistSync(data, userToken);
         socket.send(JSON.stringify(result));
       }
     } catch (error) {
@@ -129,8 +82,9 @@ serve(async (req) => {
   socket.onerror = (e) => console.log('WebSocket error:', e);
   socket.onclose = () => {
     console.log('WebSocket connection closed');
-    deviceManager.removeDevice(token);
-    deviceManager.broadcastPresenceUpdate(token, 'offline');
+    if (userToken) {
+      deviceManager.removeDevice(userToken);
+    }
   };
 
   return response;

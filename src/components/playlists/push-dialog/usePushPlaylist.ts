@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
+import { useWebSocketConnection } from '@/hooks/useWebSocketConnection';
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
+  const { sendMessage } = useWebSocketConnection();
 
   const handlePush = async (selectedDevices: string[]) => {
     if (selectedDevices.length === 0) {
@@ -15,74 +17,52 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       setIsSyncing(true);
       console.log('Starting WebSocket sync for devices:', selectedDevices);
 
-      const { data: deviceData, error: deviceError } = await supabase
-        .from('devices')
-        .select('token')
-        .in('id', selectedDevices)
+      // Playlist verilerini çek
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
+          *,
+          playlist_songs (
+            songs (
+              id,
+              title,
+              artist,
+              file_url,
+              bunny_id
+            )
+          )
+        `)
+        .eq('id', playlistId)
         .single();
 
-      console.log('Device data query result:', { deviceData, deviceError });
+      if (playlistError) throw playlistError;
 
-      if (deviceError || !deviceData?.token) {
-        console.error('Device token query error:', deviceError);
-        throw new Error('Cihaz token\'ı bulunamadı');
-      }
+      const songs = playlist.playlist_songs.map((ps: any) => ({
+        ...ps.songs,
+        file_url: ps.songs.bunny_id 
+          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
+          : ps.songs.file_url
+      }));
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        console.error('Supabase URL not found in env');
-        throw new Error('Supabase URL not found');
-      }
-
-      const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist?token=${deviceData.token}`;
-      console.log('Connecting to WebSocket:', wsUrl);
-      
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('WebSocket connection opened, sending playlist data');
-        ws.send(JSON.stringify({
-          type: 'sync_playlist',
-          payload: {
-            playlistId,
-            devices: selectedDevices
-          }
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        const response = JSON.parse(event.data);
-        console.log('WebSocket response received:', response);
-        
-        if (response.type === 'sync_success') {
-          console.log('Sync successful:', response);
-          toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
-          onClose();
-        } else if (response.type === 'error') {
-          console.error('Sync error:', response);
-          toast.error(`Hata: ${response.payload.message}`);
+      // WebSocket üzerinden playlist'i gönder
+      sendMessage({
+        type: 'sync_playlist',
+        payload: {
+          playlist: {
+            id: playlist.id,
+            name: playlist.name,
+            songs: songs
+          },
+          devices: selectedDevices
         }
-      };
+      });
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        console.log('WebSocket readyState:', ws.readyState);
-        console.log('WebSocket bufferedAmount:', ws.bufferedAmount);
-        toast.error("Bağlantı hatası oluştu");
-      };
-
-      ws.onclose = (event) => {
-        console.log('WebSocket connection closed:', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        setIsSyncing(false);
-      };
-
+      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderiliyor`);
+      onClose();
     } catch (error) {
-      console.error('Error in handlePush:', error);
+      console.error('Error syncing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
+    } finally {
       setIsSyncing(false);
     }
   };

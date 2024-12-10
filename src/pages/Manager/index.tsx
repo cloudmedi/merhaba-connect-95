@@ -9,8 +9,12 @@ import Schedule from "./Schedule";
 import Announcements from "./Announcements";
 import Settings from "./Settings";
 import ProfileSettings from "./Settings/Profile";
+import { useWebSocketConnection } from "@/hooks/useWebSocketConnection";
 
 export default function Manager() {
+  // Initialize WebSocket connection when Manager component mounts
+  useWebSocketConnection();
+
   return (
     <div className="min-h-screen bg-white">
       <div className="flex flex-col h-screen">
