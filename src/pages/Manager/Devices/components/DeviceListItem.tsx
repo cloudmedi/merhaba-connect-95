@@ -58,6 +58,7 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
 
   // Get the current playlist name from device's playlist assignments
   const currentPlaylist = device.playlist_assignments?.[0]?.playlist?.name;
+  console.log('Current playlist for device:', device.name, currentPlaylist);
 
   return (
     <TableRow className="hover:bg-gray-50/50">

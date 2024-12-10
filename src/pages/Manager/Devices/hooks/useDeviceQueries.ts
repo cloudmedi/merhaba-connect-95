@@ -46,6 +46,8 @@ export const useDeviceQueries = () => {
         throw error;
       }
 
+      console.log('Fetched devices with playlist assignments:', data);
+
       return (data as Device[]) || [];
     },
   });
