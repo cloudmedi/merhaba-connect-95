@@ -22,7 +22,9 @@ export default defineConfig({
           'bufferutil',
           'utf-8-validate',
           'ws',
-          '@radix-ui/react-progress'
+          '@radix-ui/react-progress',
+          'react',
+          'react-dom'
         ]
       }
     }

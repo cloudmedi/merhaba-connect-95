@@ -3,7 +3,10 @@
   "include": [
     "src/renderer",
     "../src/components",
-    "../src/lib"
+    "../src/lib",
+    "../src/hooks",
+    "../src/utils",
+    "../src/types"
   ],
   "compilerOptions": {
     "composite": true,
