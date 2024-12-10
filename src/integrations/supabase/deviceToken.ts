@@ -39,7 +39,7 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
         return await createNewToken(macAddress);
       }
 
-      return mostRecentToken;
+      return mostRecentToken as DeviceToken;
     }
 
     return await createNewToken(macAddress);
