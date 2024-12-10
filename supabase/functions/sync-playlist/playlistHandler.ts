@@ -15,18 +15,18 @@ export class PlaylistHandler {
     try {
       console.log('Handling playlist sync:', data);
       
-      if (!data.payload || !data.payload.playlist || !data.payload.devices) {
+      if (!data.payload || !data.payload.devices) {
+        throw new Error('Missing devices in payload');
+      }
+
+      const { playlist, devices } = data.payload;
+      
+      if (!playlist || !playlist.id || !Array.isArray(devices) || devices.length === 0) {
         throw new Error('Invalid playlist data structure');
       }
 
-      const { playlistId, devices } = data.payload;
-      
-      if (!playlistId || !Array.isArray(devices) || devices.length === 0) {
-        throw new Error('Invalid playlist data');
-      }
-
       // Playlist verilerini getir
-      const { data: playlist, error: playlistError } = await this.supabase
+      const { data: playlistData, error: playlistError } = await this.supabase
         .from('playlists')
         .select(`
           *,
@@ -41,19 +41,19 @@ export class PlaylistHandler {
             )
           )
         `)
-        .eq('id', playlistId)
+        .eq('id', playlist.id)
         .single();
 
-      if (playlistError || !playlist) {
+      if (playlistError || !playlistData) {
         console.error('Playlist fetch error:', playlistError);
         throw new Error('Playlist not found');
       }
 
       // Playlist verilerini düzenle
       const formattedPlaylist = {
-        id: playlist.id,
-        name: playlist.name,
-        songs: playlist.playlist_songs
+        id: playlistData.id,
+        name: playlistData.name,
+        songs: playlistData.playlist_songs
           .sort((a: any, b: any) => a.position - b.position)
           .map((ps: any) => ({
             ...ps.songs,
