@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -13,7 +13,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
 
     try {
       setIsSyncing(true);
-      console.log('Playlist sync başlatılıyor:', { playlistId, selectedDevices });
+      toast.loading(`Playlist ${selectedDevices.length} cihaza gönderiliyor...`);
 
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
@@ -32,10 +32,7 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
         .eq('id', playlistId)
         .single();
 
-      if (playlistError) {
-        console.error('Playlist veri hatası:', playlistError);
-        throw playlistError;
-      }
+      if (playlistError) throw playlistError;
 
       const songs = playlist.playlist_songs.map((ps: any) => ({
         ...ps.songs,
@@ -44,42 +41,39 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
           : ps.songs.file_url
       }));
 
-      // Her cihaz için ayrı kanal oluştur
-      for (const deviceToken of selectedDevices) {
-        const channelName = `device_${deviceToken}`;
-        console.log(`${channelName} kanalına bağlanılıyor...`);
-        
-        const channel = supabase.channel(channelName);
-        
-        await channel.subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log(`${channelName} kanalına bağlantı başarılı`);
-            
-            // Playlist verilerini gönder
-            await channel.send({
-              type: 'broadcast',
-              event: 'sync_playlist',
-              payload: {
-                deviceToken,
-                playlist: {
-                  id: playlist.id,
-                  name: playlist.name,
-                  songs: songs
-                }
-              }
-            });
+      // Seçili cihazların token'larını al
+      const { data: devices } = await supabase
+        .from('devices')
+        .select('token')
+        .in('id', selectedDevices);
 
-            console.log(`Playlist ${deviceToken} cihazına gönderildi`);
-            channel.unsubscribe();
+      if (!devices) throw new Error('Cihaz token\'ları alınamadı');
+
+      // Her cihaz için playlist'i gönder
+      for (const device of devices) {
+        if (!device.token) continue;
+
+        const channel = supabase.channel(`device_${device.token}`);
+        
+        channel.send({
+          type: 'broadcast',
+          event: 'sync_playlist',
+          payload: {
+            deviceToken: device.token,
+            playlist: {
+              id: playlist.id,
+              name: playlist.name,
+              songs: songs
+            }
           }
         });
       }
 
-      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza gönderiliyor`);
+      toast.success(`"${playlistTitle}" playlist'i ${selectedDevices.length} cihaza başarıyla gönderildi`);
       onClose();
 
-    } catch (error) {
-      console.error('Playlist sync hatası:', error);
+    } catch (error: any) {
+      console.error('Error pushing playlist:', error);
       toast.error("Playlist gönderilirken bir hata oluştu");
     } finally {
       setIsSyncing(false);

@@ -371,7 +371,6 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string | null
-          device_id: string | null
           expires_at: string
           id: string
           last_system_update: string | null
@@ -383,7 +382,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          device_id?: string | null
           expires_at: string
           id?: string
           last_system_update?: string | null
@@ -395,7 +393,6 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          device_id?: string | null
           expires_at?: string
           id?: string
           last_system_update?: string | null
@@ -405,15 +402,7 @@ export type Database = {
           token?: string
           used_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "device_tokens_device_id_fkey"
-            columns: ["device_id"]
-            isOneToOne: false
-            referencedRelation: "devices"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       devices: {
         Row: {

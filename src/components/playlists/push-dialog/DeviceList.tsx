@@ -9,6 +9,7 @@ export interface DeviceListProps {
     status: string;
     category?: string;
     last_seen?: string;
+    token?: string;
     branches?: {
       name?: string;
     };

@@ -1,6 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { toast } from "sonner";
 import { DeviceList } from "./DeviceList";
 import { SearchBar } from "./SearchBar";
 import { DialogFooter } from "./DialogFooter";
@@ -39,11 +38,6 @@ export function PushPlaylistDialog({
   };
 
   const handleDevicePush = async () => {
-    if (selectedDevices.length === 0) {
-      toast.error("Lütfen en az bir cihaz seçin");
-      return;
-    }
-
     await handlePush(selectedDevices);
   };
 

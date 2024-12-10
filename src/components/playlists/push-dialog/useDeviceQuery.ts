@@ -5,7 +5,6 @@ export function useDeviceQuery() {
   return useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      console.log('Fetching devices...');
       const { data: userData } = await supabase.auth.getUser();
       
       if (!userData.user) {
@@ -34,8 +33,5 @@ export function useDeviceQuery() {
       console.log('Fetched devices:', data);
       return data || [];
     },
-    staleTime: 1000 * 60, // 1 minute
-    gcTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2,
   });
 }
