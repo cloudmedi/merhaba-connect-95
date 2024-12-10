@@ -91,6 +91,7 @@ export function PushPlaylistDialog({
             isSyncing={isSyncing}
             onCancel={onClose}
             onPush={handleDevicePush}
+            selectedDevices={selectedDevices}
           />
         </div>
       </DialogContent>

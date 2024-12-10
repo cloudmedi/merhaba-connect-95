@@ -1,9 +1,13 @@
-import { DialogHeader as Header, DialogTitle } from "@/components/ui/dialog";
+import { DialogHeader as BaseDialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export function DialogHeader() {
+interface DialogHeaderProps {
+  title: string;
+}
+
+export function DialogHeader({ title }: DialogHeaderProps) {
   return (
-    <Header>
-      <DialogTitle>Push Playlist</DialogTitle>
-    </Header>
+    <BaseDialogHeader>
+      <DialogTitle>{title}</DialogTitle>
+    </BaseDialogHeader>
   );
 }
