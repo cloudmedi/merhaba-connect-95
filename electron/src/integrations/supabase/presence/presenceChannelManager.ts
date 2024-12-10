@@ -17,7 +17,10 @@ export class PresenceChannelManager {
       await this.cleanup();
     }
 
-    this.channel = this.supabase.channel(`device_${this.deviceToken}`)
+    const channelName = `device_${this.deviceToken}`;
+    console.log(`Setting up presence channel: ${channelName}`);
+
+    this.channel = this.supabase.channel(channelName)
       .on('presence', { event: 'sync' }, () => {
         console.log('Presence state synchronized');
       })
@@ -26,6 +29,14 @@ export class PresenceChannelManager {
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('Leave event:', key, leftPresences);
+      })
+      .on('broadcast', { event: 'sync_playlist' }, async (payload) => {
+        console.log('Received playlist sync message:', payload);
+        // Handle playlist sync message
+        if (payload.deviceToken === this.deviceToken) {
+          // Process playlist data
+          console.log('Processing playlist for device:', this.deviceToken);
+        }
       });
 
     await this.channel.subscribe(async (status) => {

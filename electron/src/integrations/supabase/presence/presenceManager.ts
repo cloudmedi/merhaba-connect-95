@@ -35,22 +35,34 @@ export class PresenceManager {
     console.log('PresenceManager constructed with config:', this.config);
   }
 
-  async initialize(deviceToken: string, deviceId: string): Promise<void> {
+  async initialize(deviceToken: string): Promise<void> {
     if (this.isInitialized) {
       console.log('PresenceManager already initialized');
       return;
     }
     
-    console.log('Initializing PresenceManager for device:', { deviceToken, deviceId });
+    console.log('Initializing PresenceManager for device token:', deviceToken);
     this.deviceToken = deviceToken;
-    this.deviceId = deviceId;
-    this.missedHeartbeats = 0;
 
     try {
+      // Get device ID from token
+      const { data: tokenData, error: tokenError } = await this.supabase
+        .from('device_tokens')
+        .select('device_id')
+        .eq('token', deviceToken)
+        .single();
+
+      if (tokenError || !tokenData?.device_id) {
+        throw new Error('Failed to get device ID from token');
+      }
+
+      this.deviceId = tokenData.device_id;
+      this.missedHeartbeats = 0;
+
       this.presenceChannelManager = new PresenceChannelManager(
         this.supabase,
         deviceToken,
-        deviceId,
+        this.deviceId,
         this.config,
         async (status) => {
           console.log('Status change callback triggered:', status);
@@ -62,7 +74,7 @@ export class PresenceManager {
 
       this.heartbeatManager = await this.presenceInitializer.initialize(
         deviceToken,
-        deviceId,
+        this.deviceId,
         this.presenceChannelManager,
         (status) => this.updateDeviceStatus(status)
       );
@@ -74,7 +86,7 @@ export class PresenceManager {
       console.error('Error initializing presence:', {
         error,
         deviceToken,
-        deviceId,
+        deviceId: this.deviceId,
         timestamp: new Date().toISOString()
       });
       await this.reconnect();
@@ -120,11 +132,11 @@ export class PresenceManager {
 
   private async reconnect(): Promise<void> {
     console.log('Attempting to reconnect presence channel...');
-    if (this.presenceChannelManager && this.deviceToken && this.deviceId) {
+    if (this.deviceToken) {
       await this.cleanup();
       console.log(`Waiting ${this.config.reconnectDelay}ms before reconnecting`);
       await new Promise(resolve => setTimeout(resolve, this.config.reconnectDelay));
-      await this.initialize(this.deviceToken, this.deviceId);
+      await this.initialize(this.deviceToken);
     }
   }
 

@@ -24,7 +24,7 @@ export class DeviceStatusManager {
     try {
       const { data, error } = await this.supabase
         .from('device_tokens')
-        .select('status')
+        .select('status, device_id')
         .eq('token', deviceToken)
         .single();
 

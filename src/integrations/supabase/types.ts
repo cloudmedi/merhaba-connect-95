@@ -371,6 +371,7 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string | null
+          device_id: string | null
           expires_at: string
           id: string
           last_system_update: string | null
@@ -382,6 +383,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          device_id?: string | null
           expires_at: string
           id?: string
           last_system_update?: string | null
@@ -393,6 +395,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          device_id?: string | null
           expires_at?: string
           id?: string
           last_system_update?: string | null
@@ -402,7 +405,15 @@ export type Database = {
           token?: string
           used_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       devices: {
         Row: {
@@ -415,6 +426,7 @@ export type Database = {
           last_seen: string | null
           location: string | null
           location_id: string | null
+          mac_address: string | null
           name: string
           schedule: Json | null
           status: string | null
@@ -432,6 +444,7 @@ export type Database = {
           last_seen?: string | null
           location?: string | null
           location_id?: string | null
+          mac_address?: string | null
           name: string
           schedule?: Json | null
           status?: string | null
@@ -449,6 +462,7 @@ export type Database = {
           last_seen?: string | null
           location?: string | null
           location_id?: string | null
+          mac_address?: string | null
           name?: string
           schedule?: Json | null
           status?: string | null
