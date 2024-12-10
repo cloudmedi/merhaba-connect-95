@@ -38,14 +38,12 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.join(__dirname, 'index.html')
-        },
-        external: ['@supabase/supabase-js']
+        }
       }
     },
     plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '../src'),
         '@renderer': path.resolve(__dirname, 'src/renderer')
       }
     }
