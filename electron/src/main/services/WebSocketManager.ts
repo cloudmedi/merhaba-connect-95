@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { BrowserWindow } from 'electron';
-import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT, HEARTBEAT_EVENT } from '../../../src/integrations/supabase/presence/types';
+import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT, HEARTBEAT_EVENT } from '../../types/events';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -30,7 +30,7 @@ export class WebSocketManager {
     }, 30000);
   }
 
-  private initializeWebSocket() {
+  private async initializeWebSocket() {
     try {
       const wsUrl = `${process.env.VITE_SUPABASE_URL.replace('https://', 'wss://')}/realtime/v1/websocket?apikey=${process.env.VITE_SUPABASE_ANON_KEY}&vsn=1.0.0`;
       console.log('Initializing WebSocket connection:', wsUrl);

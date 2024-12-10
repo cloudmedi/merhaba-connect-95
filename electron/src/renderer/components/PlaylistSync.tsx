@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Progress } from './ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import { PLAYLIST_SYNC_EVENT } from '../types/events';
+import { PLAYLIST_SYNC_EVENT } from '../../types/events';
 
 interface SyncStatus {
   playlistId: string;
