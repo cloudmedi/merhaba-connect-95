@@ -57,6 +57,7 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
   const expirationDate = new Date();
   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
+  // First create a device
   const { data: deviceData, error: deviceError } = await supabase
     .from('devices')
     .insert({
@@ -73,6 +74,7 @@ async function createNewToken(macAddress: string): Promise<DeviceToken> {
     throw deviceError;
   }
 
+  // Then create token and associate it with the device
   const { data: tokenData, error: tokenError } = await supabase
     .from('device_tokens')
     .insert({
