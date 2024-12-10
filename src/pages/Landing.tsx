@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PlaylistGrid } from "@/components/landing/PlaylistGrid";
-import { AudioPreview } from "@/components/landing/AudioPreview";
-import { PlayCircle, Users } from "lucide-react";
-import { usePublicPlaylists } from "@/components/landing/hooks/usePublicPlaylists";
-import type { PreviewPlaylist } from "@/components/landing/types";
+import { 
+  Music2, 
+  Calendar, 
+  Bell, 
+  Monitor, 
+  BarChart3, 
+  Building2,
+  PlayCircle,
+  Users,
+  Play,
+  Pause
+} from "lucide-react";
+
+interface Playlist {
+  id: string;
+  name: string;
+  description: string | null;
+  artwork_url: string | null;
+  is_hero: boolean;
+}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -20,6 +36,7 @@ export default function Landing() {
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // Sektörleri getir
   const { data: sectors } = useQuery({
     queryKey: ['sectors'],
     queryFn: async () => {
@@ -32,7 +49,19 @@ export default function Landing() {
     }
   });
 
-  const { data: playlists } = usePublicPlaylists();
+  // Hero playlistleri getir
+  const { data: playlists } = useQuery({
+    queryKey: ['hero-playlists'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('playlists')
+        .select('*')
+        .eq('is_catalog', true)
+        .limit(8);
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -54,29 +83,58 @@ export default function Landing() {
       toast.success('Kaydınız başarıyla alındı. En kısa sürede sizinle iletişime geçeceğiz.');
       setIsRegisterOpen(false);
     } catch (error) {
-      console.error('Registration error:', error);
       toast.error('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
-  const handlePlaylistPlay = (playlist: PreviewPlaylist) => {
-    if (currentPlayingId === playlist.id) {
-      setIsPlaying(false);
-      setCurrentPlayingId(null);
-    } else {
-      setCurrentPlayingId(playlist.id);
-      setIsPlaying(true);
+  const features = [
+    {
+      title: "Playlist Yönetimi",
+      description: "Müzik listelerinizi kolayca oluşturun, düzenleyin ve yönetin. Şarkıları türe, ruh haline ve kategorilere göre organize edin.",
+      icon: Music2,
+      color: "text-purple-500",
+      bgColor: "bg-purple-100"
+    },
+    {
+      title: "Zamanlama Kontrolü",
+      description: "Farklı zaman ve lokasyonlar için müzik çalma planları oluşturun. Tekrarlayan programlar ayarlayın.",
+      icon: Calendar,
+      color: "text-blue-500",
+      bgColor: "bg-blue-100"
+    },
+    {
+      title: "Cihaz Yönetimi",
+      description: "Tüm müzik cihazlarınızı tek bir merkezden izleyin ve kontrol edin.",
+      icon: Monitor,
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-100"
+    },
+    {
+      title: "Duyuru Sistemi",
+      description: "Şarkılar arasında veya programlı zamanlarda çalacak duyurular oluşturun ve yönetin.",
+      icon: Bell,
+      color: "text-amber-500",
+      bgColor: "bg-amber-100"
+    },
+    {
+      title: "Gerçek Zamanlı Analitikler",
+      description: "Çalma sayılarını, popüler şarkıları ve cihaz performans metriklerini takip edin.",
+      icon: BarChart3,
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-100"
+    },
+    {
+      title: "Çoklu Şube Desteği",
+      description: "Birden fazla lokasyondaki müzik sistemini, şubeye özel ayarlarla yönetin.",
+      icon: Building2,
+      color: "text-rose-500",
+      bgColor: "bg-rose-100"
     }
-  };
-
-  const handlePreviewEnd = () => {
-    setIsPlaying(false);
-    setCurrentPlayingId(null);
-    setIsRegisterOpen(true);
-  };
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-blue-100 opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -110,23 +168,106 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* Playlist Preview Section */}
       {playlists && playlists.length > 0 && (
-        <>
-          <PlaylistGrid
-            playlists={playlists}
-            currentPlayingId={currentPlayingId}
-            isPlaying={isPlaying}
-            onPlay={handlePlaylistPlay}
-          />
-          {currentPlayingId && isPlaying && (
-            <AudioPreview
-              playlist={playlists.find(p => p.id === currentPlayingId)!}
-              onPreviewEnd={handlePreviewEnd}
-            />
-          )}
-        </>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Örnek Playlist Koleksiyonu
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              İşletmenize özel hazırlanmış profesyonel müzik listelerimizden örnekler
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {playlists.map((playlist: Playlist) => (
+              <Card key={playlist.id} className="group relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                <div className="aspect-square relative overflow-hidden">
+                  <img 
+                    src={playlist.artwork_url || "/placeholder.svg"} 
+                    alt={playlist.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:text-white/90"
+                      onClick={() => {
+                        setCurrentPlayingId(playlist.id);
+                        setIsPlaying(!isPlaying);
+                      }}
+                    >
+                      {currentPlayingId === playlist.id && isPlaying ? (
+                        <Pause className="h-12 w-12" />
+                      ) : (
+                        <Play className="h-12 w-12" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-lg mb-1">{playlist.name}</h3>
+                  {playlist.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2">{playlist.description}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
+      {/* Features Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Kapsamlı Yönetim Özellikleri
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            İşletmenizin müzik sistemini yönetmek için ihtiyacınız olan her şey tek bir yerde
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature) => (
+            <Card key={feature.title} className="border-none shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4`}>
+                  <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                </div>
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-[#6E59A5] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-4">
+              İşletmenizin Müziğini Dönüştürmeye Hazır mısınız?
+            </h2>
+            <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
+              Platformumuzu kullanan binlerce işletmeye katılın ve müşterileriniz için mükemmel atmosferi yaratın.
+            </p>
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={() => setIsRegisterOpen(true)}
+              className="bg-white text-[#6E59A5] hover:bg-gray-100"
+            >
+              Hemen Başlayın
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Register Dialog */}
       <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
