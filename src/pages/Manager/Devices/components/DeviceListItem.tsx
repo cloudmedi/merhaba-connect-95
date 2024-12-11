@@ -4,11 +4,12 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Device } from "../hooks/types";
-import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2, PlayCircle } from "lucide-react";
+import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2, PlayCircle, RefreshCw, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { EditDeviceDialog } from "./EditDeviceDialog";
+import { PowerScheduleDialog } from "./PowerScheduleDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -30,6 +32,7 @@ interface DeviceListItemProps {
 export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
 
   const lastSeen = device.last_seen 
     ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
@@ -53,6 +56,24 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
     } catch (error) {
       console.error('Error updating device:', error);
       toast.error('Cihaz güncellenirken bir hata oluştu');
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      const { error } = await supabase
+        .from('devices')
+        .update({
+          status: 'restarting',
+          last_seen: new Date().toISOString()
+        })
+        .eq('id', device.id);
+
+      if (error) throw error;
+      toast.success('Cihaz yeniden başlatılıyor');
+    } catch (error) {
+      console.error('Error resetting device:', error);
+      toast.error('Cihaz yeniden başlatılırken bir hata oluştu');
     }
   };
 
@@ -104,6 +125,16 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
               <Pencil className="h-4 w-4 mr-2" />
               Düzenle
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleReset}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Cihazı Resetle
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowScheduleDialog(true)}>
+              <Clock className="h-4 w-4 mr-2" />
+              Güç Programı
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-red-600"
               onClick={() => {
@@ -181,6 +212,13 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
           device={device}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
+          onSave={handleSave}
+        />
+
+        <PowerScheduleDialog
+          device={device}
+          open={showScheduleDialog}
+          onOpenChange={setShowScheduleDialog}
           onSave={handleSave}
         />
       </TableCell>
