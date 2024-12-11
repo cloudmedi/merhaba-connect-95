@@ -1,12 +1,6 @@
 import type { Device as BaseDevice } from "@/pages/Manager/Devices/hooks/types";
 
-export type PushDialogDevice = Omit<BaseDevice, 'system_info' | 'branches'> & {
-  branches?: {
-    id?: string;
-    name?: string;
-    company_id?: string | null;
-  } | null;
-};
+export type PushDialogDevice = BaseDevice;
 
 export interface DialogFooterProps {
   selectedCount: number;
