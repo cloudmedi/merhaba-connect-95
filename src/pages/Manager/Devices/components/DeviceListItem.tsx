@@ -1,24 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { formatDistanceToNow } from "date-fns";
-import { tr } from "date-fns/locale";
+import { TableRow } from "@/components/ui/table";
 import { Device } from "../hooks/types";
-import { Monitor, Signal, AlertTriangle, MoreVertical, Eye, Pencil, Trash2, PlayCircle, RefreshCw, Clock } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useState } from "react";
+import { DeviceInfo } from "./DeviceInfo";
+import { DeviceActions } from "./DeviceActions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EditDeviceDialog } from "./EditDeviceDialog";
 import { PowerScheduleDialog } from "./PowerScheduleDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,16 +18,6 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
-
-  const lastSeen = device.last_seen 
-    ? formatDistanceToNow(new Date(device.last_seen), { addSuffix: true, locale: tr })
-    : 'Hiç bağlanmadı';
-
-  const getStatusIcon = () => {
-    if (device.status === 'online') return <Signal className="h-4 w-4 text-emerald-500" />;
-    if (device.system_info?.health === 'warning') return <AlertTriangle className="h-4 w-4 text-amber-500" />;
-    return <Monitor className="h-4 w-4 text-gray-400" />;
-  };
 
   const handleSave = async (updatedDevice: Partial<Device>) => {
     try {
@@ -59,102 +34,23 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
     }
   };
 
-  const handleReset = async () => {
-    try {
-      const { error } = await supabase
-        .from('devices')
-        .update({
-          status: 'restarting',
-          last_seen: new Date().toISOString()
-        })
-        .eq('id', device.id);
-
-      if (error) throw error;
-      toast.success('Cihaz yeniden başlatılıyor');
-    } catch (error) {
-      console.error('Error resetting device:', error);
-      toast.error('Cihaz yeniden başlatılırken bir hata oluştu');
-    }
-  };
-
-  // Get the current playlist name from device's playlist assignments
-  const currentPlaylist = device.playlist_assignments?.[0]?.playlist?.name;
-  console.log('Current playlist for device:', device.name, currentPlaylist);
-
   return (
     <TableRow className="hover:bg-gray-50/50">
-      <TableCell className="w-[40px]">
-        {getStatusIcon()}
-      </TableCell>
-      <TableCell className="font-medium">
-        <div>
-          <p className="font-medium text-gray-900">{device.name}</p>
-          <p className="text-sm text-gray-500">{device.branches?.name || 'Şube atanmamış'}</p>
-          {currentPlaylist && (
-            <div className="mt-1 flex items-center gap-1 text-xs text-gray-600">
-              <PlayCircle className="h-3 w-3" />
-              <span>{currentPlaylist}</span>
-            </div>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge 
-          variant={device.status === 'online' ? 'success' : 'secondary'}
-          className={device.status === 'online' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}
-        >
-          {device.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-gray-500">
-        {lastSeen}
-      </TableCell>
-      <TableCell className="text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => setShowDetails(true)}>
-              <Eye className="h-4 w-4 mr-2" />
-              Detaylar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Düzenle
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleReset}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Cihazı Resetle
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowScheduleDialog(true)}>
-              <Clock className="h-4 w-4 mr-2" />
-              Güç Programı
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="text-red-600"
-              onClick={() => {
-                if (confirm('Bu cihazı silmek istediğinizden emin misiniz?')) {
-                  onDelete(device.id);
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Sil
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <DeviceInfo device={device} />
+      <DeviceActions 
+        device={device}
+        onDelete={onDelete}
+        onShowDetails={() => setShowDetails(true)}
+        onShowEditDialog={() => setShowEditDialog(true)}
+        onShowScheduleDialog={() => setShowScheduleDialog(true)}
+      />
 
-        <Dialog open={showDetails} onOpenChange={setShowDetails}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Cihaz Detayları - {device.name}</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 mt-4">
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Cihaz Detayları - {device.name}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Sistem Bilgileri</h4>
@@ -204,24 +100,23 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
                   </div>
                 )}
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-        <EditDeviceDialog
-          device={device}
-          open={showEditDialog}
-          onOpenChange={setShowEditDialog}
-          onSave={handleSave}
-        />
+      <EditDeviceDialog
+        device={device}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSave={handleSave}
+      />
 
-        <PowerScheduleDialog
-          device={device}
-          open={showScheduleDialog}
-          onOpenChange={setShowScheduleDialog}
-          onSave={handleSave}
-        />
-      </TableCell>
+      <PowerScheduleDialog
+        device={device}
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+        onSave={handleSave}
+      />
     </TableRow>
   );
 }
