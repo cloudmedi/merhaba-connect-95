@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Device } from "../hooks/types";
-import { MoreVertical, Eye, Pencil, Trash2, RefreshCw, Clock, StopCircle } from "lucide-react";
 import { toast } from "sonner";
+import { MoreVertical, Eye, Pencil, Trash2, RefreshCw, Clock, StopCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TableCell } from "@/components/ui/table";
 
 interface DeviceActionsProps {
   device: Device;
