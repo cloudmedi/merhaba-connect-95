@@ -404,6 +404,45 @@ export type Database = {
         }
         Relationships: []
       }
+      device_volume_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          device_id: string | null
+          id: string
+          volume: number
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          volume: number
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          id?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_volume_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_volume_history_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           branch_id: string | null
@@ -422,6 +461,7 @@ export type Database = {
           system_info: Json | null
           token: string | null
           updated_at: string | null
+          volume: number | null
         }
         Insert: {
           branch_id?: string | null
@@ -440,6 +480,7 @@ export type Database = {
           system_info?: Json | null
           token?: string | null
           updated_at?: string | null
+          volume?: number | null
         }
         Update: {
           branch_id?: string | null
@@ -458,6 +499,7 @@ export type Database = {
           system_info?: Json | null
           token?: string | null
           updated_at?: string | null
+          volume?: number | null
         }
         Relationships: [
           {

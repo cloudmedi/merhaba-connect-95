@@ -78,4 +78,5 @@ export interface Device {
   created_by?: string;
   branches?: DeviceBranch | null;
   playlist_assignments?: PlaylistAssignment[];
+  volume?: number;
 }

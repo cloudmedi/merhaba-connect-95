@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Device } from "../hooks/types";
 import { toast } from "sonner";
-import { MoreVertical, Eye, Pencil, Trash2, RefreshCw, Clock, StopCircle } from "lucide-react";
+import { 
+  MoreVertical, 
+  Eye, 
+  Pencil, 
+  Trash2, 
+  RefreshCw, 
+  Clock, 
+  StopCircle,
+  Volume2 
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -11,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TableCell } from "@/components/ui/table";
+import { useState } from "react";
+import { VolumeControlDialog } from "@/components/devices/VolumeControlDialog";
 
 interface DeviceActionsProps {
   device: Device;
@@ -27,6 +38,8 @@ export function DeviceActions({
   onShowEditDialog,
   onShowScheduleDialog 
 }: DeviceActionsProps) {
+  const [showVolumeDialog, setShowVolumeDialog] = useState(false);
+
   const handleReset = async () => {
     try {
       const { error } = await supabase
@@ -81,6 +94,10 @@ export function DeviceActions({
             Düzenle
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setShowVolumeDialog(true)}>
+            <Volume2 className="h-4 w-4 mr-2" />
+            Ses Kontrolü
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleReset}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Cihazı Resetle
@@ -107,6 +124,12 @@ export function DeviceActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <VolumeControlDialog
+        device={device}
+        open={showVolumeDialog}
+        onOpenChange={setShowVolumeDialog}
+      />
     </TableCell>
   );
 }
