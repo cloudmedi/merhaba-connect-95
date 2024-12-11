@@ -89,9 +89,9 @@ export function MusicTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg">
+    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white">
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full rounded-md" type="auto">
+        <div className="relative">
           <Table>
             <TableHeader className="sticky top-0 z-20 bg-white border-b">
               <TableRow className="hover:bg-transparent">
@@ -109,24 +109,28 @@ export function MusicTable({
                 <TableHead className="w-[50px] bg-white"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {songs.map((song) => (
-                <SongTableRow
-                  key={song.id}
-                  song={song}
-                  isSelected={selectedSongs.some((s) => s.id === song.id)}
-                  onSelect={(checked) => onSelectSong(song, checked)}
-                  onPlay={() => handlePlaySong(song)}
-                  formatDuration={formatDuration}
-                  defaultArtwork={defaultArtwork}
-                  onDelete={() => onDelete(song.id)}
-                  isPlaying={isPlaying}
-                  currentlyPlayingId={currentlyPlaying?.id}
-                />
-              ))}
-            </TableBody>
           </Table>
-        </ScrollArea>
+          <ScrollArea className="h-[calc(100vh-400px)]" type="auto">
+            <Table>
+              <TableBody>
+                {songs.map((song) => (
+                  <SongTableRow
+                    key={song.id}
+                    song={song}
+                    isSelected={selectedSongs.some((s) => s.id === song.id)}
+                    onSelect={(checked) => onSelectSong(song, checked)}
+                    onPlay={() => handlePlaySong(song)}
+                    formatDuration={formatDuration}
+                    defaultArtwork={defaultArtwork}
+                    onDelete={() => onDelete(song.id)}
+                    isPlaying={isPlaying}
+                    currentlyPlayingId={currentlyPlaying?.id}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </div>
       </div>
 
       <div className="sticky bottom-0 bg-white border-t px-4 py-2">
