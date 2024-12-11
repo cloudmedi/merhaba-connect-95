@@ -35,6 +35,15 @@ interface MusicTableProps {
   onDelete: (id: string) => void;
 }
 
+const defaultArtwork = "/placeholder.svg";
+
+const formatDuration = (duration?: number) => {
+  if (!duration) return "0:00";
+  const minutes = Math.floor(duration / 60);
+  const seconds = duration % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 export function MusicTable({
   songs,
   selectedSongs,
@@ -52,6 +61,21 @@ export function MusicTable({
   const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
+
+  const handlePlaySong = (song: Song) => {
+    setCurrentlyPlaying(song);
+    setIsPlaying(true);
+    setCurrentPlaylistId(Date.now().toString()); // Unique ID for the current playlist
+  };
+
+  const transformedSongs = songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist || 'Unknown Artist',
+    duration: song.duration || 0,
+    artwork_url: song.artwork_url || defaultArtwork,
+    file_url: song.file_url
+  }));
 
   if (isLoading) {
     return <DataTableLoader />;
