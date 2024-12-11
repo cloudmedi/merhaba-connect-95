@@ -404,6 +404,54 @@ export type Database = {
         }
         Relationships: []
       }
+      device_updates: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          device_id: string | null
+          error_message: string | null
+          id: string
+          started_at: string | null
+          status: string
+          update_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          update_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          update_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_updates_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_updates_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "system_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_volume_history: {
         Row: {
           changed_by: string | null
@@ -449,9 +497,11 @@ export type Database = {
           category: string
           created_at: string | null
           created_by: string | null
+          current_version: string | null
           id: string
           ip_address: string | null
           last_seen: string | null
+          last_update_check: string | null
           location: string | null
           location_id: string | null
           mac_address: string | null
@@ -460,6 +510,7 @@ export type Database = {
           status: string | null
           system_info: Json | null
           token: string | null
+          update_status: string | null
           updated_at: string | null
           volume: number | null
         }
@@ -468,9 +519,11 @@ export type Database = {
           category: string
           created_at?: string | null
           created_by?: string | null
+          current_version?: string | null
           id?: string
           ip_address?: string | null
           last_seen?: string | null
+          last_update_check?: string | null
           location?: string | null
           location_id?: string | null
           mac_address?: string | null
@@ -479,6 +532,7 @@ export type Database = {
           status?: string | null
           system_info?: Json | null
           token?: string | null
+          update_status?: string | null
           updated_at?: string | null
           volume?: number | null
         }
@@ -487,9 +541,11 @@ export type Database = {
           category?: string
           created_at?: string | null
           created_by?: string | null
+          current_version?: string | null
           id?: string
           ip_address?: string | null
           last_seen?: string | null
+          last_update_check?: string | null
           location?: string | null
           location_id?: string | null
           mac_address?: string | null
@@ -498,6 +554,7 @@ export type Database = {
           status?: string | null
           system_info?: Json | null
           token?: string | null
+          update_status?: string | null
           updated_at?: string | null
           volume?: number | null
         }
@@ -1355,6 +1412,47 @@ export type Database = {
           storage_usage?: number
         }
         Relationships: []
+      }
+      system_updates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          published_at: string | null
+          release_notes: string | null
+          status: string
+          update_type: string
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          release_notes?: string | null
+          status?: string
+          update_type: string
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          release_notes?: string | null
+          status?: string
+          update_type?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_updates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
