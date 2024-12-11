@@ -21,7 +21,7 @@ export const useMusicLibrary = () => {
   const [filterGenre, setFilterGenre] = useState<string>("all");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 20; // Sabit sayfa başına öğe sayısı
 
   // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
@@ -52,8 +52,6 @@ export const useMusicLibrary = () => {
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
-
-      console.log('Fetching songs with genre filter:', filterGenre);
 
       let query = supabase
         .from('songs')
