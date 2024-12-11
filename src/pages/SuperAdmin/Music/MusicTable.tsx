@@ -92,12 +92,6 @@ export function MusicTable({
     setCurrentPlaylistId('temp-playlist');
   };
 
-  const handleSongChange = (index: number) => {
-    setCurrentSongIndex(index);
-    setCurrentlyPlaying(songs[index]);
-  };
-
-  // Pagination calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
@@ -111,56 +105,56 @@ export function MusicTable({
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="border rounded-lg">
-        <div className="relative min-h-[800px] max-h-[calc(100vh-200px)]">
-          <ScrollArea className="h-full rounded-md" type="auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-white">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[30px]">
-                    <Checkbox
-                      checked={selectedSongs.length === songs.length}
-                      onCheckedChange={onSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="font-medium text-gray-700">Title</TableHead>
-                  <TableHead className="font-medium text-gray-700">Artist</TableHead>
-                  <TableHead className="font-medium text-gray-700">Album</TableHead>
-                  <TableHead className="font-medium text-gray-700">Genres</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {songs.map((song) => (
-                  <SongTableRow
-                    key={song.id}
-                    song={song}
-                    isSelected={selectedSongs.some((s) => s.id === song.id)}
-                    onSelect={(checked) => onSelectSong(song, checked)}
-                    onPlay={() => handlePlaySong(song)}
-                    formatDuration={formatDuration}
-                    defaultArtwork={defaultArtwork}
-                    onDelete={() => onDelete(song.id)}
-                    isPlaying={isPlaying}
-                    currentlyPlayingId={currentlyPlaying?.id}
+    <div className="flex flex-col space-y-4 h-full">
+      <div className="relative border rounded-lg flex-1 min-h-0">
+        <ScrollArea className="h-[calc(100vh-320px)] rounded-md" type="always">
+          <Table>
+            <TableHeader className="sticky top-0 z-20 bg-white">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[30px] bg-white">
+                  <Checkbox
+                    checked={selectedSongs.length === songs.length}
+                    onCheckedChange={onSelectAll}
                   />
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </div>
+                </TableHead>
+                <TableHead className="font-medium text-gray-700 bg-white">Title</TableHead>
+                <TableHead className="font-medium text-gray-700 bg-white">Artist</TableHead>
+                <TableHead className="font-medium text-gray-700 bg-white">Album</TableHead>
+                <TableHead className="font-medium text-gray-700 bg-white">Genres</TableHead>
+                <TableHead className="font-medium text-gray-700 bg-white text-right">Duration</TableHead>
+                <TableHead className="w-[50px] bg-white"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {songs.map((song) => (
+                <SongTableRow
+                  key={song.id}
+                  song={song}
+                  isSelected={selectedSongs.some((s) => s.id === song.id)}
+                  onSelect={(checked) => onSelectSong(song, checked)}
+                  onPlay={() => handlePlaySong(song)}
+                  formatDuration={formatDuration}
+                  defaultArtwork={defaultArtwork}
+                  onDelete={() => onDelete(song.id)}
+                  isPlaying={isPlaying}
+                  currentlyPlayingId={currentlyPlaying?.id}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
-        totalItems={totalCount}
-      />
+      <div className="sticky bottom-0 bg-white border-t">
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalCount}
+        />
+      </div>
 
       {currentlyPlaying && (
         <MusicPlayer
@@ -174,7 +168,7 @@ export function MusicTable({
             setCurrentlyPlaying(null);
             setIsPlaying(false);
           }}
-          onSongChange={handleSongChange}
+          onSongChange={(index) => setCurrentSongIndex(index)}
           onPlayStateChange={setIsPlaying}
           currentSongId={currentlyPlaying.id}
         />

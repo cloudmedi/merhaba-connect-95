@@ -103,18 +103,18 @@ export function TablePagination({
   };
 
   return (
-    <div className="flex items-center justify-between py-4">
+    <div className="flex items-center justify-between px-4 py-3">
       <div className="text-sm text-muted-foreground">
         Showing {startIndex + 1}-{endIndex} of {totalItems} songs
       </div>
       {totalPages > 1 && (
-        <div className="flex justify-end">
+        <div className="ml-auto">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious 
                   onClick={() => onPageChange(currentPage - 1)}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} select-none`}
                 />
               </PaginationItem>
               
@@ -123,7 +123,7 @@ export function TablePagination({
               <PaginationItem>
                 <PaginationNext 
                   onClick={() => onPageChange(currentPage + 1)}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} select-none`}
                 />
               </PaginationItem>
             </PaginationContent>
