@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Trash2, ChevronLeft, ChevronRight, PlaySquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CreatePlaylistDialog } from "./components/CreatePlaylistDialog";
 
 interface Song {
   id: string;
@@ -22,6 +23,7 @@ export default function MusicLibrary() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
   const { toast } = useToast();
   const itemsPerPage = 20;
 
@@ -124,10 +126,22 @@ export default function MusicLibrary() {
           </Button>
         </div>
         {selectedSongs.length > 0 && (
-          <Button variant="destructive" onClick={() => handleDelete(selectedSongs[0].id)}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete ({selectedSongs.length})
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setIsCreatePlaylistOpen(true)}
+            >
+              <PlaySquare className="w-4 h-4 mr-2" />
+              Create Playlist ({selectedSongs.length})
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleDelete(selectedSongs[0].id)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete ({selectedSongs.length})
+            </Button>
+          </div>
         )}
       </div>
 
@@ -224,6 +238,12 @@ export default function MusicLibrary() {
           </div>
         </div>
       </div>
+
+      <CreatePlaylistDialog
+        isOpen={isCreatePlaylistOpen}
+        onClose={() => setIsCreatePlaylistOpen(false)}
+        selectedSongs={selectedSongs}
+      />
     </div>
   );
 }
