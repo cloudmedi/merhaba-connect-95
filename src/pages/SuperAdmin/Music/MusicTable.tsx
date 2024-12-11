@@ -65,7 +65,7 @@ export function MusicTable({
   const handlePlaySong = (song: Song) => {
     setCurrentlyPlaying(song);
     setIsPlaying(true);
-    setCurrentPlaylistId(Date.now().toString()); // Unique ID for the current playlist
+    setCurrentPlaylistId(Date.now().toString());
   };
 
   const transformedSongs = songs.map(song => ({
