@@ -11,7 +11,7 @@ export function CreatePlaylistDialog({ isOpen, onClose, selectedSongs }: CreateP
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[1200px] h-[80vh]">
-        <CreatePlaylist />
+        <CreatePlaylist initialSelectedSongs={selectedSongs} />
       </DialogContent>
     </Dialog>
   );
