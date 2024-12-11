@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { MusicContent } from "./MusicContent";
+import { MusicLibrary } from "./MusicLibrary";
 
 export default function Music() {
   return (
@@ -7,7 +7,7 @@ export default function Music() {
       title="Music Library"
       description="Manage and organize your music collection"
     >
-      <MusicContent />
+      <MusicLibrary />
     </DashboardLayout>
   );
 }
