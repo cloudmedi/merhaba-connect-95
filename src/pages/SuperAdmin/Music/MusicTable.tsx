@@ -90,8 +90,8 @@ export function MusicTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white">
-      <div className="sticky top-0 z-50 bg-white border-b">
+    <div className="flex flex-col h-[calc(100vh-280px)] bg-white border rounded-lg">
+      <div className="sticky top-0 z-10 bg-white border-b">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -112,30 +112,28 @@ export function MusicTable({
         </Table>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-[calc(100vh-400px)]">
-          <Table>
-            <TableBody>
-              {songs.map((song) => (
-                <SongTableRow
-                  key={song.id}
-                  song={song}
-                  isSelected={selectedSongs.some((s) => s.id === song.id)}
-                  onSelect={(checked) => onSelectSong(song, checked)}
-                  onPlay={() => handlePlaySong(song)}
-                  formatDuration={formatDuration}
-                  defaultArtwork={defaultArtwork}
-                  onDelete={() => onDelete(song.id)}
-                  isPlaying={isPlaying}
-                  currentlyPlayingId={currentlyPlaying?.id}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      </div>
+      <ScrollArea className="flex-1">
+        <Table>
+          <TableBody>
+            {songs.map((song) => (
+              <SongTableRow
+                key={song.id}
+                song={song}
+                isSelected={selectedSongs.some((s) => s.id === song.id)}
+                onSelect={(checked) => onSelectSong(song, checked)}
+                onPlay={() => handlePlaySong(song)}
+                formatDuration={formatDuration}
+                defaultArtwork={defaultArtwork}
+                onDelete={() => onDelete(song.id)}
+                isPlaying={isPlaying}
+                currentlyPlayingId={currentlyPlaying?.id}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
 
-      <div className="sticky bottom-0 bg-white border-t">
+      <div className="sticky bottom-0 border-t bg-white p-4">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
