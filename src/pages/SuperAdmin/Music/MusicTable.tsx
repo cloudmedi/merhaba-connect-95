@@ -90,7 +90,7 @@ export function MusicTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] bg-white border rounded-lg">
+    <div className="flex flex-col h-[calc(100vh-280px)] bg-white border rounded-lg overflow-hidden">
       <div className="sticky top-0 z-10 bg-white border-b">
         <Table>
           <TableHeader>
@@ -113,24 +113,26 @@ export function MusicTable({
       </div>
 
       <ScrollArea className="flex-1">
-        <Table>
-          <TableBody>
-            {songs.map((song) => (
-              <SongTableRow
-                key={song.id}
-                song={song}
-                isSelected={selectedSongs.some((s) => s.id === song.id)}
-                onSelect={(checked) => onSelectSong(song, checked)}
-                onPlay={() => handlePlaySong(song)}
-                formatDuration={formatDuration}
-                defaultArtwork={defaultArtwork}
-                onDelete={() => onDelete(song.id)}
-                isPlaying={isPlaying}
-                currentlyPlayingId={currentlyPlaying?.id}
-              />
-            ))}
-          </TableBody>
-        </Table>
+        <div className="min-h-0">
+          <Table>
+            <TableBody>
+              {songs.map((song) => (
+                <SongTableRow
+                  key={song.id}
+                  song={song}
+                  isSelected={selectedSongs.some((s) => s.id === song.id)}
+                  onSelect={(checked) => onSelectSong(song, checked)}
+                  onPlay={() => handlePlaySong(song)}
+                  formatDuration={formatDuration}
+                  defaultArtwork={defaultArtwork}
+                  onDelete={() => onDelete(song.id)}
+                  isPlaying={isPlaying}
+                  currentlyPlayingId={currentlyPlaying?.id}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </ScrollArea>
 
       <div className="sticky bottom-0 border-t bg-white p-4">
