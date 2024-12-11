@@ -11,11 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMutations";
 import { toast } from "sonner";
 
-interface PlaylistEditorProps {
-  initialSelectedSongs?: any[];
-}
-
-export function PlaylistEditor({ initialSelectedSongs }: PlaylistEditorProps) {
+export function PlaylistEditor() {
   const navigate = useNavigate();
   const location = useLocation();
   const { handleSavePlaylist } = usePlaylistMutations();
@@ -26,7 +22,7 @@ export function PlaylistEditor({ initialSelectedSongs }: PlaylistEditorProps) {
     description: "",
     artwork: null as File | null,
     artwork_url: "",
-    selectedSongs: initialSelectedSongs || [],
+    selectedSongs: [],
     selectedUsers: [],
     selectedGenres: [],
     selectedCategories: [],
