@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Song {
@@ -21,9 +21,9 @@ interface Song {
 export default function MusicLibrary() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const itemsPerPage = 20;
-  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['songs', currentPage, searchQuery],
@@ -47,6 +47,26 @@ export default function MusicLibrary() {
       return data as Song[];
     }
   });
+
+  // Get total count for pagination
+  const { data: totalCount = 0 } = useQuery({
+    queryKey: ['songs-count', searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from('songs')
+        .select('*', { count: 'exact', head: true });
+
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const handleDelete = async (songId: string) => {
     try {
@@ -175,6 +195,33 @@ export default function MusicLibrary() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Pagination */}
+        <div className="border-t p-4 bg-white flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} songs
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
