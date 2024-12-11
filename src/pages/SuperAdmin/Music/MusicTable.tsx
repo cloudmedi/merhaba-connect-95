@@ -113,23 +113,23 @@ export function MusicTable({
   return (
     <div className="space-y-4">
       <div className="border rounded-lg">
-        <div className="h-[calc(100vh-280px)] relative">
-          <ScrollArea className="h-full rounded-md" type="always">
+        <div className="relative min-h-[800px] max-h-[calc(100vh-200px)]">
+          <ScrollArea className="h-full rounded-md" type="auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-white">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[30px] bg-white sticky top-0 z-20">
+                  <TableHead className="w-[30px]">
                     <Checkbox
                       checked={selectedSongs.length === songs.length}
                       onCheckedChange={onSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Artist</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Album</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Genres</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0 z-20">Duration</TableHead>
-                  <TableHead className="w-[50px] bg-white sticky top-0 z-20"></TableHead>
+                  <TableHead className="font-medium text-gray-700">Title</TableHead>
+                  <TableHead className="font-medium text-gray-700">Artist</TableHead>
+                  <TableHead className="font-medium text-gray-700">Album</TableHead>
+                  <TableHead className="font-medium text-gray-700">Genres</TableHead>
+                  <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
