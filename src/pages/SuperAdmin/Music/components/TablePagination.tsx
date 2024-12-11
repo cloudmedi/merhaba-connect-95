@@ -103,12 +103,12 @@ export function TablePagination({
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex items-center justify-between w-full">
       <div className="text-sm text-muted-foreground">
         Showing {startIndex + 1}-{endIndex} of {totalItems} songs
       </div>
       {totalPages > 1 && (
-        <div className="ml-auto">
+        <div>
           <Pagination>
             <PaginationContent>
               <PaginationItem>

@@ -61,55 +61,15 @@ export function MusicTable({
     return <EmptyState />;
   }
 
-  const formatDuration = (duration?: number) => {
-    if (!duration) return "0:00";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
-
-  const getBunnyUrl = (song: Song): string => {
-    if (!song) return '';
-    
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    }
-    
-    if (song.file_url.startsWith('http')) {
-      return song.file_url;
-    }
-    
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
-  };
-
-  const handlePlaySong = (song: Song) => {
-    const songIndex = songs.findIndex(s => s.id === song.id);
-    setCurrentSongIndex(songIndex);
-    setCurrentlyPlaying(song);
-    setIsPlaying(true);
-    setCurrentPlaylistId('temp-playlist');
-  };
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
-  const transformedSongs = songs.map(song => ({
-    id: song.id,
-    title: song.title,
-    artist: song.artist || "Unknown Artist",
-    duration: song.duration?.toString() || "0:00",
-    file_url: getBunnyUrl(song),
-    bunny_id: song.bunny_id
-  }));
-
   return (
-    <div className="flex flex-col space-y-4 h-full">
-      <div className="relative border rounded-lg flex-1 min-h-0">
-        <ScrollArea className="h-[calc(100vh-320px)] rounded-md" type="always">
+    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg">
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full rounded-md" type="auto">
           <Table>
-            <TableHeader className="sticky top-0 z-20 bg-white">
+            <TableHeader className="sticky top-0 z-20 bg-white border-b">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[30px] bg-white">
                   <Checkbox
@@ -145,7 +105,7 @@ export function MusicTable({
         </ScrollArea>
       </div>
 
-      <div className="sticky bottom-0 bg-white border-t">
+      <div className="sticky bottom-0 bg-white border-t px-4 py-2">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
