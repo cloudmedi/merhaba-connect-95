@@ -22,8 +22,8 @@ interface VolumeHistory {
   volume: number;
   created_at: string;
   profiles: {
-    first_name?: string | null;
-    last_name?: string | null;
+    first_name: string | null;
+    last_name: string | null;
   } | null;
 }
 

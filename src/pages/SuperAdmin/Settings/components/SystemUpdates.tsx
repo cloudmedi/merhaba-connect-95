@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface SystemUpdate {
   id: string;
   version: string;
-  release_notes: string;
+  release_notes: string | null;
   update_type: 'major' | 'minor' | 'patch' | 'hotfix';
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   created_at: string;
@@ -79,7 +79,7 @@ export function SystemUpdates() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUpdates(data);
+      setUpdates(data as SystemUpdate[]);
     } catch (error) {
       console.error('Error fetching updates:', error);
       toast.error('Failed to fetch system updates');
