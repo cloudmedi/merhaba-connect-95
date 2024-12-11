@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { PlaylistEditor } from "./components/PlaylistEditor";
+import { PlaylistEditor } from "@/pages/SuperAdmin/Playlists/components/PlaylistEditor";
 
 interface CreatePlaylistProps {
   initialSelectedSongs?: any[];
