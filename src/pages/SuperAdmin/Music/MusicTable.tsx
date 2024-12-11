@@ -58,14 +58,15 @@ export function MusicTable({
   onDelete
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
-  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
 
   const handlePlaySong = (song: Song) => {
-    setCurrentlyPlaying(song);
-    setIsPlaying(true);
-    setCurrentPlaylistId(Date.now().toString());
+    if (currentlyPlaying?.id === song.id) {
+      setIsPlaying(!isPlaying);
+    } else {
+      setCurrentlyPlaying(song);
+      setIsPlaying(true);
+    }
   };
 
   const transformedSongs = songs.map(song => ({
@@ -89,29 +90,29 @@ export function MusicTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white overflow-hidden">
-      <div className="flex-1 relative">
-        <div className="sticky top-0 z-50 bg-white border-b">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[30px]">
-                  <Checkbox
-                    checked={selectedSongs.length === songs.length}
-                    onCheckedChange={onSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="font-medium text-gray-700">Title</TableHead>
-                <TableHead className="font-medium text-gray-700">Artist</TableHead>
-                <TableHead className="font-medium text-gray-700">Album</TableHead>
-                <TableHead className="font-medium text-gray-700">Genres</TableHead>
-                <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-          </Table>
-        </div>
-        
+    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white">
+      <div className="sticky top-0 z-50 bg-white border-b">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[30px] py-4">
+                <Checkbox
+                  checked={selectedSongs.length === songs.length}
+                  onCheckedChange={onSelectAll}
+                />
+              </TableHead>
+              <TableHead className="font-medium text-gray-700">Title</TableHead>
+              <TableHead className="font-medium text-gray-700">Artist</TableHead>
+              <TableHead className="font-medium text-gray-700">Album</TableHead>
+              <TableHead className="font-medium text-gray-700">Genres</TableHead>
+              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+        </Table>
+      </div>
+
+      <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-400px)]">
           <Table>
             <TableBody>
@@ -134,7 +135,7 @@ export function MusicTable({
         </ScrollArea>
       </div>
 
-      <div className="sticky bottom-0 bg-white border-t mt-auto">
+      <div className="sticky bottom-0 bg-white border-t">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -148,7 +149,6 @@ export function MusicTable({
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
-            id: currentPlaylistId,
             title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
             songs: transformedSongs
@@ -157,9 +157,9 @@ export function MusicTable({
             setCurrentlyPlaying(null);
             setIsPlaying(false);
           }}
-          onSongChange={(index) => setCurrentSongIndex(index)}
           onPlayStateChange={setIsPlaying}
           currentSongId={currentlyPlaying.id}
+          autoPlay={true}
         />
       )}
     </div>
