@@ -35,14 +35,14 @@ interface MusicTableProps {
   onDelete: (id: string) => void;
 }
 
-const defaultArtwork = "/placeholder.svg";
-
 const formatDuration = (duration?: number) => {
   if (!duration) return "0:00";
   const minutes = Math.floor(duration / 60);
   const seconds = duration % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
+
+const defaultArtwork = "/placeholder.svg";
 
 export function MusicTable({
   songs,
@@ -89,51 +89,52 @@ export function MusicTable({
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white">
-      <div className="flex-1 min-h-0">
-        <div className="relative">
+    <div className="flex flex-col h-[calc(100vh-280px)] border rounded-lg bg-white overflow-hidden">
+      <div className="flex-1 relative">
+        <div className="sticky top-0 z-50 bg-white border-b">
           <Table>
-            <TableHeader className="sticky top-0 z-20 bg-white border-b">
+            <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[30px] bg-white">
+                <TableHead className="w-[30px]">
                   <Checkbox
                     checked={selectedSongs.length === songs.length}
                     onCheckedChange={onSelectAll}
                   />
                 </TableHead>
-                <TableHead className="font-medium text-gray-700 bg-white">Title</TableHead>
-                <TableHead className="font-medium text-gray-700 bg-white">Artist</TableHead>
-                <TableHead className="font-medium text-gray-700 bg-white">Album</TableHead>
-                <TableHead className="font-medium text-gray-700 bg-white">Genres</TableHead>
-                <TableHead className="font-medium text-gray-700 bg-white text-right">Duration</TableHead>
-                <TableHead className="w-[50px] bg-white"></TableHead>
+                <TableHead className="font-medium text-gray-700">Title</TableHead>
+                <TableHead className="font-medium text-gray-700">Artist</TableHead>
+                <TableHead className="font-medium text-gray-700">Album</TableHead>
+                <TableHead className="font-medium text-gray-700">Genres</TableHead>
+                <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
           </Table>
-          <ScrollArea className="h-[calc(100vh-400px)]" type="auto">
-            <Table>
-              <TableBody>
-                {songs.map((song) => (
-                  <SongTableRow
-                    key={song.id}
-                    song={song}
-                    isSelected={selectedSongs.some((s) => s.id === song.id)}
-                    onSelect={(checked) => onSelectSong(song, checked)}
-                    onPlay={() => handlePlaySong(song)}
-                    formatDuration={formatDuration}
-                    defaultArtwork={defaultArtwork}
-                    onDelete={() => onDelete(song.id)}
-                    isPlaying={isPlaying}
-                    currentlyPlayingId={currentlyPlaying?.id}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
         </div>
+        
+        <ScrollArea className="h-[calc(100vh-400px)]">
+          <Table>
+            <TableBody>
+              {songs.map((song) => (
+                <SongTableRow
+                  key={song.id}
+                  song={song}
+                  isSelected={selectedSongs.some((s) => s.id === song.id)}
+                  onSelect={(checked) => onSelectSong(song, checked)}
+                  onPlay={() => handlePlaySong(song)}
+                  formatDuration={formatDuration}
+                  defaultArtwork={defaultArtwork}
+                  onDelete={() => onDelete(song.id)}
+                  isPlaying={isPlaying}
+                  currentlyPlayingId={currentlyPlaying?.id}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
-      <div className="sticky bottom-0 bg-white border-t px-4 py-2">
+      <div className="sticky bottom-0 bg-white border-t mt-auto">
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
