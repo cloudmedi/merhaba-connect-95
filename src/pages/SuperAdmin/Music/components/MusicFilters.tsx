@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { BulkPlaylistDialog } from "./bulk-playlist/BulkPlaylistDialog";
-import type { Genre } from "../hooks/useMusicLibrary";
+import type { Genre } from "@/types/api";
 
 interface MusicFiltersProps {
   searchQuery: string;
@@ -53,7 +53,7 @@ export function MusicFilters({
           <SelectContent>
             <SelectItem value="all">All Genres</SelectItem>
             {genres.map((genre) => (
-              <SelectItem key={genre.id} value={genre.id}>
+              <SelectItem key={genre.id} value={genre.name}>
                 {genre.name}
               </SelectItem>
             ))}

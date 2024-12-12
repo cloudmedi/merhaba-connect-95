@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MusicFilters } from "./components/MusicFilters";
 import { MusicTable } from "./components/MusicTable";
 import { toast } from "sonner";
-import type { Song } from "@/types/api";
+import type { Song, Genre } from "@/types/api";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
@@ -68,16 +68,12 @@ export function MusicContent() {
     queryKey: ['genres'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('songs')
-        .select('genre');
+        .from('genres')
+        .select('*')
+        .order('name');
 
       if (error) throw error;
-
-      const allGenres = data
-        .flatMap(song => song.genre || [])
-        .filter((genre): genre is string => Boolean(genre));
-
-      return Array.from(new Set(allGenres)).sort();
+      return (data || []) as Genre[];
     }
   });
 
@@ -94,11 +90,7 @@ export function MusicContent() {
 
       toast.success("Song deleted successfully");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
     }
   };
 
