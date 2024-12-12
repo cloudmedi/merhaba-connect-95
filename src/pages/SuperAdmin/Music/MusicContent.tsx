@@ -1,26 +1,21 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody } from "@/components/ui/table";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MusicTableHeader } from "./components/MusicTableHeader";
-import { MusicTableRow } from "./components/MusicTableRow";
-import type { Song } from "@/types/playlist";
+import { MusicFilters } from "./components/MusicFilters";
+import { MusicTable } from "./components/MusicTable";
+import { toast } from "sonner";
+import type { Song } from "@/types/api";
 
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
+  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const itemsPerPage = 20;
 
+  // Fetch songs with filtering
   const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs', currentPage, searchQuery],
+    queryKey: ['songs', currentPage, searchQuery, selectedGenre],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
@@ -35,6 +30,10 @@ export function MusicContent() {
         query = query.ilike('title', `%${searchQuery}%`);
       }
 
+      if (selectedGenre !== 'all') {
+        query = query.contains('genre', [selectedGenre]);
+      }
+
       const { data, error } = await query;
 
       if (error) throw error;
@@ -44,7 +43,7 @@ export function MusicContent() {
 
   // Get total count for pagination
   const { data: totalCount = 0 } = useQuery({
-    queryKey: ['songs-count', searchQuery],
+    queryKey: ['songs-count', searchQuery, selectedGenre],
     queryFn: async () => {
       let query = supabase
         .from('songs')
@@ -54,9 +53,31 @@ export function MusicContent() {
         query = query.ilike('title', `%${searchQuery}%`);
       }
 
+      if (selectedGenre !== 'all') {
+        query = query.contains('genre', [selectedGenre]);
+      }
+
       const { count, error } = await query;
       if (error) throw error;
       return count || 0;
+    }
+  });
+
+  // Fetch unique genres
+  const { data: genres = [] } = useQuery({
+    queryKey: ['genres'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('genre');
+
+      if (error) throw error;
+
+      const allGenres = data
+        .flatMap(song => song.genre || [])
+        .filter((genre): genre is string => Boolean(genre));
+
+      return Array.from(new Set(allGenres)).sort();
     }
   });
 
@@ -71,10 +92,7 @@ export function MusicContent() {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Song deleted successfully",
-      });
+      toast.success("Song deleted successfully");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -84,119 +102,69 @@ export function MusicContent() {
     }
   };
 
-  const handleCreatePlaylist = () => {
-    if (selectedSongs.length === 0) {
-      toast({
-        title: "No songs selected",
-        description: "Please select at least one song to create a playlist",
-        variant: "destructive"
+  const handleSelectAll = () => {
+    if (selectedSongs.length > 0) {
+      setSelectedSongs([]);
+    } else {
+      // Select all filtered songs
+      let query = supabase
+        .from('songs')
+        .select('*');
+
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`);
+      }
+
+      if (selectedGenre !== 'all') {
+        query = query.contains('genre', [selectedGenre]);
+      }
+
+      query.then(({ data }) => {
+        if (data) {
+          setSelectedSongs(data as Song[]);
+          toast.success(`Selected ${data.length} songs`);
+        }
       });
-      return;
     }
-
-    navigate("/super-admin/playlists/create", {
-      state: { selectedSongs }
-    });
-  };
-
-  const formatDuration = (duration?: number) => {
-    if (!duration) return "0:00";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
-            <Input
-              type="search"
-              placeholder="Search songs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Upload Music
-          </Button>
-        </div>
-        {selectedSongs.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Button onClick={handleCreatePlaylist}>
-              Create Playlist ({selectedSongs.length} songs)
-            </Button>
-            <Button variant="destructive" onClick={() => handleDelete(selectedSongs[0].id)}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete ({selectedSongs.length})
-            </Button>
-          </div>
-        )}
-      </div>
+      <MusicFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedGenre={selectedGenre}
+        onGenreChange={setSelectedGenre}
+        genres={genres}
+        onSelectAll={handleSelectAll}
+        selectedCount={selectedSongs.length}
+      />
 
-      <div className="flex-1 border rounded-lg bg-white overflow-hidden flex flex-col">
-        <Table>
-          <MusicTableHeader
-            onSelectAll={(checked) => {
-              if (checked) {
-                setSelectedSongs(songs);
-              } else {
-                setSelectedSongs([]);
-              }
-            }}
-            selectedSongs={selectedSongs}
-            songs={songs}
-          />
-          <TableBody>
-            {songs.map((song) => (
-              <MusicTableRow
-                key={song.id}
-                song={song}
-                isSelected={selectedSongs.some(s => s.id === song.id)}
-                onSelect={(checked) => {
-                  if (checked) {
-                    setSelectedSongs([...selectedSongs, song]);
-                  } else {
-                    setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
-                  }
-                }}
-                onDelete={handleDelete}
-                formatDuration={formatDuration}
-              />
-            ))}
-          </TableBody>
-        </Table>
-
-        <div className="border-t p-4 bg-white flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} songs
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <MusicTable
+        songs={songs}
+        selectedSongs={selectedSongs}
+        onSelectSong={(song, checked) => {
+          if (checked) {
+            setSelectedSongs([...selectedSongs, song]);
+          } else {
+            setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
+          }
+        }}
+        onSelectAll={(checked) => {
+          if (checked) {
+            setSelectedSongs(songs);
+          } else {
+            setSelectedSongs([]);
+          }
+        }}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        isLoading={isLoading}
+        totalCount={totalCount}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
