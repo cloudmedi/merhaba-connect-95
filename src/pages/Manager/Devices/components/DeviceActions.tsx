@@ -76,6 +76,21 @@ export function DeviceActions({
     }
   };
 
+  const handleVolumeChange = async (newVolume: number) => {
+    try {
+      const { error } = await supabase
+        .from('devices')
+        .update({ volume: newVolume })
+        .eq('id', device.id);
+
+      if (error) throw error;
+      toast.success('Ses seviyesi başarıyla güncellendi');
+    } catch (error) {
+      console.error('Error updating volume:', error);
+      toast.error('Ses seviyesi güncellenirken bir hata oluştu');
+    }
+  };
+
   return (
     <TableCell className="text-right">
       <DropdownMenu>
@@ -126,9 +141,11 @@ export function DeviceActions({
       </DropdownMenu>
 
       <VolumeControlDialog
-        device={device}
-        open={showVolumeDialog}
-        onOpenChange={setShowVolumeDialog}
+        isOpen={showVolumeDialog}
+        onClose={() => setShowVolumeDialog(false)}
+        deviceId={device.id}
+        currentVolume={device.volume || 50}
+        onVolumeChange={handleVolumeChange}
       />
     </TableCell>
   );

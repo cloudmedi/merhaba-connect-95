@@ -34,14 +34,7 @@ export function VolumeControlDialog({
     try {
       const { data, error } = await supabase
         .from('device_volume_history')
-        .select(`
-          volume,
-          created_at,
-          profiles:changed_by (
-            first_name,
-            last_name
-          )
-        `)
+        .select('volume, created_at, changed_by')
         .eq('device_id', deviceId)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -49,11 +42,7 @@ export function VolumeControlDialog({
       if (error) throw error;
 
       if (data) {
-        setVolumeHistory(data.map(item => ({
-          volume: item.volume,
-          created_at: item.created_at,
-          profiles: item.profiles
-        })));
+        setVolumeHistory(data);
       }
     } catch (error) {
       console.error('Error fetching volume history:', error);
@@ -95,7 +84,6 @@ export function VolumeControlDialog({
                 >
                   <div>
                     <span className="font-medium">{history.volume}%</span>
-                    <span className="text-gray-500 ml-2">by {history.profiles.first_name} {history.profiles.last_name}</span>
                   </div>
                   <span className="text-gray-500">
                     {format(new Date(history.created_at), 'MMM d, HH:mm')}

@@ -37,8 +37,5 @@ export interface Playlist {
 export interface VolumeHistory {
   volume: number;
   created_at: string;
-  profiles: {
-    first_name: string;
-    last_name: string;
-  };
+  changed_by: string;
 }
