@@ -40,7 +40,28 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
     setIsCreating(true);
 
     try {
-      // 1. Önce seçilen genre'a ait şarkıları al
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
+      // 1. First create the playlist with the current user as creator
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .insert([{
+          name: bulkPlaylistName,
+          description: `Auto-generated playlist for ${genres.find(g => g.id === selectedGenreId)?.name} genre`,
+          genre_id: selectedGenreId,
+          is_public: false,
+          is_catalog: false,
+          is_hero: false,
+          created_by: user.id // Explicitly set the creator
+        }])
+        .select()
+        .single();
+
+      if (playlistError) throw playlistError;
+
+      // 2. Get songs for the selected genre
       let query = supabase
         .from('songs')
         .select('*')
@@ -60,23 +81,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
         throw new Error("No songs found for selected genre");
       }
 
-      // 2. Yeni playlist oluştur
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .insert([{
-          name: bulkPlaylistName,
-          description: `Auto-generated playlist for ${genres.find(g => g.id === selectedGenreId)?.name} genre`,
-          genre_id: selectedGenreId,
-          is_public: false,
-          is_catalog: false,
-          is_hero: false
-        }])
-        .select()
-        .single();
-
-      if (playlistError) throw playlistError;
-
-      // 3. Şarkıları playlist'e ekle
+      // 3. Add songs to the playlist
       const playlistSongs = songs.map((song, index) => ({
         playlist_id: playlist.id,
         song_id: song.id,
@@ -92,7 +97,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       toast.success("Playlist created successfully!");
       onClose();
       
-      // Playlist edit sayfasına yönlendir
+      // Navigate to playlist edit page
       navigate("/super-admin/playlists/create", { 
         state: { 
           editMode: true, 
