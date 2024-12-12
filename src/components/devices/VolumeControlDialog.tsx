@@ -21,10 +21,6 @@ interface VolumeControlDialogProps {
 interface VolumeHistory {
   volume: number;
   created_at: string;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
 }
 
 export function VolumeControlDialog({ device, open, onOpenChange }: VolumeControlDialogProps) {
@@ -42,14 +38,7 @@ export function VolumeControlDialog({ device, open, onOpenChange }: VolumeContro
     try {
       const { data, error } = await supabase
         .from('device_volume_history')
-        .select(`
-          volume,
-          created_at,
-          profiles:changed_by (
-            first_name,
-            last_name
-          )
-        `)
+        .select('volume, created_at')
         .eq('device_id', device.id)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -128,10 +117,6 @@ export function VolumeControlDialog({ device, open, onOpenChange }: VolumeContro
                     <div className="flex items-center gap-2">
                       <Volume2 className="h-4 w-4 text-gray-500" />
                       <span>%{entry.volume}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">
-                        {entry.profiles?.first_name} {entry.profiles?.last_name}
-                      </span>
                     </div>
                     <span className="text-gray-500">
                       {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: tr })}
