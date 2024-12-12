@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { MusicHeader } from "./MusicHeader";
-import { MusicActions } from "./MusicActions";
-import { MusicTable } from "./MusicTable";
-import { MusicFilters } from "./MusicFilters";
-import { useToast } from "@/hooks/use-toast";
-import { useMusicLibrary } from "./hooks/useMusicLibrary";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { MusicTable } from "./MusicTable";
+import { MusicActions } from "./MusicActions";
+import { MusicFilters } from "./MusicFilters";
+import { useMusicLibrary } from "./hooks/useMusicLibrary";
+import { useNavigate } from "react-router-dom";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -44,7 +46,7 @@ export function MusicContent() {
     }
   };
 
-  const handleDeleteSong = async (songId: string) => {
+  const handleDelete = async (songId: string) => {
     try {
       const { error } = await supabase
         .from('songs')
@@ -62,47 +64,13 @@ export function MusicContent() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete song",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      const { error } = await supabase
-        .from('songs')
-        .delete()
-        .in('id', selectedSongs.map(song => song.id));
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `${selectedSongs.length} songs have been deleted`,
-      });
-
-      setSelectedSongs([]);
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete songs",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
   const handleCreatePlaylist = () => {
-    if (selectedSongs.length === 0) {
-      toast({
-        title: "No songs selected",
-        description: "Please select at least one song to create a playlist",
-        variant: "destructive"
-      });
-      return;
-    }
-
     navigate("/super-admin/playlists/create", {
       state: { selectedSongs }
     });
@@ -115,29 +83,39 @@ export function MusicContent() {
   );
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <MusicHeader />
-        <div className="flex items-center gap-2">
-          {selectedSongs.length > 0 && (
-            <>
-              <Button 
-                onClick={handleCreatePlaylist}
-                className="whitespace-nowrap"
-              >
-                Create Playlist ({selectedSongs.length} songs)
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleBulkDelete}
-                className="whitespace-nowrap"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedSongs.length})
-              </Button>
-            </>
-          )}
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+            <Input
+              type="search"
+              placeholder="Search songs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <MusicActions onRefresh={refetch} />
         </div>
+        {selectedSongs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleCreatePlaylist}
+              className="whitespace-nowrap"
+            >
+              Create Playlist ({selectedSongs.length} songs)
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleDelete(selectedSongs[0].id)}
+              className="whitespace-nowrap"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete ({selectedSongs.length})
+            </Button>
+          </div>
+        )}
       </div>
       
       <MusicFilters
@@ -159,7 +137,7 @@ export function MusicContent() {
         itemsPerPage={itemsPerPage}
         isLoading={isLoading}
         totalCount={totalCount}
-        onDelete={handleDeleteSong}
+        onDelete={handleDelete}
       />
     </div>
   );
