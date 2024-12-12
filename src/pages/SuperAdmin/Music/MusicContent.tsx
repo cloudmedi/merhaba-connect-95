@@ -37,7 +37,7 @@ export function MusicContent() {
       const { data, error } = await query;
 
       if (error) {
-        toast(error.message);
+        toast.error(error.message);
         throw error;
       }
       return data as Song[];

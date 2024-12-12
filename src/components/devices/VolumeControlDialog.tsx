@@ -1,44 +1,36 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { Volume2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
-import { tr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { format } from "date-fns";
+import { VolumeHistory } from "@/types/api";
 
 interface VolumeControlDialogProps {
-  device: {
-    id: string;
-    name: string;
-    volume?: number;
-  };
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  deviceId: string;
+  currentVolume: number;
+  onVolumeChange: (volume: number) => void;
 }
 
-interface VolumeHistory {
-  volume: number;
-  created_at: string;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
-}
-
-export function VolumeControlDialog({ device, open, onOpenChange }: VolumeControlDialogProps) {
-  const [volume, setVolume] = useState(device.volume || 50);
-  const [history, setHistory] = useState<VolumeHistory[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export function VolumeControlDialog({
+  isOpen,
+  onClose,
+  deviceId,
+  currentVolume,
+  onVolumeChange,
+}: VolumeControlDialogProps) {
+  const [volume, setVolume] = useState(currentVolume);
+  const [volumeHistory, setVolumeHistory] = useState<VolumeHistory[]>([]);
 
   useEffect(() => {
-    if (open) {
-      loadVolumeHistory();
+    if (isOpen) {
+      fetchVolumeHistory();
     }
-  }, [open, device.id]);
+  }, [isOpen, deviceId]);
 
-  const loadVolumeHistory = async () => {
+  const fetchVolumeHistory = async () => {
     try {
       const { data, error } = await supabase
         .from('device_volume_history')
@@ -50,97 +42,68 @@ export function VolumeControlDialog({ device, open, onOpenChange }: VolumeContro
             last_name
           )
         `)
-        .eq('device_id', device.id)
+        .eq('device_id', deviceId)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(10);
 
       if (error) throw error;
-      setHistory(data || []);
+
+      if (data) {
+        setVolumeHistory(data.map(item => ({
+          volume: item.volume,
+          created_at: item.created_at,
+          profiles: item.profiles
+        })));
+      }
     } catch (error) {
-      console.error('Error loading volume history:', error);
-      toast.error('Ses geçmişi yüklenirken bir hata oluştu');
+      console.error('Error fetching volume history:', error);
     }
   };
 
-  const handleVolumeChange = async (values: number[]) => {
-    const newVolume = values[0];
-    setVolume(newVolume);
-    setIsLoading(true);
-
-    try {
-      // Update device volume
-      const { error: deviceError } = await supabase
-        .from('devices')
-        .update({ volume: newVolume })
-        .eq('id', device.id);
-
-      if (deviceError) throw deviceError;
-
-      // Add to history
-      const { error: historyError } = await supabase
-        .from('device_volume_history')
-        .insert({
-          device_id: device.id,
-          volume: newVolume,
-        });
-
-      if (historyError) throw historyError;
-
-      toast.success('Ses seviyesi güncellendi');
-      loadVolumeHistory();
-    } catch (error) {
-      console.error('Error updating volume:', error);
-      toast.error('Ses seviyesi güncellenirken bir hata oluştu');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleVolumeChange = (value: number[]) => {
+    setVolume(value[0]);
+    onVolumeChange(value[0]);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Volume2 className="h-5 w-5" />
-            Ses Kontrolü - {device.name}
-          </DialogTitle>
+          <DialogTitle>Volume Control</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <label className="text-sm font-medium">Ses Seviyesi: {volume}%</label>
-            <Slider
-              value={[volume]}
-              onValueChange={handleVolumeChange}
-              max={100}
-              step={1}
-              disabled={isLoading}
-              className="w-full"
-            />
+        <div className="py-4">
+          <Slider
+            value={[volume]}
+            onValueChange={handleVolumeChange}
+            max={100}
+            step={1}
+          />
+          <div className="text-center mt-2 text-sm text-gray-500">
+            Current Volume: {volume}%
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Ses Geçmişi</h3>
-            <ScrollArea className="h-[200px] rounded-md border">
-              <div className="p-4 space-y-2">
-                {history.map((entry, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 text-gray-500" />
-                      <span>%{entry.volume}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">
-                        {entry.profiles?.first_name} {entry.profiles?.last_name}
-                      </span>
-                    </div>
-                    <span className="text-gray-500">
-                      {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: tr })}
-                    </span>
+        <div className="mt-4">
+          <h4 className="text-sm font-medium mb-2">Volume History</h4>
+          <ScrollArea className="h-[200px]">
+            <div className="space-y-2">
+              {volumeHistory.map((history, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center text-sm py-2 border-b last:border-0"
+                >
+                  <div>
+                    <span className="font-medium">{history.volume}%</span>
+                    <span className="text-gray-500 ml-2">by {history.profiles.first_name} {history.profiles.last_name}</span>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
+                  <span className="text-gray-500">
+                    {format(new Date(history.created_at), 'MMM d, HH:mm')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>
