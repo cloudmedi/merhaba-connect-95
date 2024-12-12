@@ -21,7 +21,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
   const [bulkPlaylistName, setBulkPlaylistName] = useState("");
   const [selectionMethod, setSelectionMethod] = useState("latest");
   const [songLimit, setSongLimit] = useState(500);
-  const [bulkGenre, setBulkGenre] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       return;
     }
 
-    if (!bulkGenre) {
+    if (!selectedGenre) {
       toast.error("Please select a genre");
       return;
     }
@@ -39,11 +39,11 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
     setIsCreating(true);
 
     try {
-      // Şarkıları seç
+      // 1. Önce seçilen genre'a ait şarkıları al
       let query = supabase
         .from('songs')
         .select('*')
-        .contains('genre', [bulkGenre])
+        .contains('genre', [selectedGenre])
         .limit(songLimit);
 
       if (selectionMethod === "latest") {
@@ -55,20 +55,26 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       const { data: songs, error: songsError } = await query;
 
       if (songsError) throw songsError;
+      if (!songs || songs.length === 0) {
+        throw new Error("No songs found for selected genre");
+      }
 
-      // Playlist oluştur
+      // 2. Yeni playlist oluştur
       const { data: playlist, error: playlistError } = await supabase
         .from('playlists')
         .insert([{
           name: bulkPlaylistName,
-          genre_id: bulkGenre,
+          description: `Auto-generated playlist for ${selectedGenre} genre`,
+          is_public: false,
+          is_catalog: false,
+          is_hero: false
         }])
         .select()
         .single();
 
       if (playlistError) throw playlistError;
 
-      // Şarkıları playlist'e ekle
+      // 3. Şarkıları playlist'e ekle
       const playlistSongs = songs.map((song, index) => ({
         playlist_id: playlist.id,
         song_id: song.id,
@@ -84,7 +90,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       toast.success("Playlist created successfully!");
       onClose();
       
-      // Playlist detay sayfasına yönlendir
+      // Playlist edit sayfasına yönlendir
       navigate("/super-admin/playlists/create", { 
         state: { 
           editMode: true, 
@@ -92,7 +98,8 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
         } 
       });
     } catch (error: any) {
-      toast.error("Error creating playlist: " + error.message);
+      console.error('Error creating playlist:', error);
+      toast.error(error.message || "Failed to create playlist");
     } finally {
       setIsCreating(false);
     }
@@ -111,7 +118,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       
       <div className="space-y-2">
         <label className="text-sm font-medium">Genre</label>
-        <Select value={bulkGenre} onValueChange={setBulkGenre}>
+        <Select value={selectedGenre} onValueChange={setSelectedGenre}>
           <SelectTrigger>
             <SelectValue placeholder="Select a genre" />
           </SelectTrigger>

@@ -21,9 +21,8 @@ export const useMusicLibrary = () => {
   const [filterGenre, setFilterGenre] = useState<string>("all");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // Sabit sayfa başına öğe sayısı
+  const itemsPerPage = 20;
 
-  // First, get total count of songs
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', filterGenre],
     queryFn: async () => {
@@ -46,7 +45,6 @@ export const useMusicLibrary = () => {
     }
   });
 
-  // Then fetch paginated songs
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
@@ -79,11 +77,10 @@ export const useMusicLibrary = () => {
     }
   });
 
-  // Fetch unique genres from songs
   const { data: genres = [] } = useQuery({
     queryKey: ['genres'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: songs, error } = await supabase
         .from('songs')
         .select('genre');
 
@@ -92,8 +89,7 @@ export const useMusicLibrary = () => {
         throw error;
       }
 
-      // Extract unique genres from all songs
-      const allGenres = data
+      const allGenres = songs
         .flatMap(song => song.genre || [])
         .filter((genre): genre is string => Boolean(genre));
 
