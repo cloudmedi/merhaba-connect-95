@@ -19,38 +19,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
-    const initializeAuth = async () => {
+    let mounted = true;
+
+    async function getInitialSession() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session:', session);
+        setIsLoading(true);
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            firstName: session.user.user_metadata.firstName || '',
-            lastName: session.user.user_metadata.lastName || '',
-            role: session.user.user_metadata.role || 'manager',
-            isActive: true,
-            createdAt: session.user.created_at,
-            updatedAt: session.user.updated_at || session.user.created_at
-          });
+        if (error) {
+          console.error('Error fetching initial session:', error.message);
+          return;
         }
-        setIsLoading(false);
+
+        console.log('Initial session check:', session);
+
+        if (mounted) {
+          if (session?.user) {
+            console.log('Setting initial user:', session.user);
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              firstName: session.user.user_metadata.firstName || '',
+              lastName: session.user.user_metadata.lastName || '',
+              role: session.user.user_metadata.role || 'manager',
+              isActive: true,
+              createdAt: session.user.created_at,
+              updatedAt: session.user.updated_at || session.user.created_at
+            });
+          } else {
+            console.log('No initial session found');
+            setUser(null);
+          }
+        }
       } catch (error) {
-        console.error('Error getting session:', error);
-        setIsLoading(false);
+        console.error('Session initialization error:', error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-    };
+    }
 
-    initializeAuth();
+    getInitialSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Auth state changed:', _event, session);
-      
-      if (session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
+
+      if (session?.user && mounted) {
+        console.log('Setting user from auth change:', session.user);
         setUser({
           id: session.user.id,
           email: session.user.email!,
@@ -61,25 +77,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: session.user.created_at,
           updatedAt: session.user.updated_at || session.user.created_at
         });
-      } else {
+
+        if (event === 'SIGNED_IN') {
+          // Role'e göre yönlendirme
+          if (session.user.user_metadata.role === 'super_admin') {
+            navigate('/super-admin');
+          } else {
+            navigate('/manager');
+          }
+        }
+      } else if (!session && mounted) {
+        console.log('No session in auth change');
         setUser(null);
-        // Redirect to login if no session
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
           navigate('/manager/login');
         }
       }
-      setIsLoading(false);
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
 
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       console.log('Attempting login with:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -104,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updatedAt: data.user.updated_at || data.user.created_at
         });
         
-        toast.success('Login successful');
+        toast.success('Giriş başarılı');
         
         // Role'e göre yönlendirme
         if (data.user.user_metadata.role === 'super_admin') {
@@ -115,8 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Login failed');
+      toast.error(error.message || 'Giriş başarısız');
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,10 +162,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate('/super-admin/login');
       }
       
-      toast.success('Logged out successfully');
+      toast.success('Başarıyla çıkış yapıldı');
     } catch (error: any) {
       console.error('Logout failed:', error);
-      toast.error('Failed to log out');
+      toast.error('Çıkış yapılamadı');
     }
   };
 
