@@ -11,10 +11,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import type { Genre } from "../../hooks/useMusicLibrary";
 
 interface BulkPlaylistFormProps {
-  genres: Genre[];
+  genres: string[];
   onClose: () => void;
 }
 
@@ -22,7 +21,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
   const [bulkPlaylistName, setBulkPlaylistName] = useState("");
   const [selectionMethod, setSelectionMethod] = useState("latest");
   const [songLimit, setSongLimit] = useState(500);
-  const [selectedGenreId, setSelectedGenreId] = useState("");
+  const [bulkGenre, setBulkGenre] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
 
@@ -32,7 +31,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       return;
     }
 
-    if (!selectedGenreId) {
+    if (!bulkGenre) {
       toast.error("Please select a genre");
       return;
     }
@@ -40,32 +39,11 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
     setIsCreating(true);
 
     try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No authenticated user");
-
-      // 1. First create the playlist with the current user as creator
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .insert([{
-          name: bulkPlaylistName,
-          description: `Auto-generated playlist for ${genres.find(g => g.id === selectedGenreId)?.name} genre`,
-          genre_id: selectedGenreId,
-          is_public: false,
-          is_catalog: false,
-          is_hero: false,
-          created_by: user.id // Explicitly set the creator
-        }])
-        .select()
-        .single();
-
-      if (playlistError) throw playlistError;
-
-      // 2. Get songs for the selected genre
+      // Şarkıları seç
       let query = supabase
         .from('songs')
         .select('*')
-        .contains('genre', [genres.find(g => g.id === selectedGenreId)?.name])
+        .contains('genre', [bulkGenre])
         .limit(songLimit);
 
       if (selectionMethod === "latest") {
@@ -77,11 +55,20 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       const { data: songs, error: songsError } = await query;
 
       if (songsError) throw songsError;
-      if (!songs || songs.length === 0) {
-        throw new Error("No songs found for selected genre");
-      }
 
-      // 3. Add songs to the playlist
+      // Playlist oluştur
+      const { data: playlist, error: playlistError } = await supabase
+        .from('playlists')
+        .insert([{
+          name: bulkPlaylistName,
+          genre_id: bulkGenre,
+        }])
+        .select()
+        .single();
+
+      if (playlistError) throw playlistError;
+
+      // Şarkıları playlist'e ekle
       const playlistSongs = songs.map((song, index) => ({
         playlist_id: playlist.id,
         song_id: song.id,
@@ -97,7 +84,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       toast.success("Playlist created successfully!");
       onClose();
       
-      // Navigate to playlist edit page
+      // Playlist detay sayfasına yönlendir
       navigate("/super-admin/playlists/create", { 
         state: { 
           editMode: true, 
@@ -105,8 +92,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
         } 
       });
     } catch (error: any) {
-      console.error('Error creating playlist:', error);
-      toast.error(error.message || "Failed to create playlist");
+      toast.error("Error creating playlist: " + error.message);
     } finally {
       setIsCreating(false);
     }
@@ -125,14 +111,14 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       
       <div className="space-y-2">
         <label className="text-sm font-medium">Genre</label>
-        <Select value={selectedGenreId} onValueChange={setSelectedGenreId}>
+        <Select value={bulkGenre} onValueChange={setBulkGenre}>
           <SelectTrigger>
             <SelectValue placeholder="Select a genre" />
           </SelectTrigger>
           <SelectContent>
             {genres.map((genre) => (
-              <SelectItem key={genre.id} value={genre.id}>
-                {genre.name}
+              <SelectItem key={genre} value={genre}>
+                {genre}
               </SelectItem>
             ))}
           </SelectContent>
