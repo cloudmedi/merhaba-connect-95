@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MusicTable } from "./MusicTable";
 import { MusicActions } from "./MusicActions";
 import { MusicFilters } from "./MusicFilters";
 import { useMusicLibrary } from "./hooks/useMusicLibrary";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -96,7 +94,7 @@ export function MusicContent() {
               className="pl-10"
             />
           </div>
-          <MusicActions onRefresh={refetch} />
+          <MusicActions onRefresh={() => refetch()} />
         </div>
         {selectedSongs.length > 0 && (
           <div className="flex items-center gap-2">
