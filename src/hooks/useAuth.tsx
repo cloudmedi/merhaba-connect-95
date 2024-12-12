@@ -20,24 +20,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          firstName: session.user.user_metadata.firstName || '',
-          lastName: session.user.user_metadata.lastName || '',
-          role: session.user.user_metadata.role || 'manager',
-          isActive: true,
-          createdAt: session.user.created_at,
-          updatedAt: session.user.updated_at || session.user.created_at
-        });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session:', session);
+        
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            firstName: session.user.user_metadata.firstName || '',
+            lastName: session.user.user_metadata.lastName || '',
+            role: session.user.user_metadata.role || 'manager',
+            isActive: true,
+            createdAt: session.user.created_at,
+            updatedAt: session.user.updated_at || session.user.created_at
+          });
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Auth state changed:', _event, session);
+      
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -51,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else {
         setUser(null);
+        // Redirect to login if no session
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+          navigate('/manager/login');
+        }
       }
       setIsLoading(false);
     });
@@ -58,18 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login with:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        toast.error(error.message);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('Login successful:', data.user);
         setUser({
           id: data.user.id,
           email: data.user.email!,
@@ -92,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      toast.error(error.message || 'Login failed');
       throw error;
     }
   };
