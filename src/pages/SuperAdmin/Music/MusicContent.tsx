@@ -36,10 +36,7 @@ export function MusicContent() {
 
       const { data, error } = await query;
 
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
+      if (error) throw error;
       return data as Song[];
     }
   });
@@ -84,6 +81,8 @@ export function MusicContent() {
     }
   });
 
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
   const handleDelete = async (songId: string) => {
     try {
       const { error } = await supabase
@@ -95,7 +94,11 @@ export function MusicContent() {
 
       toast.success("Song deleted successfully");
     } catch (error: any) {
-      toast.error(error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -155,7 +158,7 @@ export function MusicContent() {
           }
         }}
         currentPage={currentPage}
-        totalPages={Math.ceil(totalCount / itemsPerPage)}
+        totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
         isLoading={isLoading}

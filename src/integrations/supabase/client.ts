@@ -2,23 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use environment variables for the connection details
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = "https://mfvacqmsaudhozgogfrx.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mdmFjcW1zYXVkaG96Z29nZnJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIwNzU3NDEsImV4cCI6MjA0NzY1MTc0MX0.vb4GA9tKLhi0F_b6Gar7jTDNetUd8xfyVTHMAVN5dwY";
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase connection details');
-}
+// Import the supabase client like this:
+// import { supabase } from "@/integrations/supabase/client";
 
-// Create a single instance of the Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    storageKey: 'lovable-auth-token',
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
-
-// Export a function to get the client instead of creating multiple instances
-export const getSupabaseClient = () => supabase;
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
