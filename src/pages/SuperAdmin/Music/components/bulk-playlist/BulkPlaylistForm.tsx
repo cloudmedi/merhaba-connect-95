@@ -11,7 +11,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import type { Genre } from "../../hooks/useMusicLibrary";
+
+interface Genre {
+  id: string;
+  name: string;
+  description?: string | null;
+}
 
 interface BulkPlaylistFormProps {
   genres: Genre[];
