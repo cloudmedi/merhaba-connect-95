@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ManagerHeader } from "@/components/ManagerHeader";
 import ManagerDashboard from "./Dashboard";
 import { PlaylistDetail } from "./Playlists/PlaylistDetail";
@@ -10,10 +10,37 @@ import Announcements from "./Announcements";
 import Settings from "./Settings";
 import ProfileSettings from "./Settings/Profile";
 import { useWebSocketConnection } from "@/hooks/useWebSocketConnection";
+import ManagerLogin from "./Auth/Login";
+import ManagerRegister from "./Auth/Register";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Manager() {
-  // Initialize WebSocket connection when Manager component mounts
+  const { user, isLoading } = useAuth();
   useWebSocketConnection();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // Eğer kullanıcı giriş yapmamışsa ve auth sayfalarında değilse, login'e yönlendir
+  if (!user && !window.location.pathname.match(/\/manager\/(login|register)/)) {
+    return <Navigate to="/manager/login" replace />;
+  }
+
+  // Eğer kullanıcı giriş yapmışsa ve auth sayfalarındaysa, dashboard'a yönlendir
+  if (user && window.location.pathname.match(/\/manager\/(login|register)/)) {
+    return <Navigate to="/manager" replace />;
+  }
+
+  // Auth sayfaları için header'ı gösterme
+  if (window.location.pathname.match(/\/manager\/(login|register)/)) {
+    return (
+      <Routes>
+        <Route path="login" element={<ManagerLogin />} />
+        <Route path="register" element={<ManagerRegister />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
