@@ -21,74 +21,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    async function getInitialSession() {
+    // Initial session check
+    const checkSession = async () => {
       try {
-        setIsLoading(true);
+        console.log('Checking initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error fetching initial session:', error.message);
+          console.error('Session check error:', error.message);
           return;
         }
 
-        console.log('Initial session check:', session);
+        if (session?.user && mounted) {
+          console.log('Found existing session:', session.user.id);
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            firstName: session.user.user_metadata?.firstName || '',
+            lastName: session.user.user_metadata?.lastName || '',
+            role: session.user.user_metadata?.role || 'manager',
+            isActive: true,
+            createdAt: session.user.created_at,
+            updatedAt: session.user.updated_at || session.user.created_at
+          });
 
-        if (mounted) {
-          if (session?.user) {
-            console.log('Setting initial user:', session.user);
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: session.user.user_metadata.firstName || '',
-              lastName: session.user.user_metadata.lastName || '',
-              role: session.user.user_metadata.role || 'manager',
-              isActive: true,
-              createdAt: session.user.created_at,
-              updatedAt: session.user.updated_at || session.user.created_at
-            });
-          } else {
-            console.log('No initial session found');
-            setUser(null);
+          // Redirect based on role if on login page
+          const currentPath = window.location.pathname;
+          if (currentPath.includes('/login')) {
+            const redirectPath = session.user.user_metadata?.role === 'super_admin' 
+              ? '/super-admin' 
+              : '/manager';
+            navigate(redirectPath);
+          }
+        } else {
+          console.log('No active session found during initial check');
+          setUser(null);
+          
+          // Only redirect to login if not already on a login/register page
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+            navigate('/manager/login');
           }
         }
       } catch (error) {
-        console.error('Session initialization error:', error);
+        console.error('Session check failed:', error);
       } finally {
         if (mounted) {
           setIsLoading(false);
         }
       }
-    }
+    };
 
-    getInitialSession();
-
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session);
+      console.log('Auth state changed:', event, session?.user?.id);
 
       if (session?.user && mounted) {
-        console.log('Setting user from auth change:', session.user);
+        console.log('Setting user from auth change:', session.user.id);
         setUser({
           id: session.user.id,
           email: session.user.email!,
-          firstName: session.user.user_metadata.firstName || '',
-          lastName: session.user.user_metadata.lastName || '',
-          role: session.user.user_metadata.role || 'manager',
+          firstName: session.user.user_metadata?.firstName || '',
+          lastName: session.user.user_metadata?.lastName || '',
+          role: session.user.user_metadata?.role || 'manager',
           isActive: true,
           createdAt: session.user.created_at,
           updatedAt: session.user.updated_at || session.user.created_at
         });
 
         if (event === 'SIGNED_IN') {
-          // Role'e göre yönlendirme
-          if (session.user.user_metadata.role === 'super_admin') {
-            navigate('/super-admin');
-          } else {
-            navigate('/manager');
-          }
+          const redirectPath = session.user.user_metadata?.role === 'super_admin' 
+            ? '/super-admin' 
+            : '/manager';
+          navigate(redirectPath);
         }
       } else if (!session && mounted) {
-        console.log('No session in auth change');
+        console.log('No session in auth change, clearing user');
         setUser(null);
+        
+        // Only redirect to login if not already on a login/register page
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
           navigate('/manager/login');
@@ -96,6 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Initial session check
+    checkSession();
+
+    // Cleanup
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -105,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Attempting login with:', email);
+      console.log('Attempting login for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -114,18 +129,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Login error:', error);
-        toast.error(error.message);
+        toast.error(error.message || 'Giriş başarısız');
         throw error;
       }
 
       if (data.user) {
-        console.log('Login successful:', data.user);
+        console.log('Login successful:', data.user.id);
         setUser({
           id: data.user.id,
           email: data.user.email!,
-          firstName: data.user.user_metadata.firstName || '',
-          lastName: data.user.user_metadata.lastName || '',
-          role: data.user.user_metadata.role || 'manager',
+          firstName: data.user.user_metadata?.firstName || '',
+          lastName: data.user.user_metadata?.lastName || '',
+          role: data.user.user_metadata?.role || 'manager',
           isActive: true,
           createdAt: data.user.created_at,
           updatedAt: data.user.updated_at || data.user.created_at
@@ -133,16 +148,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast.success('Giriş başarılı');
         
-        // Role'e göre yönlendirme
-        if (data.user.user_metadata.role === 'super_admin') {
-          navigate('/super-admin');
-        } else {
-          navigate('/manager');
-        }
+        // Redirect based on role
+        const redirectPath = data.user.user_metadata?.role === 'super_admin' 
+          ? '/super-admin' 
+          : '/manager';
+        navigate(redirectPath);
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || 'Giriş başarısız');
+      console.error('Login process failed:', error);
+      toast.error(error.message || 'Giriş işlemi başarısız');
       throw error;
     } finally {
       setIsLoading(false);
@@ -151,18 +165,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
       setUser(null);
+      toast.success('Başarıyla çıkış yapıldı');
       
       // Redirect based on current path
       const isManagerPath = window.location.pathname.startsWith('/manager');
-      if (isManagerPath) {
-        navigate('/manager/login');
-      } else {
-        navigate('/super-admin/login');
-      }
-      
-      toast.success('Başarıyla çıkış yapıldı');
+      navigate(isManagerPath ? '/manager/login' : '/super-admin/login');
     } catch (error: any) {
       console.error('Logout failed:', error);
       toast.error('Çıkış yapılamadı');
