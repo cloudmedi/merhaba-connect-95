@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface MusicFiltersProps {
   searchQuery: string;
@@ -42,6 +43,7 @@ export function MusicFilters({
   const [bulkPlaylistName, setBulkPlaylistName] = useState("");
   const [selectionMethod, setSelectionMethod] = useState("latest");
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
 
   const handleCreateBulkPlaylist = async () => {
     if (!bulkPlaylistName.trim()) {
@@ -104,6 +106,14 @@ export function MusicFilters({
       setIsDialogOpen(false);
       setBulkPlaylistName("");
       setSelectionMethod("latest");
+      
+      // Playlist detay sayfasına yönlendir
+      navigate("/super-admin/playlists/create", { 
+        state: { 
+          editMode: true, 
+          playlistData: playlist 
+        } 
+      });
     } catch (error: any) {
       toast.error("Playlist oluşturulurken hata: " + error.message);
     } finally {
