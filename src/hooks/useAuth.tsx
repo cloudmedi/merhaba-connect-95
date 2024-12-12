@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get initial session
@@ -81,14 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast.success('Login successful');
         
+        // Role'e göre yönlendirme
         if (data.user.user_metadata.role === 'super_admin') {
-          window.location.href = '/super-admin';
+          navigate('/super-admin');
         } else {
-          window.location.href = '/manager';
+          navigate('/manager');
         }
       }
     } catch (error: any) {
-      toast.error('Login failed: ' + error.message);
+      console.error('Login error:', error);
       throw error;
     }
   };
@@ -101,9 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Redirect based on current path
       const isManagerPath = window.location.pathname.startsWith('/manager');
       if (isManagerPath) {
-        window.location.href = '/manager/login';
+        navigate('/manager/login');
       } else {
-        window.location.href = '/super-admin/login';
+        navigate('/super-admin/login');
       }
       
       toast.success('Logged out successfully');
