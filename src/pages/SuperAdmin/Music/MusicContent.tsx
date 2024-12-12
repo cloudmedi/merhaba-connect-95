@@ -1,26 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Table, TableBody } from "@/components/ui/table";
+import { Search, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-
-interface Song {
-  id: string;
-  title: string;
-  artist?: string;
-  album?: string;
-  genre?: string[];
-  duration?: number;
-  artwork_url?: string;
-  file_url: string;
-}
+import { MusicTableHeader } from "./components/MusicTableHeader";
+import { MusicTableRow } from "./components/MusicTableRow";
 
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
+  const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -116,7 +107,6 @@ export function MusicContent() {
 
   return (
     <div className="space-y-8">
-      {/* Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
@@ -147,72 +137,39 @@ export function MusicContent() {
         )}
       </div>
 
-      {/* Table Container */}
       <div className="flex-1 border rounded-lg bg-white overflow-hidden flex flex-col">
-        <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider border-b sticky top-0">
-          <div className="col-span-1">
-            <Checkbox 
-              checked={selectedSongs.length === songs.length}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setSelectedSongs(songs);
-                } else {
-                  setSelectedSongs([]);
-                }
-              }}
-            />
-          </div>
-          <div className="col-span-5">Title</div>
-          <div className="col-span-3">Artist</div>
-          <div className="col-span-2">Album</div>
-          <div className="col-span-1 text-right">Duration</div>
-        </div>
+        <Table>
+          <MusicTableHeader
+            onSelectAll={(checked) => {
+              if (checked) {
+                setSelectedSongs(songs);
+              } else {
+                setSelectedSongs([]);
+              }
+            }}
+            selectedSongs={selectedSongs}
+            songs={songs}
+          />
+          <TableBody>
+            {songs.map((song) => (
+              <MusicTableRow
+                key={song.id}
+                song={song}
+                isSelected={selectedSongs.some(s => s.id === song.id)}
+                onSelect={(checked) => {
+                  if (checked) {
+                    setSelectedSongs([...selectedSongs, song]);
+                  } else {
+                    setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
+                  }
+                }}
+                onDelete={handleDelete}
+                formatDuration={formatDuration}
+              />
+            ))}
+          </TableBody>
+        </Table>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-auto">
-          {songs.map((song) => (
-            <div 
-              key={song.id}
-              className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-gray-50 border-b last:border-b-0"
-            >
-              <div className="col-span-1">
-                <Checkbox
-                  checked={selectedSongs.some(s => s.id === song.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedSongs([...selectedSongs, song]);
-                    } else {
-                      setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
-                    }
-                  }}
-                />
-              </div>
-              <div className="col-span-5 flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0">
-                  {song.artwork_url && (
-                    <img 
-                      src={song.artwork_url} 
-                      alt={song.title}
-                      className="w-full h-full object-cover rounded"
-                    />
-                  )}
-                </div>
-                <span className="font-medium text-sm text-gray-900 truncate">{song.title}</span>
-              </div>
-              <div className="col-span-3 truncate text-xs text-gray-500">
-                {song.artist || '-'}
-              </div>
-              <div className="col-span-2 truncate text-xs text-gray-500">
-                {song.album || '-'}
-              </div>
-              <div className="col-span-1 text-right text-xs text-gray-500">
-                {formatDuration(song.duration)}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pagination */}
         <div className="border-t p-4 bg-white flex items-center justify-between">
           <div className="text-sm text-gray-500">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} songs
