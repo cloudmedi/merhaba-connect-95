@@ -5,11 +5,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BulkPlaylistForm } from "./BulkPlaylistForm";
+import type { Genre } from "../../hooks/useMusicLibrary";
 
 interface BulkPlaylistDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  genres: string[];
+  genres: Genre[];
 }
 
 export function BulkPlaylistDialog({

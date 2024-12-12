@@ -4,7 +4,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { MusicFilters } from "./components/MusicFilters";
 import { MusicTable } from "./components/MusicTable";
 import { toast } from "sonner";
-import type { Song } from "@/types/api";
+
+interface Song {
+  id: string;
+  title: string;
+  artist?: string | null;
+  album?: string | null;
+  genre?: string[] | null;
+  duration?: number | null;
+  file_url: string;
+  artwork_url?: string | null;
+  bunny_id?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Genre {
+  id: string;
+  name: string;
+  description?: string | null;
+}
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
@@ -13,7 +33,6 @@ export function MusicContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Fetch songs with filtering
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['songs', currentPage, searchQuery, selectedGenre],
     queryFn: async () => {
@@ -41,7 +60,6 @@ export function MusicContent() {
     }
   });
 
-  // Get total count for pagination
   const { data: totalCount = 0 } = useQuery({
     queryKey: ['songs-count', searchQuery, selectedGenre],
     queryFn: async () => {
@@ -63,21 +81,16 @@ export function MusicContent() {
     }
   });
 
-  // Fetch unique genres
   const { data: genres = [] } = useQuery({
     queryKey: ['genres'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('songs')
-        .select('genre');
+        .from('genres')
+        .select('*')
+        .order('name');
 
       if (error) throw error;
-
-      const allGenres = data
-        .flatMap(song => song.genre || [])
-        .filter((genre): genre is string => Boolean(genre));
-
-      return Array.from(new Set(allGenres)).sort();
+      return data as Genre[];
     }
   });
 
