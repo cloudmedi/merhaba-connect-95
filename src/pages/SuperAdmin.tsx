@@ -14,7 +14,6 @@ import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import SuperAdminLogin from "./SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./SuperAdmin/Auth/Register";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
 export default function SuperAdmin() {
