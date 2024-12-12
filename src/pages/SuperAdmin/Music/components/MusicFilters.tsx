@@ -44,16 +44,17 @@ export function MusicFilters({
   const [selectionMethod, setSelectionMethod] = useState("latest");
   const [songLimit, setSongLimit] = useState(500);
   const [isCreating, setIsCreating] = useState(false);
+  const [bulkGenre, setBulkGenre] = useState(""); // Yeni state for bulk playlist genre
   const navigate = useNavigate();
 
   const handleCreateBulkPlaylist = async () => {
     if (!bulkPlaylistName.trim()) {
-      toast.error("Lütfen playlist adı girin");
+      toast.error("Please enter a playlist name");
       return;
     }
 
-    if (!selectedGenre || selectedGenre === "all") {
-      toast.error("Lütfen bir genre seçin");
+    if (!bulkGenre) {
+      toast.error("Please select a genre");
       return;
     }
 
@@ -64,7 +65,7 @@ export function MusicFilters({
       let query = supabase
         .from('songs')
         .select('*')
-        .contains('genre', [selectedGenre])
+        .contains('genre', [bulkGenre])
         .limit(songLimit);
 
       if (selectionMethod === "latest") {
@@ -82,7 +83,7 @@ export function MusicFilters({
         .from('playlists')
         .insert([{
           name: bulkPlaylistName,
-          genre_id: selectedGenre,
+          genre_id: bulkGenre,
           is_public: true
         }])
         .select()
@@ -103,11 +104,12 @@ export function MusicFilters({
 
       if (assignError) throw assignError;
 
-      toast.success("Playlist başarıyla oluşturuldu!");
+      toast.success("Playlist created successfully!");
       setIsDialogOpen(false);
       setBulkPlaylistName("");
       setSelectionMethod("latest");
       setSongLimit(500);
+      setBulkGenre("");
       
       // Playlist detay sayfasına yönlendir
       navigate("/super-admin/playlists/create", { 
@@ -117,7 +119,7 @@ export function MusicFilters({
         } 
       });
     } catch (error: any) {
-      toast.error("Playlist oluşturulurken hata: " + error.message);
+      toast.error("Error creating playlist: " + error.message);
     } finally {
       setIsCreating(false);
     }
@@ -169,6 +171,21 @@ export function MusicFilters({
                   value={bulkPlaylistName}
                   onChange={(e) => setBulkPlaylistName(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Genre</label>
+                <Select value={bulkGenre} onValueChange={setBulkGenre}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a genre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genres.map((genre) => (
+                      <SelectItem key={genre} value={genre}>
+                        {genre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Selection Method</label>
