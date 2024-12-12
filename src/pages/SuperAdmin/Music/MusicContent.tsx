@@ -1,135 +1,44 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { MusicFilters } from "./components/MusicFilters";
 import { MusicTable } from "./components/MusicTable";
-import { toast } from "sonner";
-import type { Song } from "@/types/api";
+import { useMusicLibrary } from "./hooks/useMusicLibrary";
 
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+  
+  const {
+    songs,
+    isLoading,
+    genres,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    refetch
+  } = useMusicLibrary();
 
-  // Fetch songs with filtering
-  const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs', currentPage, searchQuery, selectedGenre],
-    queryFn: async () => {
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
+  const filteredSongs = songs.filter(song => {
+    const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         song.album?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesGenre = selectedGenre === "all" || 
+                        song.genre?.includes(selectedGenre);
 
-      let query = supabase
-        .from('songs')
-        .select('*')
-        .range(from, to)
-        .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Song[];
-    }
+    return matchesSearch && matchesGenre;
   });
-
-  // Get total count for pagination
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['songs-count', searchQuery, selectedGenre],
-    queryFn: async () => {
-      let query = supabase
-        .from('songs')
-        .select('*', { count: 'exact', head: true });
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    }
-  });
-
-  // Fetch unique genres
-  const { data: genres = [] } = useQuery({
-    queryKey: ['genres'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('genre');
-
-      if (error) throw error;
-
-      const allGenres = data
-        .flatMap(song => song.genre || [])
-        .filter((genre): genre is string => Boolean(genre));
-
-      return Array.from(new Set(allGenres)).sort();
-    }
-  });
-
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-
-  const handleDelete = async (songId: string) => {
-    try {
-      const { error } = await supabase
-        .from('songs')
-        .delete()
-        .eq('id', songId);
-
-      if (error) throw error;
-
-      toast.success("Song deleted successfully");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleSelectAll = () => {
     if (selectedSongs.length > 0) {
       setSelectedSongs([]);
     } else {
-      // Select all filtered songs
-      let query = supabase
-        .from('songs')
-        .select('*');
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      query.then(({ data }) => {
-        if (data) {
-          setSelectedSongs(data as Song[]);
-          toast.success(`Selected ${data.length} songs`);
-        }
-      });
+      setSelectedSongs(filteredSongs.map(song => song.id));
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <MusicFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -139,31 +48,22 @@ export function MusicContent() {
         onSelectAll={handleSelectAll}
         selectedCount={selectedSongs.length}
       />
-
+      
       <MusicTable
-        songs={songs}
+        songs={filteredSongs}
+        isLoading={isLoading}
         selectedSongs={selectedSongs}
-        onSelectSong={(song, checked) => {
-          if (checked) {
-            setSelectedSongs([...selectedSongs, song]);
+        onSongSelect={(id) => {
+          if (selectedSongs.includes(id)) {
+            setSelectedSongs(selectedSongs.filter(songId => songId !== id));
           } else {
-            setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
-          }
-        }}
-        onSelectAll={(checked) => {
-          if (checked) {
-            setSelectedSongs(songs);
-          } else {
-            setSelectedSongs([]);
+            setSelectedSongs([...selectedSongs, id]);
           }
         }}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        isLoading={isLoading}
-        totalCount={totalCount}
-        onDelete={handleDelete}
+        onRefresh={refetch}
       />
     </div>
   );
