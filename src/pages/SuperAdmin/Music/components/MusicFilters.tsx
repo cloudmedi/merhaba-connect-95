@@ -42,6 +42,7 @@ export function MusicFilters({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [bulkPlaylistName, setBulkPlaylistName] = useState("");
   const [selectionMethod, setSelectionMethod] = useState("latest");
+  const [songLimit, setSongLimit] = useState(500);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
 
@@ -64,7 +65,7 @@ export function MusicFilters({
         .from('songs')
         .select('*')
         .contains('genre', [selectedGenre])
-        .limit(500);
+        .limit(songLimit);
 
       if (selectionMethod === "latest") {
         query = query.order('created_at', { ascending: false });
@@ -106,6 +107,7 @@ export function MusicFilters({
       setIsDialogOpen(false);
       setBulkPlaylistName("");
       setSelectionMethod("latest");
+      setSongLimit(500);
       
       // Playlist detay sayfasına yönlendir
       navigate("/super-admin/playlists/create", { 
@@ -175,10 +177,21 @@ export function MusicFilters({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="latest">Latest 500 songs</SelectItem>
-                    <SelectItem value="random">Random 500 songs</SelectItem>
+                    <SelectItem value="latest">Latest songs</SelectItem>
+                    <SelectItem value="random">Random songs</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Number of Songs</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="500"
+                  value={songLimit}
+                  onChange={(e) => setSongLimit(Number(e.target.value))}
+                  placeholder="Enter number of songs (max 500)"
+                />
               </div>
               <Button 
                 className="w-full" 
