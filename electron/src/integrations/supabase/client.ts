@@ -5,7 +5,7 @@ import { PresenceManager } from './presence/presenceManager';
 let supabase: ReturnType<typeof createClient>;
 let presenceManager: PresenceManager;
 let isInitialized = false;
-export let currentDeviceToken: string | null = null;  // Export edildi
+export let currentDeviceToken: string | null = null;
 
 async function initSupabase() {
   if (isInitialized) {
@@ -22,23 +22,26 @@ async function initSupabase() {
       throw new Error('Missing Supabase connection details');
     }
 
-    console.log('Creating Supabase client...');
-    supabase = createClient(
-      envVars.VITE_SUPABASE_URL,
-      envVars.VITE_SUPABASE_ANON_KEY,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: false
-        },
-        realtime: {
-          params: {
-            eventsPerSecond: 10
+    if (!supabase) {
+      console.log('Creating Supabase client...');
+      supabase = createClient(
+        envVars.VITE_SUPABASE_URL,
+        envVars.VITE_SUPABASE_ANON_KEY,
+        {
+          auth: {
+            persistSession: true,
+            storageKey: 'lovable-electron-auth-token',
+            autoRefreshToken: true,
+            detectSessionInUrl: false
+          },
+          realtime: {
+            params: {
+              eventsPerSecond: 10
+            }
           }
         }
-      }
-    );
+      );
+    }
 
     presenceManager = new PresenceManager(supabase, {
       heartbeatInterval: 5000,
