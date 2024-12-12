@@ -116,12 +116,6 @@ export function MusicContent() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Music Library</h1>
-        <p className="text-sm text-gray-500">Manage and organize your music collection</p>
-      </div>
-
       {/* Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 flex-1">
@@ -155,7 +149,6 @@ export function MusicContent() {
 
       {/* Table Container */}
       <div className="flex-1 border rounded-lg bg-white overflow-hidden flex flex-col">
-        {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 text-sm font-medium text-gray-500 border-b sticky top-0">
           <div className="col-span-1">
             <Checkbox 
