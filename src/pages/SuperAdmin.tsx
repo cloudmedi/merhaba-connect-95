@@ -12,6 +12,7 @@ import Notifications from "./SuperAdmin/Notifications";
 import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import SuperAdminLogin from "./SuperAdmin/Auth/Login";
+import SuperAdminRegister from "./SuperAdmin/Auth/Register";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
@@ -22,19 +23,20 @@ export default function SuperAdmin() {
     return <div>Loading...</div>;
   }
 
-  // Eğer kullanıcı giriş yapmamışsa, login sayfasına yönlendir
-  if (!user && window.location.pathname !== "/super-admin/login") {
+  // Eğer kullanıcı giriş yapmamışsa ve auth sayfalarında değilse, login'e yönlendir
+  if (!user && !["/super-admin/login", "/super-admin/register"].includes(window.location.pathname)) {
     return <Navigate to="/super-admin/login" replace />;
   }
 
-  // Eğer kullanıcı giriş yapmışsa ve login sayfasındaysa, dashboard'a yönlendir
-  if (user && window.location.pathname === "/super-admin/login") {
+  // Eğer kullanıcı giriş yapmışsa ve auth sayfalarındaysa, dashboard'a yönlendir
+  if (user && ["/super-admin/login", "/super-admin/register"].includes(window.location.pathname)) {
     return <Navigate to="/super-admin" replace />;
   }
 
   return (
     <Routes>
       <Route path="login" element={<SuperAdminLogin />} />
+      <Route path="register" element={<SuperAdminRegister />} />
       <Route index element={<Dashboard />} />
       <Route path="users" element={<Users />} />
       <Route path="playlists" element={<Playlists />} />

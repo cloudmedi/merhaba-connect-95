@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
@@ -73,14 +74,12 @@ export default function SuperAdminLogin() {
             >
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate("/super-admin/register")}
-            >
-              Register as Super Admin
-            </Button>
+            <div className="text-center text-sm">
+              Don't have an account?{" "}
+              <Link to="/super-admin/register" className="text-[#9b87f5] hover:underline">
+                Register as Super Admin
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>
