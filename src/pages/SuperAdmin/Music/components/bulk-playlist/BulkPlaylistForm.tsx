@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import type { Genre } from "../../hooks/useMusicLibrary";
 
 interface BulkPlaylistFormProps {
-  genres: string[];
+  genres: Genre[];
   onClose: () => void;
 }
 
@@ -21,7 +22,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
   const [bulkPlaylistName, setBulkPlaylistName] = useState("");
   const [selectionMethod, setSelectionMethod] = useState("latest");
   const [songLimit, setSongLimit] = useState(500);
-  const [selectedGenre, setSelectedGenre] = useState("");
+  const [selectedGenreId, setSelectedGenreId] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
 
@@ -31,7 +32,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       return;
     }
 
-    if (!selectedGenre) {
+    if (!selectedGenreId) {
       toast.error("Please select a genre");
       return;
     }
@@ -43,7 +44,7 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       let query = supabase
         .from('songs')
         .select('*')
-        .contains('genre', [selectedGenre])
+        .contains('genre', [genres.find(g => g.id === selectedGenreId)?.name])
         .limit(songLimit);
 
       if (selectionMethod === "latest") {
@@ -64,7 +65,8 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
         .from('playlists')
         .insert([{
           name: bulkPlaylistName,
-          description: `Auto-generated playlist for ${selectedGenre} genre`,
+          description: `Auto-generated playlist for ${genres.find(g => g.id === selectedGenreId)?.name} genre`,
+          genre_id: selectedGenreId,
           is_public: false,
           is_catalog: false,
           is_hero: false
@@ -118,14 +120,14 @@ export function BulkPlaylistForm({ genres, onClose }: BulkPlaylistFormProps) {
       
       <div className="space-y-2">
         <label className="text-sm font-medium">Genre</label>
-        <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+        <Select value={selectedGenreId} onValueChange={setSelectedGenreId}>
           <SelectTrigger>
             <SelectValue placeholder="Select a genre" />
           </SelectTrigger>
           <SelectContent>
             {genres.map((genre) => (
-              <SelectItem key={genre} value={genre}>
-                {genre}
+              <SelectItem key={genre.id} value={genre.id}>
+                {genre.name}
               </SelectItem>
             ))}
           </SelectContent>

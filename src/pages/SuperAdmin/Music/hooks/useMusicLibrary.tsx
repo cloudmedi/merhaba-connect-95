@@ -17,6 +17,12 @@ export interface Song {
   updated_at?: string | null;
 }
 
+export interface Genre {
+  id: string;
+  name: string;
+  description?: string | null;
+}
+
 export const useMusicLibrary = () => {
   const [filterGenre, setFilterGenre] = useState<string>("all");
   const [sortByRecent, setSortByRecent] = useState<boolean>(false);
@@ -80,20 +86,17 @@ export const useMusicLibrary = () => {
   const { data: genres = [] } = useQuery({
     queryKey: ['genres'],
     queryFn: async () => {
-      const { data: songs, error } = await supabase
-        .from('songs')
-        .select('genre');
+      const { data, error } = await supabase
+        .from('genres')
+        .select('*')
+        .order('name');
 
       if (error) {
         console.error('Error fetching genres:', error);
         throw error;
       }
 
-      const allGenres = songs
-        .flatMap(song => song.genre || [])
-        .filter((genre): genre is string => Boolean(genre));
-
-      return Array.from(new Set(allGenres)).sort();
+      return data as Genre[];
     }
   });
 
