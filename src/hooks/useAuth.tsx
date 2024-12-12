@@ -24,16 +24,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Initial session check
     const checkSession = async () => {
       try {
-        console.log('🔍 Checking initial session...');
+        console.log('🔍 [Auth] Checking initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('❌ Session check error:', error.message);
+          console.error('❌ [Auth] Session check error:', error.message);
           return;
         }
 
         if (session?.user && mounted) {
-          console.log('✅ Found existing session:', {
+          console.log('✅ [Auth] Found existing session:', {
             userId: session.user.id,
             email: session.user.email,
             role: session.user.user_metadata?.role
@@ -52,26 +52,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Redirect based on role if on login page
           const currentPath = window.location.pathname;
-          if (currentPath.includes('/login')) {
-            console.log('🔄 Redirecting from login page based on role');
+          if (currentPath === '/') {
+            console.log('🔄 [Auth] Redirecting from root based on role');
             const redirectPath = session.user.user_metadata?.role === 'super_admin' 
               ? '/super-admin' 
               : '/manager';
             navigate(redirectPath);
           }
         } else {
-          console.log('⚠️ No active session found during initial check');
+          console.log('⚠️ [Auth] No active session found during initial check');
           setUser(null);
           
           // Only redirect to login if not already on a login/register page
           const currentPath = window.location.pathname;
           if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-            console.log('🔄 Redirecting to login page');
+            console.log('🔄 [Auth] Redirecting to login page');
             navigate('/manager/login');
           }
         }
       } catch (error) {
-        console.error('❌ Session check failed:', error);
+        console.error('❌ [Auth] Session check failed:', error);
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -81,10 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔔 Auth state changed:', { event, userId: session?.user?.id });
+      console.log('🔔 [Auth] Auth state changed:', { event, userId: session?.user?.id });
 
       if (session?.user && mounted) {
-        console.log('👤 Setting user from auth change:', {
+        console.log('👤 [Auth] Setting user from auth change:', {
           userId: session.user.id,
           email: session.user.email,
           role: session.user.user_metadata?.role
@@ -102,20 +102,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (event === 'SIGNED_IN') {
-          console.log('✨ User signed in, redirecting...');
+          console.log('✨ [Auth] User signed in, redirecting...');
           const redirectPath = session.user.user_metadata?.role === 'super_admin' 
             ? '/super-admin' 
             : '/manager';
           navigate(redirectPath);
         }
       } else if (!session && mounted) {
-        console.log('👋 No session in auth change, clearing user');
+        console.log('👋 [Auth] No session in auth change, clearing user');
         setUser(null);
         
         // Only redirect to login if not already on a login/register page
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-          console.log('🔄 Redirecting to login page due to no session');
+          console.log('🔄 [Auth] Redirecting to login page due to no session');
           navigate('/manager/login');
         }
       }
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Cleanup
     return () => {
-      console.log('🧹 Cleaning up auth subscriptions');
+      console.log('🧹 [Auth] Cleaning up auth subscriptions');
       mounted = false;
       subscription.unsubscribe();
     };
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('🔑 Attempting login for:', email);
+      console.log('🔑 [Auth] Attempting login for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -143,13 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error('❌ Login error:', error);
+        console.error('❌ [Auth] Login error:', error);
         toast.error(error.message || 'Giriş başarısız');
         throw error;
       }
 
       if (data.user) {
-        console.log('✅ Login successful:', {
+        console.log('✅ [Auth] Login successful:', {
           userId: data.user.id,
           email: data.user.email,
           role: data.user.user_metadata?.role
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate(redirectPath);
       }
     } catch (error: any) {
-      console.error('❌ Login process failed:', error);
+      console.error('❌ [Auth] Login process failed:', error);
       toast.error(error.message || 'Giriş işlemi başarısız');
       throw error;
     } finally {
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log('👋 Logging out user...');
+      console.log('👋 [Auth] Logging out user...');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isManagerPath = window.location.pathname.startsWith('/manager');
       navigate(isManagerPath ? '/manager/login' : '/super-admin/login');
     } catch (error: any) {
-      console.error('❌ Logout failed:', error);
+      console.error('❌ [Auth] Logout failed:', error);
       toast.error('Çıkış yapılamadı');
     }
   };
