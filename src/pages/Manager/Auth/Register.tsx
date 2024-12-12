@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Music2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +14,6 @@ export default function ManagerRegister() {
   const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +38,11 @@ export default function ManagerRegister() {
         throw new Error('Registration failed');
       }
 
-      toast.success("Registration successful! Please login to continue.");
+      toast("Registration successful! Please login to continue.");
       navigate("/manager/login");
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || "An error occurred during registration");
+      toast(error.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }

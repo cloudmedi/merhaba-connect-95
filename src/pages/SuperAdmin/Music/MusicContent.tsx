@@ -36,7 +36,10 @@ export function MusicContent() {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        toast(error.message);
+        throw error;
+      }
       return data as Song[];
     }
   });
