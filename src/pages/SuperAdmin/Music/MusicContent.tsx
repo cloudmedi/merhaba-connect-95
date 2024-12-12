@@ -188,7 +188,7 @@ export function MusicContent() {
                 />
               </div>
               <div className="col-span-5 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded flex-shrink-0">
+                <div className="w-14 h-14 bg-gray-200 rounded flex-shrink-0">
                   {song.artwork_url && (
                     <img 
                       src={song.artwork_url} 
@@ -197,15 +197,15 @@ export function MusicContent() {
                     />
                   )}
                 </div>
-                <span className="font-medium truncate">{song.title}</span>
+                <span className="font-medium text-base text-gray-900 truncate">{song.title}</span>
               </div>
-              <div className="col-span-3 truncate text-gray-600">
+              <div className="col-span-3 truncate text-sm text-gray-600">
                 {song.artist || '-'}
               </div>
-              <div className="col-span-2 truncate text-gray-600">
+              <div className="col-span-2 truncate text-sm text-gray-600">
                 {song.album || '-'}
               </div>
-              <div className="col-span-1 text-right text-gray-600">
+              <div className="col-span-1 text-right text-sm text-gray-600">
                 {formatDuration(song.duration)}
               </div>
             </div>
