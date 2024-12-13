@@ -5,14 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
-import { toast } from "sonner";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, user, isLoading: authLoading } = useAuth();
+  const { user, login, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (user?.role === 'super_admin') {
@@ -27,9 +26,8 @@ export default function SuperAdminLogin() {
 
     try {
       await login(email, password);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error in component:', error);
-      toast.error('Giriş başarısız: ' + error.message);
     } finally {
       setIsLoading(false);
     }
