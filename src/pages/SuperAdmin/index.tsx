@@ -17,18 +17,19 @@ import { AdminNav } from "@/components/AdminNav";
 export default function SuperAdmin() {
   const { user, isLoading } = useAuth();
 
-  // Show loading state while checking authentication
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Yükleniyor...</div>
+      </div>
+    );
   }
 
-  // Auth check
   if (!user) {
     console.log('No user found, redirecting to login');
     return <Navigate to="/super-admin/login" replace />;
   }
 
-  // Role check
   if (user.role !== 'super_admin') {
     console.log('User is not super_admin, redirecting to home');
     return <Navigate to="/" replace />;
