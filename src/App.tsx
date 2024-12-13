@@ -16,23 +16,15 @@ function App() {
       <Routes>
         <Route path="/" element={<Index />} />
         
-        {/* Manager routes with ManagerAuthProvider */}
-        <Route element={<ManagerAuthProvider>
-          <Routes>
-            <Route path="/manager/login" element={<ManagerLogin />} />
-            <Route path="/manager/register" element={<ManagerRegister />} />
-            <Route path="/manager/*" element={<Manager />} />
-          </Routes>
-        </ManagerAuthProvider>} />
+        {/* Manager routes */}
+        <Route path="/manager" element={<ManagerAuthProvider><Manager /></ManagerAuthProvider>} />
+        <Route path="/manager/login" element={<ManagerAuthProvider><ManagerLogin /></ManagerAuthProvider>} />
+        <Route path="/manager/register" element={<ManagerAuthProvider><ManagerRegister /></ManagerAuthProvider>} />
 
-        {/* Super Admin routes with SuperAdminAuthProvider */}
-        <Route element={<SuperAdminAuthProvider>
-          <Routes>
-            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
-            <Route path="/super-admin/register" element={<SuperAdminRegister />} />
-            <Route path="/super-admin/*" element={<SuperAdmin />} />
-          </Routes>
-        </SuperAdminAuthProvider>} />
+        {/* Super Admin routes */}
+        <Route path="/super-admin" element={<SuperAdminAuthProvider><SuperAdmin /></SuperAdminAuthProvider>} />
+        <Route path="/super-admin/login" element={<SuperAdminAuthProvider><SuperAdminLogin /></SuperAdminAuthProvider>} />
+        <Route path="/super-admin/register" element={<SuperAdminAuthProvider><SuperAdminRegister /></SuperAdminAuthProvider>} />
       </Routes>
       <Toaster />
     </>
