@@ -23,6 +23,38 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
 
       if (session?.user) {
         try {
+          // First check if the profile exists
+          const { data: profileExists, error: checkError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (checkError) {
+            console.error('Error checking profile:', checkError);
+            throw checkError;
+          }
+
+          // If profile doesn't exist, create it
+          if (!profileExists) {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([
+                {
+                  id: session.user.id,
+                  email: session.user.email,
+                  role: 'super_admin',
+                  is_active: true
+                }
+              ]);
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+              throw insertError;
+            }
+          }
+
+          // Now fetch the complete profile
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
@@ -53,6 +85,7 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           console.error('Error in auth state change:', error);
+          await supabase.auth.signOut();
           setUser(null);
         }
       } else {
@@ -80,6 +113,37 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
+        // Check if profile exists, create if it doesn't
+        const { data: existingProfile, error: checkError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking profile:', checkError);
+          throw new Error('Failed to check user profile');
+        }
+
+        if (!existingProfile) {
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                email: data.user.email,
+                role: 'super_admin',
+                is_active: true
+              }
+            ]);
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            throw new Error('Failed to create user profile');
+          }
+        }
+
+        // Verify the role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
