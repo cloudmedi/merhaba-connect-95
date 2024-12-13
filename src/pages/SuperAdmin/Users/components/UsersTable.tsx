@@ -37,6 +37,7 @@ export function UsersTable() {
           is_active,
           created_at,
           updated_at,
+          avatar_url,
           companies (
             id,
             name,
@@ -76,6 +77,7 @@ export function UsersTable() {
         isActive: profile.is_active,
         createdAt: profile.created_at,
         updatedAt: profile.updated_at,
+        avatar_url: profile.avatar_url,
         company: profile.companies ? {
           id: profile.companies.id,
           name: profile.companies.name,
@@ -114,11 +116,11 @@ export function UsersTable() {
   }
 
   // Pagination calculations
-  const totalItems = users.length;
+  const totalItems = users?.length || 0;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
-  const currentUsers = users.slice(startIndex, endIndex);
+  const currentUsers = users?.slice(startIndex, endIndex) || [];
 
   return (
     <div className="space-y-4">
