@@ -9,12 +9,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { user: authUser, isLoading } = useAuthState();
-  const { login, logout } = useAuthActions(setUser);
+  const { login: baseLogin, logout } = useAuthActions(setUser);
 
   // Sync user state with auth state
   if (user !== authUser) {
     setUser(authUser);
   }
+
+  const login = async (email: string, password: string) => {
+    await baseLogin(email, password, 'super_admin');
+  };
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout }}>

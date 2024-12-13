@@ -1,10 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { UserRole } from '@/types/auth';
 
 export function useAuthActions(setUser: (user: any) => void) {
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, expectedRole: UserRole) => {
     try {
-      console.log('Attempting login for:', email);
+      console.log(`Attempting ${expectedRole} login for:`, email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,7 +24,7 @@ export function useAuthActions(setUser: (user: any) => void) {
 
         if (checkError) throw checkError;
 
-        // If profile doesn't exist, create it
+        // If profile doesn't exist, create it with the expected role
         if (!existingProfile) {
           console.log('Creating new profile for user:', data.user.id);
           const { error: insertError } = await supabase
@@ -32,7 +33,7 @@ export function useAuthActions(setUser: (user: any) => void) {
               {
                 id: data.user.id,
                 email: data.user.email,
-                role: 'super_admin',
+                role: expectedRole,
                 is_active: true
               }
             ]);
@@ -52,7 +53,7 @@ export function useAuthActions(setUser: (user: any) => void) {
 
         if (profileError) throw profileError;
 
-        if (profile && profile.role === 'super_admin') {
+        if (profile && profile.role === expectedRole) {
           setUser({
             id: data.user.id,
             email: data.user.email!,
@@ -68,7 +69,7 @@ export function useAuthActions(setUser: (user: any) => void) {
           toast.success('Login successful');
         } else {
           await supabase.auth.signOut();
-          throw new Error('Unauthorized access: Super admin privileges required');
+          throw new Error(`Unauthorized access: ${expectedRole} privileges required`);
         }
       }
     } catch (error: any) {
