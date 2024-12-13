@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { AuthContextType, User } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getInitialSession, handleAuthStateChange } from '@/lib/sessionManager';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,42 +12,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
+    async function getInitialSession() {
       try {
-        console.log('Initializing auth...');
-        const { session, user } = await getInitialSession();
+        console.log('Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (mounted) {
-          if (user) {
-            console.log('Found user:', user);
-            setUser(user);
+        if (error) {
+          console.error('Session error:', error);
+          throw error;
+        }
+
+        if (session?.user && mounted) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            throw profileError;
           }
-          setIsLoading(false);
+
+          if (profile && mounted) {
+            console.log('Profile loaded:', profile);
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              firstName: profile.first_name || '',
+              lastName: profile.last_name || '',
+              role: profile.role as 'super_admin' | 'manager' | 'admin',
+              isActive: profile.is_active,
+              createdAt: session.user.created_at,
+              updatedAt: profile.updated_at || session.user.created_at,
+              avatar_url: profile.avatar_url
+            });
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+      } finally {
         if (mounted) {
-          setUser(null);
           setIsLoading(false);
         }
       }
-    };
+    }
 
-    initializeAuth();
+    getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (mounted) {
-        if (event === 'SIGNED_IN' && session) {
-          const user = await handleAuthStateChange(event, session);
-          setUser(user);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
+
+      if (event === 'SIGNED_IN' && session?.user && mounted) {
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) throw profileError;
+
+          if (profile && mounted) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              firstName: profile.first_name || '',
+              lastName: profile.last_name || '',
+              role: profile.role as 'super_admin' | 'manager' | 'admin',
+              isActive: profile.is_active,
+              createdAt: session.user.created_at,
+              updatedAt: profile.updated_at || session.user.created_at,
+              avatar_url: profile.avatar_url
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
           setUser(null);
         }
-        setIsLoading(false);
+      } else if (event === 'SIGNED_OUT' && mounted) {
+        console.log('User signed out');
+        setUser(null);
       }
+
+      setIsLoading(false);
     });
 
     return () => {
@@ -70,12 +117,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const user = await handleAuthStateChange('SIGNED_IN', data);
-        if (user) {
-          setUser(user);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile) {
+          setUser({
+            id: data.user.id,
+            email: data.user.email!,
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            role: profile.role as 'super_admin' | 'manager' | 'admin',
+            isActive: profile.is_active,
+            createdAt: data.user.created_at,
+            updatedAt: profile.updated_at || data.user.created_at,
+            avatar_url: profile.avatar_url
+          });
+          
           toast.success('Giriş başarılı');
           
-          if (user.role === 'super_admin') {
+          if (profile.role === 'super_admin') {
             window.location.href = '/super-admin';
           } else {
             window.location.href = '/manager';
