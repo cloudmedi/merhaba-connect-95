@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/contexts/SuperAdminAuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
@@ -19,8 +20,47 @@ export default function SuperAdminLogin() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate("/super-admin");
+      // First attempt to sign in
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Check if profile exists
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .maybeSingle();
+
+        if (profileError) throw profileError;
+
+        // If profile doesn't exist, create it
+        if (!profile) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: authData.user.id,
+                email: authData.user.email,
+                role: 'super_admin',
+                is_active: true
+              }
+            ]);
+
+          if (insertError) throw insertError;
+
+          // Wait a bit for the database to update
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Complete login process
+        await login(email, password);
+        navigate("/super-admin");
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || "Giriş başarısız");
