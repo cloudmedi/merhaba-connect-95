@@ -9,16 +9,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
-        const { user } = await getInitialSession();
+        console.log('Initializing auth...');
+        const { session, user } = await getInitialSession();
+        
         if (mounted) {
-          setUser(user);
+          if (user) {
+            console.log('Found user:', user);
+            setUser(user);
+          }
           setIsLoading(false);
         }
       } catch (error) {
@@ -33,17 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
+      console.log('Auth state changed:', event, session?.user?.id);
       
       if (mounted) {
-        const user = await handleAuthStateChange(event, session);
-        setUser(user);
+        if (event === 'SIGNED_IN' && session) {
+          const user = await handleAuthStateChange(event, session);
+          setUser(user);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setUser(null);
+        }
         setIsLoading(false);
       }
     });
 
     return () => {
-      setMounted(false);
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
