@@ -36,18 +36,12 @@ export function useAuthActions(setUser: (user: any) => void) {
             avatar_url: profile.avatar_url
           });
           
-          toast.success('Giriş başarılı');
-          
-          if (profile.role === 'super_admin') {
-            window.location.href = '/super-admin';
-          } else {
-            window.location.href = '/manager';
-          }
+          toast.success('Login successful');
         }
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Giriş başarısız: ' + error.message);
+      toast.error('Login failed: ' + error.message);
       throw error;
     }
   };
@@ -60,14 +54,10 @@ export function useAuthActions(setUser: (user: any) => void) {
       if (error) throw error;
       
       setUser(null);
-      
-      const isManagerPath = window.location.pathname.startsWith('/manager');
-      window.location.href = isManagerPath ? '/manager/login' : '/super-admin/login';
-      
-      toast.success('Çıkış başarılı');
+      toast.success('Logged out successfully');
     } catch (error: any) {
       console.error('Logout error:', error);
-      toast.error('Çıkış yapılamadı');
+      toast.error('Failed to log out');
     }
   };
 

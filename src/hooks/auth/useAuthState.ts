@@ -10,39 +10,73 @@ export function useAuthState() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsLoading(true);
+      console.log('Auth state changed:', event, session?.user?.id);
 
       if (session?.user) {
         try {
+          // First check if the profile exists
+          const { data: profileExists, error: checkError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (checkError) {
+            console.error('Error checking profile:', checkError);
+            throw checkError;
+          }
+
+          // If profile doesn't exist, create it
+          if (!profileExists) {
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([
+                {
+                  id: session.user.id,
+                  email: session.user.email,
+                  role: 'super_admin',
+                  is_active: true
+                }
+              ]);
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+              throw insertError;
+            }
+          }
+
+          // Now fetch the complete profile
           const { data: profile, error } = await supabase
             .from('profiles')
-            .select('*, companies(*)')
+            .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching profile:', error);
+            throw error;
+          }
 
-          if (profile) {
-            const userRole = profile.role as UserRole;
-            if (userRole !== 'super_admin' && userRole !== 'manager') {
-              throw new Error('Invalid user role');
-            }
-
+          if (profile && profile.role === 'super_admin') {
             setUser({
               id: session.user.id,
               email: session.user.email!,
-              role: userRole,
+              role: profile.role as UserRole,
               firstName: profile.first_name,
               lastName: profile.last_name,
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url,
-              companyId: profile.company_id,
-              company: profile.companies
+              avatar_url: profile.avatar_url
             });
+          } else {
+            console.log('User is not a super admin, signing out');
+            await supabase.auth.signOut();
+            setUser(null);
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error in auth state change:', error);
+          await supabase.auth.signOut();
           setUser(null);
         }
       } else {
@@ -50,53 +84,6 @@ export function useAuthState() {
       }
 
       setIsLoading(false);
-    });
-
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error checking session:', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*, companies(*)')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile, error }) => {
-            if (error) {
-              console.error('Error fetching profile:', error);
-              setUser(null);
-            } else if (profile) {
-              const userRole = profile.role as UserRole;
-              if (userRole !== 'super_admin' && userRole !== 'manager') {
-                console.error('Invalid user role');
-                setUser(null);
-                return;
-              }
-
-              setUser({
-                id: session.user.id,
-                email: session.user.email!,
-                role: userRole,
-                firstName: profile.first_name,
-                lastName: profile.last_name,
-                isActive: profile.is_active,
-                createdAt: session.user.created_at,
-                updatedAt: profile.updated_at || session.user.created_at,
-                avatar_url: profile.avatar_url,
-                companyId: profile.company_id,
-                company: profile.companies
-              });
-            }
-            setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
-      }
     });
 
     return () => {
