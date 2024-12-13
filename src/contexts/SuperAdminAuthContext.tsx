@@ -18,7 +18,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
       setIsLoading(true);
 
       if (session?.user) {
@@ -33,6 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (profile) {
             const userRole = profile.role as UserRole;
+            if (userRole !== 'super_admin') {
+              await supabase.auth.signOut();
+              throw new Error('Unauthorized access: Super admin privileges required');
+            }
+
             setUser({
               id: session.user.id,
               email: session.user.email!,
@@ -56,45 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error checking session:', error);
-        setIsLoading(false);
-        return;
-      }
-
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile, error }) => {
-            if (error) {
-              console.error('Error fetching profile:', error);
-              setUser(null);
-            } else if (profile) {
-              const userRole = profile.role as UserRole;
-              setUser({
-                id: session.user.id,
-                email: session.user.email!,
-                role: userRole,
-                firstName: profile.first_name,
-                lastName: profile.last_name,
-                isActive: profile.is_active,
-                createdAt: session.user.created_at,
-                updatedAt: profile.updated_at || session.user.created_at,
-                avatar_url: profile.avatar_url
-              });
-            }
-            setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
-      }
-    });
-
     return () => {
       subscription.unsubscribe();
     };
@@ -103,8 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Attempting login for:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

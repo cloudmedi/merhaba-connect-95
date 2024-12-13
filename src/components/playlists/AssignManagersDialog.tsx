@@ -7,7 +7,7 @@ import { SchedulingSection } from "./manager-selection/SchedulingSection";
 import { AssignManagersContent } from "./manager-selection/AssignManagersContent";
 import { Manager } from "./types";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/ManagerAuthContext";
 
 interface AssignManagersDialogProps {
   open: boolean;

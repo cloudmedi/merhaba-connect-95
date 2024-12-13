@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/ManagerAuthContext";
 import { toast } from "sonner";
 
 interface User {

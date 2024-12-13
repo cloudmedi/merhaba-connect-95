@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/ManagerAuthContext";
 import { toast } from "sonner";
 import { CampaignFormData } from "../../types";
 
