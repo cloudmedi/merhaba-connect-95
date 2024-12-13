@@ -4,7 +4,7 @@ import { UsersFilters } from './components/UsersFilters';
 import { UsersHeader } from './components/UsersHeader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/types/auth';
+import { User, License } from '@/types/auth';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
@@ -40,20 +40,29 @@ export default function Users() {
 
       console.log('Fetched users data:', data); // Debug log
 
-      return data.map((profile): User => ({
-        id: profile.id,
-        email: profile.email,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        role: profile.role as User['role'],
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
-        avatar_url: profile.avatar_url,
-        companyId: profile.company_id,
-        company: profile.companies,
-        license: profile.licenses?.[0] // Get the first license if exists
-      }));
+      return data.map((profile): User => {
+        // Validate and type-cast the license data
+        const license = profile.licenses?.[0];
+        const typedLicense: License | undefined = license ? {
+          ...license,
+          type: license.type === 'premium' ? 'premium' : 'trial' // Ensure type is either 'premium' or 'trial'
+        } : undefined;
+
+        return {
+          id: profile.id,
+          email: profile.email,
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          role: profile.role as User['role'],
+          isActive: profile.is_active,
+          createdAt: profile.created_at,
+          updatedAt: profile.updated_at,
+          avatar_url: profile.avatar_url,
+          companyId: profile.company_id,
+          company: profile.companies,
+          license: typedLicense
+        };
+      });
     }
   });
 
