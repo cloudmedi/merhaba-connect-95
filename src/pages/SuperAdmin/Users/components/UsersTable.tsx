@@ -1,6 +1,5 @@
 import { User } from '@/types/auth';
-import { UserStatus } from './UserStatus';
-import { UserActions } from './UserActions';
+import { UserTableRow } from './UserTableRow';
 
 export interface UsersTableProps {
   users: User[];
@@ -16,32 +15,23 @@ export function UsersTable({ users, onEdit, onDelete, onViewHistory }: UsersTabl
         <thead>
           <tr className="border-b border-gray-200">
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Email</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Company</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Role</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">License</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Expires</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-b border-gray-200">
-              <td className="px-4 py-3">
-                {user.firstName} {user.lastName}
-              </td>
-              <td className="px-4 py-3">{user.email}</td>
-              <td className="px-4 py-3 capitalize">{user.role}</td>
-              <td className="px-4 py-3">
-                <UserStatus status={user.isActive} />
-              </td>
-              <td className="px-4 py-3">
-                <UserActions 
-                  user={user}
-                  onEdit={() => onEdit(user)}
-                  onDelete={() => onDelete(user)}
-                  onViewHistory={() => onViewHistory(user)}
-                />
-              </td>
-            </tr>
+            <UserTableRow
+              key={user.id}
+              user={user}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onViewHistory={onViewHistory}
+            />
           ))}
         </tbody>
       </table>
