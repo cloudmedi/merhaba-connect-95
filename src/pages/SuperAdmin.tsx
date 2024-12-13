@@ -12,6 +12,7 @@ import Reports from "./SuperAdmin/Reports";
 import Notifications from "./SuperAdmin/Notifications";
 import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { Loader2 } from "lucide-react";
 
 export default function SuperAdmin() {
@@ -34,19 +35,21 @@ export default function SuperAdmin() {
   }
 
   return (
-    <Routes>
-      <Route index element={<Dashboard />} />
-      <Route path="users" element={<Users />} />
-      <Route path="playlists" element={<Playlists />} />
-      <Route path="playlists/create" element={<CreatePlaylist />} />
-      <Route path="music" element={<Music />} />
-      <Route path="genres" element={<Genres />} />
-      <Route path="categories" element={<Categories />} />
-      <Route path="moods" element={<Moods />} />
-      <Route path="notifications/*" element={<Notifications />} />
-      <Route path="settings/*" element={<Settings />} />
-      <Route path="reports" element={<Reports />} />
-      <Route path="performance" element={<Performance />} />
-    </Routes>
+    <DashboardLayout>
+      <Routes>
+        <Route index element={<Dashboard />} />
+        <Route path="users/*" element={<Users />} />
+        <Route path="playlists" element={<Playlists />} />
+        <Route path="playlists/create" element={<CreatePlaylist />} />
+        <Route path="music/*" element={<Music />} />
+        <Route path="genres/*" element={<Genres />} />
+        <Route path="categories/*" element={<Categories />} />
+        <Route path="moods/*" element={<Moods />} />
+        <Route path="notifications/*" element={<Notifications />} />
+        <Route path="settings/*" element={<Settings />} />
+        <Route path="reports/*" element={<Reports />} />
+        <Route path="performance/*" element={<Performance />} />
+      </Routes>
+    </DashboardLayout>
   );
 }
