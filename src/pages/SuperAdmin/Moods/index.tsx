@@ -1,13 +1,16 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { MoodsContent } from "./MoodsContent";
 
 export default function Moods() {
   return (
-    <DashboardLayout 
-      title="Moods" 
-      description="Manage music moods and emotions"
-    >
-      <MoodsContent />
-    </DashboardLayout>
+    <main className="p-8 bg-[#F8F9FC]">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Moods</h1>
+          <p className="text-sm text-gray-500">Manage your moods</p>
+        </div>
+
+        <MoodsContent />
+      </div>
+    </main>
   );
 }
