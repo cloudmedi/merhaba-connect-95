@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
@@ -8,16 +7,6 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      gcTime: 1000 * 60 * 5,
-      retry: 2,
-    },
-  },
-});
 
 const router = createBrowserRouter([
   {
@@ -52,10 +41,10 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <RouterProvider router={router} />
       <Toaster />
-    </QueryClientProvider>
+    </>
   );
 }
 
