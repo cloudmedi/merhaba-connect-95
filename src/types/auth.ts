@@ -1,15 +1,32 @@
 export type UserRole = 'super_admin' | 'manager' | 'admin';
 
+export interface Company {
+  id: string;
+  name: string;
+  subscriptionStatus?: string;
+  subscriptionEndsAt?: string | null;
+}
+
+export interface License {
+  type: 'trial' | 'premium';
+  start_date: string;
+  end_date: string;
+  quantity: number;
+}
+
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   avatar_url: string | null;
+  companyId?: string;
+  company?: Company;
+  license?: License;
 }
 
 export interface AuthState {
@@ -23,4 +40,14 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+}
+
+export interface AuthResponse {
+  user: User | null;
+  session: any;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }

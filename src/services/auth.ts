@@ -1,60 +1,31 @@
-import { AuthResponse, LoginCredentials } from "@/types/auth";
-import { supabase } from './supabase';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthResponse, LoginCredentials } from '@/types/auth';
 
 export const authService = {
   async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
-    const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) throw error;
 
-    if (!user || !session) {
-      throw new Error('Login failed');
-    }
-
-    // Get profile data including avatar_url
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email!,
-        firstName: user.user_metadata.firstName || '',
-        lastName: user.user_metadata.lastName || '',
-        role: user.user_metadata.role,
-        companyId: user.user_metadata.companyId,
-        isActive: true,
-        avatar_url: profile?.avatar_url || null,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at || user.created_at
-      },
-      token: session.access_token
-    };
+    return data as AuthResponse;
   },
 
-  async logout(): Promise<void> {
+  async logout() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    localStorage.removeItem('token');
   },
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  async getCurrentUser() {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
   },
 
-  setToken(token: string): void {
-    localStorage.setItem('token', token);
+  async resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
   },
-
-  isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
 };
