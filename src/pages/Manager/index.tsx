@@ -30,7 +30,7 @@ export default function Manager() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F8F9FC]">
       <ManagerHeader />
       <Routes>
         <Route index element={<Dashboard />} />
