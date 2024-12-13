@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { UsersTable } from "./components/UsersTable";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/types/auth";
 
 export default function Users() {
   const { data: users = [], isLoading } = useQuery({
@@ -23,7 +24,32 @@ export default function Users() {
         `);
 
       if (error) throw error;
-      return data;
+
+      // Map the response to match our User type
+      return data.map((profile: any): User => ({
+        id: profile.id,
+        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        role: profile.role,
+        is_active: profile.is_active,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        avatar_url: profile.avatar_url,
+        company_id: profile.company_id,
+        company: profile.companies ? {
+          id: profile.company_id,
+          name: profile.companies.name,
+          subscription_status: profile.companies.subscription_status,
+          subscription_ends_at: profile.companies.subscription_ends_at
+        } : undefined,
+        license: profile.licenses?.[0] ? {
+          type: profile.licenses[0].type as 'trial' | 'premium',
+          start_date: profile.licenses[0].start_date,
+          end_date: profile.licenses[0].end_date,
+          quantity: profile.licenses[0].quantity
+        } : undefined
+      }));
     }
   });
 

@@ -3,8 +3,8 @@ export type UserRole = 'super_admin' | 'manager';
 export interface Company {
   id: string;
   name: string;
-  subscriptionStatus?: string;
-  subscriptionEndsAt?: string | null;
+  subscription_status?: string;
+  subscription_ends_at?: string | null;
 }
 
 export interface License {
@@ -17,14 +17,14 @@ export interface License {
 export interface User {
   id: string;
   email: string;
-  firstName: string | null;
-  lastName: string | null;
+  first_name: string | null;
+  last_name: string | null;
   role: UserRole;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
   avatar_url: string | null;
-  companyId?: string;
+  company_id?: string;
   company?: Company;
   license?: License;
 }
