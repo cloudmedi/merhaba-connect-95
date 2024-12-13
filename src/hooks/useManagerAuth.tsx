@@ -1,11 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, User, UserRole } from '@/types/auth';
+import { useState, useEffect } from 'react';
+import { User, UserRole } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function useManagerAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -14,7 +11,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function getInitialSession() {
       try {
-        console.log('Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
@@ -30,25 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (profile && mounted) {
             const userRole = profile.role as UserRole;
-            if (userRole !== 'super_admin' && userRole !== 'manager') {
-              throw new Error('Invalid user role');
-            }
-            
             setUser({
               id: session.user.id,
               email: session.user.email!,
+              first_name: profile.first_name || '',
+              last_name: profile.last_name || '',
+              role: userRole,
+              is_active: profile.is_active,
+              created_at: session.user.created_at,
+              updated_at: profile.updated_at || session.user.created_at,
+              avatar_url: profile.avatar_url,
+              company_id: profile.company_id,
+              // Aliases
               firstName: profile.first_name || '',
               lastName: profile.last_name || '',
-              role: userRole,
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url
+              companyId: profile.company_id
             });
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('Error:', error);
         setUser(null);
       } finally {
         if (mounted) {
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user && mounted) {
+      if (session?.user && mounted) {
         try {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -72,31 +72,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (profile && mounted) {
             const userRole = profile.role as UserRole;
-            if (userRole !== 'super_admin' && userRole !== 'manager') {
-              throw new Error('Invalid user role');
-            }
-
             setUser({
               id: session.user.id,
               email: session.user.email!,
+              first_name: profile.first_name || '',
+              last_name: profile.last_name || '',
+              role: userRole,
+              is_active: profile.is_active,
+              created_at: session.user.created_at,
+              updated_at: profile.updated_at || session.user.created_at,
+              avatar_url: profile.avatar_url,
+              company_id: profile.company_id,
+              // Aliases
               firstName: profile.first_name || '',
               lastName: profile.last_name || '',
-              role: userRole,
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url
+              companyId: profile.company_id
             });
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error:', error);
           setUser(null);
         }
-      } else if (event === 'SIGNED_OUT' && mounted) {
+      } else if (mounted) {
         setUser(null);
       }
-
-      setIsLoading(false);
     });
 
     return () => {
@@ -105,94 +107,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      console.log('Attempting login for:', email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        if (profile) {
-          const userRole = profile.role as UserRole;
-          if (userRole !== 'super_admin' && userRole !== 'manager') {
-            await supabase.auth.signOut();
-            throw new Error('Unauthorized access');
-          }
-
-          const userData = {
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: profile.first_name || '',
-            lastName: profile.last_name || '',
-            role: userRole,
-            isActive: profile.is_active,
-            createdAt: data.user.created_at,
-            updatedAt: profile.updated_at || data.user.created_at,
-            avatar_url: profile.avatar_url
-          };
-          console.log('Setting user after login:', userData);
-          setUser(userData);
-          
-          toast.success('Giriş başarılı');
-          
-          if (profile.role === 'super_admin') {
-            window.location.href = '/super-admin';
-          } else {
-            window.location.href = '/manager';
-          }
-        }
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error('Giriş başarısız: ' + error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setUser(null);
-      window.location.href = '/super-admin/login';
-      toast.success('Çıkış başarılı');
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      toast.error('Çıkış yapılamadı');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return { user, isLoading };
 }
