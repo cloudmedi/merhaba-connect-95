@@ -7,8 +7,8 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { AuthProvider as ManagerAuthProvider } from "@/hooks/useAuth";
-import { AuthProvider as SuperAdminAuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider as ManagerAuthProvider } from "@/contexts/ManagerAuthContext";
+import { AuthProvider as SuperAdminAuthProvider } from "@/contexts/SuperAdminAuthContext";
 
 function App() {
   return (
