@@ -103,6 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Attempting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -119,14 +121,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (profileError) throw profileError;
 
-        if (profile.role !== 'super_admin') {
+        if (!profile || profile.role !== 'super_admin') {
           await supabase.auth.signOut();
-          throw new Error('Unauthorized access');
+          throw new Error('Unauthorized access: Super admin privileges required');
         }
 
         toast.success('Giriş başarılı');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Giriş başarısız');
       throw error;
     } finally {
