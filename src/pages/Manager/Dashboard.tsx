@@ -95,8 +95,12 @@ export default function ManagerDashboard() {
   ) || [];
 
   return (
-    <div className="h-full">
-      <div className="flex justify-end mb-8">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500">Manage your playlists and media</p>
+        </div>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -109,7 +113,7 @@ export default function ManagerDashboard() {
         </div>
       </div>
 
-      <div className="space-y-12">
+      <div className="space-y-8">
         <HeroPlaylist 
           playlist={heroPlaylist} 
           isLoading={isHeroLoading} 
