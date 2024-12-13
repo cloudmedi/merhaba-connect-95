@@ -1,34 +1,26 @@
+export type UserRole = 'super_admin' | 'manager' | 'admin';
+
 export interface User {
   id: string;
   email: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: 'super_admin' | 'manager' | 'admin';
-  companyId?: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  avatar_url?: string | null;
-  company?: {
-    id: string;
-    name: string;
-    subscriptionStatus: string;
-    subscriptionEndsAt: string | null;
-  };
-  license?: {
-    type: string;
-    start_date: string;
-    end_date: string | null;
-    quantity: number;
-  };
+  avatar_url: string | null;
 }
 
-export interface AuthResponse {
-  user: User;
-  token: string;
+export interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
+export interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
 }

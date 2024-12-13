@@ -8,13 +8,13 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { AuthProvider } from '@/hooks/useAuth';
+import { AuthProvider } from '@/providers/AuthProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute
-      gcTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60,
+      gcTime: 1000 * 60 * 5,
       retry: 2,
     },
   },

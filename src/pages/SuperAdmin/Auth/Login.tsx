@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
@@ -16,7 +16,6 @@ export default function SuperAdminLogin() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // If user is already logged in and is a super_admin, redirect to dashboard
     if (user?.role === 'super_admin') {
       console.log('User is already logged in as super_admin, redirecting...');
       navigate("/super-admin");
@@ -41,7 +40,6 @@ export default function SuperAdminLogin() {
     }
   };
 
-  // Show loading state while checking authentication
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
@@ -50,7 +48,6 @@ export default function SuperAdminLogin() {
     );
   }
 
-  // Don't show login form if user is already authenticated as super_admin
   if (user?.role === 'super_admin') {
     return null;
   }
@@ -96,15 +93,6 @@ export default function SuperAdminLogin() {
               disabled={isLoading}
             >
               {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate("/super-admin/register")}
-              disabled={isLoading}
-            >
-              Super Admin Olarak Kayıt Ol
             </Button>
           </form>
         </CardContent>
