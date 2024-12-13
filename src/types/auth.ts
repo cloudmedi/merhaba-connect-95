@@ -5,6 +5,8 @@ export interface Company {
   name: string;
   subscription_status?: string;
   subscription_ends_at?: string | null;
+  subscriptionStatus?: string;
+  subscriptionEndsAt?: string | null;
 }
 
 export interface License {
@@ -27,16 +29,12 @@ export interface User {
   company_id?: string;
   company?: Company;
   license?: License;
-}
 
-export interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
+  // Aliases for frontend compatibility
+  firstName: string | null;
+  lastName: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  companyId?: string;
 }
