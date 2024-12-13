@@ -16,20 +16,15 @@ import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 export default function SuperAdmin() {
   const { user, isLoading } = useAuth();
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return <div>Yükleniyor...</div>;
   }
 
-  // Auth check
   if (!user) {
-    console.log('No user found, redirecting to login');
     return <Navigate to="/super-admin/login" replace />;
   }
 
-  // Role check
   if (user.role !== 'super_admin') {
-    console.log('User is not super_admin, redirecting to home');
     return <Navigate to="/" replace />;
   }
 

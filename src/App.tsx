@@ -8,7 +8,6 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { AuthProvider } from '@/providers/AuthProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,10 +53,8 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-      </AuthProvider>
+      <RouterProvider router={router} />
+      <Toaster />
     </QueryClientProvider>
   );
 }
