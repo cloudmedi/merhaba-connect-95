@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth';
 import { toast } from 'sonner';
+import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function Users() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -59,21 +60,30 @@ export default function Users() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <DashboardLayout>
+        <div>Loading...</div>
+      </DashboardLayout>
+    );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-start">
-        <UsersHeader />
+    <DashboardLayout 
+      title="Users" 
+      description="Manage system users and their permissions"
+    >
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
+          <UsersHeader />
+        </div>
+        <UsersFilters />
+        <UsersTable
+          users={users}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onViewHistory={handleViewHistory}
+        />
       </div>
-      <UsersFilters />
-      <UsersTable
-        users={users}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onViewHistory={handleViewHistory}
-      />
-    </div>
+    </DashboardLayout>
   );
 }
