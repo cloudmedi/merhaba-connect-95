@@ -1,105 +1,108 @@
 import { useState, useEffect } from 'react';
-import { User } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { User, UserRole } from '@/types/auth';
+import { toast } from 'sonner';
 
 export function useAuthState() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function getInitialSession() {
-      try {
-        console.log('Getting initial session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          throw error;
-        }
-
-        if (session?.user && mounted) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) {
-            console.error('Profile fetch error:', profileError);
-            throw profileError;
-          }
-
-          if (profile && mounted) {
-            console.log('Profile loaded:', profile);
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role as 'super_admin' | 'manager' | 'admin',
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    getInitialSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
+      setIsLoading(true);
 
-      if (event === 'SIGNED_IN' && session?.user && mounted) {
+      if (session?.user) {
         try {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
-            .select('*')
+            .select('*, companies(*)')
             .eq('id', session.user.id)
             .single();
 
-          if (profileError) throw profileError;
+          if (error) throw error;
 
-          if (profile && mounted) {
+          if (profile) {
+            const userRole = profile.role as UserRole;
+            if (userRole !== 'super_admin' && userRole !== 'manager') {
+              throw new Error('Invalid user role');
+            }
+
             setUser({
               id: session.user.id,
               email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role as 'super_admin' | 'manager' | 'admin',
+              role: userRole,
+              firstName: profile.first_name,
+              lastName: profile.last_name,
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url
+              avatar_url: profile.avatar_url,
+              companyId: profile.company_id,
+              company: profile.companies
             });
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
           setUser(null);
         }
-      } else if (event === 'SIGNED_OUT' && mounted) {
-        console.log('User signed out');
+      } else {
         setUser(null);
       }
 
       setIsLoading(false);
     });
 
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error checking session:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*, companies(*)')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile, error }) => {
+            if (error) {
+              console.error('Error fetching profile:', error);
+              setUser(null);
+            } else if (profile) {
+              const userRole = profile.role as UserRole;
+              if (userRole !== 'super_admin' && userRole !== 'manager') {
+                console.error('Invalid user role');
+                setUser(null);
+                return;
+              }
+
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                role: userRole,
+                firstName: profile.first_name,
+                lastName: profile.last_name,
+                isActive: profile.is_active,
+                createdAt: session.user.created_at,
+                updatedAt: profile.updated_at || session.user.created_at,
+                avatar_url: profile.avatar_url,
+                companyId: profile.company_id,
+                company: profile.companies
+              });
+            }
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  return { user, isLoading, setUser };
+  return { user, isLoading };
 }

@@ -1,31 +1,47 @@
 import { supabase } from '@/integrations/supabase/client';
-import { AuthResponse, LoginCredentials } from '@/types/auth';
+import { LoginCredentials, User } from '@/types/auth';
 
-export const authService = {
-  async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+export async function signIn({ email, password }: LoginCredentials) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error) throw error;
+  if (error) throw error;
+  return data;
+}
 
-    return data as AuthResponse;
-  },
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
 
-  async logout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  },
+export async function getCurrentUser(): Promise<User | null> {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  
+  if (error || !session?.user) {
+    return null;
+  }
 
-  async getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return user;
-  },
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
 
-  async resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) throw error;
-  },
-};
+  if (profileError || !profile) {
+    return null;
+  }
+
+  return {
+    id: session.user.id,
+    email: session.user.email!,
+    firstName: profile.first_name,
+    lastName: profile.last_name,
+    role: profile.role,
+    isActive: profile.is_active,
+    createdAt: session.user.created_at,
+    updatedAt: profile.updated_at,
+    avatar_url: profile.avatar_url
+  };
+}
