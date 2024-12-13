@@ -12,8 +12,14 @@ export default function SuperAdminLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
+
+  // If user is already logged in and is a super_admin, redirect to dashboard
+  if (user?.role === 'super_admin') {
+    navigate("/super-admin");
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,10 +27,9 @@ export default function SuperAdminLogin() {
 
     try {
       await login(email, password);
-      navigate("/super-admin");
     } catch (error: any) {
       toast({
-        title: "Login failed",
+        title: "Giriş başarısız",
         description: error.message,
         variant: "destructive"
       });
@@ -41,9 +46,9 @@ export default function SuperAdminLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Super Admin Login</CardTitle>
+          <CardTitle className="text-2xl">Super Admin Girişi</CardTitle>
           <CardDescription>
-            Enter your credentials to access the super admin dashboard
+            Super admin paneline erişmek için giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -55,15 +60,17 @@ export default function SuperAdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Şifre"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <Button 
@@ -71,15 +78,16 @@ export default function SuperAdminLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
             <Button
               type="button"
               variant="outline"
               className="w-full"
               onClick={() => navigate("/super-admin/register")}
+              disabled={isLoading}
             >
-              Register as Super Admin
+              Super Admin Olarak Kayıt Ol
             </Button>
           </form>
         </CardContent>
