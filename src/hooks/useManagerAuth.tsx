@@ -22,16 +22,53 @@ export function useAuth() {
             .eq('id', session.user.id)
             .single();
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            // If profile doesn't exist, create one
+            if (profileError.message.includes('no rows')) {
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert([{
+                  id: session.user.id,
+                  email: session.user.email,
+                  role: 'manager',
+                  is_active: true
+                }])
+                .select()
+                .single();
 
-          if (profile && mounted) {
-            const userRole = profile.role as UserRole;
+              if (createError) throw createError;
+              if (newProfile && mounted) {
+                setUser({
+                  id: session.user.id,
+                  email: session.user.email!,
+                  first_name: newProfile.first_name || '',
+                  last_name: newProfile.last_name || '',
+                  role: newProfile.role as UserRole,
+                  is_active: newProfile.is_active,
+                  created_at: session.user.created_at,
+                  updated_at: newProfile.updated_at || session.user.created_at,
+                  avatar_url: newProfile.avatar_url,
+                  company_id: newProfile.company_id,
+                  // Aliases
+                  firstName: newProfile.first_name || '',
+                  lastName: newProfile.last_name || '',
+                  isActive: newProfile.is_active,
+                  createdAt: session.user.created_at,
+                  updatedAt: newProfile.updated_at || session.user.created_at,
+                  companyId: newProfile.company_id
+                });
+              }
+            } else {
+              throw profileError;
+            }
+          } else if (profile && mounted) {
             setUser({
               id: session.user.id,
               email: session.user.email!,
               first_name: profile.first_name || '',
               last_name: profile.last_name || '',
-              role: userRole,
+              role: profile.role as UserRole,
               is_active: profile.is_active,
               created_at: session.user.created_at,
               updated_at: profile.updated_at || session.user.created_at,
@@ -48,7 +85,7 @@ export function useAuth() {
           }
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Auth initialization error:', error);
         setUser(null);
       } finally {
         if (mounted) {
@@ -71,13 +108,12 @@ export function useAuth() {
           if (profileError) throw profileError;
 
           if (profile && mounted) {
-            const userRole = profile.role as UserRole;
             setUser({
               id: session.user.id,
               email: session.user.email!,
               first_name: profile.first_name || '',
               last_name: profile.last_name || '',
-              role: userRole,
+              role: profile.role as UserRole,
               is_active: profile.is_active,
               created_at: session.user.created_at,
               updated_at: profile.updated_at || session.user.created_at,
@@ -93,12 +129,13 @@ export function useAuth() {
             });
           }
         } catch (error) {
-          console.error('Error:', error);
+          console.error('Error fetching user profile:', error);
           setUser(null);
         }
       } else if (mounted) {
         setUser(null);
       }
+      setIsLoading(false);
     });
 
     return () => {
