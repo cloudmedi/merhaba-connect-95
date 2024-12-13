@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/SuperAdminAuthContext";
 import Dashboard from "./SuperAdmin/Dashboard";
 import Users from "./SuperAdmin/Users";
 import Playlists from "./SuperAdmin/Playlists";
