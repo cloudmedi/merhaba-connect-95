@@ -28,6 +28,7 @@ export function useAuthState() {
 
           // If profile doesn't exist, create it
           if (!profileExists) {
+            console.log('Creating new profile for user:', session.user.id);
             const { error: insertError } = await supabase
               .from('profiles')
               .insert([
@@ -50,7 +51,7 @@ export function useAuthState() {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .maybeSingle();
+            .single();
 
           if (error) {
             console.error('Error fetching profile:', error);

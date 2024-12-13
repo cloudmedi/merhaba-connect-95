@@ -14,11 +14,38 @@ export function useAuthActions(setUser: (user: any) => void) {
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile, error: profileError } = await supabase
+        // First check if profile exists
+        const { data: existingProfile, error: checkError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        // If profile doesn't exist, create it
+        if (!existingProfile) {
+          console.log('Creating new profile for user:', data.user.id);
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: data.user.id,
+                email: data.user.email,
+                role: 'super_admin',
+                is_active: true
+              }
+            ]);
+
+          if (insertError) throw insertError;
+        }
+
+        // Now fetch the complete profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
         if (profileError) throw profileError;
 
