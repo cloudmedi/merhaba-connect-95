@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { UsersTable } from './components/UsersTable';
-import { UsersFilters } from './components/UsersFilters';
 import { UsersHeader } from './components/UsersHeader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,12 +8,12 @@ import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function Users() {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users', searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from('profiles')
         .select(`
           *,
@@ -24,7 +23,7 @@ export default function Users() {
             subscription_status,
             subscription_ends_at
           ),
-          licenses!left (
+          licenses (
             type,
             start_date,
             end_date,
@@ -33,8 +32,15 @@ export default function Users() {
         `)
         .order('created_at', { ascending: false });
 
+      if (searchTerm) {
+        query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+
       if (error) {
         console.error('Error fetching users:', error);
+        toast.error('Kullanıcılar yüklenirken bir hata oluştu');
         throw error;
       }
 
@@ -44,8 +50,10 @@ export default function Users() {
         // Validate and type-cast the license data
         const license = profile.licenses?.[0];
         const typedLicense: License | undefined = license ? {
-          ...license,
-          type: license.type === 'premium' ? 'premium' : 'trial' // Ensure type is either 'premium' or 'trial'
+          type: license.type === 'premium' ? 'premium' : 'trial',
+          start_date: license.start_date,
+          end_date: license.end_date,
+          quantity: license.quantity
         } : undefined;
 
         return {
@@ -66,53 +74,11 @@ export default function Users() {
     }
   });
 
-  const handleEdit = (user: User) => {
-    setSelectedUser(user);
-  };
-
-  const handleDelete = async (user: User) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-
-      if (error) throw error;
-      toast.success('User deleted successfully');
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
-    }
-  };
-
-  const handleViewHistory = (user: User) => {
-    setSelectedUser(user);
-  };
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div>Loading...</div>
-      </DashboardLayout>
-    );
-  }
-
   return (
-    <DashboardLayout 
-      title="Users" 
-      description="Manage system users and their permissions"
-    >
+    <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-start">
-          <UsersHeader />
-        </div>
-        <UsersFilters />
-        <UsersTable
-          users={users}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onViewHistory={handleViewHistory}
-        />
+        <UsersHeader onSearch={setSearchTerm} />
+        <UsersTable users={users || []} isLoading={isLoading} />
       </div>
     </DashboardLayout>
   );
