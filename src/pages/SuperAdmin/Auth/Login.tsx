@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +12,16 @@ export default function SuperAdminLogin() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login, user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  // If user is already logged in and is a super_admin, redirect to dashboard
-  if (user?.role === 'super_admin') {
-    navigate("/super-admin");
-    return null;
-  }
+  useEffect(() => {
+    // If user is already logged in and is a super_admin, redirect to dashboard
+    if (user?.role === 'super_admin') {
+      console.log('User is already logged in as super_admin, redirecting...');
+      navigate("/super-admin");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +30,7 @@ export default function SuperAdminLogin() {
     try {
       await login(email, password);
     } catch (error: any) {
+      console.error('Login error in component:', error);
       toast({
         title: "Giriş başarısız",
         description: error.message,
@@ -37,6 +40,20 @@ export default function SuperAdminLogin() {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
+        <div className="text-white">Yükleniyor...</div>
+      </div>
+    );
+  }
+
+  // Don't show login form if user is already authenticated as super_admin
+  if (user?.role === 'super_admin') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
