@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, UserRole } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 
-export function useManagerAuth() {
+export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
