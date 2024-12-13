@@ -26,7 +26,7 @@ export function useNotifications() {
         toast.error("Failed to load notifications");
       } else {
         setNotifications(data);
-        setUnreadCount(data.filter((notification) => !notification.is_read).length);
+        setUnreadCount(data.filter((notification) => notification.status === "unread").length);
       }
       setIsLoading(false);
     };
@@ -37,7 +37,7 @@ export function useNotifications() {
   const markAsRead = async (notificationId: string) => {
     const { error } = await supabase
       .from("notifications")
-      .update({ is_read: true })
+      .update({ status: "read" })
       .eq("id", notificationId);
 
     if (error) {
@@ -46,7 +46,7 @@ export function useNotifications() {
     } else {
       setNotifications((prev) =>
         prev.map((notification) =>
-          notification.id === notificationId ? { ...notification, is_read: true } : notification
+          notification.id === notificationId ? { ...notification, status: "read" } : notification
         )
       );
       setUnreadCount((prev) => prev - 1);
