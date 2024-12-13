@@ -9,11 +9,14 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 
 export default function Users() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [licenseFilter, setLicenseFilter] = useState('all');
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ['users', searchTerm],
+    queryKey: ['users', searchTerm, roleFilter, statusFilter, licenseFilter],
     queryFn: async () => {
-      const query = supabase
+      let query = supabase
         .from('profiles')
         .select(`
           *,
@@ -33,21 +36,26 @@ export default function Users() {
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+        query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+      }
+
+      if (roleFilter !== 'all') {
+        query = query.eq('role', roleFilter);
+      }
+
+      if (statusFilter !== 'all') {
+        query = query.eq('is_active', statusFilter === 'active');
       }
 
       const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching users:', error);
-        toast.error('Kullanıcılar yüklenirken bir hata oluştu');
+        toast.error('Failed to load users');
         throw error;
       }
 
-      console.log('Fetched users data:', data); // Debug log
-
       return data.map((profile): User => {
-        // Validate and type-cast the license data
         const license = profile.licenses?.[0];
         const typedLicense: License | undefined = license ? {
           type: license.type === 'premium' ? 'premium' : 'trial',
@@ -77,7 +85,12 @@ export default function Users() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <UsersHeader onSearch={setSearchTerm} />
+        <UsersHeader 
+          onSearch={setSearchTerm}
+          onRoleFilter={setRoleFilter}
+          onStatusFilter={setStatusFilter}
+          onLicenseFilter={setLicenseFilter}
+        />
         <UsersTable users={users || []} isLoading={isLoading} />
       </div>
     </DashboardLayout>

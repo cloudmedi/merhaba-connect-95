@@ -1,4 +1,12 @@
-import { User } from '@/types/auth';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { User } from "@/types/auth";
+import { UserTableRow } from "./UserTableRow";
+import { useState } from "react";
+import { EditUserDialog } from "./EditUserDialog";
+import { ViewUserDialog } from "./ViewUserDialog";
+import { UserHistoryDialog } from "./UserHistoryDialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UsersTableProps {
   users: User[];
@@ -6,62 +14,83 @@ export interface UsersTableProps {
 }
 
 export function UsersTable({ users, isLoading }: UsersTableProps) {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+
+  const handleDelete = async (user: User) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (error) throw error;
+      toast.success('User deleted successfully');
+    } catch (error: any) {
+      toast.error('Failed to delete user: ' + error.message);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="rounded-md border">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="p-4 text-left">User</th>
-            <th className="p-4 text-left">Role</th>
-            <th className="p-4 text-left">Status</th>
-            <th className="p-4 text-left">License</th>
-            <th className="p-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id} className="border-b">
-              <td className="p-4">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="font-medium">
-                      {user.firstName} {user.lastName}
-                    </p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                  </div>
-                </div>
-              </td>
-              <td className="p-4">{user.role}</td>
-              <td className="p-4">
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {user.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </td>
-              <td className="p-4">
-                {user.license ? (
-                  <div>
-                    <p>{user.license.type}</p>
-                    <p className="text-sm text-gray-500">
-                      Expires: {new Date(user.license.end_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                ) : (
-                  <span className="text-gray-500">No license</span>
-                )}
-              </td>
-              <td className="p-4">
-                {/* Add your action buttons here */}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[300px]">User</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>License</TableHead>
+              <TableHead>Expiry</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <UserTableRow
+                key={user.id}
+                user={user}
+                onEdit={() => {
+                  setSelectedUser(user);
+                  setShowEditDialog(true);
+                }}
+                onDelete={() => handleDelete(user)}
+                onViewHistory={() => {
+                  setSelectedUser(user);
+                  setShowHistoryDialog(true);
+                }}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {selectedUser && (
+        <>
+          <EditUserDialog
+            user={selectedUser}
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+          />
+          <ViewUserDialog
+            user={selectedUser}
+            open={showViewDialog}
+            onOpenChange={setShowViewDialog}
+          />
+          <UserHistoryDialog
+            user={selectedUser}
+            open={showHistoryDialog}
+            onOpenChange={setShowHistoryDialog}
+          />
+        </>
+      )}
+    </>
   );
 }
