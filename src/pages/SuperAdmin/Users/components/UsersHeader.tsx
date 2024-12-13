@@ -1,5 +1,7 @@
+import { Dispatch, SetStateAction } from 'react';
+
 interface UsersHeaderProps {
-  onSearch: (value: string) => void;
+  onSearch: Dispatch<SetStateAction<string>>;
 }
 
 export function UsersHeader({ onSearch }: UsersHeaderProps) {

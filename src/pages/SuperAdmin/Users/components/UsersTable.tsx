@@ -1,6 +1,6 @@
 import { User } from '@/types/auth';
 
-interface UsersTableProps {
+export interface UsersTableProps {
   users: User[];
   isLoading: boolean;
 }
