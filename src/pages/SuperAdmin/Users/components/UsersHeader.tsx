@@ -1,21 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { CreateUserDialog } from "./CreateUserDialog";
+interface UsersHeaderProps {
+  onSearch: (value: string) => void;
+}
 
-export function UsersHeader() {
-  const [open, setOpen] = useState(false);
-
+export function UsersHeader({ onSearch }: UsersHeaderProps) {
   return (
-    <>
-      <Button 
-        onClick={() => setOpen(true)} 
-        className="bg-[#9b87f5] hover:bg-[#7E69AB] shrink-0"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Add User
-      </Button>
-      <CreateUserDialog open={open} onOpenChange={setOpen} />
-    </>
+    <div className="flex justify-between items-center">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+        <p className="text-muted-foreground">
+          Manage system users and their permissions
+        </p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <input
+          type="text"
+          placeholder="Search users..."
+          className="px-4 py-2 border rounded-md"
+          onChange={(e) => onSearch(e.target.value)}
+        />
+      </div>
+    </div>
   );
 }
