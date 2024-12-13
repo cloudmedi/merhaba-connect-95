@@ -44,6 +44,9 @@ export function useAuthState() {
               console.error('Error creating profile:', insertError);
               throw insertError;
             }
+
+            // Wait a bit for the database to update
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
 
           // Now fetch the complete profile
@@ -51,7 +54,7 @@ export function useAuthState() {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           if (error) {
             console.error('Error fetching profile:', error);

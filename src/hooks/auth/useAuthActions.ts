@@ -38,6 +38,9 @@ export function useAuthActions(setUser: (user: any) => void) {
             ]);
 
           if (insertError) throw insertError;
+          
+          // Wait a bit for the database to update
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         // Now fetch the complete profile
@@ -45,18 +48,17 @@ export function useAuthActions(setUser: (user: any) => void) {
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
 
-        if (profile) {
-          console.log('Profile loaded:', profile);
+        if (profile && profile.role === 'super_admin') {
           setUser({
             id: data.user.id,
             email: data.user.email!,
             firstName: profile.first_name || '',
             lastName: profile.last_name || '',
-            role: profile.role as 'super_admin' | 'manager' | 'admin',
+            role: profile.role,
             isActive: profile.is_active,
             createdAt: data.user.created_at,
             updatedAt: profile.updated_at || data.user.created_at,
@@ -64,6 +66,9 @@ export function useAuthActions(setUser: (user: any) => void) {
           });
           
           toast.success('Login successful');
+        } else {
+          await supabase.auth.signOut();
+          throw new Error('Unauthorized access: Super admin privileges required');
         }
       }
     } catch (error: any) {
