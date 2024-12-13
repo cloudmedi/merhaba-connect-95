@@ -8,6 +8,7 @@ import Settings from "./Settings";
 import Announcements from "./Announcements";
 import OfflinePlayers from "./OfflinePlayers";
 import { ManagerHeader } from "@/components/ManagerHeader";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 export default function Manager() {
   const { user, isLoading } = useAuth();
@@ -29,19 +30,41 @@ export default function Manager() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <ManagerHeader />
-      <main className="p-6">
-        <Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="devices/*" element={<Devices />} />
-          <Route path="playlists/*" element={<Playlists />} />
-          <Route path="schedule/*" element={<Schedule />} />
-          <Route path="settings/*" element={<Settings />} />
-          <Route path="announcements/*" element={<Announcements />} />
-          <Route path="offline-players" element={<OfflinePlayers />} />
-        </Routes>
-      </main>
+      <Routes>
+        <Route index element={<Dashboard />} />
+        <Route path="devices/*" element={
+          <DashboardLayout title="Devices">
+            <Devices />
+          </DashboardLayout>
+        } />
+        <Route path="playlists/*" element={
+          <DashboardLayout title="Playlists">
+            <Playlists />
+          </DashboardLayout>
+        } />
+        <Route path="schedule/*" element={
+          <DashboardLayout title="Schedule">
+            <Schedule />
+          </DashboardLayout>
+        } />
+        <Route path="settings/*" element={
+          <DashboardLayout title="Settings">
+            <Settings />
+          </DashboardLayout>
+        } />
+        <Route path="announcements/*" element={
+          <DashboardLayout title="Announcements">
+            <Announcements />
+          </DashboardLayout>
+        } />
+        <Route path="offline-players" element={
+          <DashboardLayout title="Offline Players">
+            <OfflinePlayers />
+          </DashboardLayout>
+        } />
+      </Routes>
     </div>
   );
 }
