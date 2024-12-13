@@ -1,96 +1,74 @@
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/ManagerAuthContext";
 import { toast } from "sonner";
-import { CampaignFormData } from "../../types";
+import { useAuth } from "@/contexts/ManagerAuthContext";
 
-export const useCampaignMutations = () => {
+export function useCampaignMutations() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const createAnnouncement = async (title: string) => {
-    if (!user) {
-      toast.error("You must be logged in to create an announcement");
-      return null;
+  const createCampaign = async (campaignData) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert([{ ...campaignData, userId: user?.id }]);
+
+      if (error) throw error;
+
+      toast.success("Campaign created successfully!");
+      return data;
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast.error("Failed to create campaign.");
+    } finally {
+      setIsLoading(false);
     }
-
-    const { data: announcement, error } = await supabase
-      .from('announcements')
-      .insert({
-        title,
-        created_by: user.id,
-        status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating announcement:', error);
-      toast.error("Failed to create announcement");
-      return null;
-    }
-
-    return announcement;
   };
 
-  const handleCreateCampaign = async (formData: CampaignFormData, announcementId: string | null) => {
+  const updateCampaign = async (campaignId, campaignData) => {
+    setIsLoading(true);
     try {
-      if (!announcementId) {
-        toast.error("No announcement created. Please try again.");
-        return;
-      }
+      const { data, error } = await supabase
+        .from("campaigns")
+        .update(campaignData)
+        .eq("id", campaignId);
 
-      if (formData.devices.length === 0) {
-        toast.error("Please select at least one device");
-        return;
-      }
+      if (error) throw error;
 
-      // Get unique branch IDs from selected devices
-      const { data: deviceBranches } = await supabase
-        .from('devices')
-        .select('branch_id')
-        .in('id', formData.devices)
-        .not('branch_id', 'is', null);
+      toast.success("Campaign updated successfully!");
+      return data;
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+      toast.error("Failed to update campaign.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const branchIds = [...new Set(deviceBranches?.map(d => d.branch_id) || [])];
+  const deleteCampaign = async (campaignId) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("campaigns")
+        .delete()
+        .eq("id", campaignId);
 
-      // Update announcement with schedule details
-      const { error: updateError } = await supabase
-        .from('announcements')
-        .update({
-          description: formData.description,
-          start_date: formData.startDate,
-          end_date: formData.endDate,
-          repeat_type: formData.repeatType,
-          repeat_interval: formData.repeatInterval
-        })
-        .eq('id', announcementId);
+      if (error) throw error;
 
-      if (updateError) throw updateError;
-
-      // Create announcement-branch associations
-      if (branchIds.length > 0) {
-        const { error: branchError } = await supabase
-          .from('announcement_branches')
-          .insert(
-            branchIds.map(branchId => ({
-              announcement_id: announcementId,
-              branch_id: branchId
-            }))
-          );
-
-        if (branchError) throw branchError;
-      }
-
-      toast.success("Campaign created successfully");
-      return true;
-    } catch (error: any) {
-      console.error('Error creating campaign:', error);
-      toast.error(error.message || "Failed to create campaign");
-      return false;
+      toast.success("Campaign deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting campaign:", error);
+      toast.error("Failed to delete campaign.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
-    createAnnouncement,
-    handleCreateCampaign
+    createCampaign,
+    updateCampaign,
+    deleteCampaign,
+    isLoading,
   };
-};
+}

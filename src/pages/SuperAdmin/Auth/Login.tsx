@@ -3,44 +3,51 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { Music2 } from "lucide-react";
 import { useAuth } from "@/contexts/SuperAdminAuthContext";
-import { Loader2 } from "lucide-react";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, isLoading, user } = useAuth();
+  const { login } = useAuth();
+  const { toast } = useToast();
 
-  // If user is already logged in and is a super_admin, redirect to dashboard
-  if (user?.role === 'super_admin') {
-    navigate('/super-admin');
-    return null;
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      await signIn(email, password);
-      navigate('/super-admin');
-    } catch (error) {
-      console.error('Login error:', error);
+      await login(email, password);
+      navigate("/super-admin");
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
-      <Card className="w-full max-w-md mx-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Super Admin Girişi
-          </CardTitle>
-          <CardDescription className="text-center">
-            Yönetici paneline erişmek için giriş yapın
+          <div className="flex items-center gap-2 mb-2">
+            <Music2 className="h-6 w-6 text-[#9b87f5]" />
+            <h2 className="text-2xl font-bold">Merhaba Music</h2>
+          </div>
+          <CardTitle className="text-2xl">Super Admin Login</CardTitle>
+          <CardDescription>
+            Enter your credentials to access the super admin dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Input
                 type="email"
@@ -48,34 +55,31 @@ export default function SuperAdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full"
-                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Şifre"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full"
-                disabled={isLoading}
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+              className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Giriş yapılıyor...
-                </>
-              ) : (
-                'Giriş Yap'
-              )}
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/super-admin/register")}
+            >
+              Register as Super Admin
             </Button>
           </form>
         </CardContent>
