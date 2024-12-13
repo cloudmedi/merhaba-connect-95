@@ -20,9 +20,9 @@ function App() {
         <Route path="/manager/*" element={
           <ManagerAuthProvider>
             <Routes>
-              <Route path="/" element={<Manager />} />
               <Route path="/login" element={<ManagerLogin />} />
               <Route path="/register" element={<ManagerRegister />} />
+              <Route path="/*" element={<Manager />} />
             </Routes>
           </ManagerAuthProvider>
         } />
@@ -31,9 +31,9 @@ function App() {
         <Route path="/super-admin/*" element={
           <SuperAdminAuthProvider>
             <Routes>
-              <Route path="/" element={<SuperAdmin />} />
               <Route path="/login" element={<SuperAdminLogin />} />
               <Route path="/register" element={<SuperAdminRegister />} />
+              <Route path="/*" element={<SuperAdmin />} />
             </Routes>
           </SuperAdminAuthProvider>
         } />
