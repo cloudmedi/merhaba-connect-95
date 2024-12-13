@@ -1,14 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'super_admin' | 'manager' | 'admin';
-  firstName?: string;
-  lastName?: string;
-}
+import { User, UserRole } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -39,12 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (error) throw error;
 
           if (profile) {
+            const userRole = profile.role as UserRole;
             setUser({
               id: session.user.id,
               email: session.user.email!,
-              role: profile.role,
+              role: userRole,
               firstName: profile.first_name,
               lastName: profile.last_name,
+              isActive: profile.is_active,
+              createdAt: session.user.created_at,
+              updatedAt: profile.updated_at || session.user.created_at,
+              avatar_url: profile.avatar_url
             });
           }
         } catch (error) {
@@ -77,12 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error('Error fetching profile:', error);
               setUser(null);
             } else if (profile) {
+              const userRole = profile.role as UserRole;
               setUser({
                 id: session.user.id,
                 email: session.user.email!,
-                role: profile.role,
+                role: userRole,
                 firstName: profile.first_name,
                 lastName: profile.last_name,
+                isActive: profile.is_active,
+                createdAt: session.user.created_at,
+                updatedAt: profile.updated_at || session.user.created_at,
+                avatar_url: profile.avatar_url
               });
             }
             setIsLoading(false);

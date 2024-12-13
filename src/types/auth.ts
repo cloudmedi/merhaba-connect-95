@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'manager' | 'admin';
+export type UserRole = 'super_admin' | 'manager';
 
 export interface Company {
   id: string;
@@ -40,11 +40,6 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
-}
-
-export interface AuthResponse {
-  user: User | null;
-  session: any;
 }
 
 export interface LoginCredentials {
