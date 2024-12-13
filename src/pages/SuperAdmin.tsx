@@ -25,10 +25,12 @@ export default function SuperAdmin() {
   }
 
   if (!user) {
+    console.log('No user found, redirecting to login');
     return <Navigate to="/super-admin/login" replace />;
   }
 
   if (user.role !== 'super_admin') {
+    console.log('User is not super_admin, redirecting to home');
     return <Navigate to="/" replace />;
   }
 

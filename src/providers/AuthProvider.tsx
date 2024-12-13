@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        setUser(null);
       } finally {
         if (mounted) {
           setIsLoading(false);
