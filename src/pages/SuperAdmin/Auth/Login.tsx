@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
+import { toast } from "sonner";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ export default function SuperAdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login, user, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (user?.role === 'super_admin') {
