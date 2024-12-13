@@ -1,25 +1,13 @@
-import { Badge } from "@/components/ui/badge";
-import { Check, X } from "lucide-react";
-import { User } from "@/types/auth";
-
 interface UserStatusProps {
-  user: User;
+  status: boolean;
 }
 
-export function UserStatus({ user }: UserStatusProps) {
+export function UserStatus({ status }: UserStatusProps) {
   return (
-    <Badge 
-      variant={user.isActive ? 'default' : 'destructive'}
-      className={user.isActive 
-        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-        : 'bg-red-100 text-red-800 hover:bg-red-100'}
-    >
-      {user.isActive ? (
-        <Check className="mr-1 h-3 w-3" />
-      ) : (
-        <X className="mr-1 h-3 w-3" />
-      )}
-      {user.isActive ? 'active' : 'blocked'}
-    </Badge>
+    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+      status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`}>
+      {status ? 'Active' : 'Inactive'}
+    </span>
   );
 }

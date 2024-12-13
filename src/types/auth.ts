@@ -29,12 +29,6 @@ export interface User {
   license?: License;
 }
 
-export interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
