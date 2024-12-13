@@ -20,7 +20,7 @@ export default function SuperAdminLogin() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password, { role: 'super_admin' });
+      await signIn(email, password);
       navigate("/super-admin");
     } catch (error: any) {
       console.error('Login error:', error);

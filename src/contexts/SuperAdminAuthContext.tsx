@@ -6,7 +6,7 @@ import { User } from '@/types/auth';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string, options?: { role?: string }) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -19,6 +19,7 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsLoading(true);
+      console.log('Auth state changed:', event, session?.user?.id);
 
       if (session?.user) {
         try {
@@ -28,7 +29,10 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
             .eq('id', session.user.id)
             .single();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching profile:', error);
+            throw error;
+          }
 
           if (profile && profile.role === 'super_admin') {
             setUser({
@@ -43,11 +47,12 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
               avatar_url: profile.avatar_url
             });
           } else {
+            console.log('User is not a super admin, signing out');
             await supabase.auth.signOut();
-            throw new Error('Unauthorized: Super Admin access required');
+            setUser(null);
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error in auth state change:', error);
           setUser(null);
         }
       } else {
@@ -62,8 +67,11 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string, options?: { role?: string }) => {
+  const signIn = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
+      console.log('Attempting to sign in:', email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -78,9 +86,13 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
           .eq('id', data.user.id)
           .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          throw new Error('Failed to fetch user profile');
+        }
 
         if (!profile || profile.role !== 'super_admin') {
+          console.error('User is not a super admin');
           await supabase.auth.signOut();
           throw new Error('Unauthorized: Super Admin access required');
         }
@@ -91,16 +103,21 @@ export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
       console.error('Login error:', error);
       toast.error(error.message || 'Login failed');
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setIsLoading(true);
       await supabase.auth.signOut();
       toast.success('Logged out successfully');
     } catch (error: any) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
+    } finally {
+      setIsLoading(false);
     }
   };
 
