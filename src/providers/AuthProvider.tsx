@@ -1,7 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthContextType, User } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User, UserRole } from '@/types/auth';
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -10,106 +17,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function getInitialSession() {
-      try {
-        console.log('Getting initial session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
-
-        if (session?.user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) throw profileError;
-
-          if (profile && mounted) {
-            const userData = {
-              id: session.user.id,
-              email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role as 'super_admin' | 'manager' | 'admin',
-              isActive: profile.is_active,
-              createdAt: session.user.created_at,
-              updatedAt: profile.updated_at || session.user.created_at,
-              avatar_url: profile.avatar_url
-            };
-            console.log('Setting initial user:', userData);
-            setUser(userData);
-          }
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setUser(null);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    getInitialSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
+      setIsLoading(true);
 
-      if (event === 'SIGNED_IN' && session?.user) {
+      if (session?.user) {
         try {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (profileError) throw profileError;
+          if (error) throw error;
 
-          if (profile && mounted) {
-            const userData = {
+          if (profile) {
+            const userRole = profile.role as UserRole;
+            if (userRole !== 'super_admin' && userRole !== 'manager') {
+              throw new Error('Invalid user role');
+            }
+
+            setUser({
               id: session.user.id,
               email: session.user.email!,
-              firstName: profile.first_name || '',
-              lastName: profile.last_name || '',
-              role: profile.role as 'super_admin' | 'manager' | 'admin',
+              role: userRole,
+              firstName: profile.first_name,
+              lastName: profile.last_name,
               isActive: profile.is_active,
               createdAt: session.user.created_at,
               updatedAt: profile.updated_at || session.user.created_at,
               avatar_url: profile.avatar_url
-            };
-            console.log('Setting user after sign in:', userData);
-            setUser(userData);
+            });
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
           setUser(null);
         }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
+      } else {
         setUser(null);
       }
 
       setIsLoading(false);
     });
 
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error checking session:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile, error }) => {
+            if (error) {
+              console.error('Error fetching profile:', error);
+              setUser(null);
+            } else if (profile) {
+              const userRole = profile.role as UserRole;
+              if (userRole !== 'super_admin' && userRole !== 'manager') {
+                console.error('Invalid user role');
+                setUser(null);
+                return;
+              }
+
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                role: userRole,
+                firstName: profile.first_name,
+                lastName: profile.last_name,
+                isActive: profile.is_active,
+                createdAt: session.user.created_at,
+                updatedAt: profile.updated_at || session.user.created_at,
+                avatar_url: profile.avatar_url
+              });
+            }
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Attempting login for:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error) throw error;
@@ -123,58 +128,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (profileError) throw profileError;
 
-        if (profile) {
-          const userData = {
-            id: data.user.id,
-            email: data.user.email!,
-            firstName: profile.first_name || '',
-            lastName: profile.last_name || '',
-            role: profile.role as 'super_admin' | 'manager' | 'admin',
-            isActive: profile.is_active,
-            createdAt: data.user.created_at,
-            updatedAt: profile.updated_at || data.user.created_at,
-            avatar_url: profile.avatar_url
-          };
-          console.log('Setting user after login:', userData);
-          setUser(userData);
-          
-          toast.success('Giriş başarılı');
-          
-          if (profile.role === 'super_admin') {
-            window.location.href = '/super-admin';
-          } else {
-            window.location.href = '/manager';
-          }
+        if (profile.role !== 'super_admin') {
+          await supabase.auth.signOut();
+          throw new Error('Unauthorized access');
         }
+
+        toast.success('Giriş başarılı');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error('Giriş başarısız: ' + error.message);
+      toast.error(error.message || 'Giriş başarısız');
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setUser(null);
-      window.location.href = '/super-admin/login';
+      await supabase.auth.signOut();
       toast.success('Çıkış başarılı');
     } catch (error: any) {
-      console.error('Logout error:', error);
       toast.error('Çıkış yapılamadı');
+      console.error('Logout error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

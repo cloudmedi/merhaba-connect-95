@@ -9,15 +9,12 @@ import { User } from "@/types/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/users";
 import { toast } from "sonner";
-import { BasicInfoSection } from "./EditUserForm/BasicInfoSection";
-import { RoleSection } from "./EditUserForm/RoleSection";
-import { EditUserFormValues } from "./EditUserForm/types";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["admin", "manager"]),
+  role: z.enum(["manager"]),
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
   password: z.string().optional(),
 });
@@ -37,7 +34,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       email: user.email,
-      role: user.role === "super_admin" ? "admin" : user.role,
+      role: user.role === "super_admin" ? "manager" : user.role,
       companyName: user.company?.name || "",
       password: "",
     },
@@ -87,8 +84,47 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <BasicInfoSection form={form} />
-            <RoleSection form={form} />
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your first name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter your last name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter your email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -98,6 +134,20 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                   <FormLabel>Password (Optional)</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="companyName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter company name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
