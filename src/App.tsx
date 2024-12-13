@@ -7,7 +7,7 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { AuthProvider as ManagerAuthProvider } from "@/contexts/ManagerAuthContext";
+import { ManagerAuthProvider } from "@/contexts/ManagerAuthContext";
 import { SuperAdminAuthProvider } from "@/contexts/SuperAdminAuthContext";
 
 function App() {
@@ -17,14 +17,26 @@ function App() {
         <Route path="/" element={<Index />} />
         
         {/* Manager routes */}
-        <Route path="/manager" element={<ManagerAuthProvider><Manager /></ManagerAuthProvider>} />
-        <Route path="/manager/login" element={<ManagerAuthProvider><ManagerLogin /></ManagerAuthProvider>} />
-        <Route path="/manager/register" element={<ManagerAuthProvider><ManagerRegister /></ManagerAuthProvider>} />
+        <Route path="/manager/*" element={
+          <ManagerAuthProvider>
+            <Routes>
+              <Route path="/" element={<Manager />} />
+              <Route path="/login" element={<ManagerLogin />} />
+              <Route path="/register" element={<ManagerRegister />} />
+            </Routes>
+          </ManagerAuthProvider>
+        } />
 
         {/* Super Admin routes */}
-        <Route path="/super-admin" element={<SuperAdminAuthProvider><SuperAdmin /></SuperAdminAuthProvider>} />
-        <Route path="/super-admin/login" element={<SuperAdminAuthProvider><SuperAdminLogin /></SuperAdminAuthProvider>} />
-        <Route path="/super-admin/register" element={<SuperAdminAuthProvider><SuperAdminRegister /></SuperAdminAuthProvider>} />
+        <Route path="/super-admin/*" element={
+          <SuperAdminAuthProvider>
+            <Routes>
+              <Route path="/" element={<SuperAdmin />} />
+              <Route path="/login" element={<SuperAdminLogin />} />
+              <Route path="/register" element={<SuperAdminRegister />} />
+            </Routes>
+          </SuperAdminAuthProvider>
+        } />
       </Routes>
       <Toaster />
     </>
