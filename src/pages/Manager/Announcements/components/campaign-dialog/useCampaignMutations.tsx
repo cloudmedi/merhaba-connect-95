@@ -7,68 +7,78 @@ export function useCampaignMutations() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const createCampaign = async (campaignData) => {
-    setIsLoading(true);
+  const createAnnouncement = async (title: string) => {
     try {
       const { data, error } = await supabase
-        .from("campaigns")
-        .insert([{ ...campaignData, userId: user?.id }]);
+        .from("announcements")
+        .insert([{ 
+          title,
+          created_by: user?.id,
+          company_id: user?.companyId
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
-
-      toast.success("Campaign created successfully!");
       return data;
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+      toast.error("Failed to create announcement");
+      return null;
+    }
+  };
+
+  const handleCreateCampaign = async (formData: any, announcementId: string | null) => {
+    if (!announcementId) {
+      toast.error("No announcement ID provided");
+      return false;
+    }
+
+    setIsLoading(true);
+    try {
+      // Update announcement with campaign data
+      const { error: updateError } = await supabase
+        .from("announcements")
+        .update({
+          description: formData.description,
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          repeat_type: formData.repeatType,
+          repeat_interval: formData.repeatInterval,
+          status: 'pending'
+        })
+        .eq('id', announcementId);
+
+      if (updateError) throw updateError;
+
+      // Create device assignments
+      if (formData.devices.length > 0) {
+        const { error: deviceError } = await supabase
+          .from("announcement_branches")
+          .insert(
+            formData.devices.map((deviceId: string) => ({
+              announcement_id: announcementId,
+              branch_id: deviceId
+            }))
+          );
+
+        if (deviceError) throw deviceError;
+      }
+
+      toast.success("Campaign created successfully");
+      return true;
     } catch (error) {
       console.error("Error creating campaign:", error);
-      toast.error("Failed to create campaign.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateCampaign = async (campaignId, campaignData) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .update(campaignData)
-        .eq("id", campaignId);
-
-      if (error) throw error;
-
-      toast.success("Campaign updated successfully!");
-      return data;
-    } catch (error) {
-      console.error("Error updating campaign:", error);
-      toast.error("Failed to update campaign.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteCampaign = async (campaignId) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from("campaigns")
-        .delete()
-        .eq("id", campaignId);
-
-      if (error) throw error;
-
-      toast.success("Campaign deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting campaign:", error);
-      toast.error("Failed to delete campaign.");
+      toast.error("Failed to create campaign");
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
   return {
-    createCampaign,
-    updateCampaign,
-    deleteCampaign,
-    isLoading,
+    createAnnouncement,
+    handleCreateCampaign,
+    isLoading
   };
 }

@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/SuperAdminAuthContext";
 import Dashboard from "./Dashboard";
 import Settings from "./Settings";
-import Announcements from "./Announcements";
 
 export default function SuperAdmin() {
   const { user, isLoading } = useAuth();
@@ -27,7 +26,6 @@ export default function SuperAdmin() {
     <Routes>
       <Route index element={<Dashboard />} />
       <Route path="settings/*" element={<Settings />} />
-      <Route path="announcements/*" element={<Announcements />} />
     </Routes>
   );
 }

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User } from "@/types/auth";
+import { useAuth } from "@/contexts/ManagerAuthContext";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   
-  const user = useAuth().user; // Get the user from the auth context
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -18,7 +18,7 @@ export function useNotifications() {
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("recipient_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
