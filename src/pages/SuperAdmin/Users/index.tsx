@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { UsersTable } from './components/UsersTable';
+import { UsersFilters } from './components/UsersFilters';
+import { UsersHeader } from './components/UsersHeader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth';
@@ -18,7 +20,6 @@ export default function Users() {
 
       if (error) throw error;
 
-      // Transform the data to match the User type
       return data.map((profile): User => ({
         id: profile.id,
         email: profile.email,
@@ -62,7 +63,11 @@ export default function Users() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-start">
+        <UsersHeader />
+      </div>
+      <UsersFilters />
       <UsersTable
         users={users}
         onEdit={handleEdit}
