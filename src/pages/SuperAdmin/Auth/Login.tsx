@@ -3,32 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/contexts/SuperAdminAuthContext";
+import { toast } from "sonner";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await login(email, password);
       navigate("/super-admin");
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: "Login failed",
-        description: error.message || "An error occurred during login",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Giriş başarısız");
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +67,7 @@ export default function SuperAdminLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
             <Button
               type="button"
@@ -80,7 +75,7 @@ export default function SuperAdminLogin() {
               className="w-full"
               onClick={() => navigate("/super-admin/register")}
             >
-              Register as Super Admin
+              Kayıt Ol
             </Button>
           </form>
         </CardContent>
