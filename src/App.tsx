@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
@@ -10,7 +11,7 @@ import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/manager/login" element={<ManagerLogin />} />
@@ -21,7 +22,7 @@ function App() {
         <Route path="/super-admin/*" element={<SuperAdmin />} />
       </Routes>
       <Toaster />
-    </>
+    </AuthProvider>
   );
 }
 

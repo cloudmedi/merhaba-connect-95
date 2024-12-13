@@ -1,65 +1,46 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music2 } from "lucide-react";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, login, isLoading: authLoading } = useAuth();
+  const { signIn, isLoading, user } = useAuth();
 
-  useEffect(() => {
-    if (user?.role === 'super_admin') {
-      console.log('User is already logged in as super_admin, redirecting...');
-      navigate("/super-admin");
-    }
-  }, [user, navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await login(email, password);
-    } catch (error) {
-      console.error('Login error in component:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
-        <div className="text-white">Yükleniyor...</div>
-      </div>
-    );
-  }
-
+  // If user is already logged in and is a super_admin, redirect to dashboard
   if (user?.role === 'super_admin') {
+    navigate('/super-admin');
     return null;
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signIn(email, password);
+      navigate('/super-admin');
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A1F2C] to-[#2C3444]">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800">
+      <Card className="w-full max-w-md mx-4">
         <CardHeader className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Music2 className="h-6 w-6 text-[#9b87f5]" />
-            <h2 className="text-2xl font-bold">Merhaba Music</h2>
-          </div>
-          <CardTitle className="text-2xl">Super Admin Girişi</CardTitle>
-          <CardDescription>
-            Super admin paneline erişmek için giriş yapın
+          <CardTitle className="text-2xl font-bold text-center">
+            Super Admin Girişi
+          </CardTitle>
+          <CardDescription className="text-center">
+            Yönetici paneline erişmek için giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Input
                 type="email"
@@ -67,6 +48,7 @@ export default function SuperAdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="w-full"
                 disabled={isLoading}
               />
             </div>
@@ -77,15 +59,23 @@ export default function SuperAdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="w-full"
                 disabled={isLoading}
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
               disabled={isLoading}
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Giriş yapılıyor...
+                </>
+              ) : (
+                'Giriş Yap'
+              )}
             </Button>
           </form>
         </CardContent>

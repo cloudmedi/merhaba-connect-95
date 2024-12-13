@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import Dashboard from "./SuperAdmin/Dashboard";
 import Users from "./SuperAdmin/Users";
 import Playlists from "./SuperAdmin/Playlists";
@@ -12,25 +12,24 @@ import Reports from "./SuperAdmin/Reports";
 import Notifications from "./SuperAdmin/Notifications";
 import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
+import { Loader2 } from "lucide-react";
 
 export default function SuperAdmin() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Yükleniyor...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
       </div>
     );
   }
 
   if (!user) {
-    console.log('No user found, redirecting to login');
     return <Navigate to="/super-admin/login" replace />;
   }
 
   if (user.role !== 'super_admin') {
-    console.log('User is not super_admin, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
