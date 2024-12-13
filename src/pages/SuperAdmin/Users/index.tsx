@@ -16,10 +16,29 @@ export default function Users() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            subscription_status,
+            subscription_ends_at
+          ),
+          licenses!left (
+            type,
+            start_date,
+            end_date,
+            quantity
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+
+      console.log('Fetched users data:', data); // Debug log
 
       return data.map((profile): User => ({
         id: profile.id,
@@ -31,7 +50,9 @@ export default function Users() {
         createdAt: profile.created_at,
         updatedAt: profile.updated_at,
         avatar_url: profile.avatar_url,
-        companyId: profile.company_id
+        companyId: profile.company_id,
+        company: profile.companies,
+        license: profile.licenses?.[0] // Get the first license if exists
       }));
     }
   });
