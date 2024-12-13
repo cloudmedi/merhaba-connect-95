@@ -1,20 +1,15 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User } from "@/types/auth";
-import { UserTableRow } from "./UserTableRow";
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { ViewUserDialog } from "./ViewUserDialog";
 import { UserHistoryDialog } from "./UserHistoryDialog";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/types/auth";
+import { UserTableRow } from "./UserTableRow";
 
-export interface UsersTableProps {
-  users: User[];
-  isLoading: boolean;
-}
-
-export function UsersTable({ users, isLoading }: UsersTableProps) {
+export function UsersTable({ users, isLoading }: { users: User[], isLoading: boolean }) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
