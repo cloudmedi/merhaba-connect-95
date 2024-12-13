@@ -41,14 +41,21 @@ export async function getCurrentUser(): Promise<User | null> {
   return {
     id: session.user.id,
     email: session.user.email!,
+    first_name: profile.first_name,
+    last_name: profile.last_name,
+    role: userRole,
+    is_active: profile.is_active,
+    created_at: session.user.created_at,
+    updated_at: profile.updated_at,
+    avatar_url: profile.avatar_url,
+    company_id: profile.company_id,
+    company: profile.companies,
+    // Aliases
     firstName: profile.first_name,
     lastName: profile.last_name,
-    role: userRole,
     isActive: profile.is_active,
     createdAt: session.user.created_at,
     updatedAt: profile.updated_at,
-    avatar_url: profile.avatar_url,
-    companyId: profile.company_id,
-    company: profile.companies
+    companyId: profile.company_id
   };
 }
