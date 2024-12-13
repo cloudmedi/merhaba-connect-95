@@ -29,11 +29,7 @@ export default function SuperAdminLogin() {
       await login(email, password);
     } catch (error: any) {
       console.error('Login error in component:', error);
-      toast({
-        title: "Giriş başarısız",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast.error('Giriş başarısız: ' + error.message);
     } finally {
       setIsLoading(false);
     }
