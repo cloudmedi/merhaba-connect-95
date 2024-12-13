@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "./SuperAdmin/Dashboard";
 import Users from "./SuperAdmin/Users";
 import Playlists from "./SuperAdmin/Playlists";
@@ -13,6 +14,22 @@ import Performance from "./SuperAdmin/Performance";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 
 export default function SuperAdmin() {
+  const { user, isLoading } = useAuth();
+
+  // Auth check
+  if (!isLoading && !user) {
+    return <Navigate to="/super-admin/login" replace />;
+  }
+
+  // Role check
+  if (!isLoading && user && user.role !== 'super_admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <Routes>
       <Route index element={<Dashboard />} />

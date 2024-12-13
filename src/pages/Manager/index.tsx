@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { ManagerHeader } from "@/components/ManagerHeader";
 import ManagerDashboard from "./Dashboard";
 import { PlaylistDetail } from "./Playlists/PlaylistDetail";
@@ -12,8 +13,22 @@ import ProfileSettings from "./Settings/Profile";
 import { useWebSocketConnection } from "@/hooks/useWebSocketConnection";
 
 export default function Manager() {
-  // Initialize WebSocket connection when Manager component mounts
+  const { user, isLoading } = useAuth();
   useWebSocketConnection();
+
+  // Auth check
+  if (!isLoading && !user) {
+    return <Navigate to="/manager/login" replace />;
+  }
+
+  // Role check
+  if (!isLoading && user && user.role !== 'manager') {
+    return <Navigate to="/" replace />;
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-white">
