@@ -20,12 +20,13 @@ export default function SuperAdminLogin() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await signIn(email, password, { role: 'super_admin' });
       navigate("/super-admin");
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: error.message || "An error occurred during login",
         variant: "destructive"
       });
     } finally {

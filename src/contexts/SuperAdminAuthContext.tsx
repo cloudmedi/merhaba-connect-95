@@ -1,18 +1,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, UserRole } from '@/types/auth';
+import { User } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, options?: { role?: string }) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function SuperAdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,17 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (error) throw error;
 
-          if (profile) {
-            const userRole = profile.role as UserRole;
-            if (userRole !== 'super_admin') {
-              await supabase.auth.signOut();
-              throw new Error('Unauthorized access: Super admin privileges required');
-            }
-
+          if (profile && profile.role === 'super_admin') {
             setUser({
               id: session.user.id,
               email: session.user.email!,
-              role: userRole,
+              role: profile.role,
               firstName: profile.first_name,
               lastName: profile.last_name,
               isActive: profile.is_active,
@@ -48,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               updatedAt: profile.updated_at || session.user.created_at,
               avatar_url: profile.avatar_url
             });
+          } else {
+            await supabase.auth.signOut();
+            throw new Error('Unauthorized: Super Admin access required');
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
@@ -65,9 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, options?: { role?: string }) => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -86,30 +82,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!profile || profile.role !== 'super_admin') {
           await supabase.auth.signOut();
-          throw new Error('Unauthorized access: Super admin privileges required');
+          throw new Error('Unauthorized: Super Admin access required');
         }
 
-        toast.success('Giriş başarılı');
+        toast.success('Login successful');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Giriş başarısız');
+      toast.error(error.message || 'Login failed');
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      setIsLoading(true);
       await supabase.auth.signOut();
-      toast.success('Çıkış başarılı');
+      toast.success('Logged out successfully');
     } catch (error: any) {
-      toast.error('Çıkış yapılamadı');
       console.error('Logout error:', error);
-    } finally {
-      setIsLoading(false);
+      toast.error('Failed to log out');
     }
   };
 
@@ -123,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within a SuperAdminAuthProvider');
   }
   return context;
 }
