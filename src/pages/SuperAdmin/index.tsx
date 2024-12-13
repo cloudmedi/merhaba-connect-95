@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "./Dashboard";
 import Users from "./Users";
 import Music from "./Music";
@@ -14,6 +15,25 @@ import Performance from "./Performance";
 import { AdminNav } from "@/components/AdminNav";
 
 export default function SuperAdmin() {
+  const { user, isLoading } = useAuth();
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // Auth check
+  if (!user) {
+    console.log('No user found, redirecting to login');
+    return <Navigate to="/super-admin/login" replace />;
+  }
+
+  // Role check
+  if (user.role !== 'super_admin') {
+    console.log('User is not super_admin, redirecting to home');
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="flex min-h-screen bg-[#F8F9FC]">
       <AdminNav />
