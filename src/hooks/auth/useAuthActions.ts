@@ -18,7 +18,7 @@ export function useAuthActions(setUser: (user: any) => void) {
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
 
