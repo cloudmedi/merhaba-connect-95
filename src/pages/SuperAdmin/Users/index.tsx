@@ -17,13 +17,25 @@ export default function Users() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as User[];
+
+      // Transform the data to match the User type
+      return data.map((profile): User => ({
+        id: profile.id,
+        email: profile.email,
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        role: profile.role as User['role'],
+        isActive: profile.is_active,
+        createdAt: profile.created_at,
+        updatedAt: profile.updated_at,
+        avatar_url: profile.avatar_url,
+        companyId: profile.company_id
+      }));
     }
   });
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
-    // Add edit logic
   };
 
   const handleDelete = async (user: User) => {
@@ -42,7 +54,7 @@ export default function Users() {
   };
 
   const handleViewHistory = (user: User) => {
-    // Add view history logic
+    setSelectedUser(user);
   };
 
   if (isLoading) {
