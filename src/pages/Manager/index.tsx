@@ -7,6 +7,7 @@ import Schedule from "./Schedule";
 import Settings from "./Settings";
 import Announcements from "./Announcements";
 import OfflinePlayers from "./OfflinePlayers";
+import { ManagerHeader } from "@/components/ManagerHeader";
 
 export default function Manager() {
   const { user, isLoading } = useAuth();
@@ -28,14 +29,19 @@ export default function Manager() {
   }
 
   return (
-    <Routes>
-      <Route index element={<Dashboard />} />
-      <Route path="devices/*" element={<Devices />} />
-      <Route path="playlists/*" element={<Playlists />} />
-      <Route path="schedule/*" element={<Schedule />} />
-      <Route path="settings/*" element={<Settings />} />
-      <Route path="announcements/*" element={<Announcements />} />
-      <Route path="offline-players" element={<OfflinePlayers />} />
-    </Routes>
+    <div className="min-h-screen bg-white">
+      <ManagerHeader />
+      <main className="p-6">
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="devices/*" element={<Devices />} />
+          <Route path="playlists/*" element={<Playlists />} />
+          <Route path="schedule/*" element={<Schedule />} />
+          <Route path="settings/*" element={<Settings />} />
+          <Route path="announcements/*" element={<Announcements />} />
+          <Route path="offline-players" element={<OfflinePlayers />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
