@@ -7,6 +7,7 @@ import { ViewUserDialog } from "./ViewUserDialog";
 import { UserHistoryDialog } from "./UserHistoryDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface UsersTableProps {
   users: User[];
@@ -18,6 +19,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleDelete = async (user: User) => {
     try {
@@ -28,8 +30,33 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
       if (error) throw error;
       toast.success('User deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     } catch (error: any) {
       toast.error('Failed to delete user: ' + error.message);
+    }
+  };
+
+  const handleSaveUser = async (userData: Partial<User>) => {
+    try {
+      if (!selectedUser?.id) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          email: userData.email,
+          role: userData.role,
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast.success('User updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setShowEditDialog(false);
+    } catch (error: any) {
+      toast.error('Failed to update user: ' + error.message);
     }
   };
 
@@ -78,6 +105,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             user={selectedUser}
             open={showEditDialog}
             onOpenChange={setShowEditDialog}
+            onSave={handleSaveUser}
           />
           <ViewUserDialog
             user={selectedUser}
