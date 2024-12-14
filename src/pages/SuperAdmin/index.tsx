@@ -11,8 +11,8 @@ import Settings from "./Settings";
 import Reports from "./Reports";
 import Notifications from "./Notifications";
 import Performance from "./Performance";
+import { AdminNav } from "@/components/AdminNav";
 import { Loader2 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 
 export default function SuperAdmin() {
   const { user, isLoading } = useAuth();
@@ -34,20 +34,23 @@ export default function SuperAdmin() {
   }
 
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="users" element={<Users />} />
-        <Route path="playlists/*" element={<Playlists />} />
-        <Route path="music" element={<Music />} />
-        <Route path="genres" element={<Genres />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="moods" element={<Moods />} />
-        <Route path="notifications/*" element={<Notifications />} />
-        <Route path="settings/*" element={<Settings />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="performance" element={<Performance />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="flex min-h-screen bg-[#F8F9FC]">
+      <AdminNav />
+      <div className="flex-1 p-8">
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="users/*" element={<Users />} />
+          <Route path="playlists/*" element={<Playlists />} />
+          <Route path="music/*" element={<Music />} />
+          <Route path="genres/*" element={<Genres />} />
+          <Route path="categories/*" element={<Categories />} />
+          <Route path="moods/*" element={<Moods />} />
+          <Route path="notifications/*" element={<Notifications />} />
+          <Route path="settings/*" element={<Settings />} />
+          <Route path="reports/*" element={<Reports />} />
+          <Route path="performance/*" element={<Performance />} />
+        </Routes>
+      </div>
+    </div>
   );
 }
