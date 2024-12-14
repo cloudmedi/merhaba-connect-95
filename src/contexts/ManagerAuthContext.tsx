@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { User } from '@/types/auth';
+import { User, UserRole } from '@/types/auth';
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { useAuthActions } from '@/hooks/auth/useAuthActions';
 import { AuthContextType } from '@/hooks/auth/types';
@@ -28,12 +28,13 @@ export function ManagerAuthProvider({ children }: { children: ReactNode }) {
             .single();
 
           if (profile) {
+            const userRole = profile.role as UserRole;
             setUser({
               id: session.user.id,
               email: session.user.email!,
               first_name: profile.first_name || '',
               last_name: profile.last_name || '',
-              role: profile.role,
+              role: userRole,
               is_active: profile.is_active,
               created_at: session.user.created_at,
               updated_at: profile.updated_at,
@@ -73,12 +74,13 @@ export function ManagerAuthProvider({ children }: { children: ReactNode }) {
             .single();
 
           if (profile) {
+            const userRole = profile.role as UserRole;
             setUser({
               id: session.user.id,
               email: session.user.email!,
               first_name: profile.first_name || '',
               last_name: profile.last_name || '',
-              role: profile.role,
+              role: userRole,
               is_active: profile.is_active,
               created_at: session.user.created_at,
               updated_at: profile.updated_at,

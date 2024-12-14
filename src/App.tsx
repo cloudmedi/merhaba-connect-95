@@ -12,19 +12,17 @@ import { SuperAdminAuthProvider } from "@/contexts/SuperAdminAuthContext";
 
 function App() {
   return (
-    <>
+    <ManagerAuthProvider>
       <Routes>
         <Route path="/" element={<Index />} />
         
         {/* Manager routes */}
         <Route path="/manager/*" element={
-          <ManagerAuthProvider>
-            <Routes>
-              <Route path="/login" element={<ManagerLogin />} />
-              <Route path="/register" element={<ManagerRegister />} />
-              <Route path="/*" element={<Manager />} />
-            </Routes>
-          </ManagerAuthProvider>
+          <Routes>
+            <Route path="/login" element={<ManagerLogin />} />
+            <Route path="/register" element={<ManagerRegister />} />
+            <Route path="/*" element={<Manager />} />
+          </Routes>
         } />
 
         {/* Super Admin routes */}
@@ -39,7 +37,7 @@ function App() {
         } />
       </Routes>
       <Toaster />
-    </>
+    </ManagerAuthProvider>
   );
 }
 
