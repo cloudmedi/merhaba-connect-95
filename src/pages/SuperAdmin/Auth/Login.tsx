@@ -20,10 +20,11 @@ export default function SuperAdminLogin() {
 
     try {
       await login(email, password);
+      toast.success("Giriş başarılı!");
       navigate("/super-admin");
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || "Login failed");
+      toast.error(error.message || "Giriş başarısız");
     } finally {
       setIsLoading(false);
     }
@@ -37,9 +38,9 @@ export default function SuperAdminLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Super Admin Login</CardTitle>
+          <CardTitle className="text-2xl">Super Admin Girişi</CardTitle>
           <CardDescription>
-            Enter your credentials to access the super admin dashboard
+            Super admin paneline erişmek için giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -51,15 +52,17 @@ export default function SuperAdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Şifre"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
             <Button 
@@ -67,7 +70,7 @@ export default function SuperAdminLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>
         </CardContent>
