@@ -26,7 +26,7 @@ export function PlaylistDetail() {
       title: `Song Title ${i + 1}`,
       artist: `Artist ${Math.floor(i / 8) + 1}`,
       duration: "3:30",
-      file_url: `/mock-songs/song-${i + 1}.mp3` // Added mock file_url
+      file_url: `/mock-songs/song-${i + 1}.mp3`
     }))
   };
 
@@ -106,12 +106,14 @@ export function PlaylistDetail() {
         </div>
       </div>
 
-      <PushPlaylistDialog
-        isOpen={isPushDialogOpen}
-        onClose={() => setIsPushDialogOpen(false)}
-        playlistTitle={playlist.title}
-        playlistId={playlist.id}
-      />
+      {isPushDialogOpen && (
+        <PushPlaylistDialog
+          isOpen={isPushDialogOpen}
+          onClose={() => setIsPushDialogOpen(false)}
+          playlistTitle={playlist.title}
+          playlistId={playlist.id}
+        />
+      )}
 
       {isPlaying && (
         <MusicPlayer
