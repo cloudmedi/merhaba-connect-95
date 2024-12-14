@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Music2 } from "lucide-react";
 import { useAuth } from "@/contexts/ManagerAuthContext";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
@@ -20,10 +21,11 @@ export default function ManagerLogin() {
 
     try {
       await login(email, password);
+      toast.success("Giriş başarılı!");
       navigate("/manager");
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || "Login failed");
+      toast.error(error.message || "Giriş başarısız");
     } finally {
       setIsLoading(false);
     }
@@ -37,9 +39,9 @@ export default function ManagerLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Manager Login</CardTitle>
+          <CardTitle className="text-2xl">Yönetici Girişi</CardTitle>
           <CardDescription>
-            Enter your credentials to access the manager dashboard
+            Yönetici paneline erişmek için giriş yapın
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -51,15 +53,17 @@ export default function ManagerLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Şifre"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
             <Button 
@@ -67,8 +71,13 @@ export default function ManagerLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
+            <div className="text-center mt-4">
+              <Link to="/manager/register" className="text-sm text-[#9b87f5] hover:text-[#8b77e5]">
+                Hesabınız yok mu? Kayıt olun
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

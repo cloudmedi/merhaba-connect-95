@@ -17,13 +17,9 @@ function App() {
         <Route path="/" element={<Index />} />
         
         {/* Manager routes */}
-        <Route path="/manager/*" element={
-          <Routes>
-            <Route path="/login" element={<ManagerLogin />} />
-            <Route path="/register" element={<ManagerRegister />} />
-            <Route path="/*" element={<Manager />} />
-          </Routes>
-        } />
+        <Route path="/manager/login" element={<ManagerLogin />} />
+        <Route path="/manager/register" element={<ManagerRegister />} />
+        <Route path="/manager/*" element={<Manager />} />
 
         {/* Super Admin routes */}
         <Route path="/super-admin/*" element={
