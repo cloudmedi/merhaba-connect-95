@@ -10,6 +10,7 @@ import Announcements from "./Announcements";
 import Settings from "./Settings";
 import ProfileSettings from "./Settings/Profile";
 import { useWebSocketConnection } from "@/hooks/useWebSocketConnection";
+import { ErrorState } from "@/components/ErrorState";
 
 export default function Manager() {
   // Initialize WebSocket connection when Manager component mounts
@@ -25,11 +26,12 @@ export default function Manager() {
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlists/category/:categoryId" element={<CategoryPlaylists />} />
             <Route path="/playlists/:id" element={<PlaylistDetail />} />
-            <Route path="/devices" element={<Devices />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/devices/*" element={<Devices />} />
+            <Route path="/schedule/*" element={<Schedule />} />
+            <Route path="/announcements/*" element={<Announcements />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/profile" element={<ProfileSettings />} />
+            <Route path="*" element={<ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />} />
           </Routes>
         </main>
       </div>
