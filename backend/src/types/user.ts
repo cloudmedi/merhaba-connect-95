@@ -3,11 +3,13 @@ import { Types } from 'mongoose';
 export interface IUser {
   _id?: Types.ObjectId;
   email: string;
+  password: string;
   firstName?: string;
   lastName?: string;
   role: 'admin' | 'manager' | 'user';
   companyId?: Types.ObjectId;
   isActive: boolean;
+  lastLogin?: Date;
   avatarUrl?: string;
   createdAt?: Date;
   updatedAt?: Date;
