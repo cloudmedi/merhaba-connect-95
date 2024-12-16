@@ -26,7 +26,7 @@ const router = createBrowserRouter([
     element: <Index />,
   },
   {
-    path: "/manager",
+    path: "/manager/*",
     element: <Manager />,
   },
   {
@@ -38,7 +38,7 @@ const router = createBrowserRouter([
     element: <ManagerRegister />,
   },
   {
-    path: "/super-admin",
+    path: "/super-admin/*",
     element: <SuperAdmin />,
   },
   {
