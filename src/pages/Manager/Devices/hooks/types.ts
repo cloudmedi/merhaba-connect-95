@@ -68,8 +68,8 @@ export interface Device {
   status: DeviceStatus;
   ip_address?: string | null;
   system_info: DeviceSystemInfo;
-  schedule: DeviceSchedule;
-  token?: string;
+  schedule?: DeviceSchedule;
+  token?: string | null;
   last_seen?: string | null;
   created_at?: string;
   updated_at?: string;

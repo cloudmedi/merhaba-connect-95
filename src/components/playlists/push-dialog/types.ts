@@ -1,12 +1,11 @@
-import type { Device as BaseDevice } from "@/pages/Manager/Devices/hooks/types";
+import type { Device } from "@/pages/Manager/Devices/hooks/types";
 
-export type PushDialogDevice = Omit<BaseDevice, 'system_info' | 'branches'> & {
-  branches?: {
-    id?: string;
-    name?: string;
-    company_id?: string | null;
-  } | null;
-};
+export interface PushDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  playlistTitle: string;
+  playlistId: string;
+}
 
 export interface DialogFooterProps {
   selectedCount: number;
@@ -16,9 +15,5 @@ export interface DialogFooterProps {
   onPush: () => Promise<void>;
 }
 
-export interface PushDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  playlistTitle: string;
-  playlistId: string;
-}
+// Use the base Device type to ensure consistency
+export type PushDialogDevice = Device;

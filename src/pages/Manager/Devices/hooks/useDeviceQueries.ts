@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Device } from "./types";
 
-export const useDeviceQueries = () => {
+export function useDeviceQueries() {
   return useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
@@ -52,7 +52,18 @@ export const useDeviceQueries = () => {
         throw error;
       }
 
-      return (data as Device[]) || [];
+      // Transform the data to match the Device type
+      return (data || []).map(device => ({
+        ...device,
+        system_info: device.system_info || {},
+        schedule: device.schedule || {},
+        schedule_device_assignments: device.schedule_device_assignments?.map(assignment => ({
+          schedule: assignment.schedule
+        })) || [],
+        playlist_assignments: device.playlist_assignments?.map(assignment => ({
+          playlist: assignment.playlist
+        })) || []
+      })) as Device[];
     },
   });
-};
+}
