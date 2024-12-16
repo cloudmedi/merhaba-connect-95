@@ -22,6 +22,15 @@ import Performance from "./pages/SuperAdmin/Performance";
 import Reports from "./pages/SuperAdmin/Reports";
 import Settings from "./pages/SuperAdmin/Settings";
 import { ErrorState } from '@/components/ErrorState';
+import ManagerDashboard from "./pages/Manager/Dashboard";
+import Devices from "./pages/Manager/Devices";
+import ManagerPlaylists from "./pages/Manager/Playlists";
+import Schedule from "./pages/Manager/Schedule";
+import Announcements from "./pages/Manager/Announcements";
+import ManagerSettings from "./pages/Manager/Settings";
+import ProfileSettings from "./pages/Manager/Settings/Profile";
+import { ManagerPlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
+import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +51,18 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <Manager />,
+    errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
+    children: [
+      { index: true, element: <ManagerDashboard /> },
+      { path: "devices/*", element: <Devices /> },
+      { path: "playlists", element: <ManagerPlaylists /> },
+      { path: "playlists/category/:categoryId", element: <CategoryPlaylists /> },
+      { path: "playlists/:id", element: <ManagerPlaylistDetail /> },
+      { path: "schedule/*", element: <Schedule /> },
+      { path: "announcements/*", element: <Announcements /> },
+      { path: "settings", element: <ManagerSettings /> },
+      { path: "settings/profile", element: <ProfileSettings /> },
+    ],
   },
   {
     path: "/manager/login",
