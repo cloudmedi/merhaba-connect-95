@@ -29,7 +29,7 @@ import Schedule from "./pages/Manager/Schedule";
 import Announcements from "./pages/Manager/Announcements";
 import ManagerSettings from "./pages/Manager/Settings";
 import ProfileSettings from "./pages/Manager/Settings/Profile";
-import { ManagerPlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
+import { PlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
 import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 
 const queryClient = new QueryClient({
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       { path: "devices/*", element: <Devices /> },
       { path: "playlists", element: <ManagerPlaylists /> },
       { path: "playlists/category/:categoryId", element: <CategoryPlaylists /> },
-      { path: "playlists/:id", element: <ManagerPlaylistDetail /> },
+      { path: "playlists/:id", element: <PlaylistDetail /> },
       { path: "schedule/*", element: <Schedule /> },
       { path: "announcements/*", element: <Announcements /> },
       { path: "settings", element: <ManagerSettings /> },
