@@ -16,7 +16,7 @@ import Genres from "./pages/SuperAdmin/Genres";
 import Categories from "./pages/SuperAdmin/Categories";
 import Moods from "./pages/SuperAdmin/Moods";
 import Playlists from "./pages/SuperAdmin/Playlists";
-import { PlaylistDetail } from "./pages/SuperAdmin/Playlists/PlaylistDetail";
+import { PlaylistDetail as SuperAdminPlaylistDetail } from "./pages/SuperAdmin/Playlists/PlaylistDetail";
 import Notifications from "./pages/SuperAdmin/Notifications";
 import Performance from "./pages/SuperAdmin/Performance";
 import Reports from "./pages/SuperAdmin/Reports";
@@ -29,7 +29,7 @@ import Schedule from "./pages/Manager/Schedule";
 import Announcements from "./pages/Manager/Announcements";
 import ManagerSettings from "./pages/Manager/Settings";
 import ProfileSettings from "./pages/Manager/Settings/Profile";
-import { PlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
+import { PlaylistDetail as ManagerPlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
 import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 
 const queryClient = new QueryClient({
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
       { path: "devices/*", element: <Devices /> },
       { path: "playlists", element: <ManagerPlaylists /> },
       { path: "playlists/category/:categoryId", element: <CategoryPlaylists /> },
-      { path: "playlists/:id", element: <PlaylistDetail /> },
+      { path: "playlists/:id", element: <ManagerPlaylistDetail /> },
       { path: "schedule/*", element: <Schedule /> },
       { path: "announcements/*", element: <Announcements /> },
       { path: "settings", element: <ManagerSettings /> },
@@ -84,7 +84,7 @@ const router = createBrowserRouter([
       { path: "categories/*", element: <Categories /> },
       { path: "moods/*", element: <Moods /> },
       { path: "playlists", element: <Playlists /> },
-      { path: "playlists/:id", element: <PlaylistDetail /> },
+      { path: "playlists/:id", element: <SuperAdminPlaylistDetail /> },
       { path: "notifications/*", element: <Notifications /> },
       { path: "performance/*", element: <Performance /> },
       { path: "reports/*", element: <Reports /> },
