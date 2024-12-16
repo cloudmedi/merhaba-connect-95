@@ -4,6 +4,10 @@ import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
+import ManagerLogin from "./pages/Manager/Auth/Login";
+import ManagerRegister from "./pages/Manager/Auth/Register";
+import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
 import { AuthProvider } from '@/hooks/useAuth';
 
 const queryClient = new QueryClient({
@@ -22,12 +26,28 @@ const router = createBrowserRouter([
     element: <Index />,
   },
   {
-    path: "/manager/*",
+    path: "/manager",
     element: <Manager />,
   },
   {
-    path: "/super-admin/*",
+    path: "/manager/login",
+    element: <ManagerLogin />,
+  },
+  {
+    path: "/manager/register",
+    element: <ManagerRegister />,
+  },
+  {
+    path: "/super-admin",
     element: <SuperAdmin />,
+  },
+  {
+    path: "/super-admin/login",
+    element: <SuperAdminLogin />,
+  },
+  {
+    path: "/super-admin/register",
+    element: <SuperAdminRegister />,
   },
 ]);
 
