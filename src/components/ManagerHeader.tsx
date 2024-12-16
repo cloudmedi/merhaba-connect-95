@@ -1,6 +1,6 @@
 import { Bell, LogOut, Settings, User } from "lucide-react";
 import { Button } from "./ui/button";
-import { useAuth } from "@/contexts/ManagerAuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,

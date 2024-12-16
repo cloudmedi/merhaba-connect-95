@@ -32,6 +32,12 @@ export const useDeviceQueries = () => {
             name,
             company_id
           ),
+          schedule_device_assignments (
+            schedule:schedule_events (
+              id,
+              title
+            )
+          ),
           playlist_assignments (
             playlist:playlists (
               id,
@@ -45,8 +51,6 @@ export const useDeviceQueries = () => {
         console.error('Error fetching devices:', error);
         throw error;
       }
-
-      console.log('Fetched devices with playlist assignments:', data);
 
       return (data as Device[]) || [];
     },

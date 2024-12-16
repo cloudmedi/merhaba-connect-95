@@ -1,70 +1,38 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useManagerAuth";
-import Dashboard from "./Dashboard";
-import Devices from "./Devices";
-import Playlists from "./Playlists";
-import Schedule from "./Schedule";
-import Settings from "./Settings";
-import Announcements from "./Announcements";
-import OfflinePlayers from "./OfflinePlayers";
+import { Routes, Route } from "react-router-dom";
 import { ManagerHeader } from "@/components/ManagerHeader";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import ManagerDashboard from "./Dashboard";
+import { PlaylistDetail } from "./Playlists/PlaylistDetail";
+import { CategoryPlaylists } from "./Playlists/CategoryPlaylists";
+import Playlists from "./Playlists";
+import Devices from "./Devices";
+import Schedule from "./Schedule";
+import Announcements from "./Announcements";
+import Settings from "./Settings";
+import ProfileSettings from "./Settings/Profile";
+import { useWebSocketConnection } from "@/hooks/useWebSocketConnection";
 
 export default function Manager() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Yükleniyor...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/manager/login" replace />;
-  }
-
-  if (user.role !== 'manager') {
-    return <Navigate to="/" replace />;
-  }
+  // Initialize WebSocket connection when Manager component mounts
+  useWebSocketConnection();
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC]">
-      <ManagerHeader />
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="devices/*" element={
-          <DashboardLayout title="Devices">
-            <Devices />
-          </DashboardLayout>
-        } />
-        <Route path="playlists/*" element={
-          <DashboardLayout title="Playlists">
-            <Playlists />
-          </DashboardLayout>
-        } />
-        <Route path="schedule/*" element={
-          <DashboardLayout title="Schedule">
-            <Schedule />
-          </DashboardLayout>
-        } />
-        <Route path="settings/*" element={
-          <DashboardLayout title="Settings">
-            <Settings />
-          </DashboardLayout>
-        } />
-        <Route path="announcements/*" element={
-          <DashboardLayout title="Announcements">
-            <Announcements />
-          </DashboardLayout>
-        } />
-        <Route path="offline-players" element={
-          <DashboardLayout title="Offline Players">
-            <OfflinePlayers />
-          </DashboardLayout>
-        } />
-      </Routes>
+    <div className="min-h-screen bg-white">
+      <div className="flex flex-col h-screen">
+        <ManagerHeader />
+        <main className="flex-1 overflow-auto px-4 md:px-8 py-6 max-w-[1400px] mx-auto w-full">
+          <Routes>
+            <Route path="/" element={<ManagerDashboard />} />
+            <Route path="/playlists" element={<Playlists />} />
+            <Route path="/playlists/category/:categoryId" element={<CategoryPlaylists />} />
+            <Route path="/playlists/:id" element={<PlaylistDetail />} />
+            <Route path="/devices" element={<Devices />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/profile" element={<ProfileSettings />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }

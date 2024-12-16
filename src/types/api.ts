@@ -56,25 +56,14 @@ export interface Playlist {
 export interface Song {
   id: string;
   title: string;
-  artist?: string | null;
-  album?: string | null;
-  genre?: string[] | null;
-  duration?: number | null;
-  file_url: string;
-  artwork_url?: string | null;
-  bunny_id?: string | null;
-  created_by?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Genre {
-  id: string;
-  name: string;
-  description?: string | null;
-  created_by?: string | null;
-  created_at: string;
-  updated_at: string;
+  artist?: string;
+  album?: string;
+  genre?: string;
+  duration: number;
+  fileUrl: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Announcement {

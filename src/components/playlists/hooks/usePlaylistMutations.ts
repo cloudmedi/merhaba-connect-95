@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -21,8 +20,6 @@ export function usePlaylistMutations() {
     onError
   }: SavePlaylistParams) => {
     try {
-      console.log('Starting playlist save with data:', playlistData);
-      
       if (!playlistData.title) {
         throw new Error("Please enter a playlist title");
       }
@@ -32,7 +29,6 @@ export function usePlaylistMutations() {
 
       let artwork_url = playlistData.artwork_url;
       if (playlistData.artwork) {
-        console.log('Uploading artwork...');
         const reader = new FileReader();
         const fileBase64Promise = new Promise((resolve) => {
           reader.onload = () => {
@@ -53,7 +49,6 @@ export function usePlaylistMutations() {
 
         if (uploadError) throw uploadError;
         artwork_url = uploadData.url;
-        console.log('Artwork uploaded successfully:', artwork_url);
       }
 
       const playlistPayload = {
@@ -64,15 +59,12 @@ export function usePlaylistMutations() {
         mood_id: playlistData.selectedMoods[0]?.id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
-        is_hero: playlistData.isHero || false,
-        created_by: user.id
+        is_hero: playlistData.isHero || false
       };
-
-      console.log('Playlist payload:', playlistPayload);
 
       let playlist;
       if (isEditMode && existingPlaylist) {
-        console.log('Updating existing playlist:', existingPlaylist.id);
+        // Update playlist
         const { data, error } = await supabase
           .from('playlists')
           .update(playlistPayload)
@@ -83,9 +75,8 @@ export function usePlaylistMutations() {
         if (error) throw error;
         playlist = data;
 
-        // Update categories
+        // Update categories with UPSERT
         if (playlistData.selectedCategories.length > 0) {
-          console.log('Updating playlist categories...');
           const { error: categoryError } = await supabase
             .from('playlist_categories')
             .upsert(
@@ -99,9 +90,8 @@ export function usePlaylistMutations() {
           if (categoryError) throw categoryError;
         }
 
-        // Update songs
+        // Update songs with UPSERT
         if (playlistData.selectedSongs.length > 0) {
-          console.log('Updating playlist songs...');
           const { error: songError } = await supabase
             .from('playlist_songs')
             .upsert(
@@ -116,7 +106,7 @@ export function usePlaylistMutations() {
           if (songError) throw songError;
         }
       } else {
-        console.log('Creating new playlist...');
+        // Create new playlist
         const { data, error } = await supabase
           .from('playlists')
           .insert([playlistPayload])
@@ -128,7 +118,6 @@ export function usePlaylistMutations() {
 
         // Handle playlist categories
         if (playlistData.selectedCategories.length > 0) {
-          console.log('Adding playlist categories...');
           const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
             playlist_id: playlist.id,
             category_id: category.id
@@ -143,7 +132,6 @@ export function usePlaylistMutations() {
 
         // Handle playlist songs
         if (playlistData.selectedSongs.length > 0) {
-          console.log('Adding playlist songs...');
           const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
             playlist_id: playlist.id,
             song_id: song.id,
@@ -158,7 +146,6 @@ export function usePlaylistMutations() {
         }
       }
 
-      console.log('Playlist saved successfully:', playlist);
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
       onSuccess?.();
     } catch (error: any) {

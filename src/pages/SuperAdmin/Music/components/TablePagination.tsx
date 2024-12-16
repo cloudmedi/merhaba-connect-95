@@ -103,32 +103,30 @@ export function TablePagination({
   };
 
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex items-center justify-between">
       <div className="text-sm text-muted-foreground">
         Showing {startIndex + 1}-{endIndex} of {totalItems} songs
       </div>
       {totalPages > 1 && (
-        <div>
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => onPageChange(currentPage - 1)}
-                  className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} select-none`}
-                />
-              </PaginationItem>
-              
-              {renderPaginationItems()}
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => onPageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems()}
 
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => onPageChange(currentPage + 1)}
-                  className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} select-none`}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => onPageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );

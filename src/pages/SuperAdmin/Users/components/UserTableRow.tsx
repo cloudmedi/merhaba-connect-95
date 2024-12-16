@@ -8,12 +8,9 @@ import { format } from "date-fns";
 
 interface UserTableRowProps {
   user: User;
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
-  onViewHistory: (user: User) => void;
 }
 
-export function UserTableRow({ user, onEdit, onDelete, onViewHistory }: UserTableRowProps) {
+export function UserTableRow({ user }: UserTableRowProps) {
   const formatDate = (date: string | null | undefined) => {
     if (!date) return 'N/A';
     try {
@@ -36,7 +33,7 @@ export function UserTableRow({ user, onEdit, onDelete, onViewHistory }: UserTabl
       <TableCell className="p-4">{user.company?.name || 'N/A'}</TableCell>
       <TableCell className="p-4">{user.role}</TableCell>
       <TableCell className="p-4">
-        <UserStatus isActive={user.isActive} />
+        <UserStatus user={user} />
       </TableCell>
       <TableCell className="p-4">
         <Badge 
@@ -54,12 +51,7 @@ export function UserTableRow({ user, onEdit, onDelete, onViewHistory }: UserTabl
         {formatDate(user.license?.end_date)}
       </TableCell>
       <TableCell className="p-4 text-right space-x-1">
-        <UserActions 
-          user={user}
-          onEdit={() => onEdit(user)}
-          onDelete={() => onDelete(user)}
-          onViewHistory={() => onViewHistory(user)}
-        />
+        <UserActions user={user} />
       </TableCell>
     </TableRow>
   );

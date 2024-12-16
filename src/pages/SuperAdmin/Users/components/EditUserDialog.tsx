@@ -1,42 +1,82 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { User, UserRole } from "@/types/auth";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User } from "@/types/auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { userService } from "@/services/users";
+import { toast } from "sonner";
+import { BasicInfoSection } from "./EditUserForm/BasicInfoSection";
+import { RoleSection } from "./EditUserForm/RoleSection";
+import { EditUserFormValues } from "./EditUserForm/types";
+
+const formSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["admin", "manager"]),
+  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  password: z.string().optional(),
+});
 
 interface EditUserDialogProps {
   user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (userData: Partial<User>) => void;
 }
 
-interface EditUserFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: UserRole;
-}
+export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+  const queryClient = useQueryClient();
 
-export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDialogProps) {
-  const [formData, setFormData] = useState<EditUserFormData>({
-    firstName: user.firstName || '',
-    lastName: user.lastName || '',
-    email: user.email,
-    role: user.role as UserRole,
+  const form = useForm<EditUserFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email,
+      role: user.role === "super_admin" ? "admin" : user.role,
+      companyName: user.company?.name || "",
+      password: "",
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      role: formData.role,
-    });
-    onOpenChange(false);
+  const updateUserMutation = useMutation({
+    mutationFn: async (values: EditUserFormValues) => {
+      const updateData: Partial<User> & { password?: string } = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        role: values.role,
+        company: {
+          id: user.company?.id || "",
+          name: values.companyName,
+          subscriptionStatus: user.company?.subscriptionStatus || "trial",
+          subscriptionEndsAt: user.company?.subscriptionEndsAt || null,
+        }
+      };
+
+      if (values.password) {
+        updateData.password = values.password;
+      }
+
+      return userService.updateUser(user.id, updateData);
+    },
+    onSuccess: () => {
+      toast.success("User updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      onOpenChange(false);
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update user: " + error.message);
+    },
+  });
+
+  const onSubmit = (values: EditUserFormValues) => {
+    updateUserMutation.mutate(values);
   };
 
   return (
@@ -45,53 +85,43 @@ export function EditUserDialog({ user, open, onOpenChange, onSave }: EditUserDia
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: UserRole) => setFormData(prev => ({ ...prev, role: value }))}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <BasicInfoSection form={form} />
+            <RoleSection form={form} />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#6366F1] text-white hover:bg-[#5558DD]"
+                disabled={updateUserMutation.isPending}
+              >
+                {updateUserMutation.isPending ? "Updating..." : "Update User"}
+              </Button>
             </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="submit">Save Changes</Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

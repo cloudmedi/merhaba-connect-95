@@ -51,13 +51,14 @@ export interface DeviceBranch {
   company_id?: string | null;
 }
 
+export interface ScheduleEvent {
+  id: string;
+  title: string;
+}
+
 export interface PlaylistInfo {
   id: string;
   name: string;
-}
-
-export interface PlaylistAssignment {
-  playlist?: PlaylistInfo;
 }
 
 export interface Device {
@@ -77,6 +78,10 @@ export interface Device {
   location_id?: string | null;
   created_by?: string;
   branches?: DeviceBranch | null;
-  playlist_assignments?: PlaylistAssignment[];
-  volume?: number;
+  schedule_device_assignments?: Array<{
+    schedule?: ScheduleEvent;
+  }>;
+  playlist_assignments?: Array<{
+    playlist?: PlaylistInfo;
+  }>;
 }

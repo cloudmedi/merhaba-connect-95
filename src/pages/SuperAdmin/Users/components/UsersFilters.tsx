@@ -36,8 +36,8 @@ export function UsersFilters() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Roles</SelectItem>
-          <SelectItem value="super_admin">Super Admin</SelectItem>
-          <SelectItem value="manager">Manager</SelectItem>
+          <SelectItem value="admin">Admin</SelectItem>
+          <SelectItem value="member">Member</SelectItem>
         </SelectContent>
       </Select>
 
@@ -66,6 +66,21 @@ export function UsersFilters() {
           <SelectItem value="all">All Licenses</SelectItem>
           <SelectItem value="trial">Trial</SelectItem>
           <SelectItem value="premium">Premium</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select 
+        value={searchParams.get('expiry') || 'all'}
+        onValueChange={(value) => updateFilter('expiry', value)}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="All Expiry Dates" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Expiry Dates</SelectItem>
+          <SelectItem value="this-month">This Month</SelectItem>
+          <SelectItem value="next-month">Next Month</SelectItem>
+          <SelectItem value="expired">Expired</SelectItem>
         </SelectContent>
       </Select>
     </div>

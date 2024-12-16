@@ -8,6 +8,7 @@ import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { usePlaylistControl } from "@/components/dashboard/hooks/usePlaylistControl";
+import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,63 +96,63 @@ export default function ManagerDashboard() {
   ) || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Manage your playlists and media</p>
-        </div>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+    <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">
+      <ResizablePanel defaultSize={100} minSize={30}>
+        <div className="h-full p-6">
+          <HeroPlaylist 
+            playlist={heroPlaylist} 
+            isLoading={isHeroLoading} 
           />
+
+          <div className="flex justify-end mb-8">
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-12">
+            {filteredCategories.map((category) => (
+              <PlaylistGrid
+                key={category.id}
+                title={category.name}
+                description={category.description}
+                categoryId={category.id}
+                playlists={category.playlists.map(playlist => ({
+                  id: playlist.id,
+                  title: playlist.name,
+                  artwork_url: playlist.artwork_url,
+                  genre: playlist.genre_id?.name || "Various",
+                  mood: playlist.mood_id?.name || "Various"
+                }))}
+                isLoading={isCategoriesLoading}
+                onPlay={handlePlayPlaylist}
+                currentPlayingId={currentPlaylist?.id}
+                isPlaying={isPlaying}
+              />
+            ))}
+          </div>
+
+          {currentPlaylist && (
+            <MusicPlayer
+              playlist={{
+                title: currentPlaylist.title,
+                artwork: currentPlaylist.artwork_url,
+                songs: currentPlaylist.songs
+              }}
+              onClose={handleClose}
+              onPlayStateChange={handlePlayStateChange}
+              autoPlay={true}
+            />
+          )}
         </div>
-      </div>
-
-      <div className="space-y-8">
-        <HeroPlaylist 
-          playlist={heroPlaylist} 
-          isLoading={isHeroLoading} 
-        />
-
-        {filteredCategories.map((category) => (
-          <PlaylistGrid
-            key={category.id}
-            title={category.name}
-            description={category.description}
-            categoryId={category.id}
-            playlists={category.playlists.map(playlist => ({
-              id: playlist.id,
-              title: playlist.name,
-              artwork_url: playlist.artwork_url,
-              genre: playlist.genre_id?.name || "Various",
-              mood: playlist.mood_id?.name || "Various"
-            }))}
-            isLoading={isCategoriesLoading}
-            onPlay={handlePlayPlaylist}
-            currentPlayingId={currentPlaylist?.id}
-            isPlaying={isPlaying}
-          />
-        ))}
-      </div>
-
-      {currentPlaylist && (
-        <MusicPlayer
-          playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: currentPlaylist.songs
-          }}
-          onClose={handleClose}
-          onPlayStateChange={handlePlayStateChange}
-          autoPlay={true}
-        />
-      )}
-    </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }

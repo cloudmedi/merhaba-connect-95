@@ -1,61 +1,60 @@
-import { supabase } from '@/integrations/supabase/client';
-import { LoginCredentials, User, UserRole } from '@/types/auth';
+import { AuthResponse, LoginCredentials } from "@/types/auth";
+import { supabase } from './supabase';
 
-export async function signIn({ email, password }: LoginCredentials) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-  if (error) throw error;
-  return data;
-}
+export const authService = {
+  async login({ email, password }: LoginCredentials): Promise<AuthResponse> {
+    const { data: { user, session }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
+    if (error) throw error;
 
-export async function getCurrentUser(): Promise<User | null> {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  
-  if (error || !session?.user) {
-    return null;
+    if (!user || !session) {
+      throw new Error('Login failed');
+    }
+
+    // Get profile data including avatar_url
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email!,
+        firstName: user.user_metadata.firstName || '',
+        lastName: user.user_metadata.lastName || '',
+        role: user.user_metadata.role,
+        companyId: user.user_metadata.companyId,
+        isActive: true,
+        avatar_url: profile?.avatar_url || null,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at || user.created_at
+      },
+      token: session.access_token
+    };
+  },
+
+  async logout(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    localStorage.removeItem('token');
+  },
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  },
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+  },
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*, companies(*)')
-    .eq('id', session.user.id)
-    .single();
-
-  if (profileError || !profile) {
-    return null;
-  }
-
-  const userRole = profile.role as UserRole;
-  if (userRole !== 'super_admin' && userRole !== 'manager') {
-    return null;
-  }
-
-  return {
-    id: session.user.id,
-    email: session.user.email!,
-    first_name: profile.first_name,
-    last_name: profile.last_name,
-    role: userRole,
-    is_active: profile.is_active,
-    created_at: session.user.created_at,
-    updated_at: profile.updated_at,
-    avatar_url: profile.avatar_url,
-    company_id: profile.company_id,
-    company: profile.companies,
-    // Aliases
-    firstName: profile.first_name,
-    lastName: profile.last_name,
-    isActive: profile.is_active,
-    createdAt: session.user.created_at,
-    updatedAt: profile.updated_at,
-    companyId: profile.company_id
-  };
-}
+};

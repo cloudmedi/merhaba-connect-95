@@ -35,15 +35,6 @@ interface MusicTableProps {
   onDelete: (id: string) => void;
 }
 
-const formatDuration = (duration?: number) => {
-  if (!duration) return "0:00";
-  const minutes = Math.floor(duration / 60);
-  const seconds = duration % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
-
-const defaultArtwork = "/placeholder.svg";
-
 export function MusicTable({
   songs,
   selectedSongs,
@@ -58,25 +49,9 @@ export function MusicTable({
   onDelete
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
-
-  const handlePlaySong = (song: Song) => {
-    if (currentlyPlaying?.id === song.id) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setCurrentlyPlaying(song);
-      setIsPlaying(true);
-    }
-  };
-
-  const transformedSongs = songs.map(song => ({
-    id: song.id,
-    title: song.title,
-    artist: song.artist || 'Unknown Artist',
-    duration: song.duration || 0,
-    artwork_url: song.artwork_url || defaultArtwork,
-    file_url: song.file_url
-  }));
+  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -86,69 +61,111 @@ export function MusicTable({
     return <EmptyState />;
   }
 
+  const formatDuration = (duration?: number) => {
+    if (!duration) return "0:00";
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+
+  const getBunnyUrl = (song: Song): string => {
+    if (!song) return '';
+    
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
+
+  const handlePlaySong = (song: Song) => {
+    const songIndex = songs.findIndex(s => s.id === song.id);
+    setCurrentSongIndex(songIndex);
+    setCurrentlyPlaying(song);
+    setIsPlaying(true);
+    setCurrentPlaylistId('temp-playlist');
+  };
+
+  const handleSongChange = (index: number) => {
+    setCurrentSongIndex(index);
+    setCurrentlyPlaying(songs[index]);
+  };
+
+  // Pagination calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
+  const transformedSongs = songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist || "Unknown Artist",
+    duration: song.duration?.toString() || "0:00",
+    file_url: getBunnyUrl(song),
+    bunny_id: song.bunny_id
+  }));
+
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] bg-white border rounded-lg overflow-hidden">
-      <div className="sticky top-0 z-10 bg-white border-b">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[30px] py-4">
-                <Checkbox
-                  checked={selectedSongs.length === songs.length}
-                  onCheckedChange={onSelectAll}
-                />
-              </TableHead>
-              <TableHead className="font-medium text-gray-700">Title</TableHead>
-              <TableHead className="font-medium text-gray-700">Artist</TableHead>
-              <TableHead className="font-medium text-gray-700">Album</TableHead>
-              <TableHead className="font-medium text-gray-700">Genres</TableHead>
-              <TableHead className="font-medium text-gray-700 text-right">Duration</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="min-h-0">
-          <Table>
-            <TableBody>
-              {songs.map((song) => (
-                <SongTableRow
-                  key={song.id}
-                  song={song}
-                  isSelected={selectedSongs.some((s) => s.id === song.id)}
-                  onSelect={(checked) => onSelectSong(song, checked)}
-                  onPlay={() => handlePlaySong(song)}
-                  formatDuration={formatDuration}
-                  defaultArtwork={defaultArtwork}
-                  onDelete={() => onDelete(song.id)}
-                  isPlaying={isPlaying}
-                  currentlyPlayingId={currentlyPlaying?.id}
-                />
-              ))}
-            </TableBody>
-          </Table>
+    <div className="space-y-4">
+      <div className="border rounded-lg">
+        <div className="h-[calc(100vh-280px)] relative">
+          <ScrollArea className="h-full rounded-md" type="always">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[30px] bg-white sticky top-0 z-20">
+                    <Checkbox
+                      checked={selectedSongs.length === songs.length}
+                      onCheckedChange={onSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Artist</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Album</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Genres</TableHead>
+                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0 z-20">Duration</TableHead>
+                  <TableHead className="w-[50px] bg-white sticky top-0 z-20"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {songs.map((song) => (
+                  <SongTableRow
+                    key={song.id}
+                    song={song}
+                    isSelected={selectedSongs.some((s) => s.id === song.id)}
+                    onSelect={(checked) => onSelectSong(song, checked)}
+                    onPlay={() => handlePlaySong(song)}
+                    formatDuration={formatDuration}
+                    defaultArtwork={defaultArtwork}
+                    onDelete={() => onDelete(song.id)}
+                    isPlaying={isPlaying}
+                    currentlyPlayingId={currentlyPlaying?.id}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         </div>
-      </ScrollArea>
-
-      <div className="sticky bottom-0 border-t bg-white p-4">
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          startIndex={startIndex}
-          endIndex={endIndex}
-          totalItems={totalCount}
-        />
       </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={totalCount}
+      />
 
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
+            id: currentPlaylistId,
             title: "Now Playing",
             artwork: currentlyPlaying.artwork_url || defaultArtwork,
             songs: transformedSongs
@@ -157,9 +174,9 @@ export function MusicTable({
             setCurrentlyPlaying(null);
             setIsPlaying(false);
           }}
+          onSongChange={handleSongChange}
           onPlayStateChange={setIsPlaying}
           currentSongId={currentlyPlaying.id}
-          autoPlay={true}
         />
       )}
     </div>

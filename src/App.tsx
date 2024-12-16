@@ -1,39 +1,44 @@
-import { Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
-import ManagerLogin from "./pages/Manager/Auth/Login";
-import ManagerRegister from "./pages/Manager/Auth/Register";
-import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
-import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { ManagerAuthProvider } from "@/contexts/ManagerAuthContext";
-import { SuperAdminAuthProvider } from "@/contexts/SuperAdminAuthContext";
+import { AuthProvider } from '@/hooks/useAuth';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute
+      gcTime: 1000 * 60 * 5, // 5 minutes
+      retry: 2,
+    },
+  },
+});
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/manager/*",
+    element: <Manager />,
+  },
+  {
+    path: "/super-admin/*",
+    element: <SuperAdmin />,
+  },
+]);
 
 function App() {
   return (
-    <ManagerAuthProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        
-        {/* Manager routes */}
-        <Route path="/manager/login" element={<ManagerLogin />} />
-        <Route path="/manager/register" element={<ManagerRegister />} />
-        <Route path="/manager/*" element={<Manager />} />
-
-        {/* Super Admin routes */}
-        <Route path="/super-admin/*" element={
-          <SuperAdminAuthProvider>
-            <Routes>
-              <Route path="/login" element={<SuperAdminLogin />} />
-              <Route path="/register" element={<SuperAdminRegister />} />
-              <Route path="/*" element={<SuperAdmin />} />
-            </Routes>
-          </SuperAdminAuthProvider>
-        } />
-      </Routes>
-      <Toaster />
-    </ManagerAuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

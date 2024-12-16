@@ -1,22 +1,40 @@
-import { SystemHealthReport } from "./components/SystemHealthReport";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ActivePlaylistsReport } from "./components/ActivePlaylistsReport";
 import { PlaylistHistoryReport } from "./components/PlaylistHistoryReport";
 import { ManagerActivityReport } from "./components/ManagerActivityReport";
+import { SystemHealthReport } from "./components/SystemHealthReport";
 
 export default function Reports() {
   return (
-    <main className="p-8 bg-[#F8F9FC]">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-          <p className="text-sm text-gray-500">System analytics and reports</p>
-        </div>
+    <DashboardLayout
+      title="System Reports"
+      description="Detailed system health, player status, and activity reports"
+    >
+      <Tabs defaultValue="system-health" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-4">
+          <TabsTrigger value="system-health">System Health</TabsTrigger>
+          <TabsTrigger value="active-playlists">Active Playlists</TabsTrigger>
+          <TabsTrigger value="playlist-history">Playlist History</TabsTrigger>
+          <TabsTrigger value="manager-activity">Manager Activity</TabsTrigger>
+        </TabsList>
 
-        <div className="grid gap-8">
+        <TabsContent value="system-health">
           <SystemHealthReport />
+        </TabsContent>
+
+        <TabsContent value="active-playlists">
+          <ActivePlaylistsReport />
+        </TabsContent>
+
+        <TabsContent value="playlist-history">
           <PlaylistHistoryReport />
+        </TabsContent>
+
+        <TabsContent value="manager-activity">
           <ManagerActivityReport />
-        </div>
-      </div>
-    </main>
+        </TabsContent>
+      </Tabs>
+    </DashboardLayout>
   );
 }

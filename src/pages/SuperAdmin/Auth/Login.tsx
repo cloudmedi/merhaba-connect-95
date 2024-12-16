@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
-import { useAuth } from "@/contexts/SuperAdminAuthContext";
-import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SuperAdminLogin() {
   const [email, setEmail] = useState("");
@@ -13,6 +13,7 @@ export default function SuperAdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,11 +21,13 @@ export default function SuperAdminLogin() {
 
     try {
       await login(email, password);
-      toast.success("Giriş başarılı!");
       navigate("/super-admin");
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || "Giriş başarısız");
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -38,9 +41,9 @@ export default function SuperAdminLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Super Admin Girişi</CardTitle>
+          <CardTitle className="text-2xl">Super Admin Login</CardTitle>
           <CardDescription>
-            Super admin paneline erişmek için giriş yapın
+            Enter your credentials to access the super admin dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -52,17 +55,15 @@ export default function SuperAdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white"
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Şifre"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white"
               />
             </div>
             <Button 
@@ -70,7 +71,15 @@ export default function SuperAdminLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/super-admin/register")}
+            >
+              Register as Super Admin
             </Button>
           </form>
         </CardContent>

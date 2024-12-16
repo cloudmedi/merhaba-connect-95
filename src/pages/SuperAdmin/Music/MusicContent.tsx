@@ -1,85 +1,50 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { MusicHeader } from "./MusicHeader";
+import { MusicActions } from "./MusicActions";
+import { MusicTable } from "./MusicTable";
+import { MusicFilters } from "./MusicFilters";
+import { useToast } from "@/hooks/use-toast";
+import { useMusicLibrary } from "./hooks/useMusicLibrary";
 import { supabase } from "@/integrations/supabase/client";
-import { MusicFilters } from "./components/MusicFilters";
-import { MusicTable } from "./components/MusicTable";
-import { toast } from "sonner";
-import type { Song, Genre } from "@/types/api";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
+  const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedGenre, setSelectedGenre] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Fetch songs with filtering
-  const { data: songs = [], isLoading } = useQuery({
-    queryKey: ['songs', currentPage, searchQuery, selectedGenre],
-    queryFn: async () => {
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
+  const {
+    songs,
+    isLoading,
+    filterGenre,
+    setFilterGenre,
+    sortByRecent,
+    setSortByRecent,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    itemsPerPage,
+    totalCount,
+    refetch,
+    genres
+  } = useMusicLibrary();
 
-      let query = supabase
-        .from('songs')
-        .select('*')
-        .range(from, to)
-        .order('created_at', { ascending: false });
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedSongs(checked ? songs : []);
+  };
 
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data as Song[];
+  const handleSelectSong = (song: any, checked: boolean) => {
+    if (checked) {
+      setSelectedSongs(prev => [...prev, song]);
+    } else {
+      setSelectedSongs(prev => prev.filter(s => s.id !== song.id));
     }
-  });
+  };
 
-  // Get total count for pagination
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: ['songs-count', searchQuery, selectedGenre],
-    queryFn: async () => {
-      let query = supabase
-        .from('songs')
-        .select('*', { count: 'exact', head: true });
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      const { count, error } = await query;
-      if (error) throw error;
-      return count || 0;
-    }
-  });
-
-  // Fetch unique genres
-  const { data: genres = [] } = useQuery({
-    queryKey: ['genres'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('genres')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      return (data || []) as Genre[];
-    }
-  });
-
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-
-  const handleDelete = async (songId: string) => {
+  const handleDeleteSong = async (songId: string) => {
     try {
       const { error } = await supabase
         .from('songs')
@@ -88,74 +53,113 @@ export function MusicContent() {
 
       if (error) throw error;
 
-      toast.success("Song deleted successfully");
+      toast({
+        title: "Success",
+        description: "Song deleted successfully",
+      });
+
+      refetch();
     } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedSongs.length > 0) {
-      setSelectedSongs([]);
-    } else {
-      // Select all filtered songs
-      let query = supabase
-        .from('songs')
-        .select('*');
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (selectedGenre !== 'all') {
-        query = query.contains('genre', [selectedGenre]);
-      }
-
-      query.then(({ data }) => {
-        if (data) {
-          setSelectedSongs(data as Song[]);
-          toast.success(`Selected ${data.length} songs`);
-        }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete song",
+        variant: "destructive",
       });
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <MusicFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedGenre={selectedGenre}
-        onGenreChange={setSelectedGenre}
-        genres={genres}
-        onSelectAll={handleSelectAll}
-        selectedCount={selectedSongs.length}
-      />
+  const handleBulkDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('songs')
+        .delete()
+        .in('id', selectedSongs.map(song => song.id));
 
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedSongs.length} songs have been deleted`,
+      });
+
+      setSelectedSongs([]);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete songs",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreatePlaylist = () => {
+    if (selectedSongs.length === 0) {
+      toast({
+        title: "No songs selected",
+        description: "Please select at least one song to create a playlist",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    navigate("/super-admin/playlists/create", {
+      state: { selectedSongs }
+    });
+  };
+
+  const filteredSongs = songs.filter(song => 
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.album?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex items-center justify-between gap-4">
+        <MusicHeader />
+        <div className="flex items-center gap-2">
+          {selectedSongs.length > 0 && (
+            <>
+              <Button 
+                onClick={handleCreatePlaylist}
+                className="whitespace-nowrap"
+              >
+                Create Playlist ({selectedSongs.length} songs)
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleBulkDelete}
+                className="whitespace-nowrap"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete ({selectedSongs.length})
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+      
+      <MusicFilters
+        onGenreChange={(genre) => setFilterGenre(genre)}
+        onRecentChange={(recent) => setSortByRecent(recent)}
+        onSearchChange={setSearchQuery}
+        genres={genres}
+        searchQuery={searchQuery}
+      />
+      
       <MusicTable
-        songs={songs}
+        songs={filteredSongs}
         selectedSongs={selectedSongs}
-        onSelectSong={(song, checked) => {
-          if (checked) {
-            setSelectedSongs([...selectedSongs, song]);
-          } else {
-            setSelectedSongs(selectedSongs.filter(s => s.id !== song.id));
-          }
-        }}
-        onSelectAll={(checked) => {
-          if (checked) {
-            setSelectedSongs(songs);
-          } else {
-            setSelectedSongs([]);
-          }
-        }}
+        onSelectAll={handleSelectAll}
+        onSelectSong={handleSelectSong}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
         isLoading={isLoading}
         totalCount={totalCount}
-        onDelete={handleDelete}
+        onDelete={handleDeleteSong}
       />
     </div>
   );

@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Music2 } from "lucide-react";
-import { useAuth } from "@/contexts/ManagerAuthContext";
-import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ManagerLogin() {
   const [email, setEmail] = useState("");
@@ -14,6 +13,7 @@ export default function ManagerLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +21,13 @@ export default function ManagerLogin() {
 
     try {
       await login(email, password);
-      toast.success("Giriş başarılı!");
       navigate("/manager");
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || "Giriş başarısız");
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -39,9 +41,9 @@ export default function ManagerLogin() {
             <Music2 className="h-6 w-6 text-[#9b87f5]" />
             <h2 className="text-2xl font-bold">Merhaba Music</h2>
           </div>
-          <CardTitle className="text-2xl">Yönetici Girişi</CardTitle>
+          <CardTitle className="text-2xl">Manager Login</CardTitle>
           <CardDescription>
-            Yönetici paneline erişmek için giriş yapın
+            Enter your credentials to access the manager dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,17 +55,15 @@ export default function ManagerLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white"
               />
             </div>
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Şifre"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white"
               />
             </div>
             <Button 
@@ -71,13 +71,16 @@ export default function ManagerLogin() {
               className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]"
               disabled={isLoading}
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
-            <div className="text-center mt-4">
-              <Link to="/manager/register" className="text-sm text-[#9b87f5] hover:text-[#8b77e5]">
-                Hesabınız yok mu? Kayıt olun
-              </Link>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/manager/register")}
+            >
+              Register as Manager
+            </Button>
           </form>
         </CardContent>
       </Card>
