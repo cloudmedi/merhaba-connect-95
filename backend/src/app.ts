@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
 import connectDB from './config/database';
+import { initializeWebSocket } from './config/websocket';
 
 // Routes
 import adminAuthRoutes from './routes/admin/auth';
@@ -12,6 +14,25 @@ import adminSongsRoutes from './routes/admin/songs';
 import adminPlaylistsRoutes from './routes/admin/playlists';
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize WebSocket
+const io = initializeWebSocket(httpServer);
+
+// Make io available in request object
+declare global {
+  namespace Express {
+    interface Request {
+      io?: any;
+    }
+  }
+}
+
+// Middleware to attach io to request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Connect to MongoDB
 connectDB();
@@ -31,7 +52,7 @@ app.use('/api/admin/playlists', adminPlaylistsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 

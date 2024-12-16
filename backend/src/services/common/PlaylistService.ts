@@ -1,6 +1,13 @@
 import { Playlist } from '../../models/common/Playlist';
+import { WebSocketService } from './WebSocketService';
 
 export class PlaylistService {
+  private wsService: WebSocketService;
+
+  constructor(io: any) {
+    this.wsService = new WebSocketService(io);
+  }
+
   async createPlaylist(data: {
     name: string;
     description?: string;
@@ -17,6 +24,13 @@ export class PlaylistService {
     try {
       const playlist = new Playlist(data);
       await playlist.save();
+      
+      // Emit real-time update
+      this.wsService.emitPlaylistUpdate(playlist.id, {
+        action: 'created',
+        playlist
+      });
+      
       return playlist;
     } catch (error) {
       throw error;
@@ -56,6 +70,15 @@ export class PlaylistService {
         .populate('genre')
         .populate('mood')
         .populate('assignedManagers');
+      
+      if (playlist) {
+        // Emit real-time update
+        this.wsService.emitPlaylistUpdate(playlist.id, {
+          action: 'updated',
+          playlist
+        });
+      }
+      
       return playlist;
     } catch (error) {
       throw error;
@@ -65,6 +88,12 @@ export class PlaylistService {
   async deletePlaylist(id: string) {
     try {
       await Playlist.findByIdAndDelete(id);
+      
+      // Emit real-time update
+      this.wsService.emitPlaylistUpdate(id, {
+        action: 'deleted',
+        playlistId: id
+      });
     } catch (error) {
       throw error;
     }
@@ -90,6 +119,15 @@ export class PlaylistService {
         { assignedManagers: managerIds },
         { new: true }
       ).populate('assignedManagers');
+      
+      if (playlist) {
+        // Emit real-time update
+        this.wsService.emitPlaylistUpdate(playlist.id, {
+          action: 'managers-assigned',
+          playlist
+        });
+      }
+      
       return playlist;
     } catch (error) {
       throw error;
