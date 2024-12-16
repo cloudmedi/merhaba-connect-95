@@ -1,10 +1,10 @@
 import { Server } from 'socket.io';
-import { Server as HttpServer } from 'http';
+import { Server as HTTPServer } from 'http';
 
-export const initializeWebSocket = (server: HttpServer) => {
-  const io = new Server(server, {
+export const initializeWebSocket = (httpServer: HTTPServer) => {
+  const io = new Server(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: process.env.CLIENT_URL || 'http://localhost:3000',
       methods: ['GET', 'POST']
     }
   });
@@ -12,12 +12,10 @@ export const initializeWebSocket = (server: HttpServer) => {
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
-    // Join room for playlist updates
     socket.on('join-playlist', (playlistId: string) => {
       socket.join(`playlist:${playlistId}`);
     });
 
-    // Leave playlist room
     socket.on('leave-playlist', (playlistId: string) => {
       socket.leave(`playlist:${playlistId}`);
     });
