@@ -14,9 +14,19 @@ import {
   BarChart2,
   Bell,
   Activity,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/super-admin" },
@@ -36,6 +46,15 @@ export function AdminNav() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <>
@@ -59,17 +78,42 @@ export function AdminNav() {
         )}
       >
         <div className="sticky top-0 p-6">
-          <div
-            className={cn(
-              "flex items-center gap-3 mb-8",
-              isCollapsed && "justify-center"
-            )}
-          >
-            <Music2 className="h-8 w-8 text-[#9b87f5]" />
+          <div className="flex items-center justify-between mb-8">
+            <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+              <Music2 className="h-8 w-8 text-[#9b87f5]" />
+              {!isCollapsed && (
+                <h1 className="text-xl font-semibold tracking-tight">
+                  Merhaba Music
+                </h1>
+              )}
+            </div>
             {!isCollapsed && (
-              <h1 className="text-xl font-semibold tracking-tight">
-                Merhaba Music
-              </h1>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-[#9b87f5] text-white">
+                        {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Çıkış Yap
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
 
