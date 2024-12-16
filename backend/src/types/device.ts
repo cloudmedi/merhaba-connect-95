@@ -3,22 +3,19 @@ import { Types } from 'mongoose';
 export interface IDevice {
   _id?: Types.ObjectId;
   name: string;
-  branchId?: Types.ObjectId;
-  category: string;
-  status: 'online' | 'offline';
-  ipAddress?: string;
-  systemInfo?: Record<string, any>;
-  schedule?: Record<string, any>;
+  token: string;
+  status: 'online' | 'offline' | 'maintenance';
   lastSeen?: Date;
-  token?: string;
+  branchId?: Types.ObjectId;
+  systemInfo?: {
+    os: string;
+    version: string;
+    memory: number;
+    diskSpace: number;
+  };
+  ipAddress?: string;
   location?: string;
-  locationId?: Types.ObjectId;
-  createdBy?: Types.ObjectId;
-  macAddress?: string;
-  volume: number;
-  currentVersion?: string;
-  lastUpdateCheck?: Date;
-  updateStatus?: string;
+  createdBy: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }

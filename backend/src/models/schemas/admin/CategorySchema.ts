@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
-  position: { type: Number },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  position: { type: Number, required: true }
 }, {
   timestamps: true
 });
