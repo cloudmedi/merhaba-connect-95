@@ -23,7 +23,11 @@ import Reports from "./pages/SuperAdmin/Reports";
 import Settings from "./pages/SuperAdmin/Settings";
 import { ErrorState } from '@/components/ErrorState';
 import ManagerDashboard from "./pages/Manager/Dashboard";
-import Devices from "./pages/Manager/Devices";
+import { DeviceList } from "./pages/Manager/Devices/DeviceList";
+import { DeviceDetail } from "./pages/Manager/Devices/DeviceDetail";
+import { DeviceGroups } from "./pages/Manager/Devices/DeviceGroups";
+import { GroupDetail } from "./pages/Manager/Devices/GroupDetail";
+import { DeviceMaintenance } from "./pages/Manager/Devices/DeviceMaintenance";
 import ManagerPlaylists from "./pages/Manager/Playlists";
 import Schedule from "./pages/Manager/Schedule";
 import Announcements from "./pages/Manager/Announcements";
@@ -54,7 +58,16 @@ const router = createBrowserRouter([
     errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
     children: [
       { index: true, element: <ManagerDashboard /> },
-      { path: "devices/*", element: <Devices /> },
+      { 
+        path: "devices",
+        children: [
+          { index: true, element: <DeviceList /> },
+          { path: ":deviceId", element: <DeviceDetail /> },
+          { path: "groups", element: <DeviceGroups /> },
+          { path: "groups/:groupId", element: <GroupDetail /> },
+          { path: "maintenance", element: <DeviceMaintenance /> },
+        ]
+      },
       { path: "playlists", element: <ManagerPlaylists /> },
       { path: "playlists/category/:categoryId", element: <CategoryPlaylists /> },
       { path: "playlists/:id", element: <ManagerPlaylistDetail /> },
