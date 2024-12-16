@@ -38,11 +38,9 @@ export function useDeviceQueries() {
               title
             )
           ),
-          playlist_assignments (
-            playlist:playlists (
-              id,
-              name
-            )
+          playlist_assignments:playlists (
+            id,
+            name
           )
         `)
         .eq('branches.company_id', userProfile.company_id);
@@ -55,14 +53,25 @@ export function useDeviceQueries() {
       // Transform the data to match the Device type
       return (data || []).map(device => ({
         ...device,
-        system_info: device.system_info || {},
-        schedule: device.schedule || {},
-        schedule_device_assignments: device.schedule_device_assignments?.map(assignment => ({
-          schedule: assignment.schedule
-        })) || [],
-        playlist_assignments: device.playlist_assignments?.map(assignment => ({
-          playlist: assignment.playlist
-        })) || []
+        system_info: typeof device.system_info === 'string' 
+          ? JSON.parse(device.system_info) 
+          : device.system_info || {},
+        schedule: typeof device.schedule === 'string'
+          ? JSON.parse(device.schedule)
+          : device.schedule || {},
+        schedule_device_assignments: Array.isArray(device.schedule_device_assignments)
+          ? device.schedule_device_assignments.map(assignment => ({
+              schedule: assignment.schedule
+            }))
+          : [],
+        playlist_assignments: Array.isArray(device.playlist_assignments)
+          ? device.playlist_assignments.map(playlist => ({
+              playlist: {
+                id: playlist.id,
+                name: playlist.name
+              }
+            }))
+          : []
       })) as Device[];
     },
   });
