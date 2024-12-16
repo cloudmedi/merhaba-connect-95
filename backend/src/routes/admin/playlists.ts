@@ -1,8 +1,12 @@
 import express from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
+import { adminAuth } from '../../middleware/auth';
 
 const router = express.Router();
 const playlistService = new PlaylistService();
+
+// Admin middleware'ini tüm route'lara uygula
+router.use(adminAuth);
 
 // Playlist CRUD
 router.post('/', async (req, res) => {
