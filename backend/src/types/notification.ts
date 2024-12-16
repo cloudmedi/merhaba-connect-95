@@ -7,7 +7,7 @@ export interface INotification {
   type: string;
   userId: Types.ObjectId;
   isRead: boolean;
-  metadata?: any;
+  metadata?: Record<string, any>;
   readAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
