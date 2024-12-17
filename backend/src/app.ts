@@ -38,8 +38,17 @@ app.use((req, res, next) => {
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
+
+// Debug middleware to log requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // Routes
 app.use('/api/admin/auth', adminAuthRoutes);
@@ -49,6 +58,12 @@ app.use('/api/admin/genres', adminGenresRoutes);
 app.use('/api/admin/moods', adminMoodsRoutes);
 app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
+});
 
 const PORT = process.env.PORT || 5000;
 

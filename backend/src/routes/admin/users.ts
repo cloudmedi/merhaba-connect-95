@@ -14,6 +14,38 @@ router.get('/', adminAuth, async (req, res) => {
   }
 });
 
+// Create user
+router.post('/', async (req, res) => {
+  try {
+    const { email, password, firstName, lastName, role, companyName } = req.body;
+    
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    const user = new User({
+      email,
+      password,
+      firstName,
+      lastName,
+      role: role || 'manager',
+      companyName,
+      isActive: true
+    });
+
+    await user.save();
+    
+    const userResponse = { ...user.toObject() };
+    delete userResponse.password;
+    
+    res.status(201).json(userResponse);
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get user by ID
 router.get('/:id', adminAuth, async (req, res) => {
   try {
