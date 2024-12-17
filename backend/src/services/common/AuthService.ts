@@ -1,41 +1,39 @@
-import jwt from 'jsonwebtoken';
 import { User } from '../../models/admin/User';
+import * as argon2 from 'argon2';
+import jwt from 'jsonwebtoken';
+import { IUser } from '../../types/user';
 
 export class AuthService {
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-  private readonly JWT_EXPIRES_IN = '24h';
-
-  async validateUser(email: string, password: string) {
-    try {
-      const user = await User.findOne({ email });
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const isValidPassword = await user.comparePassword(password);
-      if (!isValidPassword) {
-        throw new Error('Invalid password');
-      }
-
-      return user;
-    } catch (error) {
-      throw error;
+  async validateUser(email: string, password: string): Promise<IUser> {
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      throw new Error('Invalid credentials');
     }
+
+    const isValidPassword = await argon2.verify(user.password, password);
+    
+    if (!isValidPassword) {
+      throw new Error('Invalid credentials');
+    }
+
+    return user;
   }
 
-  generateToken(userId: string, role: string) {
+  generateToken(userId: string, role: string): string {
     return jwt.sign(
       { userId, role },
-      this.JWT_SECRET,
-      { expiresIn: this.JWT_EXPIRES_IN }
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
     );
   }
 
-  verifyToken(token: string) {
+  async validateToken(token: string): Promise<boolean> {
     try {
-      return jwt.verify(token, this.JWT_SECRET);
-    } catch (error) {
-      throw error;
+      jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      return true;
+    } catch {
+      return false;
     }
   }
 }
