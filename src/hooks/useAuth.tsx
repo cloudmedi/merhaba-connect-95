@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          // Token varsa kullanıcı bilgilerini al
           const response = await fetch('/api/auth/me', {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -31,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userData = await response.json();
             setUser(userData);
           } else {
-            // Token geçersizse çıkış yap
             await logout();
           }
         }
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (response.user) {
         setUser(response.user);
-        toast.success('Login successful');
+        toast.success('Giriş başarılı');
         
         if (response.user.role === 'super_admin') {
           window.location.href = '/super-admin';
@@ -60,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error: any) {
-      toast.error('Login failed: ' + error.message);
+      toast.error('Giriş başarısız: ' + error.message);
       throw error;
     }
   };
@@ -70,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('token');
       setUser(null);
       
-      // Redirect based on current path
       const isManagerPath = window.location.pathname.startsWith('/manager');
       if (isManagerPath) {
         window.location.href = '/manager/login';
@@ -78,10 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = '/super-admin/login';
       }
       
-      toast.success('Logged out successfully');
+      toast.success('Çıkış yapıldı');
     } catch (error: any) {
-      console.error('Logout failed:', error);
-      toast.error('Failed to log out');
+      console.error('Çıkış hatası:', error);
+      toast.error('Çıkış yapılamadı');
     }
   };
 
