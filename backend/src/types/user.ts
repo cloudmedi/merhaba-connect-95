@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 export interface IUser {
   _id?: Types.ObjectId;
+  id?: string;  // MongoDB'nin _id'sini string olarak kullanmak için
   email: string;
   password: string;
   firstName?: string;

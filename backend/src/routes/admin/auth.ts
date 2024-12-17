@@ -9,7 +9,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await authService.validateUser(email, password);
-    const token = authService.generateToken(user.id, user.role);
+    const token = authService.generateToken(user._id.toString(), user.role);
     res.json({ token, user });
   } catch (error) {
     res.status(401).json({ error: 'Invalid credentials' });

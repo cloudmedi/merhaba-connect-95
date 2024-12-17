@@ -17,7 +17,12 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    return user;
+    // MongoDB dökümanını düz bir objeye çevirip id ekleyelim
+    const userObject = user.toObject();
+    return {
+      ...userObject,
+      id: user._id.toString() // _id'yi string'e çevirip id olarak ekleyelim
+    };
   }
 
   generateToken(userId: string, role: string): string {
