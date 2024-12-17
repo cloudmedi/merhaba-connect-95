@@ -1,5 +1,6 @@
 import express from 'express';
 import { User } from '../../models/admin/User';
+import { License } from '../../models/admin/License';
 import { adminAuth } from '../../middleware/auth';
 import * as argon2 from 'argon2';
 import mongoose from 'mongoose';
@@ -49,15 +50,13 @@ router.post('/', async (req, res) => {
 
       // Create license if provided
       if (license) {
-        const licenseDoc = new mongoose.model('License', {
+        const licenseDoc = new License({
           userId: user._id,
           type: license.type,
           startDate: license.start_date,
           endDate: license.end_date,
           quantity: license.quantity,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          isActive: true
         });
 
         await licenseDoc.save({ session });
