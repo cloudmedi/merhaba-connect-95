@@ -32,7 +32,8 @@ export class AuthController {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          isActive: user.isActive
+          isActive: user.isActive,
+          companyName: user.companyName
         }
       });
     } catch (error) {
@@ -43,7 +44,7 @@ export class AuthController {
 
   async register(req: Request, res: Response) {
     try {
-      const { email, password, firstName, lastName, role } = req.body;
+      const { email, password, firstName, lastName, role, companyName } = req.body;
 
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -58,7 +59,8 @@ export class AuthController {
         firstName,
         lastName,
         role: role || 'manager',
-        isActive: true
+        isActive: true,
+        companyName
       });
 
       await user.save();
@@ -77,7 +79,8 @@ export class AuthController {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          isActive: user.isActive
+          isActive: user.isActive,
+          companyName: user.companyName
         }
       });
     } catch (error) {

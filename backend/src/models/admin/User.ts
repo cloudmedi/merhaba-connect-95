@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
     enum: ['admin', 'manager', 'user'],
     default: 'user' 
   },
-  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+  companyName: { type: String },
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
   avatarUrl: { type: String }

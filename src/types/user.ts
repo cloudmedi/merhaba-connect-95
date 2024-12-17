@@ -5,7 +5,7 @@ export interface User {
   lastName: string | null;
   role: UserRole;
   isActive: boolean;
-  companyId?: string;
+  companyName?: string;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -19,7 +19,7 @@ export interface UserCreateInput {
   firstName?: string;
   lastName?: string;
   role?: UserRole;
-  companyId?: string;
+  companyName?: string;
 }
 
 export interface UserUpdateInput {
@@ -28,7 +28,7 @@ export interface UserUpdateInput {
   role?: UserRole;
   isActive?: boolean;
   password?: string;
-  companyId?: string;
+  companyName?: string;
 }
 
 export interface AuthResponse {
