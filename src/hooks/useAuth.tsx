@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,24 +32,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
-      toast.success('Successfully signed in');
+      toast.success('Successfully logged in');
     } catch (error: any) {
-      toast.error(error.message || 'Error signing in');
+      toast.error(error.message || 'Error logging in');
       throw error;
     }
   };
 
-  const signOut = async () => {
+  const logout = async () => {
     try {
       await authService.logout();
       setUser(null);
-      toast.success('Successfully signed out');
+      toast.success('Successfully logged out');
     } catch (error: any) {
-      toast.error(error.message || 'Error signing out');
+      toast.error(error.message || 'Error logging out');
       throw error;
     }
   };
@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     loading,
-    signIn,
-    signOut
+    login,
+    logout
   };
 
   return (
