@@ -14,5 +14,3 @@ export const createUserFormSchema = z.object({
     quantity: z.number().min(1, "Must have at least 1 license"),
   }),
 });
-
-export type CreateUserFormSchema = z.infer<typeof createUserFormSchema>;
