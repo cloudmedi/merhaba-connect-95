@@ -14,7 +14,13 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   role: z.enum(["admin", "manager"]),
-  companyName: z.string().min(2, "Company name must be at least 2 characters")
+  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  license: z.object({
+    type: z.enum(["trial", "premium"]),
+    start_date: z.string(),
+    end_date: z.string(),
+    quantity: z.number().min(1, "Must have at least 1 license"),
+  }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -32,7 +38,13 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
       email: "",
       password: "",
       role: "manager",
-      companyName: ""
+      companyName: "",
+      license: {
+        type: "trial",
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
+        quantity: 1
+      }
     }
   });
 
@@ -44,7 +56,8 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role,
-        companyName: data.companyName
+        companyName: data.companyName,
+        license: data.license
       });
       
       toast.success("User created successfully");
@@ -149,6 +162,79 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="license.type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>License Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select license type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="trial">Trial (14 days)</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.watch("license.type") === "premium" && (
+          <>
+            <FormField
+              control={form.control}
+              name="license.start_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>License Start Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="license.end_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>License End Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="license.quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Licenses</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <div className="flex justify-end space-x-2">
           <Button type="submit">Create User</Button>

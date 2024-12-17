@@ -29,7 +29,13 @@ export interface UserCreateInput {
   firstName: string;
   lastName: string;
   role?: 'admin' | 'manager' | 'user';
-  companyId?: string;
+  companyName?: string;
+  license?: {
+    type: 'trial' | 'premium';
+    start_date: string;
+    end_date: string;
+    quantity: number;
+  };
 }
 
 export interface UserUpdateInput {
