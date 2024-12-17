@@ -51,6 +51,11 @@ export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps
     }
   };
 
+  const handleUpdate = () => {
+    onStatusChange();
+    setIsEditOpen(false);
+  };
+
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -97,6 +102,7 @@ export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps
         user={user}
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
+        onUpdate={handleUpdate}
       />
 
       <LicenseRenewalDialog
