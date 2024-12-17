@@ -8,6 +8,7 @@ import { createUserFormSchema } from "./schema";
 import { BasicInfoSection } from "./BasicInfoSection";
 import { LicenseSection } from "./LicenseSection";
 import type { CreateUserFormValues } from "./types";
+import { userService } from "@/services/users";
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -37,8 +38,11 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   const onSubmit = async (data: CreateUserFormValues) => {
     try {
       setIsLoading(true);
-      // API call would go here
-      console.log("Form data:", data);
+      await userService.createUser({
+        ...data,
+        role: data.role,
+        companyName: data.companyName
+      });
       toast.success("User created successfully");
       onSuccess();
     } catch (error) {
