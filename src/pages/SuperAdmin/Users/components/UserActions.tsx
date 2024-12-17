@@ -19,9 +19,10 @@ import { toast } from "sonner";
 interface UserActionsProps {
   user: User;
   onStatusChange: () => void;
+  onDelete?: (userId: string) => void;
 }
 
-export function UserActions({ user, onStatusChange }: UserActionsProps) {
+export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -75,6 +76,14 @@ export function UserActions({ user, onStatusChange }: UserActionsProps) {
           <DropdownMenuItem onClick={handleToggleStatus}>
             {user.isActive ? 'Deactivate' : 'Activate'}
           </DropdownMenuItem>
+          {onDelete && (
+            <DropdownMenuItem 
+              onClick={() => onDelete(user.id)}
+              className="text-red-600 hover:text-red-700"
+            >
+              Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -88,17 +97,17 @@ export function UserActions({ user, onStatusChange }: UserActionsProps) {
         user={user}
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
-        onStatusChange={onStatusChange}
       />
 
       <LicenseRenewalDialog
+        user={user}
         open={isRenewalOpen}
         onOpenChange={setIsRenewalOpen}
         onSubmit={handleRenewLicense}
       />
 
       <UserHistoryDialog
-        userId={user.id}
+        user={user}
         open={isHistoryOpen}
         onOpenChange={setIsHistoryOpen}
       />

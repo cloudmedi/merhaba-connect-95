@@ -11,6 +11,7 @@ export interface User {
     endDate: string;
   };
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserUpdateInput {

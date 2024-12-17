@@ -2,22 +2,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useUserActions } from "./hooks/useUserActions";
 
 interface LicenseRenewalDialogProps {
-  user: { id: string; name: string; license?: { endDate: string } };
+  user: { id: string; firstName: string; lastName: string; license?: { endDate: string } };
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmit: (data: { startDate: string; endDate: string }) => Promise<void>;
 }
 
-export function LicenseRenewalDialog({ user, open, onOpenChange }: LicenseRenewalDialogProps) {
+export function LicenseRenewalDialog({ user, open, onOpenChange, onSubmit }: LicenseRenewalDialogProps) {
   const [endDate, setEndDate] = useState(user.license?.endDate || "");
-  const { handleRenewLicense } = useUserActions();
 
   const handleSubmit = async () => {
     try {
-      await handleRenewLicense(user.id, { endDate });
+      await onSubmit({ startDate: new Date().toISOString(), endDate });
       onOpenChange(false);
+      toast.success("License renewed successfully");
     } catch (error) {
       console.error('Error renewing license:', error);
       toast.error("Failed to renew license");
@@ -28,7 +28,7 @@ export function LicenseRenewalDialog({ user, open, onOpenChange }: LicenseRenewa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Renew License for {user.name}</DialogTitle>
+          <DialogTitle>Renew License for {user.firstName} {user.lastName}</DialogTitle>
         </DialogHeader>
         <div>
           <label htmlFor="end-date" className="block text-sm font-medium text-gray-700">

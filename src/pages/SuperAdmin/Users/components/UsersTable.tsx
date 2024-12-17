@@ -52,12 +52,12 @@ export function UsersTable({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
-                  <UserStatus status={user.isActive ? 'active' : 'inactive'} />
+                  <UserStatus isActive={user.isActive} />
                 </TableCell>
                 <TableCell>
                   {user.license ? (
                     <span className="text-sm text-gray-500">
-                      {user.license.type} - Expires: {new Date(user.license.expiresAt).toLocaleDateString()}
+                      {user.license.type} - Expires: {new Date(user.license.endDate).toLocaleDateString()}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-500">No license</span>
