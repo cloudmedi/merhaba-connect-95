@@ -9,7 +9,7 @@ import { BasicInfoSection } from "./CreateUserForm/BasicInfoSection";
 import { LicenseSection } from "./CreateUserForm/LicenseSection";
 import { createUserFormSchema } from "./CreateUserForm/schema";
 import type { CreateUserFormValues } from "./CreateUserForm/types";
-import { supabase } from "@/integrations/supabase/client";
+import { userService } from "@/services/users";
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -39,52 +39,31 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const createUserMutation = useMutation({
     mutationFn: async (values: CreateUserFormValues) => {
       try {
-        // 1. Önce şirketi oluştur
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .insert({
-            name: values.companyName,
-            subscription_status: values.license.type,
-            subscription_ends_at: values.license.end_date
-          })
-          .select()
-          .single();
-
-        if (companyError) throw companyError;
-
-        // 2. Auth kullanıcısını oluştur - admin API yerine signUp kullan
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
-          options: {
-            data: {
-              firstName: values.firstName,
-              lastName: values.lastName,
-              role: values.role,
-              companyId: company.id
-            }
-          }
+        // Önce şirketi oluştur
+        const company = await userService.createCompany({
+          name: values.companyName,
+          subscriptionStatus: values.license.type,
+          subscriptionEndsAt: values.license.end_date
         });
 
-        if (authError) throw authError;
-        if (!authData.user) throw new Error('User creation failed');
+        // Kullanıcıyı oluştur
+        const user = await userService.createUser({
+          email: values.email,
+          password: values.password,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          role: values.role,
+          companyId: company.id
+        });
 
-        // 3. Trigger otomatik olarak profiles tablosuna kayıt ekleyecek
-        // Biraz bekleyelim
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // 4. Lisans oluştur
-        const { error: licenseError } = await supabase
-          .from('licenses')
-          .insert({
-            user_id: authData.user.id,
-            type: values.license.type,
-            start_date: values.license.start_date,
-            end_date: values.license.end_date,
-            quantity: values.license.quantity
-          });
-
-        if (licenseError) throw licenseError;
+        // Lisansı oluştur
+        await userService.createLicense({
+          userId: user.id,
+          type: values.license.type,
+          startDate: values.license.start_date,
+          endDate: values.license.end_date,
+          quantity: values.license.quantity
+        });
 
         return { success: true };
       } catch (error: any) {

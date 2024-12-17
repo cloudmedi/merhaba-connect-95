@@ -32,16 +32,24 @@ export const userService = {
     return response.json();
   },
 
-  async getUserById(id: string): Promise<User> {
+  async createCompany(data: { 
+    name: string; 
+    subscriptionStatus: string; 
+    subscriptionEndsAt: string; 
+  }) {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
+    const response = await fetch(`${API_URL}/admin/companies`, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch user');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create company');
     }
 
     return response.json();
@@ -61,6 +69,31 @@ export const userService = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to create user');
+    }
+
+    return response.json();
+  },
+
+  async createLicense(data: {
+    userId: string;
+    type: string;
+    startDate: string;
+    endDate: string;
+    quantity: number;
+  }) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/admin/licenses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create license');
     }
 
     return response.json();
@@ -104,9 +137,9 @@ export const userService = {
     return this.updateUser(id, { isActive });
   },
 
-  async renewLicense(id: string, licenseData: LicenseUpdateInput): Promise<User> {
+  async renewLicense(userId: string, licenseData: { type: string; endDate: string }): Promise<User> {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/users/${id}/license`, {
+    const response = await fetch(`${API_URL}/admin/users/${userId}/license`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
