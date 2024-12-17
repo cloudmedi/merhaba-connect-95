@@ -8,6 +8,8 @@ export interface User {
   company?: {
     id: string;
     name: string;
+    subscriptionStatus?: string;
+    subscriptionEndsAt?: string | null;
   };
   isActive: boolean;
   createdAt: string;

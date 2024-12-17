@@ -1,4 +1,4 @@
-import { User, UserCreateInput, UserUpdateInput } from '@/types/auth';
+import { User, UserCreateInput, UserUpdateInput, LicenseUpdateInput } from '@/types/auth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -102,5 +102,24 @@ export const userService = {
 
   async toggleUserStatus(id: string, isActive: boolean): Promise<User> {
     return this.updateUser(id, { isActive });
+  },
+
+  async renewLicense(id: string, licenseData: LicenseUpdateInput): Promise<User> {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/admin/users/${id}/license`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(licenseData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to renew license');
+    }
+
+    return response.json();
   }
 };

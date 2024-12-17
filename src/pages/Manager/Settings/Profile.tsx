@@ -52,7 +52,7 @@ export default function ProfileSettings() {
       // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatarUrl: publicUrl })
         .eq('id', user?.id);
 
       if (updateError) throw updateError;
@@ -131,9 +131,9 @@ export default function ProfileSettings() {
         <div className="mb-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              {user?.avatar_url ? (
+              {user?.avatarUrl ? (
                 <img 
-                  src={user.avatar_url} 
+                  src={user.avatarUrl} 
                   alt="Profile" 
                   className="h-full w-full object-cover"
                 />
