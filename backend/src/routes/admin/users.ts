@@ -56,11 +56,10 @@ router.post('/', async (req, res) => {
       await licenseDoc.save();
     }
 
-    // Return user without password
-    const userResponse = user.toObject();
-    delete userResponse.password;
+    // Return user without password using object destructuring
+    const { password: _, ...userWithoutPassword } = user.toObject();
     
-    res.status(201).json(userResponse);
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({ error: 'Internal server error' });
