@@ -1,11 +1,19 @@
 import express from 'express';
 import { Genre } from '../../models/admin/Genre';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
+import { Request } from 'express';
+
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
 
 const router = express.Router();
 
 // Get all genres
-router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const genres = await Genre.find().sort({ name: 1 });
     res.json(genres);
@@ -15,11 +23,11 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Create genre
-router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const genre = new Genre({
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user?.id
     });
     await genre.save();
     res.status(201).json(genre);
@@ -29,7 +37,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Update genre
-router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const genre = await Genre.findByIdAndUpdate(
       req.params.id,
@@ -43,7 +51,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Delete genre
-router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     await Genre.findByIdAndDelete(req.params.id);
     res.status(204).send();
