@@ -3,7 +3,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive: boolean;
   license: {
     type: string;
@@ -17,7 +17,7 @@ export interface User {
 export interface UserUpdateInput {
   firstName?: string;
   lastName?: string;
-  role?: string;
+  role?: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive?: boolean;
   license?: {
     type: string;

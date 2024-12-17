@@ -1,16 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { User } from "../types";
 
 interface ViewUserDialogProps {
-  user: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    license?: {
-      startDate: string;
-      endDate: string;
-    };
-  };
+  user: User;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -24,7 +16,7 @@ export function ViewUserDialog({ user, open, onOpenChange }: ViewUserDialogProps
         </DialogHeader>
         <div>
           <h3>User Information</h3>
-          <p>Name: {user.first_name} {user.last_name}</p>
+          <p>Name: {user.firstName} {user.lastName}</p>
           <p>Email: {user.email}</p>
         </div>
         <div>
