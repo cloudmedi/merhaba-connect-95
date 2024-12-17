@@ -1,42 +1,43 @@
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { User } from "../types";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { UserStatus } from "./UserStatus";
+import { UserActions } from "./UserActions";
+import { UserAvatar } from "./UserAvatar";
+import { format } from "date-fns";
 
 interface UserTableRowProps {
   user: User;
-  onEdit: (userId: string) => void;
-  onDelete: (userId: string) => void;
+  onStatusChange: () => void;
 }
 
-export function UserTableRow({ user, onEdit, onDelete }: UserTableRowProps) {
+export function UserTableRow({ user, onStatusChange }: UserTableRowProps) {
   return (
     <TableRow>
       <TableCell>
-        <Checkbox />
-      </TableCell>
-      <TableCell>
-        <Avatar className="h-8 w-8">
-          <div className="bg-purple-100 text-purple-600 h-full w-full flex items-center justify-center">
-            {(user.firstName?.[0] || user.email[0]).toUpperCase()}
+        <div className="flex items-center gap-3">
+          <UserAvatar user={user} />
+          <div>
+            <p className="font-medium">
+              {user.firstName} {user.lastName}
+            </p>
+            <p className="text-sm text-gray-500">{user.email}</p>
           </div>
-        </Avatar>
+        </div>
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        <span className="capitalize">{user.role}</span>
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        {user.license.type}
+      </TableCell>
+      <TableCell className="hidden md:table-cell">
+        {format(new Date(user.license.endDate), 'dd/MM/yyyy')}
       </TableCell>
       <TableCell>
-        {user.firstName} {user.lastName}
+        <UserStatus isActive={user.isActive} />
       </TableCell>
       <TableCell>
-        {user.email}
-      </TableCell>
-      <TableCell>
-        {user.license?.endDate}
-      </TableCell>
-      <TableCell>
-        <Button onClick={() => onEdit(user.id)}>Edit</Button>
-      </TableCell>
-      <TableCell>
-        <Button onClick={() => onDelete(user.id)}>Delete</Button>
+        <UserActions user={user} onStatusChange={onStatusChange} />
       </TableCell>
     </TableRow>
   );

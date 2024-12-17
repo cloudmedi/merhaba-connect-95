@@ -1,45 +1,57 @@
 import { useState } from "react";
-import { MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EditUserDialog } from "./EditUserDialog";
 import { ViewUserDialog } from "./ViewUserDialog";
 import { LicenseRenewalDialog } from "./LicenseRenewalDialog";
+import { UserHistoryDialog } from "./UserHistoryDialog";
+import { useUserActions } from "./hooks/useUserActions";
 import { User } from "../types";
 import { toast } from "sonner";
 
 interface UserActionsProps {
   user: User;
   onStatusChange: () => void;
-  onDelete: (id: string) => void;
 }
 
-export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps) {
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [showLicenseDialog, setShowLicenseDialog] = useState(false);
+export function UserActions({ user, onStatusChange }: UserActionsProps) {
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isRenewalOpen, setIsRenewalOpen] = useState(false);
 
-  const handleStatusToggle = async () => {
+  const { handleStatusToggle, handleLicenseRenewal } = useUserActions();
+
+  const handleToggleStatus = async () => {
     try {
-      // API call to toggle user status
-      toast.success(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
+      await handleStatusToggle(user.id, !user.isActive);
       onStatusChange();
+      toast.success(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
     } catch (error) {
-      toast.error("Failed to update user status");
+      toast.error('Failed to update user status');
     }
   };
 
-  const handleDelete = async () => {
+  const handleRenewLicense = async (data: { startDate: string; endDate: string }) => {
     try {
-      await onDelete(user.id);
-      toast.success("User deleted successfully");
+      await handleLicenseRenewal(user.id, data);
+      setIsRenewalOpen(false);
+      onStatusChange();
+      toast.success('License renewed successfully');
     } catch (error) {
-      toast.error("Failed to delete user");
+      toast.error('Failed to renew license');
     }
   };
 
   return (
-    <>
+    <div className="flex justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -47,55 +59,49 @@ export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
+          <DropdownMenuItem onClick={() => setIsViewOpen(true)}>
             View Details
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+          <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowLicenseDialog(true)}>
+          <DropdownMenuItem onClick={() => setIsRenewalOpen(true)}>
             Renew License
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleStatusToggle}>
-            {user.isActive ? "Deactivate" : "Activate"}
+          <DropdownMenuItem onClick={() => setIsHistoryOpen(true)}>
+            View History
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-red-600 focus:text-red-600"
-          >
-            Delete
+          <DropdownMenuItem onClick={handleToggleStatus}>
+            {user.isActive ? 'Deactivate' : 'Activate'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <ViewUserDialog
-        user={{
-          id: user.id,
-          first_name: user.firstName,
-          last_name: user.lastName,
-          email: user.email,
-          license: user.license
-        }}
-        open={showViewDialog}
-        onOpenChange={setShowViewDialog}
+        user={user}
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
       />
 
       <EditUserDialog
         user={user}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onStatusChange={onStatusChange}
       />
 
       <LicenseRenewalDialog
-        user={{
-          id: user.id,
-          name: `${user.firstName} ${user.lastName}`,
-          license: user.license
-        }}
-        open={showLicenseDialog}
-        onOpenChange={setShowLicenseDialog}
+        open={isRenewalOpen}
+        onOpenChange={setIsRenewalOpen}
+        onSubmit={handleRenewLicense}
       />
-    </>
+
+      <UserHistoryDialog
+        userId={user.id}
+        open={isHistoryOpen}
+        onOpenChange={setIsHistoryOpen}
+      />
+    </div>
   );
 }
