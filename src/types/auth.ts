@@ -3,12 +3,22 @@ export interface User {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  role: 'admin' | 'manager' | 'user';
+  role: 'super_admin' | 'admin' | 'manager' | 'user';
   companyId?: string;
+  company?: {
+    id: string;
+    name: string;
+  };
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   avatarUrl?: string | null;
+  license?: {
+    id: string;
+    type: string;
+    startDate: string;
+    endDate: string | null;
+  };
 }
 
 export interface UserCreateInput {
@@ -16,16 +26,17 @@ export interface UserCreateInput {
   password: string;
   firstName?: string;
   lastName?: string;
-  role?: string;
+  role?: 'admin' | 'manager' | 'user';
   companyId?: string;
 }
 
 export interface UserUpdateInput {
   firstName?: string;
   lastName?: string;
-  role?: string;
+  role?: 'admin' | 'manager' | 'user';
   isActive?: boolean;
   password?: string;
+  companyId?: string;
 }
 
 export interface AuthResponse {
@@ -36,4 +47,9 @@ export interface AuthResponse {
 export interface LoginCredentials {
   email: string;
   password: string;
+}
+
+export interface LicenseUpdateInput {
+  type: string;
+  endDate: string;
 }
