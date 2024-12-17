@@ -19,10 +19,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = authService.getToken();
+        const token = localStorage.getItem('token');
         if (token) {
-          const isValid = await authService.verifyToken();
-          if (!isValid) {
+          // Token varsa kullanıcı bilgilerini al
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            // Token geçersizse çıkış yap
             await logout();
           }
         }
@@ -58,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await authService.logout();
+      localStorage.removeItem('token');
       setUser(null);
       
       // Redirect based on current path
@@ -76,8 +85,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const value = {
+    user,
+    login,
+    logout,
+    isLoading
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
