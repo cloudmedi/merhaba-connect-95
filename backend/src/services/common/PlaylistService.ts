@@ -1,7 +1,5 @@
-import { WebSocketService } from './WebSocketService';
 import { Playlist } from '../../models/common/Playlist';
-import { PlaylistAssignment } from '../../models/common/PlaylistAssignment';
-import { logger } from '../../utils/logger';
+import { WebSocketService } from './WebSocketService';
 
 export class PlaylistService {
   private wsService: WebSocketService;
@@ -27,6 +25,7 @@ export class PlaylistService {
       const playlist = new Playlist(data);
       await playlist.save();
       
+      // Emit real-time update
       this.wsService.emitPlaylistUpdate(playlist.id, {
         action: 'created',
         playlist
@@ -34,7 +33,6 @@ export class PlaylistService {
       
       return playlist;
     } catch (error) {
-      logger.error('Error creating playlist:', error);
       throw error;
     }
   }
@@ -49,7 +47,6 @@ export class PlaylistService {
         .populate('assignedManagers')
         .sort({ createdAt: -1 });
     } catch (error) {
-      logger.error('Error getting playlists:', error);
       throw error;
     }
   }
@@ -75,6 +72,7 @@ export class PlaylistService {
         .populate('assignedManagers');
       
       if (playlist) {
+        // Emit real-time update
         this.wsService.emitPlaylistUpdate(playlist.id, {
           action: 'updated',
           playlist
@@ -83,7 +81,6 @@ export class PlaylistService {
       
       return playlist;
     } catch (error) {
-      logger.error('Error updating playlist:', error);
       throw error;
     }
   }
@@ -91,14 +88,26 @@ export class PlaylistService {
   async deletePlaylist(id: string) {
     try {
       await Playlist.findByIdAndDelete(id);
-      await PlaylistAssignment.deleteMany({ playlistId: id });
       
+      // Emit real-time update
       this.wsService.emitPlaylistUpdate(id, {
         action: 'deleted',
         playlistId: id
       });
     } catch (error) {
-      logger.error('Error deleting playlist:', error);
+      throw error;
+    }
+  }
+
+  async getPlaylistById(id: string) {
+    try {
+      return await Playlist.findById(id)
+        .populate('songs.songId')
+        .populate('categories')
+        .populate('genre')
+        .populate('mood')
+        .populate('assignedManagers');
+    } catch (error) {
       throw error;
     }
   }
@@ -112,6 +121,7 @@ export class PlaylistService {
       ).populate('assignedManagers');
       
       if (playlist) {
+        // Emit real-time update
         this.wsService.emitPlaylistUpdate(playlist.id, {
           action: 'managers-assigned',
           playlist
@@ -120,7 +130,6 @@ export class PlaylistService {
       
       return playlist;
     } catch (error) {
-      logger.error('Error assigning managers:', error);
       throw error;
     }
   }
