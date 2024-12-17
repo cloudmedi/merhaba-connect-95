@@ -3,6 +3,7 @@ import { UserStatus } from "./UserStatus";
 import { UserActions } from "./UserActions";
 import { TablePagination } from "./TablePagination";
 import { User } from "../types";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface UsersTableProps {
   users: User[];
@@ -10,6 +11,7 @@ interface UsersTableProps {
   totalPages: number;
   totalCount: number;
   itemsPerPage: number;
+  isLoading: boolean;
   onPageChange: (page: number) => void;
   onStatusChange: (userId: string) => void;
   onDelete: (userId: string) => void;
@@ -21,12 +23,25 @@ export function UsersTable({
   totalPages,
   totalCount,
   itemsPerPage,
+  isLoading,
   onPageChange,
   onStatusChange,
   onDelete
 }: UsersTableProps) {
-  if (!users) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!users.length) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No users found
+      </div>
+    );
   }
 
   return (

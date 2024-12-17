@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { API_URL } from "../api";
 
 export const getUsersQuery = async (filters?: {
   search?: string;
@@ -7,62 +7,51 @@ export const getUsersQuery = async (filters?: {
   license?: string;
   expiry?: string;
 }) => {
-  let query = supabase
-    .from('profiles')
-    .select(`
-      *,
-      companies (
-        id,
-        name,
-        subscription_status,
-        subscription_ends_at
-      ),
-      licenses (
-        type,
-        start_date,
-        end_date,
-        quantity
-      )
-    `);
+  try {
+    const token = localStorage.getItem('token');
+    let url = `${API_URL}/admin/users`;
 
-  if (filters?.search) {
-    query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+    if (filters) {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.role) params.append('role', filters.role);
+      if (filters.status) params.append('status', filters.status);
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in getUsersQuery:', error);
+    throw error;
   }
-
-  if (filters?.role) {
-    query = query.eq('role', filters.role);
-  }
-
-  if (filters?.status) {
-    query = query.eq('is_active', filters.status === 'active');
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
 };
 
 export const getUserById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(`
-      *,
-      companies (
-        id,
-        name,
-        subscription_status,
-        subscription_ends_at
-      ),
-      licenses (
-        type,
-        start_date,
-        end_date,
-        quantity
-      )
-    `)
-    .eq('id', id)
-    .single();
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/admin/users/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 
-  if (error) throw error;
-  return data;
+    if (!response.ok) {
+      throw new Error('Failed to fetch user');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in getUserById:', error);
+    throw error;
+  }
 };
