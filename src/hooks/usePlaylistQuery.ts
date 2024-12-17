@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { playlistService } from '../services/api/playlistService';
+import { playlistService } from '../services/playlist-service';
 import { toast } from 'sonner';
-import type { IPlaylist, PlaylistCreateInput, PlaylistUpdateInput } from '../../../backend/src/types/playlist';
+import type { Playlist, PlaylistCreateInput, PlaylistUpdateInput } from '../types/playlist';
 
 export const usePlaylistQuery = () => {
   const queryClient = useQueryClient();
 
   const playlists = useQuery({
     queryKey: ['playlists'],
-    queryFn: playlistService.getAllPlaylists
+    queryFn: playlistService.getPlaylists
   });
 
   const createPlaylist = useMutation({
