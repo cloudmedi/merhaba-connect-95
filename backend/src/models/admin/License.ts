@@ -1,32 +1,31 @@
 import mongoose from 'mongoose';
 
 const LicenseSchema = new mongoose.Schema({
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true 
+    required: true
   },
-  type: { 
-    type: String, 
+  type: {
+    type: String,
     enum: ['trial', 'premium'],
-    required: true 
+    required: true
   },
   startDate: { 
     type: Date, 
-    required: true,
-    default: Date.now 
+    required: true 
   },
   endDate: { 
     type: Date, 
     required: true 
   },
-  quantity: { 
-    type: Number, 
-    default: 1 
+  quantity: {
+    type: Number,
+    default: 1
   },
-  isActive: { 
-    type: Boolean, 
-    default: true 
+  isActive: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

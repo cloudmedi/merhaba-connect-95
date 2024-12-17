@@ -46,15 +46,14 @@ router.post('/', async (req, res) => {
     if (license) {
       const licenseDoc = new License({
         userId: user._id,
-        type: license.type || 'trial',
-        startDate: license.start_date || new Date(),
-        endDate: license.end_date || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days default
-        quantity: license.quantity || 1,
+        type: license.type,
+        startDate: license.start_date,
+        endDate: license.end_date,
+        quantity: license.quantity,
         isActive: true
       });
 
       await licenseDoc.save();
-      console.log('License created:', licenseDoc); // Debug log
     }
 
     // Return user without password using object destructuring

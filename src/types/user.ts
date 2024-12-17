@@ -20,12 +20,6 @@ export interface UserCreateInput {
   lastName?: string;
   role?: UserRole;
   companyName?: string;
-  license?: {
-    type: 'trial' | 'premium';
-    start_date?: string;
-    end_date?: string;
-    quantity?: number;
-  };
 }
 
 export interface UserUpdateInput {
