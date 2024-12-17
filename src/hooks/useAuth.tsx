@@ -1,92 +1,101 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth';
-import { authService } from '@/services/auth';
 import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            await logout();
-          }
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setIsLoading(false);
+    // Check active sessions and sets the user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'user',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at,
+        });
       }
-    };
+      setLoading(false);
+    });
 
-    checkAuth();
+    // Listen for changes on auth state (signed in, signed out, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          firstName: session.user.user_metadata.firstName || '',
+          lastName: session.user.user_metadata.lastName || '',
+          role: session.user.user_metadata.role || 'user',
+          isActive: true,
+          createdAt: session.user.created_at,
+          updatedAt: session.user.updated_at || session.user.created_at,
+        });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const response = await authService.login({ email, password });
-      
-      if (response.user) {
-        setUser(response.user);
-        toast.success('Giriş başarılı');
-        
-        if (response.user.role === 'super_admin') {
-          window.location.href = '/super-admin';
-        } else {
-          window.location.href = '/manager';
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user) {
+        toast.success('Successfully signed in');
       }
     } catch (error: any) {
-      toast.error('Giriş başarısız: ' + error.message);
+      toast.error(error.message || 'Error signing in');
       throw error;
     }
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     try {
-      localStorage.removeItem('token');
-      setUser(null);
-      
-      const isManagerPath = window.location.pathname.startsWith('/manager');
-      if (isManagerPath) {
-        window.location.href = '/manager/login';
-      } else {
-        window.location.href = '/super-admin/login';
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
       }
-      
-      toast.success('Çıkış yapıldı');
+      toast.success('Successfully signed out');
     } catch (error: any) {
-      console.error('Çıkış hatası:', error);
-      toast.error('Çıkış yapılamadı');
+      toast.error(error.message || 'Error signing out');
+      throw error;
     }
   };
 
   const value = {
     user,
-    login,
-    logout,
-    isLoading
+    loading,
+    signIn,
+    signOut,
   };
 
   return (
