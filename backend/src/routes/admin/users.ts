@@ -1,6 +1,8 @@
 import express from 'express';
 import { User } from '../../models/admin/User';
 import { adminAuth } from '../../middleware/auth';
+import * as argon2 from 'argon2';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -14,33 +16,68 @@ router.get('/', adminAuth, async (req, res) => {
   }
 });
 
-// Create user
+// Create user with license
 router.post('/', async (req, res) => {
   try {
-    const { email, password, firstName, lastName, role, companyName } = req.body;
+    const { email, password, firstName, lastName, role, companyName, license } = req.body;
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already exists' });
     }
 
-    const user = new User({
-      email,
-      password,
-      firstName,
-      lastName,
-      role: role || 'manager',
-      companyName,
-      isActive: true
-    });
+    // Hash password
+    const hashedPassword = await argon2.hash(password);
 
-    await user.save();
-    
-    // TypeScript güvenli bir şekilde password'ü çıkartalım
-    const userResponse = user.toObject();
-    const { password: _, ...userWithoutPassword } = userResponse;
-    
-    res.status(201).json(userWithoutPassword);
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      // Create user
+      const user = new User({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: role || 'manager',
+        companyName,
+        isActive: true
+      });
+
+      await user.save({ session });
+
+      // Create license if provided
+      if (license) {
+        const licenseDoc = new mongoose.model('License', {
+          userId: user._id,
+          type: license.type,
+          startDate: license.start_date,
+          endDate: license.end_date,
+          quantity: license.quantity,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        await licenseDoc.save({ session });
+      }
+
+      // Commit transaction
+      await session.commitTransaction();
+      
+      // Return user without password
+      const userResponse = user.toObject();
+      const { password: _, ...userWithoutPassword } = userResponse;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      // If error occurs, abort transaction
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({ error: 'Internal server error' });
