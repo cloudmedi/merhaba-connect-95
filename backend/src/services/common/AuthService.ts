@@ -24,7 +24,7 @@ export class AuthService {
       id: user._id.toString(),
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
-      companyId: user.companyId || undefined,
+      companyName: user.companyName || undefined,
       lastLogin: user.lastLogin || undefined,
       avatarUrl: user.avatarUrl || undefined
     };
