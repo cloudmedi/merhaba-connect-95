@@ -7,7 +7,6 @@ export const createUser = async (userData: UserCreateInput) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify(userData),
     });
@@ -23,68 +22,44 @@ export const createUser = async (userData: UserCreateInput) => {
   }
 };
 
-export const updateUser = async (id: string, userData: Partial<UserCreateInput>) => {
+export const createCompany = async (companyData: any) => {
   try {
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
-      method: 'PUT',
+    const response = await fetch(`${API_URL}/admin/companies`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(companyData),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to update user');
+      throw new Error(error.message || 'Failed to create company');
     }
 
     return await response.json();
   } catch (error: any) {
-    throw new Error(error.message || 'Error updating user');
+    throw new Error(error.message || 'Error creating company');
   }
 };
 
-export const deleteUser = async (id: string) => {
-  try {
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete user');
-    }
-  } catch (error: any) {
-    throw new Error(error.message || 'Error deleting user');
-  }
-};
-
-export const toggleUserStatus = async (id: string, isActive: boolean) => {
-  return updateUser(id, { isActive });
-};
-
-export const renewLicense = async (userId: string, licenseData: any) => {
+export const updateUserLicense = async (userId: string, licenseData: any) => {
   try {
     const response = await fetch(`${API_URL}/admin/users/${userId}/license`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify(licenseData),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to renew license');
+      throw new Error(error.message || 'Failed to update license');
     }
 
     return await response.json();
   } catch (error: any) {
-    throw new Error(error.message || 'Error renewing license');
+    throw new Error(error.message || 'Error updating license');
   }
 };
