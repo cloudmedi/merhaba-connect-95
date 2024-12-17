@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import { CreateUserForm } from "./CreateUserForm/index";
+import { CreateUserForm } from "./CreateUserForm";
 import { useState } from "react";
 
 export function CreateUserDialog() {
