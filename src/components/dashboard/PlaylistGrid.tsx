@@ -10,7 +10,7 @@ import { PlaylistGridHeader } from "./components/PlaylistGridHeader";
 interface PlaylistGridProps {
   title: string;
   description?: string;
-  playlists: GridPlaylist[];
+  playlists?: GridPlaylist[];
   isLoading?: boolean;
   onPlay?: (playlist: GridPlaylist & { songs?: any[] }) => void;
   categoryId?: string;
