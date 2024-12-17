@@ -13,7 +13,8 @@ const LicenseSchema = new mongoose.Schema({
   },
   startDate: { 
     type: Date, 
-    required: true 
+    required: true,
+    default: Date.now 
   },
   endDate: { 
     type: Date, 
