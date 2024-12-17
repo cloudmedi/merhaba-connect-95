@@ -17,19 +17,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = authService.getToken();
-    if (token) {
-      authService.verifyToken()
-        .then(isValid => {
+    const checkAuth = async () => {
+      try {
+        const token = authService.getToken();
+        if (token) {
+          const isValid = await authService.verifyToken();
           if (!isValid) {
-            authService.logout();
+            await authService.logout();
             setUser(null);
           }
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {

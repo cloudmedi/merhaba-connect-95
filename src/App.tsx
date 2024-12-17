@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from '@/hooks/useAuth';
 import Index from "./pages/Index";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
@@ -8,7 +9,6 @@ import ManagerLogin from "./pages/Manager/Auth/Login";
 import ManagerRegister from "./pages/Manager/Auth/Register";
 import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
 import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
-import { AuthProvider } from '@/hooks/useAuth';
 import Dashboard from "./pages/SuperAdmin/Dashboard";
 import Users from "./pages/SuperAdmin/Users";
 import Music from "./pages/SuperAdmin/Music";
