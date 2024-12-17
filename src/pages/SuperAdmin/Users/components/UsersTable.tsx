@@ -1,93 +1,108 @@
-import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserTableRow } from "./UserTableRow";
-import { EmptyState } from "./EmptyState";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserStatus } from "./UserStatus";
+import { UserActions } from "./UserActions";
+import { UserAvatar } from "./UserAvatar";
 import { TablePagination } from "./TablePagination";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { User } from "../types";
 
-export function UsersTable() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+interface UsersTableProps {
+  users: User[];
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onStatusChange: () => void;
+  onDelete: (id: string) => void;
+  isLoading?: boolean;
+  totalCount: number;
+  itemsPerPage: number;
+}
 
-  const { data: users, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+export function UsersTable({
+  users,
+  currentPage,
+  totalPages,
+  onPageChange,
+  onStatusChange,
+  onDelete,
+  isLoading,
+  totalCount,
+  itemsPerPage
+}: UsersTableProps) {
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const filteredUsers = users?.filter(user =>
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  const ITEMS_PER_PAGE = 10;
-  const totalPages = Math.ceil((filteredUsers?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedUsers = filteredUsers?.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Pagination calculations
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Kullanıcı ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Kullanıcı</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Durum</TableHead>
-              <TableHead>Lisans</TableHead>
-              <TableHead>Kayıt Tarihi</TableHead>
-              <TableHead>İşlemler</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedUsers?.map((user) => (
-              <UserTableRow key={user.id} user={user} />
-            ))}
-          </TableBody>
-        </Table>
-
-        {filteredUsers?.length === 0 && !isLoadingUsers && (
-          <EmptyState 
-            title="Kullanıcı Bulunamadı" 
-            description="Arama kriterlerinize uygun kullanıcı bulunamadı." 
-          />
-        )}
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">User</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>License</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center space-x-4">
+                      <UserAvatar user={user} />
+                      <div>
+                        <div className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <UserStatus isActive={user.isActive} />
+                  </TableCell>
+                  <TableCell>
+                    {user.license ? (
+                      <div className="text-sm">
+                        <div>Start: {new Date(user.license.startDate).toLocaleDateString()}</div>
+                        <div>End: {new Date(user.license.endDate).toLocaleDateString()}</div>
+                      </div>
+                    ) : (
+                      "No license"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <UserActions
+                      user={user}
+                      onStatusChange={onStatusChange}
+                      onDelete={onDelete}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
-      {filteredUsers?.length > 0 && (
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={totalCount}
+      />
     </div>
   );
 }

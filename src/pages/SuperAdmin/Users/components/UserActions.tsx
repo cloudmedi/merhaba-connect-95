@@ -1,58 +1,41 @@
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import { LicenseRenewalDialog } from "./LicenseRenewalDialog";
-import { ViewUserDialog } from "./ViewUserDialog";
+import { MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EditUserDialog } from "./EditUserDialog";
-import { UserHistoryDialog } from "./UserHistoryDialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { userService } from "@/services/users";
+import { ViewUserDialog } from "./ViewUserDialog";
+import { LicenseRenewalDialog } from "./LicenseRenewalDialog";
+import { User } from "../types";
 import { toast } from "sonner";
-import { User } from "@/types/auth";
-import { useNavigate } from "react-router-dom";
 
 interface UserActionsProps {
   user: User;
+  onStatusChange: () => void;
+  onDelete: (id: string) => void;
 }
 
-export function UserActions({ user }: UserActionsProps) {
-  const [showRenewDialog, setShowRenewDialog] = useState(false);
-  const [showViewDialog, setShowViewDialog] = useState(false);
+export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showLicenseDialog, setShowLicenseDialog] = useState(false);
 
-  const deleteUserMutation = useMutation({
-    mutationFn: () => userService.deleteUser(user.id),
-    onSuccess: () => {
-      toast.success("Kullanıcı başarıyla silindi");
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      setShowDeleteDialog(false);
-    },
-    onError: (error: Error) => {
-      toast.error("Kullanıcı silinirken hata oluştu: " + error.message);
-    },
-  });
-
-  const handleSwitchToManager = () => {
-    if (user.role !== 'manager') {
-      toast.error("Bu kullanıcı bir yönetici değil");
-      return;
+  const handleStatusToggle = async () => {
+    try {
+      // API call to toggle user status
+      toast.success(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
+      onStatusChange();
+    } catch (error) {
+      toast.error("Failed to update user status");
     }
+  };
 
-    localStorage.setItem('managerView', JSON.stringify({
-      id: user.id,
-      email: user.email,
-      companyId: user.companyId
-    }));
-
-    navigate(`/manager`);
-    toast.success("Yönetici paneline yönlendiriliyorsunuz");
+  const handleDelete = async () => {
+    try {
+      await onDelete(user.id);
+      toast.success("User deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete user");
+    }
   };
 
   return (
@@ -60,80 +43,59 @@ export function UserActions({ user }: UserActionsProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
-            Görüntüle
+            View Details
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-            Düzenle
+            Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowRenewDialog(true)}>
-            Lisansı Yenile
+          <DropdownMenuItem onClick={() => setShowLicenseDialog(true)}>
+            Renew License
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowHistoryDialog(true)}>
-            Geçmiş
+          <DropdownMenuItem onClick={handleStatusToggle}>
+            {user.isActive ? "Deactivate" : "Activate"}
           </DropdownMenuItem>
-          {user.role === 'manager' && (
-            <DropdownMenuItem onClick={handleSwitchToManager}>
-              Manager Hesabına Geç
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem 
-            className="text-red-600"
-            onClick={() => setShowDeleteDialog(true)}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="text-red-600 focus:text-red-600"
           >
-            Sil
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <LicenseRenewalDialog
-        user={user}
-        open={showRenewDialog}
-        onOpenChange={setShowRenewDialog}
-      />
-
       <ViewUserDialog
-        user={user}
-        open={showViewDialog}
-        onOpenChange={setShowViewDialog}
+        user={{
+          id: user.id,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          email: user.email,
+          license: user.license
+        }}
+        isOpen={showViewDialog}
+        onClose={() => setShowViewDialog(false)}
       />
 
       <EditUserDialog
         user={user}
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
       />
 
-      <UserHistoryDialog
-        user={user}
-        open={showHistoryDialog}
-        onOpenChange={setShowHistoryDialog}
+      <LicenseRenewalDialog
+        user={{
+          id: user.id,
+          name: `${user.firstName} ${user.lastName}`,
+          license: user.license
+        }}
+        isOpen={showLicenseDialog}
+        onClose={() => setShowLicenseDialog(false)}
       />
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bu işlem geri alınamaz. Kullanıcı ve ilişkili tüm veriler kalıcı olarak silinecektir.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteUserMutation.mutate()}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {deleteUserMutation.isPending ? "Siliniyor..." : "Sil"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

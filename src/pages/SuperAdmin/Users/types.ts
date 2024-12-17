@@ -5,9 +5,13 @@ export interface User {
   lastName: string;
   role: string;
   isActive: boolean;
+  avatar_url?: string;
+  company_id?: string;
+  created_at?: string;
+  updated_at?: string;
   license?: {
-    endDate: string;
     startDate: string;
+    endDate: string;
   };
 }
 
