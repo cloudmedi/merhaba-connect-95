@@ -1,50 +1,49 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types/auth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { userService } from "@/services/users";
+import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LicenseRenewalDialogProps {
-  user: User;
+  user: { id: string; name: string; license?: { endDate: string } };
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function LicenseRenewalDialog({ user, open, onOpenChange }: LicenseRenewalDialogProps) {
-  const queryClient = useQueryClient();
+  const [endDate, setEndDate] = useState(user.license?.endDate || "");
 
-  const renewLicenseMutation = useMutation({
-    mutationFn: () => userService.renewLicense(user.id),
-    onSuccess: () => {
+  const handleRenewLicense = async (userId: string, endDate: string) => {
+    try {
+      await renewLicense(userId, { endDate }); // Added second argument
       toast.success("License renewed successfully");
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to renew license: " + error.message);
-    },
-  });
+    } catch (error) {
+      console.error('Error renewing license:', error);
+      toast.error("Failed to renew license");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Renew License</DialogTitle>
+          <DialogTitle>Renew License for {user.name}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <p>Are you sure you want to renew the license for {user.firstName} {user.lastName}?</p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => renewLicenseMutation.mutate()}
-              disabled={renewLicenseMutation.isPending}
-            >
-              {renewLicenseMutation.isPending ? "Renewing..." : "Renew License"}
-            </Button>
-          </div>
+        <div>
+          <label htmlFor="end-date" className="block text-sm font-medium text-gray-700">
+            End Date
+          </label>
+          <input
+            type="date"
+            id="end-date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+          />
+        </div>
+        <div className="mt-4">
+          <Button onClick={() => handleRenewLicense(user.id, endDate)}>Renew License</Button>
         </div>
       </DialogContent>
     </Dialog>

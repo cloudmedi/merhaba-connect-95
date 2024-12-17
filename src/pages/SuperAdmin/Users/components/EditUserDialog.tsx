@@ -1,127 +1,104 @@
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { User } from "@/types/auth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { userService } from "@/services/users";
 import { toast } from "sonner";
-import { BasicInfoSection } from "./EditUserForm/BasicInfoSection";
-import { RoleSection } from "./EditUserForm/RoleSection";
-import { EditUserFormValues } from "./EditUserForm/types";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const formSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  role: z.enum(["admin", "manager"]),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
-  password: z.string().optional(),
-});
+type UserUpdateInput = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  is_active: boolean;
+  password?: string;
+};
 
 interface EditUserDialogProps {
-  user: User;
+  user: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
-  const queryClient = useQueryClient();
+type UserRole = "admin" | "manager" | "user"; // Removed super_admin as it's not allowed
 
-  const form = useForm<EditUserFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      email: user.email,
-      role: user.role === "super_admin" ? "admin" : user.role,
-      companyName: user.company?.name || "",
-      password: "",
-    },
+export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+  const [formData, setFormData] = useState<UserUpdateInput>({
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    role: user.role,
+    is_active: user.is_active,
+    password: ""
   });
 
-  const updateUserMutation = useMutation({
-    mutationFn: async (values: EditUserFormValues) => {
-      const updateData: Partial<User> & { password?: string } = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        role: values.role,
-        company: {
-          id: user.company?.id || "",
-          name: values.companyName,
-          subscriptionStatus: user.company?.subscriptionStatus || "trial",
-          subscriptionEndsAt: user.company?.subscriptionEndsAt || null,
-        }
+  const handleSubmit = async (data: UserUpdateInput) => {
+    try {
+      const updateData: UserUpdateInput = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        role: data.role as UserRole,
+        is_active: data.is_active
       };
 
-      if (values.password) {
-        updateData.password = values.password;
+      if (data.password) {
+        updateData.password = data.password;
       }
 
-      return userService.updateUser(user.id, updateData);
-    },
-    onSuccess: () => {
-      toast.success("User updated successfully");
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      onOpenChange(false);
-      form.reset();
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to update user: " + error.message);
-    },
-  });
+      await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', user.id);
 
-  const onSubmit = (values: EditUserFormValues) => {
-    updateUserMutation.mutate(values);
+      toast.success("User updated successfully");
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error("Failed to update user");
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <BasicInfoSection form={form} />
-            <RoleSection form={form} />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#6366F1] text-white hover:bg-[#5558DD]"
-                disabled={updateUserMutation.isPending}
-              >
-                {updateUserMutation.isPending ? "Updating..." : "Update User"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(formData);
+        }}>
+          <Input
+            label="First Name"
+            value={formData.first_name}
+            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+          />
+          <Input
+            label="Last Name"
+            value={formData.last_name}
+            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          <Input
+            label="Role"
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          />
+          <Button type="submit">Save</Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

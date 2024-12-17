@@ -1,156 +1,183 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserTableRow } from "./UserTableRow";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
-import { User } from "@/types/auth";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { EmptyState } from "./components/EmptyState";
+import { MusicPlayer } from "@/components/MusicPlayer";
+import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
-import { TablePagination } from "@/pages/SuperAdmin/Music/components/TablePagination";
-import { useState } from "react";
+import { TablePagination } from "./components/TablePagination";
 
-const ITEMS_PER_PAGE = 20;
+interface Song {
+  id: string;
+  title: string;
+  artist?: string;
+  album?: string;
+  genre?: string[];
+  duration?: number;
+  artwork_url?: string;
+  file_url: string;
+  bunny_id?: string;
+  created_at: string;
+}
 
-export function UsersTable() {
-  const [searchParams] = useSearchParams();
-  const [currentPage, setCurrentPage] = useState(1);
-  
-  const filters = {
-    search: searchParams.get('search') || undefined,
-    role: searchParams.get('role') || undefined,
-    status: searchParams.get('status') || undefined,
-    license: searchParams.get('license') || undefined,
-    expiry: searchParams.get('expiry') || undefined,
-  };
+interface MusicTableProps {
+  songs: Song[];
+  selectedSongs: Song[];
+  onSelectAll: (checked: boolean) => void;
+  onSelectSong: (song: Song, checked: boolean) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  isLoading?: boolean;
+  totalCount: number;
+  onDelete: (id: string) => void;
+}
 
-  const { data: users, isLoading, error } = useQuery({
-    queryKey: ['users', filters],
-    queryFn: async () => {
-      let query = supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          role,
-          company_id,
-          is_active,
-          created_at,
-          updated_at,
-          companies (
-            id,
-            name,
-            subscription_status,
-            subscription_ends_at
-          ),
-          licenses (
-            type,
-            start_date,
-            end_date,
-            quantity
-          )
-        `);
-
-      if (filters.search) {
-        query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
-      }
-
-      if (filters.role && filters.role !== 'all') {
-        query = query.eq('role', filters.role);
-      }
-
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('is_active', filters.status === 'active');
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return data?.map((profile): User => ({
-        id: profile.id,
-        email: profile.email,
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        role: profile.role as 'super_admin' | 'manager' | 'admin',
-        companyId: profile.company_id,
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
-        company: profile.companies ? {
-          id: profile.companies.id,
-          name: profile.companies.name,
-          subscriptionStatus: profile.companies.subscription_status,
-          subscriptionEndsAt: profile.companies.subscription_ends_at
-        } : undefined,
-        license: profile.licenses?.[0] ? {
-          type: profile.licenses[0].type,
-          start_date: profile.licenses[0].start_date,
-          end_date: profile.licenses[0].end_date,
-          quantity: profile.licenses[0].quantity
-        } : undefined
-      })) || [];
-    },
-    retry: 1
-  });
-
-  if (error) {
-    return (
-      <div className="rounded-md border p-8 text-center">
-        <p className="text-red-500">Error loading users: {error.message}</p>
-      </div>
-    );
-  }
+export function MusicTable({
+  songs,
+  selectedSongs,
+  onSelectAll,
+  onSelectSong,
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  isLoading,
+  totalCount,
+  onDelete
+}: MusicTableProps) {
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
 
   if (isLoading) {
     return <DataTableLoader />;
   }
 
-  if (!users?.length) {
-    return (
-      <div className="rounded-md border p-8 text-center">
-        <p className="text-muted-foreground">No users found</p>
-      </div>
-    );
+  if (songs.length === 0) {
+    return <EmptyState />;
   }
 
+  const formatDuration = (duration?: number) => {
+    if (!duration) return "0:00";
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+
+  const getBunnyUrl = (song: Song): string => {
+    if (!song) return '';
+    
+    if (song.bunny_id) {
+      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+    }
+    
+    if (song.file_url.startsWith('http')) {
+      return song.file_url;
+    }
+    
+    return `https://cloud-media.b-cdn.net/${song.file_url}`;
+  };
+
+  const handlePlaySong = (song: Song) => {
+    const songIndex = songs.findIndex(s => s.id === song.id);
+    setCurrentSongIndex(songIndex);
+    setCurrentlyPlaying(song);
+    setIsPlaying(true);
+    setCurrentPlaylistId('temp-playlist');
+  };
+
+  const handleSongChange = (index: number) => {
+    setCurrentSongIndex(index);
+    setCurrentlyPlaying(songs[index]);
+  };
+
   // Pagination calculations
-  const totalItems = users.length;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
-  const currentUsers = users.slice(startIndex, endIndex);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
+
+  const transformedSongs = songs.map(song => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist || "Unknown Artist",
+    duration: song.duration?.toString() || "0:00",
+    file_url: getBunnyUrl(song),
+    bunny_id: song.bunny_id
+  }));
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>NAME</TableHead>
-              <TableHead>COMPANY</TableHead>
-              <TableHead>ROLE</TableHead>
-              <TableHead>STATUS</TableHead>
-              <TableHead>LICENSE</TableHead>
-              <TableHead>EXPIRY</TableHead>
-              <TableHead className="text-right">ACTIONS</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentUsers.map((user) => (
-              <UserTableRow key={user.id} user={user} />
-            ))}
-          </TableBody>
-        </Table>
+      <div className="border rounded-lg">
+        <div className="h-[calc(100vh-280px)] relative">
+          <ScrollArea className="h-full rounded-md" type="always">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[30px] bg-white sticky top-0 z-20">
+                    <Checkbox
+                      checked={selectedSongs.length === songs.length}
+                      onCheckedChange={onSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Artist</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Album</TableHead>
+                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Genres</TableHead>
+                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0 z-20">Duration</TableHead>
+                  <TableHead className="w-[50px] bg-white sticky top-0 z-20"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {songs.map((song) => (
+                  <SongTableRow
+                    key={song.id}
+                    song={song}
+                    isSelected={selectedSongs.some((s) => s.id === song.id)}
+                    onSelect={(checked) => onSelectSong(song, checked)}
+                    onPlay={() => handlePlaySong(song)}
+                    formatDuration={formatDuration}
+                    defaultArtwork={defaultArtwork}
+                    onDelete={() => onDelete(song.id)}
+                    isPlaying={isPlaying}
+                    currentlyPlayingId={currentlyPlaying?.id}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </div>
       </div>
-      
+
       <TablePagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={setCurrentPage}
+        onPageChange={onPageChange}
         startIndex={startIndex}
         endIndex={endIndex}
-        totalItems={totalItems}
+        totalItems={totalCount}
       />
+
+      {currentlyPlaying && (
+        <MusicPlayer
+          playlist={{
+            id: currentPlaylistId,
+            title: "Now Playing",
+            artwork: currentlyPlaying.artwork_url || defaultArtwork,
+            songs: transformedSongs
+          }}
+          onClose={() => {
+            setCurrentlyPlaying(null);
+            setIsPlaying(false);
+          }}
+          onSongChange={handleSongChange}
+          onPlayStateChange={setIsPlaying}
+          currentSongId={currentlyPlaying.id}
+        />
+      )}
     </div>
   );
 }
