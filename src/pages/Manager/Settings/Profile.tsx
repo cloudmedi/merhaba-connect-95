@@ -25,16 +25,21 @@ export default function Profile() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (data: ProfileFormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
-      const updatedProfile = {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        avatar_url: data.avatar_url
-      };
-      
-      await updateProfile(updatedProfile);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          avatar_url: formData.avatar_url
+        })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (error) throw error;
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -43,7 +48,7 @@ export default function Profile() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-sm font-medium">First Name</label>
         <Input

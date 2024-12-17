@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useUserActions } from "./hooks/useUserActions";
 
 interface LicenseRenewalDialogProps {
   user: { id: string; name: string; license?: { endDate: string } };
@@ -12,11 +12,11 @@ interface LicenseRenewalDialogProps {
 
 export function LicenseRenewalDialog({ user, open, onOpenChange }: LicenseRenewalDialogProps) {
   const [endDate, setEndDate] = useState(user.license?.endDate || "");
+  const { handleRenewLicense } = useUserActions();
 
-  const handleRenewLicense = async (userId: string, endDate: string) => {
+  const handleSubmit = async () => {
     try {
-      await renewLicense(userId, { endDate }); // Added second argument
-      toast.success("License renewed successfully");
+      await handleRenewLicense(user.id, { endDate });
       onOpenChange(false);
     } catch (error) {
       console.error('Error renewing license:', error);
@@ -43,7 +43,7 @@ export function LicenseRenewalDialog({ user, open, onOpenChange }: LicenseRenewa
           />
         </div>
         <div className="mt-4">
-          <Button onClick={() => handleRenewLicense(user.id, endDate)}>Renew License</Button>
+          <Button onClick={handleSubmit}>Renew License</Button>
         </div>
       </DialogContent>
     </Dialog>
