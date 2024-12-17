@@ -1,79 +1,65 @@
-import { User, UserCreateInput, UserUpdateInput } from '@/types/auth';
+import { UserCreateInput } from "@/types/user";
+import { API_URL } from "../api";
 
-const API_URL = import.meta.env.VITE_API_URL;
+export const createUser = async (userData: UserCreateInput) => {
+  try {
+    const response = await fetch(`${API_URL}/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
 
-export const createUser = async (userData: UserCreateInput): Promise<User> => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/admin/users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(userData),
-  });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create user');
+    }
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to create user');
-  }
-
-  return response.json();
-};
-
-export const updateUser = async (id: string, updates: UserUpdateInput & { companyId?: string }): Promise<User> => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/admin/users/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(updates),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to update user');
-  }
-
-  return response.json();
-};
-
-export const deleteUser = async (id: string): Promise<void> => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/admin/users/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to delete user');
+    return await response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Error creating user');
   }
 };
 
-export const toggleUserStatus = async (id: string, isActive: boolean): Promise<User> => {
-  return updateUser(id, { isActive });
+export const createCompany = async (companyData: any) => {
+  try {
+    const response = await fetch(`${API_URL}/admin/companies`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(companyData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create company');
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Error creating company');
+  }
 };
 
-export const renewLicense = async (userId: string, licenseData: { type: string; endDate: string }): Promise<User> => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_URL}/admin/users/${userId}/license`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(licenseData),
-  });
+export const updateUserLicense = async (userId: string, licenseData: any) => {
+  try {
+    const response = await fetch(`${API_URL}/admin/users/${userId}/license`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(licenseData),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to renew license');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update license');
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Error updating license');
   }
-
-  return response.json();
 };
