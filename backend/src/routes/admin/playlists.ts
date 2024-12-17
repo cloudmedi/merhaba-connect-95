@@ -3,7 +3,6 @@ import { PlaylistService } from '../../services/common/PlaylistService';
 import { adminAuth } from '../../middleware/auth';
 
 const router = express.Router();
-const playlistService = new PlaylistService();
 
 // Admin middleware'ini tüm route'lara uygula
 router.use(adminAuth);
@@ -11,6 +10,7 @@ router.use(adminAuth);
 // Playlist CRUD
 router.post('/', async (req, res) => {
   try {
+    const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.createPlaylist(req.body);
     res.json(playlist);
   } catch (error) {
@@ -20,6 +20,7 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
+    const playlistService = new PlaylistService(req.io);
     const playlists = await playlistService.getAllPlaylists();
     res.json(playlists);
   } catch (error) {
@@ -29,6 +30,7 @@ router.get('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.updatePlaylist(req.params.id, req.body);
     res.json(playlist);
   } catch (error) {
@@ -38,6 +40,7 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    const playlistService = new PlaylistService(req.io);
     await playlistService.deletePlaylist(req.params.id);
     res.status(204).send();
   } catch (error) {
