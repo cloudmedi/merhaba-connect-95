@@ -40,7 +40,13 @@ export default function SuperAdminRegister() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await register(values);
+      await register({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        role: 'admin'
+      });
       toast.success("Registration successful! Please login to continue.");
       navigate("/super-admin/login");
     } catch (error: any) {

@@ -22,7 +22,13 @@ export const authService = {
     return data;
   },
 
-  async register(userData: { email: string; password: string; firstName: string; lastName: string }): Promise<AuthResponse> {
+  async register(userData: { 
+    email: string; 
+    password: string; 
+    firstName: string; 
+    lastName: string;
+    role: string;
+  }): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: {
@@ -37,7 +43,6 @@ export const authService = {
     }
 
     const data = await response.json();
-    this.setToken(data.token);
     return data;
   },
 

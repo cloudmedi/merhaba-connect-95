@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
+  register: (userData: { email: string; password: string; firstName: string; lastName: string; role: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -49,11 +49,9 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const register = async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
+  const register = async (userData: { email: string; password: string; firstName: string; lastName: string; role: string }) => {
     try {
-      const response = await authService.register(userData);
-      toast.success('Registration successful');
-      return response;
+      await authService.register(userData);
     } catch (error: any) {
       toast.error(error.message || 'Error during registration');
       throw error;
