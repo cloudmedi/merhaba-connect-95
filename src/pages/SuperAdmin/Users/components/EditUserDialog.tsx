@@ -1,103 +1,117 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-type UserUpdateInput = {
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  password?: string;
-};
-
 interface EditUserDialogProps {
-  user: any;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  user: {
+    id: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    role?: string;
+  };
 }
 
-type UserRole = "admin" | "manager" | "user"; // Removed super_admin as it's not allowed
-
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
-  const [formData, setFormData] = useState<UserUpdateInput>({
-    first_name: user.first_name,
-    last_name: user.last_name,
-    email: user.email,
-    role: user.role,
-    is_active: user.is_active,
+export function EditUserDialog({ isOpen, onClose, user }: EditUserDialogProps) {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    firstName: user.first_name || "",
+    lastName: user.last_name || "",
+    email: user.email || "",
+    role: user.role || "user",
     password: ""
   });
 
-  const handleSubmit = async (data: UserUpdateInput) => {
+  useEffect(() => {
+    setFormData({
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      email: user.email || "",
+      role: user.role || "user",
+      password: ""
+    });
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      const updateData: UserUpdateInput = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        role: data.role as UserRole,
-        is_active: data.is_active
-      };
-
-      if (data.password) {
-        updateData.password = data.password;
-      }
-
-      await supabase
-        .from('users')
-        .update(updateData)
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          role: formData.role
+        })
         .eq('id', user.id);
 
-      toast.success("User updated successfully");
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error("Failed to update user");
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı bilgileri güncellendi",
+      });
+      
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
+          <DialogTitle>Kullanıcı Düzenle</DialogTitle>
         </DialogHeader>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(formData);
-        }}>
-          <Input
-            label="First Name"
-            value={formData.first_name}
-            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-          />
-          <Input
-            label="Last Name"
-            value={formData.last_name}
-            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <Input
-            label="Role"
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
-          <Button type="submit">Save</Button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">Ad</Label>
+            <Input
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Soyad</Label>
+            <Input
+              id="lastName"
+              value={formData.lastName}
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">E-posta</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            />
+          </div>
+
+          <div className="pt-4 flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              İptal
+            </Button>
+            <Button type="submit">
+              Kaydet
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

@@ -1,181 +1,91 @@
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyState } from "./components/EmptyState";
-import { MusicPlayer } from "@/components/MusicPlayer";
-import { SongTableRow } from "@/components/music/SongTableRow";
-import DataTableLoader from "@/components/loaders/DataTableLoader";
-import { TablePagination } from "./components/TablePagination";
+import { UserTableRow } from "./UserTableRow";
+import { EmptyState } from "./EmptyState";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { TablePagination } from "./TablePagination";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Song {
-  id: string;
-  title: string;
-  artist?: string;
-  album?: string;
-  genre?: string[];
-  duration?: number;
-  artwork_url?: string;
-  file_url: string;
-  bunny_id?: string;
-  created_at: string;
-}
+export function UsersTable() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-interface MusicTableProps {
-  songs: Song[];
-  selectedSongs: Song[];
-  onSelectAll: (checked: boolean) => void;
-  onSelectSong: (song: Song, checked: boolean) => void;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  itemsPerPage: number;
-  isLoading?: boolean;
-  totalCount: number;
-  onDelete: (id: string) => void;
-}
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-export function MusicTable({
-  songs,
-  selectedSongs,
-  onSelectAll,
-  onSelectSong,
-  currentPage,
-  totalPages,
-  onPageChange,
-  itemsPerPage,
-  isLoading,
-  totalCount,
-  onDelete
-}: MusicTableProps) {
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
-  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
-
-  if (isLoading) {
-    return <DataTableLoader />;
-  }
-
-  if (songs.length === 0) {
-    return <EmptyState />;
-  }
-
-  const formatDuration = (duration?: number) => {
-    if (!duration) return "0:00";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
-
-  const getBunnyUrl = (song: Song): string => {
-    if (!song) return '';
-    
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
+      if (error) throw error;
+      return data;
     }
-    
-    if (song.file_url.startsWith('http')) {
-      return song.file_url;
-    }
-    
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
-  };
+  });
 
-  const handlePlaySong = (song: Song) => {
-    const songIndex = songs.findIndex(s => s.id === song.id);
-    setCurrentSongIndex(songIndex);
-    setCurrentlyPlaying(song);
-    setIsPlaying(true);
-    setCurrentPlaylistId('temp-playlist');
-  };
+  const filteredUsers = users?.filter(user =>
+    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
-  const handleSongChange = (index: number) => {
-    setCurrentSongIndex(index);
-    setCurrentlyPlaying(songs[index]);
-  };
-
-  // Pagination calculations
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
-
-  const transformedSongs = songs.map(song => ({
-    id: song.id,
-    title: song.title,
-    artist: song.artist || "Unknown Artist",
-    duration: song.duration?.toString() || "0:00",
-    file_url: getBunnyUrl(song),
-    bunny_id: song.bunny_id
-  }));
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil((filteredUsers?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="space-y-4">
-      <div className="border rounded-lg">
-        <div className="h-[calc(100vh-280px)] relative">
-          <ScrollArea className="h-full rounded-md" type="always">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[30px] bg-white sticky top-0 z-20">
-                    <Checkbox
-                      checked={selectedSongs.length === songs.length}
-                      onCheckedChange={onSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Title</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Artist</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Album</TableHead>
-                  <TableHead className="font-medium text-gray-700 bg-white sticky top-0 z-20">Genres</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-right bg-white sticky top-0 z-20">Duration</TableHead>
-                  <TableHead className="w-[50px] bg-white sticky top-0 z-20"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {songs.map((song) => (
-                  <SongTableRow
-                    key={song.id}
-                    song={song}
-                    isSelected={selectedSongs.some((s) => s.id === song.id)}
-                    onSelect={(checked) => onSelectSong(song, checked)}
-                    onPlay={() => handlePlaySong(song)}
-                    formatDuration={formatDuration}
-                    defaultArtwork={defaultArtwork}
-                    onDelete={() => onDelete(song.id)}
-                    isPlaying={isPlaying}
-                    currentlyPlayingId={currentlyPlaying?.id}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Kullanıcı ara..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
         </div>
       </div>
 
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
-        totalItems={totalCount}
-      />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Kullanıcı</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Lisans</TableHead>
+              <TableHead>Kayıt Tarihi</TableHead>
+              <TableHead>İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedUsers?.map((user) => (
+              <UserTableRow key={user.id} user={user} />
+            ))}
+          </TableBody>
+        </Table>
 
-      {currentlyPlaying && (
-        <MusicPlayer
-          playlist={{
-            id: currentPlaylistId,
-            title: "Now Playing",
-            artwork: currentlyPlaying.artwork_url || defaultArtwork,
-            songs: transformedSongs
-          }}
-          onClose={() => {
-            setCurrentlyPlaying(null);
-            setIsPlaying(false);
-          }}
-          onSongChange={handleSongChange}
-          onPlayStateChange={setIsPlaying}
-          currentSongId={currentlyPlaying.id}
+        {filteredUsers?.length === 0 && !isLoadingUsers && (
+          <EmptyState 
+            title="Kullanıcı Bulunamadı" 
+            description="Arama kriterlerinize uygun kullanıcı bulunamadı." 
+          />
+        )}
+      </div>
+
+      {filteredUsers?.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       )}
     </div>
