@@ -1,12 +1,20 @@
 import express from 'express';
 import { MoodService } from '../../services/admin/MoodService';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
+import { Request } from 'express';
+
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
 
 const router = express.Router();
 const moodService = new MoodService();
 
 // Get all moods
-router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const moods = await moodService.getAllMoods();
     res.json(moods);
@@ -16,11 +24,11 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Create mood
-router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const mood = await moodService.createMood({
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user?.id
     });
     res.status(201).json(mood);
   } catch (error) {
@@ -29,7 +37,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Update mood
-router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const mood = await moodService.updateMood(req.params.id, req.body);
     res.json(mood);
@@ -39,7 +47,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Delete mood
-router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     await moodService.deleteMood(req.params.id);
     res.status(204).send();
