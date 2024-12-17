@@ -1,9 +1,11 @@
 import express from 'express';
 import { AuthService } from '../../services/common/AuthService';
 import { adminAuth } from '../../middleware/auth';
+import { AuthController } from '../../controllers/auth.controller';
 
 const router = express.Router();
 const authService = new AuthService();
+const authController = new AuthController();
 
 router.post('/login', async (req, res) => {
   try {
@@ -18,6 +20,8 @@ router.post('/login', async (req, res) => {
     res.status(401).json({ error: 'Invalid credentials' });
   }
 });
+
+router.post('/register', authController.register);
 
 router.get('/verify', adminAuth, (req, res) => {
   res.json({ message: 'Token is valid' });
