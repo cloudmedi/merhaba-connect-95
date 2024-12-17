@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/auth';
-import { supabase } from '@/integrations/supabase/client';
+import { authService } from '@/services/auth';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -17,71 +17,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          firstName: session.user.user_metadata.firstName || '',
-          lastName: session.user.user_metadata.lastName || '',
-          role: session.user.user_metadata.role || 'manager',
-          isActive: true,
-          createdAt: session.user.created_at,
-          updatedAt: session.user.updated_at || session.user.created_at
-        });
+    const checkAuth = async () => {
+      try {
+        const token = authService.getToken();
+        if (token) {
+          const isValid = await authService.verifyToken();
+          if (!isValid) {
+            await logout();
+          }
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          firstName: session.user.user_metadata.firstName || '',
-          lastName: session.user.user_metadata.lastName || '',
-          role: session.user.user_metadata.role || 'manager',
-          isActive: true,
-          createdAt: session.user.created_at,
-          updatedAt: session.user.updated_at || session.user.created_at
-        });
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email!,
-          firstName: data.user.user_metadata.firstName || '',
-          lastName: data.user.user_metadata.lastName || '',
-          role: data.user.user_metadata.role || 'manager',
-          isActive: true,
-          createdAt: data.user.created_at,
-          updatedAt: data.user.updated_at || data.user.created_at
-        });
-        
+      const response = await authService.login({ email, password });
+      
+      if (response.user) {
+        setUser(response.user);
         toast.success('Login successful');
         
-        if (data.user.user_metadata.role === 'super_admin') {
+        if (response.user.role === 'super_admin') {
           window.location.href = '/super-admin';
         } else {
           window.location.href = '/manager';
@@ -95,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      await authService.logout();
       setUser(null);
       
       // Redirect based on current path

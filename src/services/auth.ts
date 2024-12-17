@@ -22,6 +22,25 @@ export const authService = {
     return data;
   },
 
+  async register(userData: { email: string; password: string; firstName: string; lastName: string }): Promise<AuthResponse> {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Registration failed');
+    }
+
+    const data = await response.json();
+    this.setToken(data.token);
+    return data;
+  },
+
   async logout(): Promise<void> {
     localStorage.removeItem('token');
   },
