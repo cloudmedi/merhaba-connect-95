@@ -17,12 +17,19 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    const userObject = user.toObject();
-    return {
-      ...userObject,
+    // MongoDB'den gelen null değerleri undefined'a dönüştür
+    const userObject = {
+      ...user.toObject(),
       _id: user._id,
-      id: user._id.toString()
+      id: user._id.toString(),
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+      companyId: user.companyId || undefined,
+      lastLogin: user.lastLogin || undefined,
+      avatarUrl: user.avatarUrl || undefined
     };
+
+    return userObject;
   }
 
   generateToken(userId: string, role: string): string {
