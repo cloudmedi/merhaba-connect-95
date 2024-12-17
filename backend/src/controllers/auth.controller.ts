@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { User } from '../models/admin/User';
 
 export class AuthController {
@@ -13,7 +13,7 @@ export class AuthController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await argon2.verify(user.password, password);
       if (!isValidPassword) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -50,7 +50,7 @@ export class AuthController {
         return res.status(400).json({ error: 'Email already registered' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await argon2.hash(password);
 
       const user = new User({
         email,
