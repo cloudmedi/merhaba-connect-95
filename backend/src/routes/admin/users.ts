@@ -3,7 +3,6 @@ import { User } from '../../models/admin/User';
 import { License } from '../../models/admin/License';
 import { adminAuth } from '../../middleware/auth';
 import * as argon2 from 'argon2';
-import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -30,53 +29,38 @@ router.post('/', async (req, res) => {
     // Hash password
     const hashedPassword = await argon2.hash(password);
 
-    // Start a session for transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // Create user
+    const user = new User({
+      email,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      role: role || 'manager',
+      companyName,
+      isActive: true
+    });
 
-    try {
-      // Create user
-      const user = new User({
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: role || 'manager',
-        companyName,
+    await user.save();
+
+    // Create license if provided
+    if (license) {
+      const licenseDoc = new License({
+        userId: user._id,
+        type: license.type,
+        startDate: license.start_date,
+        endDate: license.end_date,
+        quantity: license.quantity,
         isActive: true
       });
 
-      await user.save({ session });
-
-      // Create license if provided
-      if (license) {
-        const licenseDoc = new License({
-          userId: user._id,
-          type: license.type,
-          startDate: license.start_date,
-          endDate: license.end_date,
-          quantity: license.quantity,
-          isActive: true
-        });
-
-        await licenseDoc.save({ session });
-      }
-
-      // Commit transaction
-      await session.commitTransaction();
-      
-      // Return user without password
-      const userResponse = user.toObject();
-      const { password: _, ...userWithoutPassword } = userResponse;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      // If error occurs, abort transaction
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
+      await licenseDoc.save();
     }
+
+    // Return user without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    
+    res.status(201).json(userResponse);
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({ error: 'Internal server error' });
