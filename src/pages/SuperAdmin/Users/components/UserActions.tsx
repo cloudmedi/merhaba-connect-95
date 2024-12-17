@@ -77,14 +77,14 @@ export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps
           email: user.email,
           license: user.license
         }}
-        isOpen={showViewDialog}
-        onClose={() => setShowViewDialog(false)}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
       />
 
       <EditUserDialog
         user={user}
-        isOpen={showEditDialog}
-        onClose={() => setShowEditDialog(false)}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
 
       <LicenseRenewalDialog
@@ -93,8 +93,8 @@ export function UserActions({ user, onStatusChange, onDelete }: UserActionsProps
           name: `${user.firstName} ${user.lastName}`,
           license: user.license
         }}
-        isOpen={showLicenseDialog}
-        onClose={() => setShowLicenseDialog(false)}
+        open={showLicenseDialog}
+        onOpenChange={setShowLicenseDialog}
       />
     </>
   );

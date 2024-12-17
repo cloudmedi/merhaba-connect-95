@@ -33,10 +33,6 @@ export function UsersTable({
     return <div>Loading...</div>;
   }
 
-  // Pagination calculations
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
-
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -69,7 +65,7 @@ export function UsersTable({
                   </TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>
-                    <UserStatus isActive={user.isActive} />
+                    <UserStatus status={user.isActive ? 'active' : 'inactive'} />
                   </TableCell>
                   <TableCell>
                     {user.license ? (
@@ -99,8 +95,6 @@ export function UsersTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
         totalItems={totalCount}
       />
     </div>
