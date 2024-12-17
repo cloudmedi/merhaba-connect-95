@@ -7,12 +7,12 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (userData: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// AuthProvider'ı React.FC olarak açıkça tanımlayalım
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,17 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
+  const register = async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
+    try {
+      const response = await authService.register(userData);
+      toast.success('Registration successful');
+      return response;
+    } catch (error: any) {
+      toast.error(error.message || 'Error during registration');
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -60,11 +71,11 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  // value objesini useMemo ile optimize edebiliriz
   const value = {
     user,
     loading,
     login,
+    register,
     logout
   };
 
@@ -75,7 +86,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-// Hook'u ayrı bir fonksiyon olarak tanımlayalım
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

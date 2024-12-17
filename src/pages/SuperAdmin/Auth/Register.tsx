@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,7 @@ const formSchema = z.object({
 
 export default function SuperAdminRegister() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,42 +40,7 @@ export default function SuperAdminRegister() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            firstName: values.firstName,
-            lastName: values.lastName,
-            role: 'super_admin'
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Signup error:', error);
-        throw error;
-      }
-
-      if (!user) {
-        throw new Error('User creation failed');
-      }
-
-      // Wait a bit for the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Verify the profile was created by checking the profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile verification error:', profileError);
-        throw new Error('Failed to verify user profile');
-      }
-
+      await register(values);
       toast.success("Registration successful! Please login to continue.");
       navigate("/super-admin/login");
     } catch (error: any) {
@@ -88,7 +54,7 @@ export default function SuperAdminRegister() {
       <div className="w-full max-w-md space-y-8 p-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
-            Super Admin Registration
+            Admin Registration
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Already have an account?{" "}
