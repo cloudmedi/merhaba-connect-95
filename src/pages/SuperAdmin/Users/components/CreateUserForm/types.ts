@@ -3,8 +3,8 @@ export interface CreateUserFormValues {
   lastName: string;
   email: string;
   password: string;
-  companyName: string;
   role: "admin" | "manager";
+  companyName: string;
   license: {
     type: "trial" | "premium";
     start_date: string;
