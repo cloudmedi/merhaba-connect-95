@@ -3,33 +3,33 @@ export interface Song {
   title: string;
   artist?: string;
   duration?: number;
-  file_url?: string;
-  artwork_url?: string;
+  fileUrl?: string;
+  artworkUrl?: string;
 }
 
 export interface Playlist {
   id: string;
   name: string;
   description?: string;
-  artwork_url?: string;
-  is_public: boolean;
-  is_hero: boolean;
-  created_by: string;
+  artworkUrl?: string;
+  isPublic: boolean;
+  isHero: boolean;
+  createdBy: string;
   songs: Song[];
-  genre_id?: string;
-  mood_id?: string;
-  created_at: string;
-  updated_at: string;
+  genreId?: string;
+  moodId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PlaylistCreateInput {
   name: string;
   description?: string;
-  artwork_url?: string;
-  is_public?: boolean;
-  is_hero?: boolean;
-  genre_id?: string;
-  mood_id?: string;
+  artworkUrl?: string;
+  isPublic?: boolean;
+  isHero?: boolean;
+  genreId?: string;
+  moodId?: string;
   songs?: string[];
 }
 

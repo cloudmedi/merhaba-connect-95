@@ -26,8 +26,8 @@ export interface User {
 export interface UserCreateInput {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   role?: 'admin' | 'manager' | 'user';
   companyId?: string;
 }
