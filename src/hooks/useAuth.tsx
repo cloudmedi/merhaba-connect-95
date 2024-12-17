@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '@/services/auth';
 import { User } from '@/types/auth';
 import { toast } from 'sonner';
@@ -12,7 +12,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// AuthProvider'ı React.FC olarak açıkça tanımlayalım
+const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // value objesini useMemo ile optimize edebiliriz
   const value = {
     user,
     loading,
@@ -71,12 +73,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+// Hook'u ayrı bir fonksiyon olarak tanımlayalım
+const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
+
+export { AuthProvider, useAuth };
