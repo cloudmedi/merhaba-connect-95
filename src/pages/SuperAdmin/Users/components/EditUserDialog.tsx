@@ -20,7 +20,7 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    role: user.role
+    role: user.role as 'super_admin' | 'admin' | 'manager' | 'user'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +101,7 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
             <Label htmlFor="role">Role</Label>
             <Select
               value={formData.role}
-              onValueChange={(value) => setFormData(prev => ({
+              onValueChange={(value: 'super_admin' | 'admin' | 'manager' | 'user') => setFormData(prev => ({
                 ...prev,
                 role: value
               }))}
@@ -110,6 +110,7 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="user">User</SelectItem>

@@ -6,6 +6,7 @@ export interface User {
   role: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive: boolean;
   license: {
+    id: string;
     type: string;
     startDate: string;
     endDate: string;
@@ -20,6 +21,7 @@ export interface UserUpdateInput {
   role?: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive?: boolean;
   license?: {
+    id: string;
     type: string;
     startDate: string;
     endDate: string;
