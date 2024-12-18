@@ -43,8 +43,6 @@ router.post('/upload',
   upload.single('file'), 
   async (req: Request, res: Response) => {
     const uploadService = new ChunkUploadService((progress) => {
-      // WebSocket ile progress bilgisini gönder
-      // Not: WebSocket implementasyonu ayrıca yapılmalı
       logger.info(`Upload progress: ${progress}%`);
     });
 
@@ -56,24 +54,54 @@ router.post('/upload',
       const file = req.file;
       const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
+      logger.info('Starting file upload process', {
+        originalName: file.originalname,
+        fileName: fileName,
+        size: file.size
+      });
+
       // Paralel işlemler
       const [metadata, fileUrl] = await Promise.all([
         metadataService.extractMetadata(file.buffer, fileName),
         uploadService.uploadFile(file.buffer, fileName)
       ]);
 
+      logger.info('File upload and metadata extraction completed', {
+        metadata,
+        fileUrl
+      });
+
       const user = (req as AuthRequest).user;
+
+      // Duration kontrolü
+      if (!metadata.duration && metadata.duration !== 0) {
+        logger.warn('Duration not found in metadata, attempting to extract from buffer');
+        try {
+          const tempFilePath = join(tmpdir(), `duration-${Date.now()}-${fileName}`);
+          await writeFile(tempFilePath, file.buffer);
+          const duration = await getAudioDurationInSeconds(tempFilePath);
+          metadata.duration = Math.round(duration);
+          await unlink(tempFilePath);
+          logger.info(`Duration extracted successfully: ${metadata.duration} seconds`);
+        } catch (durationError) {
+          logger.error('Failed to extract duration from buffer:', durationError);
+        }
+      }
 
       const song = new Song({
         title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
         artist: metadata?.artist || null,
         album: metadata?.album || null,
         genre: metadata?.genre ? [metadata.genre] : [],
-        duration: null,
+        duration: metadata?.duration || null,
         fileUrl: fileUrl,
         bunnyId: fileName,
         artworkUrl: null,
         createdBy: user?.id
+      });
+
+      logger.info('Saving song to database', {
+        songData: song.toObject()
       });
 
       await song.save();
