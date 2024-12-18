@@ -53,7 +53,7 @@ function SortableTableRow({ category, onEdit, onDelete }: {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: category.id });
+  } = useSortable({ id: category._id || category.id || '' });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -72,6 +72,15 @@ function SortableTableRow({ category, onEdit, onDelete }: {
     }
   };
 
+  const handleDelete = () => {
+    const categoryId = category._id || category.id;
+    if (!categoryId) {
+      console.error('No valid ID found for category:', category);
+      return;
+    }
+    onDelete(categoryId);
+  };
+
   return (
     <TableRow ref={setNodeRef} style={style}>
       <TableCell className="w-[50px]">
@@ -87,7 +96,7 @@ function SortableTableRow({ category, onEdit, onDelete }: {
       <TableCell className="font-medium">{category.name}</TableCell>
       <TableCell className="hidden md:table-cell">{category.description}</TableCell>
       <TableCell className="hidden md:table-cell">
-        {formatDate(category.created_at)}
+        {formatDate(category.createdAt)}
       </TableCell>
       <TableCell>
         <DropdownMenu>
@@ -103,7 +112,7 @@ function SortableTableRow({ category, onEdit, onDelete }: {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600"
-              onClick={() => onDelete(category.id)}
+              onClick={handleDelete}
             >
               <Trash className="mr-2 h-4 w-4" />
               Delete
@@ -127,8 +136,8 @@ export function CategoriesTable({ categories, onEdit, onDelete, onReorder }: Gen
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
-      const oldIndex = categories.findIndex((cat) => cat.id === active.id);
-      const newIndex = categories.findIndex((cat) => cat.id === over.id);
+      const oldIndex = categories.findIndex((cat) => (cat._id || cat.id) === active.id);
+      const newIndex = categories.findIndex((cat) => (cat._id || cat.id) === over.id);
       onReorder(oldIndex, newIndex);
     }
   };
@@ -153,12 +162,12 @@ export function CategoriesTable({ categories, onEdit, onDelete, onReorder }: Gen
           >
             <TableBody>
               <SortableContext
-                items={categories.map(cat => cat.id)}
+                items={categories.map(cat => cat._id || cat.id || '')}
                 strategy={verticalListSortingStrategy}
               >
                 {categories.map((category) => (
                   <SortableTableRow
-                    key={category.id}
+                    key={category._id || category.id}
                     category={category}
                     onEdit={onEdit}
                     onDelete={onDelete}
