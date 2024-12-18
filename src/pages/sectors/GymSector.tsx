@@ -139,8 +139,9 @@ export default function GymSector() {
                       className="w-full aspect-video object-cover"
                     />
                   </div>
-                </TabsContent>
-              ))}
+                </div>
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </div>
