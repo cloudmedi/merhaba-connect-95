@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 export interface User {
   id: string;
   email: string;
@@ -19,7 +21,7 @@ export interface UserCreateInput {
   firstName?: string;
   lastName?: string;
   role?: UserRole;
-  companyName?: string;
+  companyName?: string;  // Added this line to fix the error
 }
 
 export interface UserUpdateInput {
@@ -28,7 +30,7 @@ export interface UserUpdateInput {
   role?: UserRole;
   isActive?: boolean;
   password?: string;
-  companyName?: string;
+  companyName?: string;  // Added for consistency
 }
 
 export interface AuthResponse {
