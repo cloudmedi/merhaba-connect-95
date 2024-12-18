@@ -7,6 +7,10 @@ import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { writeFile, unlink } from 'fs/promises';
+import { getAudioDurationInSeconds } from 'get-audio-duration';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
