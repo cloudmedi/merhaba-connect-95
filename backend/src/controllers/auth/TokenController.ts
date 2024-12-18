@@ -52,7 +52,6 @@ export class TokenController {
         timestamp: new Date().toISOString()
       });
 
-      // User bilgisini ve token'ı birlikte dönüyoruz
       res.json({
         valid: true,
         token: token,
