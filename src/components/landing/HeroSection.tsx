@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { TrialForm } from "./TrialForm";
+import { HeroFeatures } from "./HeroFeatures";
+import { PlaylistGrid } from "./PlaylistGrid";
+import { CallToAction } from "./CallToAction";
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -110,40 +113,7 @@ export function HeroSection() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 pt-8">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                  </svg>
-                </div>
-                <span className="text-gray-700">10.000+ Şarkı</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                  </svg>
-                </div>
-                <span className="text-gray-700">Haftalık Güncellemeler</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                  </svg>
-                </div>
-                <span className="text-gray-700">Sektöre Özel</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                  </svg>
-                </div>
-                <span className="text-gray-700">7/24 Destek</span>
-              </div>
-            </div>
+            <HeroFeatures />
           </div>
 
           <div className="relative">
@@ -157,41 +127,8 @@ export function HeroSection() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">
-            Spor Salonunuzun Müzik İhtiyacını Karşılayalım
-          </h2>
-          <p className="text-gray-600 mb-8">
-            14 günlük ücretsiz deneme ile MusicBiz'in spor salonunuza özel müzik çözümlerini keşfedin.
-          </p>
-          <Button 
-            size="lg"
-            className="bg-[#6E59A5] hover:bg-[#5A478A] text-white"
-          >
-            Ücretsiz Deneyin
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {playlists.map((playlist, index) => (
-            <div key={index} className="relative group cursor-pointer">
-              <div className="aspect-square overflow-hidden rounded-lg">
-                <img
-                  src={playlist.image}
-                  alt={playlist.title}
-                  className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Play className="w-12 h-12 text-white" />
-                </div>
-              </div>
-              <div className="mt-2">
-                <p className="text-xs text-gray-500">{playlist.category}</p>
-                <h3 className="font-medium text-gray-900">{playlist.title}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
+        <CallToAction />
+        <PlaylistGrid playlists={playlists} />
       </div>
 
       <TrialForm 
