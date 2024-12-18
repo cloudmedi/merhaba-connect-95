@@ -4,7 +4,7 @@ import { GenresTable } from "./GenresTable";
 import { GenresDialog } from "./GenresDialog";
 import { Genre } from "./types";
 import { useToast } from "@/hooks/use-toast";
-import { genreService } from "@/services/genres";
+import axios from "@/lib/axios";
 
 export function GenresContent() {
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -14,13 +14,13 @@ export function GenresContent() {
 
   const fetchGenres = async () => {
     try {
-      const data = await genreService.getGenres();
-      setGenres(data);
-    } catch (error) {
+      const response = await axios.get('/admin/genres');
+      setGenres(response.data);
+    } catch (error: any) {
       console.error('Error fetching genres:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch genres",
+        description: error.response?.data?.error || "Failed to fetch genres",
         variant: "destructive",
       });
     }
@@ -32,18 +32,18 @@ export function GenresContent() {
 
   const handleCreate = async (newGenre: Pick<Genre, "name" | "description">) => {
     try {
-      await genreService.createGenre(newGenre);
+      await axios.post('/admin/genres', newGenre);
       setIsDialogOpen(false);
       fetchGenres();
       toast({
         title: "Success",
         description: "Genre created successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating genre:', error);
       toast({
         title: "Error",
-        description: "Failed to create genre",
+        description: error.response?.data?.error || "Failed to create genre",
         variant: "destructive",
       });
     }
@@ -51,7 +51,7 @@ export function GenresContent() {
 
   const handleEdit = async (updatedGenre: Genre) => {
     try {
-      await genreService.updateGenre(updatedGenre.id, { 
+      await axios.put(`/admin/genres/${updatedGenre.id}`, { 
         name: updatedGenre.name, 
         description: updatedGenre.description 
       });
@@ -62,11 +62,11 @@ export function GenresContent() {
         title: "Success",
         description: "Genre updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating genre:', error);
       toast({
         title: "Error",
-        description: "Failed to update genre",
+        description: error.response?.data?.error || "Failed to update genre",
         variant: "destructive",
       });
     }
@@ -74,17 +74,17 @@ export function GenresContent() {
 
   const handleDelete = async (id: string) => {
     try {
-      await genreService.deleteGenre(id);
+      await axios.delete(`/admin/genres/${id}`);
       fetchGenres();
       toast({
         title: "Success",
         description: "Genre deleted successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting genre:', error);
       toast({
         title: "Error",
-        description: "Failed to delete genre",
+        description: error.response?.data?.error || "Failed to delete genre",
         variant: "destructive",
       });
     }

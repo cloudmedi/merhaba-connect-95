@@ -5,5 +5,5 @@ export interface Genre {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  songCount?: number; // Optional field for UI purposes
+  songCount?: number;
 }
