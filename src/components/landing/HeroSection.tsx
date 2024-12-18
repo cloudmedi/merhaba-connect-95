@@ -1,29 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
-import { useState } from "react";
-import { AudioPreview } from "@/components/music/AudioPreview";
 
 export function HeroSection() {
   const navigate = useNavigate();
-  const [isPlaying, setIsPlaying] = useState(false);
   
-  // Örnek şarkı listesi
-  const sampleSongs = [
-    {
-      id: "1",
-      title: "Jazz Cafe",
-      artist: "Smooth Trio",
-      fileUrl: "https://cloud-media.b-cdn.net/sample/jazz-cafe.mp3"
-    },
-    {
-      id: "2",
-      title: "Lounge Ambiance",
-      artist: "Chill Masters",
-      fileUrl: "https://cloud-media.b-cdn.net/sample/lounge-ambiance.mp3"
-    }
-  ];
-
   return (
     <div className="relative bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -60,11 +41,9 @@ export function HeroSection() {
               <Button 
                 size="lg"
                 variant="outline"
-                className="border-[#6E59A5] text-[#6E59A5] hover:bg-[#6E59A5] hover:text-white flex items-center gap-2"
-                onClick={() => setIsPlaying(!isPlaying)}
+                className="border-[#6E59A5] text-[#6E59A5] hover:bg-[#6E59A5] hover:text-white"
               >
-                {isPlaying ? "Müziği Durdur" : "Örnek Müzikleri Dinleyin"}
-                {isPlaying && <AudioPreview fileUrl={sampleSongs[0].fileUrl} />}
+                Örnek Müzikleri Dinleyin
               </Button>
             </div>
 
