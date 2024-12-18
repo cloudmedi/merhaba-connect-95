@@ -9,12 +9,12 @@ export interface Song {
   album?: string | null;
   genre?: string[] | null;
   duration?: number | null;
-  file_url: string;
-  artwork_url?: string | null;
-  created_at: string;
-  bunny_id?: string | null;
-  created_by?: string | null;
-  updated_at?: string | null;
+  fileUrl: string;
+  artworkUrl?: string | null;
+  createdAt: string;
+  bunnyId?: string | null;
+  createdBy?: string | null;
+  updatedAt?: string | null;
 }
 
 export const useMusicLibrary = () => {
@@ -27,12 +27,14 @@ export const useMusicLibrary = () => {
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
       const response = await axios.get('/api/admin/songs');
-      return response.data;
+      return response.data as Song[];
     }
   });
 
   // Fetch unique genres from songs
-  const genres = Array.from(new Set(songs.flatMap(song => song.genre || []))).sort();
+  const genres: string[] = Array.from(
+    new Set(songs.flatMap(song => song.genre || []))
+  ).sort();
 
   const totalCount = songs.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
