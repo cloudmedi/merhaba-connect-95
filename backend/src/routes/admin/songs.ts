@@ -5,8 +5,8 @@ import multer from 'multer';
 import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
-import fetch from 'node-fetch';
-import NodeID3 from 'node-id3';
+import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
+import { MetadataService } from '../../services/upload/MetadataService';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -23,6 +23,7 @@ interface AuthRequest extends Request {
 }
 
 const router = express.Router();
+const metadataService = new MetadataService();
 
 // Get all songs
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -41,46 +42,25 @@ router.post('/upload',
   adminMiddleware, 
   upload.single('file'), 
   async (req: Request, res: Response) => {
+    const uploadService = new ChunkUploadService((progress) => {
+      // WebSocket ile progress bilgisini gönder
+      // Not: WebSocket implementasyonu ayrıca yapılmalı
+      logger.info(`Upload progress: ${progress}%`);
+    });
+
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
       const file = req.file;
-      const bunnyId = `music/${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
+      const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Extract metadata from the audio file using node-id3
-      let metadata;
-      try {
-        metadata = NodeID3.read(file.buffer);
-        logger.info('Extracted metadata:', metadata);
-      } catch (metadataError) {
-        logger.error('Error extracting metadata:', metadataError);
-        metadata = null;
-      }
-      
-      // Create public URL for CDN
-      const publicUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
-      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
-
-      logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
-      logger.info('Using API Key:', bunnyConfig.apiKey ? 'API Key exists' : 'No API Key');
-
-      const uploadResponse = await fetch(bunnyUrl, {
-        method: 'PUT',
-        headers: {
-          'AccessKey': bunnyConfig.apiKey,
-          'Content-Type': file.mimetype,
-          'Accept': '*/*'
-        },
-        body: file.buffer
-      });
-
-      if (!uploadResponse.ok) {
-        const responseText = await uploadResponse.text();
-        logger.error('Bunny CDN upload failed:', responseText);
-        throw new Error(`Failed to upload to Bunny CDN: ${responseText}`);
-      }
+      // Paralel işlemler
+      const [metadata, fileUrl] = await Promise.all([
+        metadataService.extractMetadata(file.buffer, fileName),
+        uploadService.uploadFile(file.buffer, fileName)
+      ]);
 
       const user = (req as AuthRequest).user;
 
@@ -89,10 +69,10 @@ router.post('/upload',
         artist: metadata?.artist || null,
         album: metadata?.album || null,
         genre: metadata?.genre ? [metadata.genre] : [],
-        duration: null, // NodeID3 doesn't provide duration, we'll need to handle this separately if needed
-        fileUrl: publicUrl,
-        bunnyId: bunnyId,
-        artworkUrl: null, // TODO: Handle artwork separately if needed
+        duration: null,
+        fileUrl: fileUrl,
+        bunnyId: fileName,
+        artworkUrl: null,
         createdBy: user?.id
       });
 
