@@ -65,10 +65,12 @@ export function MoodsContent() {
 
   const handleDelete = async (id: string) => {
     try {
-      if (!id) {
+      if (!id || id === 'undefined') {
+        console.error('Invalid mood ID:', id);
         toast.error("Invalid mood ID");
         return;
       }
+      
       await moodService.deleteMood(id);
       fetchMoods();
       toast.success("Mood deleted successfully");

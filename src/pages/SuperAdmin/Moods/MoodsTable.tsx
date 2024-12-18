@@ -24,6 +24,15 @@ export function MoodsTable({ moods, isLoading, onEdit, onDelete }: MoodsTablePro
     return <CatalogLoader count={moods.length || 6} />;
   }
 
+  const handleDelete = (mood: Mood) => {
+    const moodId = mood._id || mood.id;
+    if (!moodId) {
+      console.error('No valid ID found for mood:', mood);
+      return;
+    }
+    onDelete(moodId);
+  };
+
   return (
     <div className="rounded-md border">
       <ScrollArea className="h-[600px]">
@@ -38,7 +47,7 @@ export function MoodsTable({ moods, isLoading, onEdit, onDelete }: MoodsTablePro
           </TableHeader>
           <TableBody>
             {moods.map((mood) => (
-              <TableRow key={mood.id}>
+              <TableRow key={mood._id || mood.id}>
                 <TableCell>{mood.icon}</TableCell>
                 <TableCell>{mood.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{mood.description}</TableCell>
@@ -55,7 +64,7 @@ export function MoodsTable({ moods, isLoading, onEdit, onDelete }: MoodsTablePro
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onDelete(mood.id)}
+                      onClick={() => handleDelete(mood)}
                       className="hover:text-red-600"
                     >
                       <Trash2 className="w-4 h-4" />
