@@ -36,12 +36,11 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
   };
 
   const handleDelete = (genre: Genre) => {
-    const genreId = genre._id || genre.id;
-    if (!genreId) {
+    if (!genre._id) {
       console.error('No valid ID found for genre:', genre);
       return;
     }
-    onDelete(genreId);
+    onDelete(genre._id);
   };
 
   return (
@@ -59,7 +58,7 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
           </TableHeader>
           <TableBody>
             {genres.map((genre) => (
-              <TableRow key={genre._id || genre.id}>
+              <TableRow key={genre._id}>
                 <TableCell className="font-medium">{genre.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{genre.description}</TableCell>
                 <TableCell>{genre.songCount || 0}</TableCell>

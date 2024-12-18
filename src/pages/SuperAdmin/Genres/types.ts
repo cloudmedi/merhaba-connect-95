@@ -1,6 +1,5 @@
 export interface Genre {
-  _id?: string;
-  id: string;
+  _id: string;
   name: string;
   description: string | null;
   created_by: string | null;
