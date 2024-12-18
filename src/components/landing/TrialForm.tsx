@@ -39,11 +39,13 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Form validation
     if (!formData.fullName || !formData.companyName || !formData.email || !formData.phone || !formData.industry || !formData.source) {
       toast.error("Lütfen tüm zorunlu alanları doldurun");
       return;
     }
 
+    // TODO: Form submission logic will be implemented here
     console.log("Form data:", formData);
     toast.success("Başvurunuz alındı! En kısa sürede size ulaşacağız.");
     onOpenChange(false);
@@ -51,42 +53,40 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-8 bg-[#F1F0FB]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#403E43] text-center mb-6">
+          <DialogTitle className="text-2xl font-bold text-center">
             14 Gün Ücretsiz Deneyin
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Ad Soyad <span className="text-red-500">*</span>
             </label>
             <Input
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="Ad Soyad"
-              className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Firma Adı <span className="text-red-500">*</span>
             </label>
             <Input
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
               placeholder="Firma Adı"
-              className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               İş E-posta <span className="text-red-500">*</span>
             </label>
             <Input
@@ -94,13 +94,12 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="ornek@firmaniz.com"
-              className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Telefon Numarası <span className="text-red-500">*</span>
             </label>
             <Input
@@ -108,13 +107,12 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               placeholder="0555 555 55 55"
-              className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Sektör <span className="text-red-500">*</span>
             </label>
             <Select
@@ -122,7 +120,7 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
               onValueChange={(value) => setFormData({ ...formData, industry: value })}
               required
             >
-              <SelectTrigger className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors">
+              <SelectTrigger>
                 <SelectValue placeholder="Sektör seçin" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +134,7 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Bizi Nereden Duydunuz? <span className="text-red-500">*</span>
             </label>
             <Select
@@ -144,7 +142,7 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
               onValueChange={(value) => setFormData({ ...formData, source: value })}
               required
             >
-              <SelectTrigger className="bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors">
+              <SelectTrigger>
                 <SelectValue placeholder="Seçin" />
               </SelectTrigger>
               <SelectContent>
@@ -158,21 +156,18 @@ export function TrialForm({ open, onOpenChange }: { open: boolean; onOpenChange:
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[#403E43] mb-1.5 block">
+            <label className="text-sm font-medium mb-1 block">
               Ek Bilgi
             </label>
             <Textarea
               value={formData.additionalInfo}
               onChange={(e) => setFormData({ ...formData, additionalInfo: e.target.value })}
               placeholder="Eklemek istediğiniz notlar..."
-              className="min-h-[100px] bg-white border-[#D3E4FD] focus:border-[#33C3F0] transition-colors"
+              className="min-h-[100px]"
             />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-[#33C3F0] hover:bg-[#2BB0DD] text-white font-medium py-2.5 transition-colors"
-          >
+          <Button type="submit" className="w-full bg-[#6E59A5] hover:bg-[#5A478A]">
             Gönder
           </Button>
         </form>
