@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Footer } from "@/components/landing/Footer";
-import { HeroSection } from "@/components/landing/HeroSection";
-import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
-import { Features } from "@/components/landing/Features";
-import { Pricing } from "@/components/landing/Pricing";
 import { useState } from "react";
 import { TrialForm } from "@/components/landing/TrialForm";
 import {
@@ -14,16 +8,33 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-const sectors = [
-  "Kafe & Restoran",
-  "Spor Salonu",
-  "Güzellik & SPA",
-  "Mağaza",
-  "Otel",
-  "AVM",
-  "Ofis",
-  "Diğer"
-];
+const sectorGroups = {
+  "Sağlık & Güzellik": [
+    "Spor Salonu",
+    "Medikal Merkezler",
+    "Diş Klinikleri",
+    "Güzellik Salonları",
+    "SPA Merkezleri"
+  ],
+  "Perakende": [
+    "Mağazalar",
+    "AVM",
+    "Market Zincirleri",
+    "Butikler"
+  ],
+  "Hizmet Sektörü": [
+    "Kafe & Restoran",
+    "Oteller",
+    "Bar & Publar",
+    "Kafeler"
+  ],
+  "Kurumsal": [
+    "Ofisler",
+    "Okullar",
+    "İş Merkezleri",
+    "Plaza"
+  ]
+};
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -40,7 +51,6 @@ export default function Landing() {
                 className="text-gray-600 gap-2"
                 onClick={() => navigate("/")}
               >
-                <ArrowLeft className="h-4 w-4" />
                 MusicBiz
               </Button>
 
@@ -53,17 +63,25 @@ export default function Landing() {
                     Sektörler
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64 p-4 shadow-lg rounded-xl border-none bg-white">
-                  <div className="grid gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Sektörünüzü Seçin</h3>
-                    {sectors.map((sector) => (
-                      <Button
-                        key={sector}
-                        variant="ghost"
-                        className="w-full justify-start text-left h-auto py-3 px-4 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                      >
-                        {sector}
-                      </Button>
+                <PopoverContent className="w-[500px] p-6" align="start">
+                  <div className="grid grid-cols-2 gap-8">
+                    {Object.entries(sectorGroups).map(([category, sectors]) => (
+                      <div key={category} className="space-y-3">
+                        <h3 className="font-semibold text-gray-900 text-sm">
+                          {category}
+                        </h3>
+                        <div className="space-y-2">
+                          {sectors.map((sector) => (
+                            <Button
+                              key={sector}
+                              variant="ghost"
+                              className="w-full justify-start text-left h-auto py-1.5 px-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                            >
+                              {sector}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </PopoverContent>
