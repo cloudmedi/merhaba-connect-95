@@ -6,7 +6,7 @@ import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import fetch from 'node-fetch';
-import * as mm from 'music-metadata';
+import NodeID3 from 'node-id3';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -49,10 +49,10 @@ router.post('/upload',
       const file = req.file;
       const bunnyId = `music/${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Extract metadata from the audio file using parseBuffer
+      // Extract metadata from the audio file using node-id3
       let metadata;
       try {
-        metadata = await mm.parseBuffer(file.buffer);
+        metadata = NodeID3.read(file.buffer);
         logger.info('Extracted metadata:', metadata);
       } catch (metadataError) {
         logger.error('Error extracting metadata:', metadataError);
@@ -85,14 +85,14 @@ router.post('/upload',
       const user = (req as AuthRequest).user;
 
       const song = new Song({
-        title: metadata?.common?.title || file.originalname.replace(/\.[^/.]+$/, ""),
-        artist: metadata?.common?.artist || null,
-        album: metadata?.common?.album || null,
-        genre: metadata?.common?.genre || [],
-        duration: metadata?.format?.duration ? Math.round(metadata.format.duration) : null,
+        title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
+        artist: metadata?.artist || null,
+        album: metadata?.album || null,
+        genre: metadata?.genre ? [metadata.genre] : [],
+        duration: null, // NodeID3 doesn't provide duration, we'll need to handle this separately if needed
         fileUrl: publicUrl,
         bunnyId: bunnyId,
-        artworkUrl: null, // TODO: Extract artwork if available
+        artworkUrl: null, // TODO: Handle artwork separately if needed
         createdBy: user?.id
       });
 
