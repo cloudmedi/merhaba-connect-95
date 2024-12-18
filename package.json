@@ -76,6 +76,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "fs-extra": "^11.2.0",
+    "get-audio-duration": "^4.0.1",
     "howler": "^2.2.4",
     "input-otp": "^1.2.4",
     "joi": "^17.13.3",
