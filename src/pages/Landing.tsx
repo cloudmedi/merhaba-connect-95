@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { Footer } from "@/components/landing/Footer";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
@@ -31,7 +31,6 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
       <nav className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -49,19 +48,20 @@ export default function Landing() {
                 <PopoverTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-gray-600 gap-1"
+                    className="text-gray-600 gap-2 font-medium"
                   >
-                    İş Türleri
-                    <ChevronDown className="h-4 w-4" />
+                    <Building2 className="h-4 w-4" />
+                    Sektörler
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-48 p-2">
-                  <div className="grid gap-1">
+                <PopoverContent className="w-64 p-4 shadow-lg rounded-xl border-none bg-white">
+                  <div className="grid gap-2">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Sektörünüzü Seçin</h3>
                     {sectors.map((sector) => (
                       <Button
                         key={sector}
                         variant="ghost"
-                        className="w-full justify-start text-left"
+                        className="w-full justify-start text-left h-auto py-3 px-4 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                       >
                         {sector}
                       </Button>
