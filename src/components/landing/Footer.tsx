@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, AppWindow, Layers } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 
 export function Footer() {
   return (
@@ -33,14 +33,12 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Özellikler</h3>
             <ul className="space-y-2">
               <li>
-                <Button variant="link" className="text-gray-300 hover:text-white p-0 h-auto flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
+                <Button variant="link" className="text-gray-300 hover:text-white p-0 h-auto">
                   Merkezi Yönetim
                 </Button>
               </li>
               <li>
-                <Button variant="link" className="text-gray-300 hover:text-white p-0 h-auto flex items-center gap-2">
-                  <AppWindow className="h-4 w-4" />
+                <Button variant="link" className="text-gray-300 hover:text-white p-0 h-auto">
                   Akıllı Programlama
                 </Button>
               </li>
@@ -52,9 +50,9 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Apps */}
+          {/* Uygulamalar */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Apps</h3>
+            <h3 className="text-lg font-semibold">Uygulamalar</h3>
             <ul className="space-y-2">
               <li>
                 <Button variant="link" className="text-gray-300 hover:text-white p-0 h-auto">
