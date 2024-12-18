@@ -1,10 +1,10 @@
+import { useState, useEffect, useRef } from 'react';
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { PlayerControls } from "./PlayerControls";
 import { VolumeControl } from "./VolumeControl";
 import { TrackInfo } from "./TrackInfo";
 import { ProgressBar } from "./ProgressBar";
-import { useAudioPlayer } from "./hooks/useAudioPlayer";
 import { useNavigate } from "react-router-dom";
 
 interface MusicPlayerProps {
@@ -41,39 +41,117 @@ export function MusicPlayerContainer({
   isPlaying: externalIsPlaying
 }: MusicPlayerProps) {
   const navigate = useNavigate();
-  const {
-    currentSongIndex,
-    volume,
-    isMuted,
-    isPlaying,
-    progress,
-    handlePlayPause,
-    handleNext,
-    handlePrevious,
-    handleProgressChange,
-    handleVolumeChange,
-    toggleMute,
-    getCurrentSong,
-    setIsPlaying
-  } = useAudioPlayer({
-    playlist,
-    initialSongIndex,
-    autoPlay,
-    onSongChange,
-    onPlayStateChange,
-    currentSongId,
-    externalIsPlaying
-  });
+  const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  if (!playlist.songs || playlist.songs.length === 0) return null;
-  const currentSong = getCurrentSong();
-  if (!currentSong) return null;
+  useEffect(() => {
+    if (!playlist.songs || playlist.songs.length === 0) return;
+
+    const audio = new Audio();
+    audioRef.current = audio;
+
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+
+    const handleEnded = () => {
+      onPlayStateChange?.(false);
+      handleNext();
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+
+    // Set up initial audio
+    const currentSong = playlist.songs[currentSongIndex];
+    if (currentSong) {
+      audio.src = currentSong.file_url;
+      if (externalIsPlaying) {
+        audio.play().catch(console.error);
+      }
+    }
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
+      audio.src = '';
+    };
+  }, [playlist.songs, currentSongIndex]);
+
+  // Respond to external play state changes
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (externalIsPlaying) {
+      audioRef.current.play().catch(console.error);
+    } else {
+      audioRef.current.pause();
+    }
+  }, [externalIsPlaying]);
+
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
+    
+    if (externalIsPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(console.error);
+    }
+    onPlayStateChange?.(!externalIsPlaying);
+  };
+
+  const handleNext = () => {
+    if (!playlist.songs) return;
+    const nextIndex = (currentSongIndex + 1) % playlist.songs.length;
+    setCurrentSongIndex(nextIndex);
+    onSongChange?.(nextIndex);
+  };
+
+  const handlePrevious = () => {
+    if (!playlist.songs) return;
+    const prevIndex = currentSongIndex === 0 ? playlist.songs.length - 1 : currentSongIndex - 1;
+    setCurrentSongIndex(prevIndex);
+    onSongChange?.(prevIndex);
+  };
+
+  const handleProgressChange = (values: number[]) => {
+    if (!audioRef.current) return;
+    const [value] = values;
+    const time = (value / 100) * audioRef.current.duration;
+    audioRef.current.currentTime = time;
+    setProgress(value);
+  };
+
+  const handleVolumeChange = (values: number[]) => {
+    if (!audioRef.current) return;
+    const [value] = values;
+    const volumeValue = value / 100;
+    audioRef.current.volume = volumeValue;
+    setVolume(volumeValue);
+    setIsMuted(volumeValue === 0);
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    audioRef.current.volume = newMutedState ? 0 : volume;
+  };
 
   const handleArtworkClick = () => {
     if (playlist.id) {
       navigate(`/manager/playlists/${playlist.id}`);
     }
   };
+
+  const currentSong = playlist.songs?.[currentSongIndex];
+  if (!currentSong) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10">
@@ -88,7 +166,7 @@ export function MusicPlayerContainer({
 
           <div className="flex-1 max-w-2xl space-y-2">
             <PlayerControls
-              isPlaying={isPlaying}
+              isPlaying={externalIsPlaying || false}
               onPlayPause={handlePlayPause}
               onNext={handleNext}
               onPrevious={handlePrevious}
@@ -101,7 +179,7 @@ export function MusicPlayerContainer({
 
           <div className="flex items-center gap-4">
             <VolumeControl
-              volume={volume}
+              volume={volume * 100}
               isMuted={isMuted}
               onVolumeChange={handleVolumeChange}
               onMuteToggle={toggleMute}

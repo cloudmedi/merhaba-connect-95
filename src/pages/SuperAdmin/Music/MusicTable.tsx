@@ -6,7 +6,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
 import { TablePagination } from "./components/TablePagination";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Song } from "./MusicContent";
 
 interface MusicTableProps {
@@ -40,6 +40,22 @@ export function MusicTable({
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlaySong = (song: Song) => {
+    if (currentlyPlaying?._id === song._id) {
+      // Aynı şarkıya tıklandığında sadece play/pause durumunu değiştir
+      setIsPlaying(!isPlaying);
+    } else {
+      // Farklı şarkıya tıklandığında yeni şarkıyı ayarla ve çal
+      setCurrentlyPlaying(song);
+      setIsPlaying(true);
+    }
+  };
+
+  const handlePlayStateChange = (playing: boolean) => {
+    setIsPlaying(playing);
+  };
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -57,21 +73,6 @@ export function MusicTable({
   };
 
   const defaultArtwork = "/placeholder.svg";
-
-  const handlePlaySong = (song: Song) => {
-    if (currentlyPlaying?._id === song._id) {
-      // If clicking the same song, toggle play/pause
-      setIsPlaying(!isPlaying);
-    } else {
-      // If clicking a different song, start playing it
-      setCurrentlyPlaying(song);
-      setIsPlaying(true);
-    }
-  };
-
-  const handlePlayStateChange = (playing: boolean) => {
-    setIsPlaying(playing);
-  };
 
   const transformedSongs = songs.map(song => ({
     id: song._id,
