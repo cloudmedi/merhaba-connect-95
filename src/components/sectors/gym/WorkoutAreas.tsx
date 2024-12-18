@@ -55,7 +55,11 @@ export function WorkoutAreas() {
         <Carousel 
           setApi={setApi}
           className="w-full"
-          onSelect={(api) => {
+          opts={{
+            align: "start",
+            loop: true
+          }}
+          onSelect={(api: any) => {
             setCurrent(api.selectedScrollSnap());
           }}
         >
