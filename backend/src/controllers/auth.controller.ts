@@ -9,17 +9,28 @@ export class AuthController {
     try {
       const { email, password } = req.body;
 
-      logger.info('Login attempt', { email });
+      logger.info('Login attempt started', { 
+        email,
+        timestamp: new Date().toISOString(),
+        requestIP: req.ip
+      });
 
       const user = await User.findOne({ email });
       if (!user) {
-        logger.warn('Login failed: User not found', { email });
+        logger.warn('Login failed: User not found', { 
+          email,
+          timestamp: new Date().toISOString()
+        });
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const isValidPassword = await argon2.verify(user.password, password);
       if (!isValidPassword) {
-        logger.warn('Login failed: Invalid password', { email });
+        logger.warn('Login failed: Invalid password', { 
+          email,
+          userId: user._id,
+          timestamp: new Date().toISOString()
+        });
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -33,7 +44,8 @@ export class AuthController {
         userId: user._id,
         email: user.email,
         role: user.role,
-        tokenPreview: token.substring(0, 20) + '...',
+        tokenPreview: `${token.substring(0, 10)}...`,
+        timestamp: new Date().toISOString(),
         expiresIn: '7d'
       });
 
@@ -50,7 +62,11 @@ export class AuthController {
         }
       });
     } catch (error) {
-      logger.error('Login error', { error });
+      logger.error('Login error', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -59,11 +75,20 @@ export class AuthController {
     try {
       const { email, password, firstName, lastName, role, companyName } = req.body;
 
-      logger.info('Registration attempt', { email, firstName, lastName, role });
+      logger.info('Registration attempt', {
+        email,
+        firstName,
+        lastName,
+        role,
+        timestamp: new Date().toISOString()
+      });
 
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        logger.warn('Registration failed: Email exists', { email });
+        logger.warn('Registration failed: Email exists', {
+          email,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ error: 'Email already registered' });
       }
 
@@ -91,7 +116,8 @@ export class AuthController {
         userId: user._id,
         email: user.email,
         role: user.role,
-        tokenPreview: token.substring(0, 20) + '...'
+        tokenPreview: `${token.substring(0, 10)}...`,
+        timestamp: new Date().toISOString()
       });
 
       res.status(201).json({
@@ -107,7 +133,11 @@ export class AuthController {
         }
       });
     } catch (error) {
-      logger.error('Registration error', { error });
+      logger.error('Registration error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -118,17 +148,22 @@ export class AuthController {
       
       logger.info('Token verification request', {
         tokenExists: !!token,
-        authHeaderExists: !!req.headers.authorization
+        authHeaderExists: !!req.headers.authorization,
+        timestamp: new Date().toISOString(),
+        headers: req.headers
       });
       
       if (!token) {
-        logger.warn('Token verification failed: No token provided');
+        logger.warn('Token verification failed: No token provided', {
+          timestamp: new Date().toISOString()
+        });
         return res.status(401).json({ error: 'No token provided' });
       }
 
       logger.debug('JWT environment check', {
         jwtSecretExists: !!process.env.JWT_SECRET,
-        nodeEnv: process.env.NODE_ENV
+        nodeEnv: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
       });
 
       try {
@@ -136,19 +171,24 @@ export class AuthController {
         logger.debug('Token decoded successfully', {
           userId: decoded.userId,
           role: decoded.role,
-          expiresAt: new Date(decoded.exp * 1000).toISOString()
+          expiresAt: new Date(decoded.exp * 1000).toISOString(),
+          timestamp: new Date().toISOString()
         });
         
         const user = await User.findById(decoded.userId);
         if (!user) {
-          logger.warn('Token verification failed: User not found', { userId: decoded.userId });
+          logger.warn('Token verification failed: User not found', {
+            userId: decoded.userId,
+            timestamp: new Date().toISOString()
+          });
           return res.status(401).json({ error: 'User not found' });
         }
 
         logger.info('Token verification successful', {
           userId: user._id,
           email: user.email,
-          role: user.role
+          role: user.role,
+          timestamp: new Date().toISOString()
         });
 
         const newToken = jwt.sign(
@@ -159,8 +199,9 @@ export class AuthController {
 
         logger.debug('New token generated', {
           userId: user._id,
-          tokenPreview: newToken.substring(0, 20) + '...',
-          expiresIn: '7d'
+          tokenPreview: `${newToken.substring(0, 10)}...`,
+          expiresIn: '7d',
+          timestamp: new Date().toISOString()
         });
 
         res.json({ 
@@ -177,11 +218,19 @@ export class AuthController {
           }
         });
       } catch (verifyError) {
-        logger.error('Token verification failed', { error: verifyError });
+        logger.error('Token verification failed', {
+          error: verifyError instanceof Error ? verifyError.message : 'Unknown error',
+          stack: verifyError instanceof Error ? verifyError.stack : undefined,
+          timestamp: new Date().toISOString()
+        });
         res.status(401).json({ error: 'Invalid token' });
       }
     } catch (error) {
-      logger.error('Token verification error', { error });
+      logger.error('Token verification error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       res.status(401).json({ error: 'Invalid token' });
     }
   }
