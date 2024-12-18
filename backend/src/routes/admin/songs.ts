@@ -47,7 +47,9 @@ router.post('/upload',
 
       const file = req.file;
       const bunnyId = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
-      const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
+      
+      // Bunny CDN URL'sini doğru şekilde oluştur
+      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
 
       logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
 
@@ -96,7 +98,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     }
 
     if (song.bunnyId) {
-      const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${song.bunnyId}`;
+      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${song.bunnyId}`;
       const deleteResponse = await fetch(bunnyUrl, {
         method: 'DELETE',
         headers: {
