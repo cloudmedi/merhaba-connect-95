@@ -9,16 +9,29 @@ const router = express.Router();
 // Get all users with their licenses
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const users = await User.find()
-      .select('-password')
-      .populate({
-        path: 'licenses',
-        model: License,
-        match: { isActive: true },
-        options: { sort: { endDate: -1 }, limit: 1 }
-      });
-    res.json(users);
+    const users = await User.find().select('-password');
+    
+    // Her kullanıcı için lisans bilgisini License tablosundan çekelim
+    const usersWithLicenses = await Promise.all(users.map(async (user) => {
+      const license = await License.findOne({ 
+        userId: user._id,
+        isActive: true 
+      }).sort({ endDate: -1 }); // En son lisansı getir
+      
+      return {
+        ...user.toObject(),
+        license: license ? {
+          id: license._id,
+          type: license.type,
+          startDate: license.startDate,
+          endDate: license.endDate
+        } : null
+      };
+    }));
+
+    res.json(usersWithLicenses);
   } catch (error) {
+    console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
