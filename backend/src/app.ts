@@ -57,7 +57,8 @@ app.use(cors({
     'Authorization',
     'Cache-Control',
     'Pragma',
-    'Expires'
+    'Expires',
+    'cache-control'
   ]
 }));
 
