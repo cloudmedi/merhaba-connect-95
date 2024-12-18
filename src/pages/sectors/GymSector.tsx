@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SectorLayout } from "@/components/layout/SectorLayout";
 import { Play, Volume2, Music2, Calendar, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SectorLayout } from "@/components/layout/SectorLayout";
 
 export default function GymSector() {
   const testimonials = [
