@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from '@/hooks/useAuth';
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Manager from "./pages/Manager";
 import SuperAdmin from "./pages/SuperAdmin";
 import ManagerLogin from "./pages/Manager/Auth/Login";
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <Index />,
     errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
+  },
+  {
+    path: "/landing",
+    element: <Landing />,
   },
   {
     path: "/manager",
