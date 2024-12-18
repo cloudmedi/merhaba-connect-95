@@ -6,9 +6,12 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
 import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
+import { useState } from "react";
+import { TrialForm } from "@/components/landing/TrialForm";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,13 +34,13 @@ export default function Landing() {
                 variant="ghost"
                 onClick={() => navigate("/manager/login")}
               >
-                Log in
+                Giriş Yap
               </Button>
               <Button 
                 className="bg-[#6E59A5] hover:bg-[#5A478A]"
-                onClick={() => navigate("/manager/register")}
+                onClick={() => setIsTrialFormOpen(true)}
               >
-                Get Started
+                Ücretsiz Deneyin
               </Button>
             </div>
           </div>
@@ -49,6 +52,11 @@ export default function Landing() {
       <Features />
       <Pricing />
       <Footer />
+
+      <TrialForm 
+        open={isTrialFormOpen} 
+        onOpenChange={setIsTrialFormOpen}
+      />
     </div>
   );
 }
