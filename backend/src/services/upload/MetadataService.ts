@@ -15,11 +15,8 @@ export class MetadataService {
         return cachedMetadata;
       }
 
-      // Create a temporary Blob from the buffer
-      const blob = new Blob([buffer], { type: 'audio/mpeg' });
-
       // Get duration using get-audio-duration
-      const duration = await getAudioDurationInSeconds(blob);
+      const duration = await getAudioDurationInSeconds(buffer);
 
       // Get other metadata using NodeID3
       const id3Metadata = NodeID3.read(buffer);
