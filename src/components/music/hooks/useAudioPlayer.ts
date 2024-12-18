@@ -17,6 +17,7 @@ interface UseAudioPlayerProps {
   onSongChange?: (index: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
   currentSongId?: string | number;
+  externalIsPlaying?: boolean;
 }
 
 export function useAudioPlayer({
@@ -25,7 +26,8 @@ export function useAudioPlayer({
   autoPlay = true,
   onSongChange,
   onPlayStateChange,
-  currentSongId
+  currentSongId,
+  externalIsPlaying
 }: UseAudioPlayerProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
   const [volume, setVolume] = useState(100);
@@ -33,6 +35,21 @@ export function useAudioPlayer({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
   const [audio] = useState(new Audio());
+
+  useEffect(() => {
+    if (typeof externalIsPlaying !== 'undefined') {
+      setIsPlaying(externalIsPlaying);
+      if (externalIsPlaying) {
+        audio.play().catch(error => {
+          console.error('Error playing audio:', error);
+          setIsPlaying(false);
+          onPlayStateChange?.(false);
+        });
+      } else {
+        audio.pause();
+      }
+    }
+  }, [externalIsPlaying]);
 
   useEffect(() => {
     if (!playlist.songs || playlist.songs.length === 0) {
@@ -83,8 +100,12 @@ export function useAudioPlayer({
     }
   }, [currentSongId, playlist.songs]);
 
-  useEffect(() => {
-    if (isPlaying) {
+  const handlePlayPause = () => {
+    const newIsPlaying = !isPlaying;
+    setIsPlaying(newIsPlaying);
+    onPlayStateChange?.(newIsPlaying);
+    
+    if (newIsPlaying) {
       audio.play().catch(error => {
         console.error('Error playing audio:', error);
         setIsPlaying(false);
@@ -93,11 +114,6 @@ export function useAudioPlayer({
     } else {
       audio.pause();
     }
-    onPlayStateChange?.(isPlaying);
-  }, [isPlaying]);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
   };
 
   const handleNext = () => {
@@ -152,6 +168,7 @@ export function useAudioPlayer({
     handleProgressChange,
     handleVolumeChange,
     toggleMute,
-    getCurrentSong: () => playlist.songs?.[currentSongIndex]
+    getCurrentSong: () => playlist.songs?.[currentSongIndex],
+    setIsPlaying
   };
 }

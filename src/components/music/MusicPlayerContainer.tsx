@@ -27,6 +27,7 @@ interface MusicPlayerProps {
   onSongChange?: (index: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
   currentSongId?: string | number;
+  isPlaying?: boolean;
 }
 
 export function MusicPlayerContainer({
@@ -36,7 +37,8 @@ export function MusicPlayerContainer({
   autoPlay = true,
   onSongChange,
   onPlayStateChange,
-  currentSongId
+  currentSongId,
+  isPlaying: externalIsPlaying
 }: MusicPlayerProps) {
   const navigate = useNavigate();
   const {
@@ -51,14 +53,16 @@ export function MusicPlayerContainer({
     handleProgressChange,
     handleVolumeChange,
     toggleMute,
-    getCurrentSong
+    getCurrentSong,
+    setIsPlaying
   } = useAudioPlayer({
     playlist,
     initialSongIndex,
     autoPlay,
     onSongChange,
     onPlayStateChange,
-    currentSongId
+    currentSongId,
+    externalIsPlaying
   });
 
   if (!playlist.songs || playlist.songs.length === 0) return null;

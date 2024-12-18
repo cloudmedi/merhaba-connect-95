@@ -69,6 +69,10 @@ export function MusicTable({
     }
   };
 
+  const handlePlayStateChange = (playing: boolean) => {
+    setIsPlaying(playing);
+  };
+
   const transformedSongs = songs.map(song => ({
     id: song._id,
     title: song.title,
@@ -143,8 +147,9 @@ export function MusicTable({
             setIsPlaying(false);
           }}
           initialSongIndex={songs.findIndex(s => s._id === currentlyPlaying._id)}
-          onPlayStateChange={setIsPlaying}
+          onPlayStateChange={handlePlayStateChange}
           currentSongId={currentlyPlaying._id}
+          isPlaying={isPlaying}
         />
       )}
     </div>
