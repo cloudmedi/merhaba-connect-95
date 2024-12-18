@@ -21,8 +21,14 @@ export class AuthController {
       const token = jwt.sign(
         { userId: user._id, role: user.role },
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '7d' } // Token süresini 7 güne çıkardık
+        { expiresIn: '7d' }
       );
+
+      console.log('Login successful - Generated token:', {
+        token,
+        decoded: jwt.decode(token),
+        secret: process.env.JWT_SECRET ? 'Secret exists' : 'Using fallback secret'
+      });
 
       res.json({
         token,
@@ -93,38 +99,64 @@ export class AuthController {
     try {
       const token = req.headers.authorization?.replace('Bearer ', '');
       
+      console.log('Token verification request:', {
+        receivedToken: token,
+        authHeader: req.headers.authorization
+      });
+      
       if (!token) {
+        console.log('No token provided in request');
         return res.status(401).json({ error: 'No token provided' });
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-      
-      const user = await User.findById(decoded.userId);
-      if (!user) {
-        return res.status(401).json({ error: 'User not found' });
-      }
-
-      // Token geçerliyse yeni token oluştur
-      const newToken = jwt.sign(
-        { userId: user._id, role: user.role },
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '7d' }
-      );
-
-      res.json({ 
-        valid: true,
-        token: newToken, // Yeni token'ı da dön
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          isActive: user.isActive,
-          companyName: user.companyName
-        }
+      console.log('Environment check:', {
+        jwtSecretExists: !!process.env.JWT_SECRET,
+        nodeEnv: process.env.NODE_ENV
       });
+
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+        console.log('Token successfully decoded:', {
+          decoded,
+          expiresIn: new Date(decoded.exp * 1000).toISOString()
+        });
+        
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+          console.log('User not found for decoded token userId:', decoded.userId);
+          return res.status(401).json({ error: 'User not found' });
+        }
+
+        const newToken = jwt.sign(
+          { userId: user._id, role: user.role },
+          process.env.JWT_SECRET || 'your-secret-key',
+          { expiresIn: '7d' }
+        );
+
+        console.log('New token generated:', {
+          newToken,
+          decoded: jwt.decode(newToken)
+        });
+
+        res.json({ 
+          valid: true,
+          token: newToken,
+          user: {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+            isActive: user.isActive,
+            companyName: user.companyName
+          }
+        });
+      } catch (verifyError) {
+        console.error('Token verification failed:', verifyError);
+        res.status(401).json({ error: 'Invalid token' });
+      }
     } catch (error) {
+      console.error('Token verification error:', error);
       res.status(401).json({ error: 'Invalid token' });
     }
   }
