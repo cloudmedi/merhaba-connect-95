@@ -18,7 +18,7 @@ export interface Song {
   genre?: string[];
   duration?: number;
   fileUrl: string;
-  file_url: string; // Added for compatibility
+  file_url: string;
   artworkUrl?: string;
   createdAt: string;
   bunnyId?: string;
@@ -37,12 +37,11 @@ export function MusicContent() {
     refetch
   } = useQuery({
     queryKey: ['songs'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Song[]> => {
       const response = await axios.get('/admin/songs');
-      // Transform the response to include both fileUrl and file_url
       return response.data.map((song: any) => ({
         ...song,
-        file_url: song.fileUrl // Ensure both properties exist
+        file_url: song.fileUrl
       }));
     }
   });
@@ -102,7 +101,6 @@ export function MusicContent() {
     (song.album?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  // Fixed the type inference for genres extraction with explicit typing
   const genres = Array.from(new Set(
     filteredSongs.reduce<string[]>((acc, song: Song) => {
       if (song.genre && Array.isArray(song.genre)) {
