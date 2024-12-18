@@ -12,6 +12,11 @@ export class TokenController {
 
   async verifyToken(req: Request, res: Response) {
     try {
+      // Cache kontrolünü devre dışı bırak
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       logger.info('Token verification request', {
@@ -52,6 +57,7 @@ export class TokenController {
         timestamp: new Date().toISOString()
       });
 
+      // Kullanıcı bilgilerini ve token'ı birlikte dönüyoruz
       const userData = {
         id: user._id,
         email: user.email,

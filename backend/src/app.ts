@@ -59,7 +59,8 @@ app.use(cors({
     'Pragma',
     'Expires',
     'cache-control'
-  ]
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
 app.use(express.json());
