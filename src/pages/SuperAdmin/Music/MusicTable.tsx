@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,18 +6,8 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { SongTableRow } from "@/components/music/SongTableRow";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
 import { TablePagination } from "./components/TablePagination";
-
-interface Song {
-  id: string;
-  title: string;
-  artist?: string;
-  album?: string;
-  genre?: string[];
-  duration?: number;
-  artworkUrl?: string;
-  fileUrl: string;
-  createdAt: string;
-}
+import { useState } from "react";
+import type { Song } from "./MusicContent";
 
 interface MusicTableProps {
   songs: Song[];
@@ -32,6 +21,7 @@ interface MusicTableProps {
   isLoading?: boolean;
   totalCount: number;
   onDelete: (id: string) => void;
+  onEdit: (song: Song) => void;
 }
 
 export function MusicTable({
@@ -45,12 +35,11 @@ export function MusicTable({
   itemsPerPage,
   isLoading,
   totalCount,
-  onDelete
+  onDelete,
+  onEdit
 }: MusicTableProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<Song | null>(null);
-  const [currentSongIndex, setCurrentSongIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
 
   if (isLoading) {
     return <DataTableLoader />;
@@ -67,27 +56,15 @@ export function MusicTable({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
+  const defaultArtwork = "/placeholder.svg";
 
   const handlePlaySong = (song: Song) => {
-    const songIndex = songs.findIndex(s => s.id === song.id);
-    setCurrentSongIndex(songIndex);
     setCurrentlyPlaying(song);
     setIsPlaying(true);
-    setCurrentPlaylistId('temp-playlist');
   };
-
-  const handleSongChange = (index: number) => {
-    setCurrentSongIndex(index);
-    setCurrentlyPlaying(songs[index]);
-  };
-
-  // Pagination calculations
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   const transformedSongs = songs.map(song => ({
-    id: song.id,
+    id: song._id,
     title: song.title,
     artist: song.artist || "Unknown Artist",
     duration: song.duration?.toString() || "0:00",
@@ -119,25 +96,17 @@ export function MusicTable({
               <TableBody>
                 {songs.map((song) => (
                   <SongTableRow
-                    key={song.id}
-                    song={{
-                      id: song.id,
-                      title: song.title,
-                      artist: song.artist || '',
-                      album: song.album || '',
-                      genre: song.genre || [],
-                      duration: song.duration,
-                      artwork_url: song.artworkUrl,
-                      file_url: song.fileUrl
-                    }}
-                    isSelected={selectedSongs.some((s) => s.id === song.id)}
+                    key={song._id}
+                    song={song}
+                    isSelected={selectedSongs.some((s) => s._id === song._id)}
                     onSelect={(checked) => onSelectSong(song, checked)}
                     onPlay={() => handlePlaySong(song)}
                     formatDuration={formatDuration}
                     defaultArtwork={defaultArtwork}
-                    onDelete={() => onDelete(song.id)}
-                    isPlaying={isPlaying}
-                    currentlyPlayingId={currentlyPlaying?.id}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                    isPlaying={isPlaying && currentlyPlaying?._id === song._id}
+                    currentlyPlayingId={currentlyPlaying?._id}
                   />
                 ))}
               </TableBody>
@@ -150,15 +119,15 @@ export function MusicTable({
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={onPageChange}
-        startIndex={startIndex}
-        endIndex={endIndex}
+        startIndex={(currentPage - 1) * itemsPerPage}
+        endIndex={Math.min(currentPage * itemsPerPage, totalCount)}
         totalItems={totalCount}
       />
 
       {currentlyPlaying && (
         <MusicPlayer
           playlist={{
-            id: currentPlaylistId,
+            id: 'temp-playlist',
             title: "Now Playing",
             artwork: currentlyPlaying.artworkUrl || defaultArtwork,
             songs: transformedSongs
@@ -167,9 +136,9 @@ export function MusicTable({
             setCurrentlyPlaying(null);
             setIsPlaying(false);
           }}
-          onSongChange={handleSongChange}
+          initialSongIndex={songs.findIndex(s => s._id === currentlyPlaying._id)}
           onPlayStateChange={setIsPlaying}
-          currentSongId={currentlyPlaying.id}
+          currentSongId={currentlyPlaying._id}
         />
       )}
     </div>

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import axios from '@/lib/axios';
+import { toast } from "sonner";
 
 export interface Song {
   _id: string;
@@ -20,12 +21,14 @@ export interface Song {
   fileUrl: string;
   artworkUrl?: string;
   createdAt: string;
+  bunnyId?: string;
+  createdBy?: string;
+  updatedAt?: string;
 }
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const {
@@ -54,31 +57,18 @@ export function MusicContent() {
 
   const handleDeleteSong = async (songId: string) => {
     try {
-      if (!songId) {
-        toast({
-          title: "Error",
-          description: "Invalid song ID",
-          variant: "destructive",
-        });
-        return;
-      }
-
       await axios.delete(`/admin/songs/${songId}`);
-
-      toast({
-        title: "Success",
-        description: "Song deleted successfully",
-      });
-
+      toast.success("Song deleted successfully");
       refetch();
     } catch (error: any) {
       console.error('Error deleting song:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete song",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete song");
     }
+  };
+
+  const handleEditSong = (song: Song) => {
+    // For now, just show a toast since edit functionality is not implemented yet
+    toast.info("Edit functionality coming soon");
   };
 
   const handleBulkDelete = async () => {
@@ -88,21 +78,13 @@ export function MusicContent() {
       }
       setSelectedSongs([]);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete songs",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete songs");
     }
   };
 
   const handleCreatePlaylist = () => {
     if (selectedSongs.length === 0) {
-      toast({
-        title: "No songs selected",
-        description: "Please select at least one song to create a playlist",
-        variant: "destructive"
-      });
+      toast.error("Please select at least one song to create a playlist");
       return;
     }
 
@@ -117,7 +99,6 @@ export function MusicContent() {
     (song.album?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  // Extract unique genres from songs
   const genres = Array.from(new Set(
     songs.reduce((acc: string[], song) => {
       if (song.genre && Array.isArray(song.genre)) {
@@ -173,6 +154,7 @@ export function MusicContent() {
         isLoading={isLoading}
         totalCount={filteredSongs.length}
         onDelete={handleDeleteSong}
+        onEdit={handleEditSong}
       />
     </div>
   );

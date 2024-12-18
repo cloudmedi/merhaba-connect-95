@@ -28,6 +28,7 @@ interface SongTableRowProps {
   formatDuration: (duration?: number) => string;
   defaultArtwork: string;
   onDelete: (id: string) => void;
+  onEdit: (song: Song) => void;
   isPlaying?: boolean;
   currentlyPlayingId?: string;
 }
@@ -40,6 +41,7 @@ export function SongTableRow({
   formatDuration,
   defaultArtwork,
   onDelete,
+  onEdit,
   isPlaying,
   currentlyPlayingId,
 }: SongTableRowProps) {
@@ -49,6 +51,16 @@ export function SongTableRow({
   };
 
   const isCurrentSong = song._id === currentlyPlayingId;
+
+  const handleDelete = () => {
+    if (song._id) {
+      onDelete(song._id);
+    }
+  };
+
+  const handleEdit = () => {
+    onEdit(song);
+  };
 
   return (
     <TableRow className={`hover:bg-gray-50/50 group ${isCurrentSong ? 'bg-purple-50' : ''}`}>
@@ -120,12 +132,12 @@ export function SongTableRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-red-600 cursor-pointer"
-              onClick={() => onDelete(song._id)}
+              onClick={handleDelete}
             >
               Delete
             </DropdownMenuItem>
