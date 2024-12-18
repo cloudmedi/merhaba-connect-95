@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
   }
 });
 
-// Request interceptor - token yönetimi
+// Token yönetimi için request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -25,32 +25,23 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor - error handling
+// Hata yönetimi için response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      // Token geçersiz olduğunda sadece login sayfasına yönlendir
+    if (error.response?.status === 401) {
+      // Token geçersiz olduğunda login sayfasına yönlendir
       window.location.href = '/login';
       toast.error('Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
-    }
-
-    const message = error.response?.data?.message || 'Bir hata oluştu';
-    
-    if (error.response?.status === 403) {
+    } else if (error.response?.status === 403) {
       toast.error('Bu işlem için yetkiniz yok.');
     } else if (error.response?.status === 404) {
       toast.error('İstenen kaynak bulunamadı.');
     } else if (error.response?.status >= 500) {
       toast.error('Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.');
     } else {
-      toast.error(message);
+      toast.error(error.response?.data?.message || 'Bir hata oluştu');
     }
-
     return Promise.reject(error);
   }
 );
