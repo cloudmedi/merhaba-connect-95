@@ -21,7 +21,6 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    // Console transport with colorization
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
@@ -31,20 +30,17 @@ const logger = winston.createLogger({
         })
       )
     }),
-    // File transport for errors
     new winston.transports.File({ 
       filename: path.join(logsDir, 'error.log'),
       level: 'error',
-      maxsize: 5242880, // 5MB
+      maxsize: 5242880,
       maxFiles: 5
     }),
-    // File transport for all logs
     new winston.transports.File({ 
       filename: path.join(logsDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
+      maxsize: 5242880,
       maxFiles: 5
     }),
-    // Separate file for auth logs
     new winston.transports.File({ 
       filename: path.join(logsDir, 'auth.log'),
       format: winston.format.combine(
