@@ -2,6 +2,11 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { TrialForm } from "@/components/landing/TrialForm";
+import { Footer } from "@/components/landing/Footer";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
+import { Features } from "@/components/landing/Features";
+import { Pricing } from "@/components/landing/Pricing";
 import {
   Popover,
   PopoverContent,
