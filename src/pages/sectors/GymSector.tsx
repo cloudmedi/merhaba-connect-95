@@ -1,10 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play, Volume2, Music2, Calendar, Clock } from "lucide-react";
+import { Play, Volume2, Music2, Calendar, Clock, ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { SectorLayout } from "@/components/layout/SectorLayout";
+import { useState } from "react";
 
 export default function GymSector() {
+  const [isHovered, setIsHovered] = useState<string | null>(null);
+
   const testimonials = [
     {
       name: "Ahmet Yılmaz",
@@ -49,33 +58,91 @@ export default function GymSector() {
     }
   ];
 
+  const pricingPlans = [
+    {
+      name: "Başlangıç",
+      price: "499",
+      description: "Küçük spor salonları için ideal",
+      features: [
+        "1 Şube",
+        "5 Playlist",
+        "Email Destek",
+        "Temel Raporlama"
+      ]
+    },
+    {
+      name: "Profesyonel",
+      price: "999",
+      description: "Orta ölçekli spor salonları için",
+      features: [
+        "5 Şube",
+        "Sınırsız Playlist",
+        "7/24 Destek",
+        "Gelişmiş Raporlama",
+        "Özel Playlist Desteği"
+      ],
+      popular: true
+    },
+    {
+      name: "Kurumsal",
+      price: "1999",
+      description: "Büyük spor salonları ve zincirler için",
+      features: [
+        "Sınırsız Şube",
+        "Özel API Erişimi",
+        "Öncelikli Destek",
+        "Özel Entegrasyonlar",
+        "Kişiselleştirilmiş Çözümler"
+      ]
+    }
+  ];
+
+  const faqs = [
+    {
+      question: "Deneme süresi nasıl işliyor?",
+      answer: "14 günlük ücretsiz deneme süresinde tüm özelliklere erişebilirsiniz. Kredi kartı bilgisi gerektirmez ve süre sonunda otomatik ücretlendirme yapılmaz."
+    },
+    {
+      question: "Müzikleri offline kullanabilir miyim?",
+      answer: "Evet, playlist'lerinizi offline kullanım için indirebilirsiniz. İnternet bağlantınız olmadığında bile müzik kesintisiz devam eder."
+    },
+    {
+      question: "Telif hakkı sorunu yaşar mıyım?",
+      answer: "Hayır, tüm müziklerimiz telif hakkı ödenmiş ve ticari kullanıma uygun lisanslara sahiptir."
+    },
+    {
+      question: "Playlist'leri özelleştirebilir miyim?",
+      answer: "Evet, kendi playlist'lerinizi oluşturabilir, mevcut playlist'leri düzenleyebilir ve antrenman programınıza göre özelleştirebilirsiniz."
+    }
+  ];
+
   return (
     <SectorLayout>
-      {/* Hero Section */}
-      <div className="relative h-[600px]">
+      {/* Hero Section - with added animation */}
+      <div className="relative h-[600px] overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2940&auto=format&fit=crop"
           alt="Modern Spor Salonu"
-          className="w-full h-full object-cover brightness-50"
+          className="w-full h-full object-cover brightness-50 transform scale-105 animate-slow-zoom"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/20">
           <div className="max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 px-4 py-2 rounded-full w-fit mb-6">
+            <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 px-4 py-2 rounded-full w-fit mb-6 animate-fade-in-up">
               <Play className="w-4 h-4" />
               <span className="text-sm">14 Gün Ücretsiz Deneme</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fade-in-up delay-100">
               Spor Salonunuzu<br />
               <span className="text-purple-400">Müzikle Güçlendirin</span>
             </h1>
-            <p className="text-xl text-white/90 max-w-2xl mb-8">
+            <p className="text-xl text-white/90 max-w-2xl mb-8 animate-fade-in-up delay-200">
               Motivasyonu artıran, enerji dolu playlist'ler ile spor salonunuzun atmosferini zirveye taşıyın.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-[#6E59A5] hover:bg-[#5A478A]">
+            <div className="flex flex-wrap gap-4 animate-fade-in-up delay-300">
+              <Button size="lg" className="bg-[#6E59A5] hover:bg-[#5A478A] transform hover:scale-105 transition-all">
                 Hemen Deneyin
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 transform hover:scale-105 transition-all">
                 Detaylı Bilgi Alın
               </Button>
             </div>
@@ -83,14 +150,23 @@ export default function GymSector() {
         </div>
       </div>
 
-      {/* Features Grid */}
+      {/* Features Grid - with hover animations */}
       <div className="max-w-7xl mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="border-none shadow-lg">
+            <Card 
+              key={index} 
+              className="border-none shadow-lg transform hover:scale-105 transition-all hover:shadow-xl cursor-pointer"
+              onMouseEnter={() => setIsHovered(feature.title)}
+              onMouseLeave={() => setIsHovered(null)}
+            >
               <CardContent className="pt-6">
-                <div className="rounded-full w-12 h-12 bg-purple-100 flex items-center justify-center mb-4">
-                  <feature.icon className="h-6 w-6 text-[#6E59A5]" />
+                <div className={`rounded-full w-12 h-12 bg-purple-100 flex items-center justify-center mb-4 transition-all ${
+                  isHovered === feature.title ? 'bg-[#6E59A5]' : ''
+                }`}>
+                  <feature.icon className={`h-6 w-6 transition-colors ${
+                    isHovered === feature.title ? 'text-white' : 'text-[#6E59A5]'
+                  }`} />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
@@ -100,7 +176,6 @@ export default function GymSector() {
         </div>
       </div>
 
-      {/* Tabs Section */}
       <div className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4">
           <Tabs defaultValue="cardio" className="w-full">
@@ -146,7 +221,62 @@ export default function GymSector() {
         </div>
       </div>
 
-      {/* Testimonials */}
+      {/* Pricing Section */}
+      <div className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">Şeffaf Fiyatlandırma</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            İhtiyacınıza en uygun paketi seçin, dilediğiniz zaman değiştirin
+          </p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {pricingPlans.map((plan, index) => (
+              <Card 
+                key={index}
+                className={`relative transform hover:scale-105 transition-all ${
+                  plan.popular ? 'border-2 border-[#6E59A5] shadow-xl' : 'border shadow-lg'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-[#6E59A5] text-white px-4 py-1 rounded-full text-sm">
+                      En Popüler
+                    </span>
+                  </div>
+                )}
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                  <p className="text-gray-600 mb-4">{plan.description}</p>
+                  <div className="text-4xl font-bold mb-6">
+                    ₺{plan.price}<span className="text-lg text-gray-500">/ay</span>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                          </svg>
+                        </div>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button 
+                    className={`w-full ${
+                      plan.popular 
+                        ? 'bg-[#6E59A5] hover:bg-[#5A478A] text-white' 
+                        : 'bg-white text-[#6E59A5] border border-[#6E59A5] hover:bg-[#6E59A5] hover:text-white'
+                    }`}
+                  >
+                    Paketi Seçin
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 py-20">
         <h2 className="text-3xl font-bold text-center mb-12">
           Spor Salonu Sahipleri Ne Diyor?
@@ -173,18 +303,35 @@ export default function GymSector() {
         </div>
       </div>
 
-      {/* CTA Section */}
+      {/* FAQ Section */}
+      <div className="max-w-3xl mx-auto px-4 py-20">
+        <h2 className="text-3xl font-bold text-center mb-12">Sıkça Sorulan Sorular</h2>
+        <Accordion type="single" collapsible className="space-y-4">
+          {faqs.map((faq, index) => (
+            <AccordionItem key={index} value={`item-${index}`} className="border rounded-lg px-6">
+              <AccordionTrigger className="text-left hover:no-underline">
+                <span className="text-lg font-medium">{faq.question}</span>
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-600">
+                {faq.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+
+      {/* CTA Section - with improved styling */}
       <div className="bg-[#6E59A5] text-white py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">
+          <h2 className="text-3xl font-bold mb-6 animate-fade-in-up">
             Spor Salonunuzun Müzik İhtiyacını Karşılayalım
           </h2>
-          <p className="text-xl mb-8 opacity-90">
+          <p className="text-xl mb-8 opacity-90 animate-fade-in-up delay-100">
             14 günlük ücretsiz deneme ile MusicBiz'in spor salonunuza özel müzik çözümlerini keşfedin.
           </p>
           <Button 
             size="lg" 
-            className="bg-white text-[#6E59A5] hover:bg-white/90 px-8 py-6 text-lg font-medium"
+            className="bg-white text-[#6E59A5] hover:bg-white/90 px-8 py-6 text-lg font-medium transform hover:scale-105 transition-all animate-fade-in-up delay-200"
           >
             Hemen Başlayın
           </Button>
