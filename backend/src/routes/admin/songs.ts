@@ -6,6 +6,7 @@ import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import fetch from 'node-fetch';
+import * as mm from 'music-metadata';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -46,10 +47,14 @@ router.post('/upload',
       }
 
       const file = req.file;
-      const bunnyId = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
+      const bunnyId = `music/${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
+      
+      // Extract metadata from the audio file
+      const metadata = await mm.parseBuffer(file.buffer);
       
       // Bunny CDN URL'sini oluştur
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
+      const publicUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
 
       logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
       logger.info('Using API Key:', bunnyConfig.apiKey ? 'API Key exists' : 'No API Key');
@@ -73,13 +78,14 @@ router.post('/upload',
       const user = (req as AuthRequest).user;
 
       const song = new Song({
-        title: req.body.title || file.originalname,
-        artist: req.body.artist,
-        album: req.body.album,
-        genre: req.body.genre,
-        duration: req.body.duration,
+        title: metadata.common.title || file.originalname.replace(/\.[^/.]+$/, ""),
+        artist: metadata.common.artist || null,
+        album: metadata.common.album || null,
+        genre: metadata.common.genre || [],
+        duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
+        fileUrl: publicUrl,
         bunnyId: bunnyId,
-        fileUrl: bunnyUrl,
+        artworkUrl: null, // TODO: Extract artwork if available
         createdBy: user?.id
       });
 
