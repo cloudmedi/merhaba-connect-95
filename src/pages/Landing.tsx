@@ -16,36 +16,13 @@ import {
 
 const sectors = [
   "Kafe & Restoran",
-  "Bar & Gece Kulübü",
-  "Fast Food",
-  "Fine Dining",
-  "Pastane & Fırın",
   "Spor Salonu",
-  "Yoga & Pilates Stüdyosu",
-  "Fitness Center",
-  "CrossFit Box",
   "Güzellik & SPA",
-  "Kuaför & Güzellik Merkezi",
-  "Masaj Salonu",
-  "Tırnak Bakım Salonu",
   "Mağaza",
-  "Giyim Mağazası",
-  "Elektronik Market",
-  "Süpermarket",
   "Otel",
-  "Butik Otel",
-  "Resort Otel",
-  "Tatil Köyü",
   "AVM",
   "Ofis",
-  "Coworking Space",
-  "Plaza",
-  "Diş Kliniği",
-  "Hastane",
-  "Sağlık Merkezi",
-  "Eczane",
-  "Eğitim Kurumu",
-  "Spor Kompleksi"
+  "Diğer"
 ];
 
 export default function Landing() {
