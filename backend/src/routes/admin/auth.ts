@@ -23,8 +23,7 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', authController.register);
 
-router.get('/verify', adminAuth, (req, res) => {
-  res.json({ message: 'Token is valid' });
-});
+// Verify endpoint'ini güncelliyoruz - artık sadece token kontrolü değil, user bilgilerini de dönüyor
+router.get('/verify', authController.verifyToken);
 
 export default router;
