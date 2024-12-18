@@ -2,12 +2,6 @@ import express from 'express';
 import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import { Request } from 'express';
-import { bunnyConfig } from '../../config/bunny';
-import fetch from 'node-fetch';
-import multer from 'multer';
-import crypto from 'crypto';
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 interface AuthRequest extends Request {
   user?: {
@@ -25,50 +19,6 @@ router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) =
     res.json(songs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch songs' });
-  }
-});
-
-// Upload song
-router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), async (req: AuthRequest, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const fileBuffer = req.file.buffer;
-    const fileName = `${crypto.randomUUID()}-${req.file.originalname}`;
-    const bunnyFileName = `music/${fileName}`;
-
-    // Upload to Bunny CDN
-    const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyFileName}`;
-    
-    const uploadResponse = await fetch(bunnyUrl, {
-      method: 'PUT',
-      headers: {
-        'AccessKey': bunnyConfig.apiKey,
-        'Content-Type': req.file.mimetype
-      },
-      body: fileBuffer
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload to Bunny CDN');
-    }
-
-    // Create song record in database
-    const song = new Song({
-      title: req.file.originalname.replace(/\.[^/.]+$/, ""),
-      fileUrl: `https://${bunnyConfig.storageZoneName}.b-cdn.net/${bunnyFileName}`,
-      bunnyId: bunnyFileName,
-      createdBy: req.user?.id
-    });
-
-    await song.save();
-    res.status(201).json(song);
-
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Failed to upload song' });
   }
 });
 
