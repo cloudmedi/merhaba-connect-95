@@ -32,8 +32,12 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
       createdBy: req.user?.id
     });
     res.status(201).json(category);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create category' });
+  } catch (error: any) {
+    console.error('Error creating category:', error);
+    res.status(500).json({ 
+      error: 'Failed to create category',
+      details: error.message 
+    });
   }
 });
 
@@ -41,6 +45,9 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
 router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
     const category = await categoryService.updateCategory(req.params.id, req.body);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
     res.json(category);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update category' });

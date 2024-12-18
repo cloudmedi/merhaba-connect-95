@@ -1,9 +1,17 @@
 import { Category } from '../../models/admin/Category';
 
 export class CategoryService {
-  async createCategory(data: { name: string; description?: string; position: number; createdBy: string }) {
+  async createCategory(data: { name: string; description?: string; createdBy: string }) {
     try {
-      const category = new Category(data);
+      // Get the maximum position
+      const maxPositionCategory = await Category.findOne().sort({ position: -1 });
+      const nextPosition = maxPositionCategory ? maxPositionCategory.position + 1 : 1;
+
+      const category = new Category({
+        ...data,
+        position: nextPosition
+      });
+      
       await category.save();
       return category;
     } catch (error) {
