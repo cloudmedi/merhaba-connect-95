@@ -47,6 +47,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           }
         } else {
           console.log('No token found during initialization');
+          setUser(null);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -86,6 +87,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     try {
       console.log('Registration started');
       await authService.register(userData);
+      toast.success('Registration successful');
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error(error.message || 'Error during registration');

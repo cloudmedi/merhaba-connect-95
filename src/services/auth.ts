@@ -102,6 +102,8 @@ export const authService = {
       const response = await fetch(`${API_URL}/admin/auth/verify`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
       });
 
@@ -119,19 +121,20 @@ export const authService = {
         hasUser: !!data.user
       });
       
-      // Yeni token gelirse güncelle
       if (data.token) {
         console.log('Updating token in localStorage with new token');
         this.setToken(data.token);
       }
 
-      // Kullanıcı bilgilerini de localStorage'a kaydet
       if (data.user) {
         console.log('Updating user in localStorage with verified user data');
         this.setUser(data.user);
       }
 
-      return { isValid: true, user: data.user };
+      return { 
+        isValid: true, 
+        user: data.user 
+      };
     } catch (error) {
       console.error('Token verification error:', error);
       return { isValid: false, user: null };

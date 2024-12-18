@@ -12,6 +12,11 @@ export class TokenController {
 
   async verifyToken(req: Request, res: Response) {
     try {
+      // Cache kontrolünü devre dışı bırak
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       logger.info('Token verification request', {
@@ -66,7 +71,7 @@ export class TokenController {
       res.json({
         valid: true,
         user: userData,
-        token: token
+        token
       });
     } catch (error) {
       logger.error('Token verification error', {
