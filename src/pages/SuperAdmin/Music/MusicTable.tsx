@@ -59,8 +59,14 @@ export function MusicTable({
   const defaultArtwork = "/placeholder.svg";
 
   const handlePlaySong = (song: Song) => {
-    setCurrentlyPlaying(song);
-    setIsPlaying(true);
+    if (currentlyPlaying?._id === song._id) {
+      // If clicking the same song, toggle play/pause
+      setIsPlaying(!isPlaying);
+    } else {
+      // If clicking a different song, start playing it
+      setCurrentlyPlaying(song);
+      setIsPlaying(true);
+    }
   };
 
   const transformedSongs = songs.map(song => ({
