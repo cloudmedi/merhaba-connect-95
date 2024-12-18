@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { Footer } from "@/components/landing/Footer";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
@@ -8,6 +8,22 @@ import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
 import { useState } from "react";
 import { TrialForm } from "@/components/landing/TrialForm";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+const sectors = [
+  "Kafe & Restoran",
+  "Spor Salonu",
+  "Güzellik & SPA",
+  "Mağaza",
+  "Otel",
+  "AVM",
+  "Ofis",
+  "Diğer"
+];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -19,7 +35,7 @@ export default function Landing() {
       <nav className="border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
+            <div className="flex items-center gap-6">
               <Button 
                 variant="ghost" 
                 className="text-gray-600 gap-2"
@@ -28,7 +44,33 @@ export default function Landing() {
                 <ArrowLeft className="h-4 w-4" />
                 MusicBiz
               </Button>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="text-gray-600 gap-1"
+                  >
+                    İş Türleri
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2">
+                  <div className="grid gap-1">
+                    {sectors.map((sector) => (
+                      <Button
+                        key={sector}
+                        variant="ghost"
+                        className="w-full justify-start text-left"
+                      >
+                        {sector}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
+
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost"
