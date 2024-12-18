@@ -35,7 +35,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // Upload a new song
-router.post('/', 
+router.post('/upload', 
   authMiddleware, 
   adminMiddleware, 
   upload.single('file'), 
