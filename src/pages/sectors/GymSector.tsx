@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { SectorLayout } from "@/components/layout/SectorLayout";
 import { Features } from "@/components/sectors/gym/Features";
@@ -9,7 +8,7 @@ import { FAQ } from "@/components/sectors/gym/FAQ";
 export default function GymSector() {
   return (
     <SectorLayout>
-      {/* Hero Section - Unchanged */}
+      {/* Hero Section - Without Buttons */}
       <div className="relative h-[600px] overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2940&auto=format&fit=crop"
@@ -29,14 +28,6 @@ export default function GymSector() {
             <p className="text-xl text-white/90 max-w-2xl mb-8 animate-fade-in-up delay-200">
               Motivasyonu artıran, enerji dolu playlist'ler ile spor salonunuzun atmosferini zirveye taşıyın.
             </p>
-            <div className="flex flex-wrap gap-4 animate-fade-in-up delay-300">
-              <Button size="lg" className="bg-[#6E59A5] hover:bg-[#5A478A] transform hover:scale-105 transition-all">
-                Hemen Deneyin
-              </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 transform hover:scale-105 transition-all">
-                Detaylı Bilgi Alın
-              </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -55,12 +46,11 @@ export default function GymSector() {
           <p className="text-xl mb-8 opacity-90 animate-fade-in-up delay-100">
             14 günlük ücretsiz deneme ile MusicBiz'in spor salonunuza özel müzik çözümlerini keşfedin.
           </p>
-          <Button 
-            size="lg" 
-            className="bg-white text-[#6E59A5] hover:bg-white/90 px-8 py-6 text-lg font-medium transform hover:scale-105 transition-all animate-fade-in-up delay-200"
+          <button 
+            className="bg-white text-[#6E59A5] hover:bg-white/90 px-8 py-3 rounded-lg text-lg font-medium transform hover:scale-105 transition-all animate-fade-in-up delay-200"
           >
             Hemen Başlayın
-          </Button>
+          </button>
         </div>
       </div>
     </SectorLayout>
