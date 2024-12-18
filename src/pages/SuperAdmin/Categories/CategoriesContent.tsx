@@ -28,6 +28,7 @@ export function CategoriesContent() {
 
   const handleCreate = async (newCategory: Pick<Category, "name" | "description">) => {
     try {
+      console.log("Creating new category with data:", newCategory);
       await categoryService.createCategory(newCategory);
       setIsDialogOpen(false);
       fetchCategories();
@@ -40,7 +41,9 @@ export function CategoriesContent() {
 
   const handleEdit = async (updatedCategory: Category) => {
     try {
+      console.log("Updating category with data:", updatedCategory);
       if (!updatedCategory.id) {
+        console.error("Category ID is missing in handleEdit");
         throw new Error('Category ID is missing');
       }
       
@@ -106,6 +109,7 @@ export function CategoriesContent() {
       </div>
       <CategoriesHeader 
         onCreateNew={() => {
+          console.log("Opening dialog for new category");
           setEditingCategory(null);
           setIsDialogOpen(true);
         }}
@@ -113,6 +117,7 @@ export function CategoriesContent() {
       <CategoriesTable 
         categories={categories}
         onEdit={(category) => {
+          console.log("Opening dialog to edit category:", category);
           setEditingCategory(category);
           setIsDialogOpen(true);
         }}

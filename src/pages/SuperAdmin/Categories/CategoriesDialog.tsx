@@ -24,6 +24,7 @@ export function CategoriesDialog({ open, onOpenChange, category, onSubmit }: Cat
   });
 
   useEffect(() => {
+    console.log("Category prop received in dialog:", category);
     if (category) {
       setFormData({
         name: category.name,
@@ -39,7 +40,9 @@ export function CategoriesDialog({ open, onOpenChange, category, onSubmit }: Cat
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(category ? { ...category, ...formData } : formData);
+    const submitData = category ? { ...category, ...formData } : formData;
+    console.log("Form data being submitted:", submitData);
+    onSubmit(submitData);
   };
 
   return (
