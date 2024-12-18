@@ -30,6 +30,7 @@ export interface UserCreateInput {
   lastName: string;
   role?: 'admin' | 'manager' | 'user';
   companyId?: string;
+  companyName?: string;  // Added this field
 }
 
 export interface UserUpdateInput {
@@ -39,6 +40,7 @@ export interface UserUpdateInput {
   isActive?: boolean;
   password?: string;
   companyId?: string;
+  companyName?: string;  // Added this field
 }
 
 export interface AuthResponse {
