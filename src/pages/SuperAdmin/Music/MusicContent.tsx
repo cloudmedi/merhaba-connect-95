@@ -96,15 +96,15 @@ export function MusicContent() {
     });
   };
 
-  const filteredSongs = songs.filter(song => 
+  const filteredSongs = songs.filter((song: Song) => 
     song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (song.album?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  // Fixed the type inference for genres extraction
+  // Fixed the type inference for genres extraction with explicit typing
   const genres = Array.from(new Set(
-    songs.reduce((acc: string[], song: Song) => {
+    filteredSongs.reduce<string[]>((acc, song: Song) => {
       if (song.genre && Array.isArray(song.genre)) {
         return [...acc, ...song.genre];
       }
