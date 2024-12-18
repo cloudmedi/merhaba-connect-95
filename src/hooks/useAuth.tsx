@@ -18,24 +18,28 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeAuth = async () => {
       try {
         const token = authService.getToken();
         if (token) {
-          const isValid = await authService.verifyToken();
-          if (!isValid) {
+          const { isValid, user: verifiedUser } = await authService.verifyToken();
+          if (isValid && verifiedUser) {
+            setUser(verifiedUser);
+          } else {
             await authService.logout();
             setUser(null);
           }
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Auth initialization error:', error);
+        await authService.logout();
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -49,7 +53,13 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const register = async (userData: { email: string; password: string; firstName: string; lastName: string; role: string }) => {
+  const register = async (userData: { 
+    email: string; 
+    password: string; 
+    firstName: string; 
+    lastName: string;
+    role: string;
+  }) => {
     try {
       await authService.register(userData);
     } catch (error: any) {

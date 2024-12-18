@@ -62,10 +62,10 @@ export const authService = {
     return !!this.getToken();
   },
 
-  async verifyToken(): Promise<boolean> {
+  async verifyToken(): Promise<{ isValid: boolean; user: any }> {
     try {
       const token = this.getToken();
-      if (!token) return false;
+      if (!token) return { isValid: false, user: null };
 
       const response = await fetch(`${API_URL}/admin/auth/verify`, {
         headers: {
@@ -73,9 +73,14 @@ export const authService = {
         },
       });
 
-      return response.ok;
+      if (!response.ok) {
+        return { isValid: false, user: null };
+      }
+
+      const data = await response.json();
+      return { isValid: true, user: data.user };
     } catch {
-      return false;
+      return { isValid: false, user: null };
     }
   }
 };

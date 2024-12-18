@@ -97,8 +97,26 @@ export class AuthController {
         return res.status(401).json({ error: 'No token provided' });
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-      res.json({ valid: true, user: decoded });
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+      
+      // Token geçerliyse kullanıcı bilgilerini getir
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      res.json({ 
+        valid: true, 
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isActive: user.isActive,
+          companyName: user.companyName
+        }
+      });
     } catch (error) {
       res.status(401).json({ error: 'Invalid token' });
     }
