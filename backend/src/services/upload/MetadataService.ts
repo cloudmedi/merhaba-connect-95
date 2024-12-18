@@ -37,17 +37,20 @@ export class MetadataService {
           setTimeout(() => reject(new Error('Duration extraction timed out')), 10000);
         });
 
-        const duration = await Promise.race([durationPromise, timeoutPromise]);
+        const extractedDuration = await Promise.race([durationPromise, timeoutPromise]);
+        
+        // Type guard to ensure duration is a number
+        const duration = typeof extractedDuration === 'number' ? extractedDuration : null;
         logger.info(`Duration extracted successfully: ${duration} seconds`);
 
         // Get ID3 metadata
         const id3Metadata = NodeID3.read(buffer);
         logger.info('ID3 metadata extracted:', id3Metadata);
 
-        // Combine metadata
+        // Combine metadata with proper type checking for duration
         const metadata = {
           ...id3Metadata,
-          duration: Math.round(duration) // Round to nearest second
+          duration: duration !== null ? Math.round(duration) : null // Only round if duration is a number
         };
 
         logger.info('Final metadata object:', metadata);
