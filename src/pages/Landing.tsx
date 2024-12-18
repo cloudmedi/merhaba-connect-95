@@ -15,29 +15,29 @@ import {
 
 const sectorGroups = {
   "Sağlık & Güzellik": [
-    "Spor Salonu",
-    "Medikal Merkezler",
-    "Diş Klinikleri",
-    "Güzellik Salonları",
-    "SPA Merkezleri"
+    { name: "Spor Salonu", path: "/sectors/gym" },
+    { name: "Medikal Merkezler", path: "/sectors/medical" },
+    { name: "Diş Klinikleri", path: "/sectors/dental" },
+    { name: "Güzellik Salonları", path: "/sectors/beauty" },
+    { name: "SPA Merkezleri", path: "/sectors/spa" }
   ],
   "Perakende": [
-    "Mağazalar",
-    "AVM",
-    "Market Zincirleri",
-    "Butikler"
+    { name: "Mağazalar", path: "/sectors/retail" },
+    { name: "AVM", path: "/sectors/mall" },
+    { name: "Market Zincirleri", path: "/sectors/supermarket" },
+    { name: "Butikler", path: "/sectors/boutique" }
   ],
   "Hizmet Sektörü": [
-    "Kafe & Restoran",
-    "Oteller",
-    "Bar & Publar",
-    "Kafeler"
+    { name: "Kafe & Restoran", path: "/sectors/cafe" },
+    { name: "Oteller", path: "/sectors/hotel" },
+    { name: "Bar & Publar", path: "/sectors/bar" },
+    { name: "Kafeler", path: "/sectors/coffee" }
   ],
   "Kurumsal": [
-    "Ofisler",
-    "Okullar",
-    "İş Merkezleri",
-    "Plaza"
+    { name: "Ofisler", path: "/sectors/office" },
+    { name: "Okullar", path: "/sectors/school" },
+    { name: "İş Merkezleri", path: "/sectors/business" },
+    { name: "Plaza", path: "/sectors/plaza" }
   ]
 };
 
@@ -78,11 +78,12 @@ export default function Landing() {
                         <div className="space-y-2">
                           {sectors.map((sector) => (
                             <Button
-                              key={sector}
+                              key={sector.name}
                               variant="ghost"
                               className="w-full justify-start text-left h-auto py-1.5 px-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                              onClick={() => navigate(sector.path)}
                             >
-                              {sector}
+                              {sector.name}
                             </Button>
                           ))}
                         </div>
