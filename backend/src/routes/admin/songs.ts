@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express, { Response, Request } from 'express';
 import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import multer from 'multer';
@@ -14,21 +14,17 @@ const upload = multer({
   }
 });
 
-interface AuthRequest extends express.Request {
+interface AuthRequest extends Request {
   user?: {
     id: string;
     role: string;
   };
 }
 
-interface FileRequest extends express.Request {
-  file: Express.Multer.File;
-}
-
 const router = express.Router();
 
 // Get all songs
-router.get('/', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find();
     res.json(songs);
@@ -43,7 +39,7 @@ router.post('/',
   authMiddleware, 
   adminMiddleware, 
   upload.single('file'), 
-  async (req: AuthRequest & Partial<FileRequest>, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -69,6 +65,8 @@ router.post('/',
         throw new Error(`Failed to upload to Bunny CDN: ${await uploadResponse.text()}`);
       }
 
+      const user = (req as AuthRequest).user;
+
       const song = new Song({
         title: req.body.title,
         artist: req.body.artist,
@@ -77,7 +75,7 @@ router.post('/',
         duration: req.body.duration,
         bunnyId: bunnyId,
         fileUrl: bunnyUrl,
-        uploadedBy: req.user?.id
+        createdBy: user?.id
       });
 
       await song.save();
@@ -90,7 +88,7 @@ router.post('/',
 });
 
 // Delete a song
-router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
