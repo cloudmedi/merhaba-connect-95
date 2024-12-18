@@ -65,11 +65,16 @@ const logger = winston.createLogger({
   ]
 });
 
-// Add stream for Morgan
-logger.stream = {
+// Morgan stream için interface tanımı
+interface LoggerStream {
+  write(message: string): void;
+}
+
+// Morgan stream için logger stream oluştur
+const loggerStream: LoggerStream = {
   write: (message: string) => {
     logger.info(message.trim());
   }
 };
 
-export { logger };
+export { logger, loggerStream };
