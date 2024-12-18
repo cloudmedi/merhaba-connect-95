@@ -6,7 +6,7 @@ import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import fetch from 'node-fetch';
-import * as mm from 'music-metadata';
+import { parseFromBuffer } from 'music-metadata';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -49,12 +49,19 @@ router.post('/upload',
       const file = req.file;
       const bunnyId = `music/${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Extract metadata from the audio file
-      const metadata = await mm.parseBuffer(file.buffer);
+      // Extract metadata from the audio file using parseFromBuffer
+      let metadata;
+      try {
+        metadata = await parseFromBuffer(file.buffer);
+        logger.info('Extracted metadata:', metadata);
+      } catch (metadataError) {
+        logger.error('Error extracting metadata:', metadataError);
+        metadata = null;
+      }
       
-      // Bunny CDN URL'sini oluştur
-      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
+      // Create public URL for CDN
       const publicUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
+      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
 
       logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
       logger.info('Using API Key:', bunnyConfig.apiKey ? 'API Key exists' : 'No API Key');
@@ -78,11 +85,11 @@ router.post('/upload',
       const user = (req as AuthRequest).user;
 
       const song = new Song({
-        title: metadata.common.title || file.originalname.replace(/\.[^/.]+$/, ""),
-        artist: metadata.common.artist || null,
-        album: metadata.common.album || null,
-        genre: metadata.common.genre || [],
-        duration: metadata.format.duration ? Math.round(metadata.format.duration) : null,
+        title: metadata?.common?.title || file.originalname.replace(/\.[^/.]+$/, ""),
+        artist: metadata?.common?.artist || null,
+        album: metadata?.common?.album || null,
+        genre: metadata?.common?.genre || [],
+        duration: metadata?.format?.duration ? Math.round(metadata.format.duration) : null,
         fileUrl: publicUrl,
         bunnyId: bunnyId,
         artworkUrl: null, // TODO: Extract artwork if available
