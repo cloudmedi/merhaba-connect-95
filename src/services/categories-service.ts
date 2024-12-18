@@ -24,7 +24,6 @@ export const categoryService = {
 
   async updateCategory(categoryData: { id?: string; _id?: string; name?: string; description?: string }) {
     try {
-      // Use either id or _id, whichever is available
       const categoryId = categoryData.id || categoryData._id;
       
       if (!categoryId) {
@@ -43,27 +42,26 @@ export const categoryService = {
     }
   },
 
-  async updatePositions(updates: { id?: string; _id?: string; position: number }[]) {
+  async deleteCategory(categoryId: string) {
     try {
-      const formattedUpdates = updates.map(update => ({
-        id: update.id || update._id,
-        position: update.position
-      }));
-
-      const { data } = await axiosInstance.put('/admin/categories/positions', formattedUpdates);
-      return data;
+      if (!categoryId) {
+        throw new Error('Category ID is missing');
+      }
+      await axiosInstance.delete(`/admin/categories/${categoryId}`);
     } catch (error) {
-      console.error('Error updating positions:', error);
-      toast.error("Failed to update category positions");
+      console.error('Error in deleteCategory:', error);
+      toast.error("Failed to delete category");
       throw error;
     }
   },
 
-  async deleteCategory(categoryId: string) {
+  async updatePositions(updates: { id: string; position: number }[]) {
     try {
-      await axiosInstance.delete(`/admin/categories/${categoryId}`);
+      const { data } = await axiosInstance.put('/admin/categories/positions', updates);
+      return data;
     } catch (error) {
-      toast.error("Failed to delete category");
+      console.error('Error updating positions:', error);
+      toast.error("Failed to update category positions");
       throw error;
     }
   }

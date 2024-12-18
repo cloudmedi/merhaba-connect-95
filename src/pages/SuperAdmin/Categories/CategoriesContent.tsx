@@ -53,9 +53,14 @@ export function CategoriesContent() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (categoryId: string) => {
     try {
-      await categoryService.deleteCategory(id);
+      console.log("Deleting category with ID:", categoryId);
+      if (!categoryId) {
+        toast.error("Invalid category ID");
+        return;
+      }
+      await categoryService.deleteCategory(categoryId);
       fetchCategories();
       toast.success("Category deleted successfully");
     } catch (error) {
@@ -74,8 +79,7 @@ export function CategoriesContent() {
       newCategories.splice(newIndex, 0, movedCategory);
       
       const updates = newCategories.map((category, index) => ({
-        id: category.id,
-        _id: category._id,
+        id: category.id || category._id,
         position: index + 1
       }));
       

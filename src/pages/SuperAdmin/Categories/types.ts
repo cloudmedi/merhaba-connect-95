@@ -1,9 +1,9 @@
 export interface Category {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
-  description: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  position: number;
+  description: string;
+  position?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
