@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Dumbbell, Users, Clock, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { SectorLayout } from "@/components/layout/SectorLayout";
+import { Dumbbell, Users, Clock, Sparkles } from "lucide-react";
 
 export default function GymSector() {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-white">
-      <div className="relative h-[500px]">
+    <SectorLayout>
+      <div className="relative h-[600px]">
         <img
           src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2940&auto=format&fit=crop"
           alt="Modern Spor Salonu"
@@ -16,14 +14,6 @@ export default function GymSector() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/20">
           <div className="max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-            <Button
-              variant="ghost"
-              className="text-white mb-8 w-fit hover:bg-white/10"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Geri Dön
-            </Button>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
               Spor Salonu Müzik Çözümleri
             </h1>
@@ -133,6 +123,6 @@ export default function GymSector() {
           </div>
         </div>
       </div>
-    </div>
+    </SectorLayout>
   );
 }
