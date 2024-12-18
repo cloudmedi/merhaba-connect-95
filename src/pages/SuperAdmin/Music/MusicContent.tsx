@@ -102,8 +102,9 @@ export function MusicContent() {
     (song.album?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
+  // Fixed the type inference for genres extraction
   const genres = Array.from(new Set(
-    songs.reduce((acc: string[], song) => {
+    songs.reduce((acc: string[], song: Song) => {
       if (song.genre && Array.isArray(song.genre)) {
         return [...acc, ...song.genre];
       }
