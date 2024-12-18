@@ -22,7 +22,6 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', authController.register);
 
-// Verify endpoint'ini güncelliyoruz - artık user bilgilerini de dönüyor
 router.get('/verify', authController.verifyToken);
 
 export default router;
