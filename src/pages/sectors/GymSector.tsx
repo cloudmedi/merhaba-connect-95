@@ -184,8 +184,7 @@ export default function GymSector() {
           </p>
           <Button 
             size="lg" 
-            variant="outline" 
-            className="text-white border-white hover:bg-white hover:text-[#6E59A5] px-8 py-6 text-lg font-medium"
+            className="bg-white text-[#6E59A5] hover:bg-white/90 px-8 py-6 text-lg font-medium"
           >
             Hemen Başlayın
           </Button>
