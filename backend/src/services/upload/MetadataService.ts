@@ -2,6 +2,9 @@ import NodeID3 from 'node-id3';
 import { logger } from '../../utils/logger';
 import { Cache } from '../../utils/cache';
 import { getAudioDurationInSeconds } from 'get-audio-duration';
+import { writeFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 
 const metadataCache = new Cache<string, any>(60 * 60 * 1000); // 1 hour cache
 
@@ -15,23 +18,36 @@ export class MetadataService {
         return cachedMetadata;
       }
 
-      // Get duration using get-audio-duration
-      const duration = await getAudioDurationInSeconds(buffer);
+      // Geçici dosya oluştur
+      const tempFilePath = join(tmpdir(), `temp-${fileName}`);
+      writeFileSync(tempFilePath, buffer);
 
-      // Get other metadata using NodeID3
-      const id3Metadata = NodeID3.read(buffer);
+      try {
+        // Geçici dosyadan süreyi al
+        const duration = await getAudioDurationInSeconds(tempFilePath);
 
-      // Combine metadata
-      const metadata = {
-        ...id3Metadata,
-        duration: Math.round(duration) // Round to nearest second
-      };
+        // Get other metadata using NodeID3
+        const id3Metadata = NodeID3.read(buffer);
 
-      if (metadata) {
-        metadataCache.set(cacheKey, metadata);
+        // Combine metadata
+        const metadata = {
+          ...id3Metadata,
+          duration: Math.round(duration) // Round to nearest second
+        };
+
+        if (metadata) {
+          metadataCache.set(cacheKey, metadata);
+        }
+        
+        return metadata;
+      } finally {
+        // Geçici dosyayı temizle
+        try {
+          unlinkSync(tempFilePath);
+        } catch (error) {
+          logger.error('Error cleaning up temporary file:', error);
+        }
       }
-      
-      return metadata;
     } catch (error) {
       logger.error('Metadata extraction error:', error);
       return null;
