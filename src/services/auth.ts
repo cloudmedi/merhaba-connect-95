@@ -47,8 +47,8 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    // Sadece logout işleminde token'ı sil
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
   },
 
   getToken(): string | null {
@@ -57,6 +57,15 @@ export const authService = {
 
   setToken(token: string): void {
     localStorage.setItem('token', token);
+  },
+
+  setUser(user: any): void {
+    localStorage.setItem('user', JSON.stringify(user));
+  },
+
+  getUser(): any {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
   },
 
   isAuthenticated(): boolean {
@@ -83,6 +92,11 @@ export const authService = {
       // Yeni token gelirse güncelle
       if (data.token) {
         this.setToken(data.token);
+      }
+
+      // Kullanıcı bilgilerini de localStorage'a kaydet
+      if (data.user) {
+        this.setUser(data.user);
       }
 
       return { isValid: true, user: data.user };

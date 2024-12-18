@@ -14,7 +14,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // İlk yüklemede localStorage'dan kullanıcı bilgisini al
+    return authService.getUser();
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +28,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           const { isValid, user: verifiedUser } = await authService.verifyToken();
           if (isValid && verifiedUser) {
             setUser(verifiedUser);
+            authService.setUser(verifiedUser);
           } else {
             await authService.logout();
             setUser(null);
@@ -46,6 +50,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
+      authService.setUser(response.user);
       toast.success('Successfully logged in');
     } catch (error: any) {
       toast.error(error.message || 'Error logging in');
