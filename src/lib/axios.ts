@@ -31,28 +31,12 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Token hatası durumunda verify endpoint'ine istek at
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
-      try {
-        const response = await fetch(`${API_URL}/admin/auth/verify`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.token) {
-            localStorage.setItem('token', data.token);
-            originalRequest.headers.Authorization = `Bearer ${data.token}`;
-            return axios(originalRequest);
-          }
-        }
-      } catch (error) {
-        console.error('Token refresh error:', error);
-      }
+      
+      // Token geçersiz olduğunda sadece login sayfasına yönlendir
+      window.location.href = '/login';
+      toast.error('Oturum süreniz doldu. Lütfen tekrar giriş yapın.');
     }
 
     const message = error.response?.data?.message || 'Bir hata oluştu';

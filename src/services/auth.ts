@@ -47,6 +47,7 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
+    // Sadece logout işleminde token'ı sil
     localStorage.removeItem('token');
   },
 
