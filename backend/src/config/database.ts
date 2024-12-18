@@ -6,12 +6,7 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI;
-    
-    if (!mongoUri) {
-      throw new Error('MongoDB URI is not defined in environment variables');
-    }
-
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/musicapp';
     const options = {
       autoIndex: true,
       serverSelectionTimeoutMS: 5000,
@@ -20,27 +15,27 @@ const connectDB = async () => {
     };
 
     mongoose.connection.on('connected', () => {
-      logger.info('MongoDB connection successful');
+      logger.info('MongoDB bağlantısı başarılı');
     });
 
     mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB connection error:', err);
+      logger.error('MongoDB bağlantı hatası:', err);
     });
 
     mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB connection disconnected');
+      logger.warn('MongoDB bağlantısı kesildi');
     });
 
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
-      logger.info('MongoDB connection closed - Application terminating');
+      logger.info('MongoDB bağlantısı kapatıldı - Uygulama sonlandırılıyor');
       process.exit(0);
     });
 
-    await mongoose.connect(mongoUri, options);
-    logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
+    const conn = await mongoose.connect(mongoUri, options);
+    logger.info(`MongoDB Bağlandı: ${conn.connection.host}`);
   } catch (error) {
-    logger.error('MongoDB connection error:', error);
+    logger.error('MongoDB bağlantı hatası:', error);
     process.exit(1);
   }
 };
