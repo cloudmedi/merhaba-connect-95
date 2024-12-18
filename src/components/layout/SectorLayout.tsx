@@ -13,34 +13,6 @@ interface SectorLayoutProps {
   children: React.ReactNode;
 }
 
-const sectorGroups = {
-  "Sağlık & Güzellik": [
-    { name: "Spor Salonu", path: "/sectors/gym" },
-    { name: "Medikal Merkezler", path: "/sectors/medical" },
-    { name: "Diş Klinikleri", path: "/sectors/dental" },
-    { name: "Güzellik Salonları", path: "/sectors/beauty" },
-    { name: "SPA Merkezleri", path: "/sectors/spa" }
-  ],
-  "Perakende": [
-    { name: "Mağazalar", path: "/sectors/retail" },
-    { name: "AVM", path: "/sectors/mall" },
-    { name: "Market Zincirleri", path: "/sectors/supermarket" },
-    { name: "Butikler", path: "/sectors/boutique" }
-  ],
-  "Hizmet Sektörü": [
-    { name: "Kafe & Restoran", path: "/sectors/cafe" },
-    { name: "Oteller", path: "/sectors/hotel" },
-    { name: "Bar & Publar", path: "/sectors/bar" },
-    { name: "Kafeler", path: "/sectors/coffee" }
-  ],
-  "Kurumsal": [
-    { name: "Ofisler", path: "/sectors/office" },
-    { name: "Okullar", path: "/sectors/school" },
-    { name: "İş Merkezleri", path: "/sectors/business" },
-    { name: "Plaza", path: "/sectors/plaza" }
-  ]
-};
-
 export function SectorLayout({ children }: SectorLayoutProps) {
   const navigate = useNavigate();
   const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
@@ -59,39 +31,13 @@ export function SectorLayout({ children }: SectorLayoutProps) {
                 MusicBiz
               </Button>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="text-gray-600 font-medium"
-                  >
-                    Sektörler
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[500px] p-6" align="start">
-                  <div className="grid grid-cols-2 gap-8">
-                    {Object.entries(sectorGroups).map(([category, sectors]) => (
-                      <div key={category} className="space-y-3">
-                        <h3 className="font-semibold text-gray-900 text-sm">
-                          {category}
-                        </h3>
-                        <div className="space-y-2">
-                          {sectors.map((sector) => (
-                            <Button
-                              key={sector.name}
-                              variant="ghost"
-                              className="w-full justify-start text-left h-auto py-1.5 px-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-                              onClick={() => navigate(sector.path)}
-                            >
-                              {sector.name}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 font-medium"
+                onClick={() => navigate("/sectors")}
+              >
+                Sektörler
+              </Button>
             </div>
 
             <div className="flex items-center gap-4">
