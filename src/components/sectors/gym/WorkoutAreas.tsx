@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
 
 const areas = [
   {
@@ -29,42 +34,67 @@ const areas = [
 ];
 
 export function WorkoutAreas() {
+  const [api, setApi] = useState<any>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+
+    // Her 5 saniyede bir sonraki slide'a geç
+    const interval = setInterval(() => {
+      api.scrollNext();
+    }, 5000);
+
+    // Component unmount olduğunda interval'i temizle
+    return () => clearInterval(interval);
+  }, [api]);
+
   return (
     <div className="bg-[#F1F0FB] py-20">
       <div className="max-w-7xl mx-auto px-4">
-        <Tabs defaultValue="cardio" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 mb-8 bg-white/50 p-1 rounded-lg">
+        <Carousel 
+          setApi={setApi}
+          className="w-full"
+          onSelect={(api) => {
+            setCurrent(api.selectedScrollSnap());
+          }}
+        >
+          <CarouselContent>
             {areas.map((area) => (
-              <TabsTrigger 
-                key={area.id} 
-                value={area.id}
-                className="data-[state=active]:bg-[#6E59A5] data-[state=active]:text-white"
-              >
-                {area.title}
-              </TabsTrigger>
+              <CarouselItem key={area.id}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div className="space-y-6 animate-fade-in-up">
+                    <h3 className="text-2xl font-bold">{area.title}</h3>
+                    <p className="text-gray-600">{area.description}</p>
+                    <Button className="bg-[#6E59A5] hover:bg-[#5A478A] transform hover:scale-105 transition-all">
+                      Playlist'leri İnceleyin
+                    </Button>
+                  </div>
+                  <div className="relative rounded-xl overflow-hidden shadow-xl">
+                    <img
+                      src={`https://images.unsplash.com/photo-${area.image}?w=800&auto=format&fit=crop&q=60`}
+                      alt={area.title}
+                      className="w-full aspect-video object-cover transform hover:scale-110 transition-all duration-700"
+                    />
+                  </div>
+                </div>
+              </CarouselItem>
             ))}
-          </TabsList>
-          {areas.map((area) => (
-            <TabsContent key={area.id} value={area.id} className="mt-8 animate-fade-in-up">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div>
-                  <h3 className="text-2xl font-bold mb-4">{area.title}</h3>
-                  <p className="text-gray-600 mb-6">{area.description}</p>
-                  <Button className="bg-[#6E59A5] hover:bg-[#5A478A] transform hover:scale-105 transition-all">
-                    Playlist'leri İnceleyin
-                  </Button>
-                </div>
-                <div className="relative rounded-xl overflow-hidden shadow-xl">
-                  <img
-                    src={`https://images.unsplash.com/photo-${area.image}?w=800&auto=format&fit=crop&q=60`}
-                    alt={area.title}
-                    className="w-full aspect-video object-cover transform hover:scale-110 transition-all duration-700"
-                  />
-                </div>
-              </div>
-            </TabsContent>
+          </CarouselContent>
+        </Carousel>
+
+        {/* Slide indikatörleri */}
+        <div className="flex justify-center gap-2 mt-8">
+          {areas.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                current === index ? "bg-[#6E59A5] w-6" : "bg-gray-300"
+              }`}
+              onClick={() => api?.scrollTo(index)}
+            />
           ))}
-        </Tabs>
+        </div>
       </div>
     </div>
   );
