@@ -42,13 +42,7 @@ export function CategoriesContent() {
   const handleEdit = async (updatedCategory: Category) => {
     try {
       console.log("Updating category with data:", updatedCategory);
-      if (!updatedCategory.id) {
-        console.error("Category ID is missing in handleEdit");
-        throw new Error('Category ID is missing');
-      }
-      
-      const { id, name, description } = updatedCategory;
-      await categoryService.updateCategory(id, { name, description });
+      await categoryService.updateCategory(updatedCategory);
       setIsDialogOpen(false);
       setEditingCategory(null);
       fetchCategories();
@@ -79,21 +73,17 @@ export function CategoriesContent() {
       const [movedCategory] = newCategories.splice(oldIndex, 1);
       newCategories.splice(newIndex, 0, movedCategory);
       
-      // Update positions for all affected categories
       const updates = newCategories.map((category, index) => ({
         id: category.id,
+        _id: category._id,
         position: index + 1
       }));
       
-      // Optimistically update the UI
       setCategories(newCategories);
-      
-      // Update in the database
       await categoryService.updatePositions(updates);
       toast.success("Categories reordered successfully");
     } catch (error) {
       console.error('Error reordering categories:', error);
-      // Revert the optimistic update on error
       fetchCategories();
       toast.error("Failed to reorder categories");
     } finally {
