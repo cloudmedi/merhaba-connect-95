@@ -32,10 +32,10 @@ export const useMusicLibrary = () => {
   });
 
   // Güvenli bir şekilde genre'leri çıkart
-  const genres = Array.from(new Set(
+  const genres: string[] = Array.from(new Set(
     songs
-      .filter(song => Array.isArray(song.genre) && song.genre.length > 0)
-      .reduce((acc: string[], song) => {
+      .filter((song: Song) => Array.isArray(song.genre) && song.genre.length > 0)
+      .reduce((acc: string[], song: Song) => {
         if (song.genre) {
           return [...acc, ...song.genre];
         }
