@@ -3,7 +3,6 @@ import { MusicHeader } from "./MusicHeader";
 import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
-import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ export interface Song {
   genre?: string[];
   duration?: number;
   fileUrl: string;
+  file_url: string; // Added for compatibility
   artworkUrl?: string;
   createdAt: string;
   bunnyId?: string;
@@ -39,7 +39,11 @@ export function MusicContent() {
     queryKey: ['songs'],
     queryFn: async () => {
       const response = await axios.get('/admin/songs');
-      return response.data as Song[];
+      // Transform the response to include both fileUrl and file_url
+      return response.data.map((song: any) => ({
+        ...song,
+        file_url: song.fileUrl // Ensure both properties exist
+      }));
     }
   });
 
@@ -67,7 +71,6 @@ export function MusicContent() {
   };
 
   const handleEditSong = (song: Song) => {
-    // For now, just show a toast since edit functionality is not implemented yet
     toast.info("Edit functionality coming soon");
   };
 

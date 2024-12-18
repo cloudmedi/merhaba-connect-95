@@ -16,8 +16,13 @@ interface Song {
   album?: string;
   genre?: string[];
   duration?: number;
-  artwork_url?: string;
+  fileUrl: string;
   file_url: string;
+  artwork_url?: string;
+  createdAt: string;
+  bunnyId?: string;
+  createdBy?: string;
+  updatedAt?: string;
 }
 
 interface SongTableRowProps {
