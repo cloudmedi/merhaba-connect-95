@@ -9,7 +9,7 @@ export function HeroSection() {
   const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
   
   return (
-    <div className="relative bg-white">
+    <div className="relative bg-[#FAF9FF] bg-[url('/lovable-uploads/1a3569d7-87ab-4169-b20a-741060879300.png')] bg-repeat">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
