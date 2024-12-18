@@ -1,12 +1,11 @@
 import express from 'express';
 import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
-import { Request } from 'express';
 import multer from 'multer';
 import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
-import fetch from 'node-fetch';
+import fetch, { HeadersInit } from 'node-fetch';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -15,12 +14,12 @@ const upload = multer({
   }
 });
 
-interface AuthRequest extends Request {
+interface AuthRequest extends express.Request {
   user?: {
     id: string;
     role: string;
   };
-  file?: Express.Multer.File;
+  file?: any; // Using any for multer file type
 }
 
 const router = express.Router();
@@ -65,12 +64,14 @@ router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), a
     
     logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
 
+    const headers: HeadersInit = {
+      'AccessKey': bunnyConfig.apiKey || '',
+      'Content-Type': file.mimetype
+    };
+
     const uploadResponse = await fetch(bunnyUrl, {
       method: 'PUT',
-      headers: {
-        'AccessKey': bunnyConfig.apiKey,
-        'Content-Type': file.mimetype
-      } as HeadersInit,
+      headers,
       body: file.buffer
     });
 
@@ -123,11 +124,13 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     // Delete from Bunny CDN if bunnyId exists
     if (song.bunnyId) {
       const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${song.bunnyId}`;
+      const headers: HeadersInit = {
+        'AccessKey': bunnyConfig.apiKey || ''
+      };
+
       await fetch(bunnyUrl, {
         method: 'DELETE',
-        headers: {
-          'AccessKey': bunnyConfig.apiKey
-        } as HeadersInit
+        headers
       });
     }
 
