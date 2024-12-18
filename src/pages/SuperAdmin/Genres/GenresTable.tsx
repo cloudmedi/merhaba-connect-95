@@ -16,7 +16,7 @@ import {
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Genre } from "./types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 interface GenresTableProps {
   genres: Genre[];
@@ -25,6 +25,16 @@ interface GenresTableProps {
 }
 
 export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    try {
+      return format(parseISO(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Invalid date:', dateString);
+      return '-';
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <ScrollArea className="w-full overflow-auto">
@@ -45,7 +55,7 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
                 <TableCell className="hidden md:table-cell">{genre.description}</TableCell>
                 <TableCell>{genre.songCount || 0}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {format(new Date(genre.created_at), 'MMM dd, yyyy')}
+                  {formatDate(genre.created_at)}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
