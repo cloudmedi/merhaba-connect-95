@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { API_URL } from "@/services/api";
+import axios from '@/lib/axios';
 
 interface Song {
-  id: string;
+  _id: string;
   title: string;
   artist?: string;
   album?: string;
@@ -32,22 +33,15 @@ export function MusicContent() {
     data: songs = [],
     isLoading,
     refetch
-  } = useQuery<Song[]>({
+  } = useQuery({
     queryKey: ['songs'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/admin/songs`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch songs');
-      }
-
-      const data = await response.json();
-      return data;
+      const response = await axios.get('/admin/songs');
+      const transformedSongs = response.data.map((song: any) => ({
+        ...song,
+        id: song._id // Ensure we have both id and _id
+      }));
+      return transformedSongs;
     }
   });
 
@@ -59,23 +53,22 @@ export function MusicContent() {
     if (checked) {
       setSelectedSongs(prev => [...prev, song]);
     } else {
-      setSelectedSongs(prev => prev.filter(s => s.id !== song.id));
+      setSelectedSongs(prev => prev.filter(s => s._id !== song._id));
     }
   };
 
   const handleDeleteSong = async (songId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/admin/songs/${songId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete song');
+      if (!songId) {
+        toast({
+          title: "Error",
+          description: "Invalid song ID",
+          variant: "destructive",
+        });
+        return;
       }
+
+      await axios.delete(`/admin/songs/${songId}`);
 
       toast({
         title: "Success",
@@ -84,6 +77,7 @@ export function MusicContent() {
 
       refetch();
     } catch (error: any) {
+      console.error('Error deleting song:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete song",
@@ -95,7 +89,7 @@ export function MusicContent() {
   const handleBulkDelete = async () => {
     try {
       for (const song of selectedSongs) {
-        await handleDeleteSong(song.id);
+        await handleDeleteSong(song._id);
       }
       setSelectedSongs([]);
     } catch (error: any) {

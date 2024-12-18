@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface Song {
-  id: string;
+  _id: string;
   title: string;
   artist?: string;
   album?: string;
@@ -48,7 +48,7 @@ export function SongTableRow({
     return `${url}?width=150&quality=85&format=webp`;
   };
 
-  const isCurrentSong = song.id === currentlyPlayingId;
+  const isCurrentSong = song._id === currentlyPlayingId;
 
   return (
     <TableRow className={`hover:bg-gray-50/50 group ${isCurrentSong ? 'bg-purple-50' : ''}`}>
@@ -125,7 +125,7 @@ export function SongTableRow({
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-red-600 cursor-pointer"
-              onClick={() => onDelete(song.id)}
+              onClick={() => onDelete(song._id)}
             >
               Delete
             </DropdownMenuItem>
