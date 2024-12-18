@@ -2,6 +2,18 @@ import express from 'express';
 import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import { Request } from 'express';
+import multer from 'multer';
+import { bunnyConfig } from '../../config/bunny';
+import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
+import fetch from 'node-fetch';
+import { logger } from '../../utils/logger';
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 20 * 1024 * 1024 // 20MB limit
+  }
+});
 
 interface AuthRequest extends Request {
   user?: {
@@ -35,17 +47,53 @@ router.get('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
   }
 });
 
-// Create song
-router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+// Upload song
+router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), async (req: AuthRequest, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const file = req.file;
+    const randomString = generateRandomString(8);
+    const sanitizedFileName = sanitizeFileName(file.originalname);
+    const fileName = `${randomString}-${sanitizedFileName}`;
+
+    // Upload to Bunny CDN
+    const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${fileName}`;
+    
+    logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
+
+    const uploadResponse = await fetch(bunnyUrl, {
+      method: 'PUT',
+      headers: {
+        'AccessKey': bunnyConfig.apiKey,
+        'Content-Type': file.mimetype
+      },
+      body: file.buffer
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload to Bunny CDN: ${await uploadResponse.text()}`);
+    }
+
+    // Create song record in database
     const song = new Song({
-      ...req.body,
+      title: req.body.title || file.originalname.replace(/\.[^/.]+$/, ""),
+      artist: req.body.artist,
+      album: req.body.album,
+      genre: req.body.genre ? JSON.parse(req.body.genre) : [],
+      fileUrl: fileName,
+      bunnyId: fileName,
       createdBy: req.user?.id
     });
+
     await song.save();
     res.status(201).json(song);
+
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create song' });
+    logger.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload song' });
   }
 });
 
@@ -66,6 +114,22 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 // Delete song
 router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
+    const song = await Song.findById(req.params.id);
+    if (!song) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    // Delete from Bunny CDN if bunnyId exists
+    if (song.bunnyId) {
+      const bunnyUrl = `${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${song.bunnyId}`;
+      await fetch(bunnyUrl, {
+        method: 'DELETE',
+        headers: {
+          'AccessKey': bunnyConfig.apiKey
+        }
+      });
+    }
+
     await Song.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {
