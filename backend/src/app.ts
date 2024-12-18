@@ -6,6 +6,7 @@ import { initializeWebSocket } from './config/websocket';
 import { logger, stream } from './utils/logger';
 import { requestLogger, responseLogger } from './middleware/logger';
 import morgan from 'morgan';
+import { validateBunnyCredentials } from './utils/bunnyValidator';
 
 // Routes
 import adminAuthRoutes from './routes/admin/auth';
@@ -37,10 +38,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB and validate Bunny CDN credentials
+const initializeApp = async () => {
+  try {
+    await connectDB();
+    logger.info('MongoDB connected successfully');
 
-// Morgan logger middleware
+    const isBunnyValid = await validateBunnyCredentials();
+    if (!isBunnyValid) {
+      logger.error('⚠️ WARNING: Bunny CDN credentials validation failed. File uploads may not work correctly.');
+    }
+  } catch (error) {
+    logger.error('Failed to initialize app:', error);
+  }
+};
+
+initializeApp();
+
 app.use(morgan('combined', { stream }));
 
 // Logger middleware - MUST be before routes
