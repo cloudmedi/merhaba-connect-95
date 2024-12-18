@@ -6,10 +6,17 @@ import * as argon2 from 'argon2';
 
 const router = express.Router();
 
-// Get all users
+// Get all users with their licenses
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find()
+      .select('-password')
+      .populate({
+        path: 'licenses',
+        model: License,
+        match: { isActive: true },
+        options: { sort: { endDate: -1 }, limit: 1 }
+      });
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });

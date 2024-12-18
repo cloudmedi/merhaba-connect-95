@@ -13,9 +13,15 @@ const UserSchema = new mongoose.Schema({
   companyName: { type: String },
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
-  avatarUrl: { type: String }
+  avatarUrl: { type: String },
+  licenses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'License'
+  }]
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 export const User = mongoose.model('User', UserSchema);
