@@ -5,8 +5,8 @@ import { Request } from 'express';
 import multer from 'multer';
 import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
-import fetch from 'node-fetch';
 import { logger } from '../../utils/logger';
+import fetch from 'node-fetch';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -20,6 +20,7 @@ interface AuthRequest extends Request {
     id: string;
     role: string;
   };
+  file?: Express.Multer.File;
 }
 
 const router = express.Router();
@@ -69,7 +70,7 @@ router.post('/upload', authMiddleware, adminMiddleware, upload.single('file'), a
       headers: {
         'AccessKey': bunnyConfig.apiKey,
         'Content-Type': file.mimetype
-      },
+      } as HeadersInit,
       body: file.buffer
     });
 
@@ -126,7 +127,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
         method: 'DELETE',
         headers: {
           'AccessKey': bunnyConfig.apiKey
-        }
+        } as HeadersInit
       });
     }
 
