@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectorLayout } from "@/components/layout/SectorLayout";
-import { Dumbbell, Users, Clock, Sparkles, Play, Volume2, Music2, Calendar } from "lucide-react";
+import { Play, Volume2, Music2, Calendar, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function GymSector() {
