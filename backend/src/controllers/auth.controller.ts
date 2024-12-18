@@ -21,7 +21,7 @@ export class AuthController {
       const token = jwt.sign(
         { userId: user._id, role: user.role },
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: '24h' }
+        { expiresIn: '7d' } // Token süresini 7 güne çıkardık
       );
 
       res.json({
@@ -99,14 +99,21 @@ export class AuthController {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
       
-      // Token geçerliyse kullanıcı bilgilerini getir
       const user = await User.findById(decoded.userId);
       if (!user) {
         return res.status(401).json({ error: 'User not found' });
       }
 
+      // Token geçerliyse yeni token oluştur
+      const newToken = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: '7d' }
+      );
+
       res.json({ 
-        valid: true, 
+        valid: true,
+        token: newToken, // Yeni token'ı da dön
         user: {
           id: user._id,
           email: user.email,

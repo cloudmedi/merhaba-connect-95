@@ -78,6 +78,12 @@ export const authService = {
       }
 
       const data = await response.json();
+      
+      // Yeni token gelirse güncelle
+      if (data.token) {
+        this.setToken(data.token);
+      }
+
       return { isValid: true, user: data.user };
     } catch {
       return { isValid: false, user: null };
