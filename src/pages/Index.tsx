@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Music2, Building2, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { TrialForm } from "@/components/landing/TrialForm";
 
 export default function Index() {
   const navigate = useNavigate();
+  const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -46,7 +49,7 @@ export default function Index() {
                 Super Admin Panel
               </CardTitle>
               <CardDescription>
-                Central management system for all branches
+                Merkezi yönetim sistemi
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -54,7 +57,7 @@ export default function Index() {
                 className="w-full bg-primary" 
                 onClick={() => navigate("/super-admin")}
               >
-                Access Super Admin
+                Giriş Yap
               </Button>
             </CardContent>
           </Card>
@@ -66,21 +69,25 @@ export default function Index() {
                 Manager Panel
               </CardTitle>
               <CardDescription>
-                Branch management dashboard
+                Şube yönetim paneli
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
-                className="w-full"
-                variant="secondary"
-                onClick={() => navigate("/manager")}
+                className="w-full bg-[#6E59A5] hover:bg-[#5A478A] text-white"
+                onClick={() => setIsTrialFormOpen(true)}
               >
-                Access Manager Panel
+                Ücretsiz Deneyin
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <TrialForm 
+        open={isTrialFormOpen} 
+        onOpenChange={setIsTrialFormOpen}
+      />
     </div>
   );
 }
