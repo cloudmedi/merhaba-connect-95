@@ -15,36 +15,34 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Convert file to base64
-        const reader = new FileReader();
-        const fileBase64Promise = new Promise((resolve) => {
-          reader.onload = () => {
-            const base64 = reader.result?.toString().split(',')[1];
-            resolve(base64);
-          };
-        });
-        reader.readAsDataURL(file);
-        const fileBase64 = await fileBase64Promise;
+        // Upload file to Supabase Storage
+        const fileName = `${crypto.randomUUID()}-${file.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('songs')
+          .upload(fileName, file);
 
-        // Call the upload-music edge function
-        const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: {
-            fileData: fileBase64,
-            fileName: file.name,
-            contentType: file.type
-          }
-        });
+        if (uploadError) throw uploadError;
 
-        if (error) {
-          throw error;
-        }
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('songs')
+          .getPublicUrl(fileName);
 
-        console.log('Upload response:', data);
-        toast.success(`${file.name} has been uploaded successfully`);
+        // Save song metadata to database
+        const { error: insertError } = await supabase
+          .from('songs')
+          .insert({
+            title: file.name.replace(/\.[^/.]+$/, ""),
+            file_url: publicUrl,
+            created_at: new Date().toISOString()
+          });
 
+        if (insertError) throw insertError;
+
+        toast.success(`${file.name} başarıyla yüklendi`);
       } catch (error: any) {
         console.error('Upload error:', error);
-        toast.error(error.message || 'Failed to upload file');
+        toast.error(`${file.name} yüklenirken hata oluştu: ${error.message}`);
       }
     }
 
@@ -68,7 +66,7 @@ export function MusicHeader() {
         disabled={isUploading}
       >
         <Upload className="w-4 h-4 mr-2" />
-        {isUploading ? 'Uploading...' : 'Upload Music'}
+        {isUploading ? 'Yükleniyor...' : 'Müzik Yükle'}
       </Button>
     </div>
   );

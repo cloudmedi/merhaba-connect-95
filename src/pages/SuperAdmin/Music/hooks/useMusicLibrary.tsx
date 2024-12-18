@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Song {
   id: string;
@@ -23,19 +23,21 @@ export const useMusicLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const { data: songsData = [], isLoading, refetch } = useQuery({
+  const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
-      const response = await axios.get('/api/admin/songs');
-      return response.data || [];
+      const { data, error } = await supabase
+        .from('songs')
+        .select('*')
+        .order('created_at', { ascending: !sortByRecent });
+
+      if (error) throw error;
+      return data as Song[];
     }
   });
 
-  // API'den gelen veriyi Song[] tipine dönüştür
-  const songs: Song[] = Array.isArray(songsData) ? songsData : [];
-
-  // Genre'leri güvenli bir şekilde çıkart
-  const genres: string[] = Array.from(new Set(
+  // Extract unique genres safely
+  const genres = Array.from(new Set(
     songs.reduce((acc: string[], song) => {
       if (song.genre && Array.isArray(song.genre)) {
         return [...acc, ...song.genre];
