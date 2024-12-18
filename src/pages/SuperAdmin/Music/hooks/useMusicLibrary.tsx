@@ -31,8 +31,17 @@ export const useMusicLibrary = () => {
     }
   });
 
-  // Fetch unique genres from songs
-  const genres = Array.from(new Set(songs.flatMap(song => song.genre || []))).sort();
+  // Güvenli bir şekilde genre'leri çıkart
+  const genres = Array.from(new Set(
+    songs
+      .filter(song => Array.isArray(song.genre) && song.genre.length > 0)
+      .reduce((acc: string[], song) => {
+        if (song.genre) {
+          return [...acc, ...song.genre];
+        }
+        return acc;
+      }, [])
+  )).sort();
 
   const totalCount = songs.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
