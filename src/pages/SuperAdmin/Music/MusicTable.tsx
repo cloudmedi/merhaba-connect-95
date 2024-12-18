@@ -15,10 +15,9 @@ interface Song {
   album?: string;
   genre?: string[];
   duration?: number;
-  artwork_url?: string;
-  file_url: string;
-  bunny_id?: string;
-  created_at: string;
+  artworkUrl?: string;
+  fileUrl: string;
+  createdAt: string;
 }
 
 interface MusicTableProps {
@@ -70,20 +69,6 @@ export function MusicTable({
 
   const defaultArtwork = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b";
 
-  const getBunnyUrl = (song: Song): string => {
-    if (!song) return '';
-    
-    if (song.bunny_id) {
-      return `https://cloud-media.b-cdn.net/${song.bunny_id}`;
-    }
-    
-    if (song.file_url.startsWith('http')) {
-      return song.file_url;
-    }
-    
-    return `https://cloud-media.b-cdn.net/${song.file_url}`;
-  };
-
   const handlePlaySong = (song: Song) => {
     const songIndex = songs.findIndex(s => s.id === song.id);
     setCurrentSongIndex(songIndex);
@@ -106,8 +91,7 @@ export function MusicTable({
     title: song.title,
     artist: song.artist || "Unknown Artist",
     duration: song.duration?.toString() || "0:00",
-    file_url: getBunnyUrl(song),
-    bunny_id: song.bunny_id
+    file_url: song.fileUrl,
   }));
 
   return (
@@ -136,7 +120,16 @@ export function MusicTable({
                 {songs.map((song) => (
                   <SongTableRow
                     key={song.id}
-                    song={song}
+                    song={{
+                      id: song.id,
+                      title: song.title,
+                      artist: song.artist || '',
+                      album: song.album || '',
+                      genre: song.genre || [],
+                      duration: song.duration,
+                      artwork_url: song.artworkUrl,
+                      file_url: song.fileUrl
+                    }}
                     isSelected={selectedSongs.some((s) => s.id === song.id)}
                     onSelect={(checked) => onSelectSong(song, checked)}
                     onPlay={() => handlePlaySong(song)}
@@ -167,7 +160,7 @@ export function MusicTable({
           playlist={{
             id: currentPlaylistId,
             title: "Now Playing",
-            artwork: currentlyPlaying.artwork_url || defaultArtwork,
+            artwork: currentlyPlaying.artworkUrl || defaultArtwork,
             songs: transformedSongs
           }}
           onClose={() => {

@@ -10,8 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { API_URL } from "@/services/api";
 
+interface Song {
+  id: string;
+  title: string;
+  artist?: string;
+  album?: string;
+  genre?: string[];
+  duration?: number;
+  fileUrl: string;
+  artworkUrl?: string;
+  createdAt: string;
+}
+
 export function MusicContent() {
-  const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
+  const [selectedSongs, setSelectedSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -20,7 +32,7 @@ export function MusicContent() {
     data: songs = [],
     isLoading,
     refetch
-  } = useQuery({
+  } = useQuery<Song[]>({
     queryKey: ['songs'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
@@ -43,7 +55,7 @@ export function MusicContent() {
     setSelectedSongs(checked ? songs : []);
   };
 
-  const handleSelectSong = (song: any, checked: boolean) => {
+  const handleSelectSong = (song: Song, checked: boolean) => {
     if (checked) {
       setSelectedSongs(prev => [...prev, song]);
     } else {
@@ -112,8 +124,8 @@ export function MusicContent() {
 
   const filteredSongs = songs.filter(song => 
     song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.album?.toLowerCase().includes(searchQuery.toLowerCase())
+    (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (song.album?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   // Extract unique genres from songs
