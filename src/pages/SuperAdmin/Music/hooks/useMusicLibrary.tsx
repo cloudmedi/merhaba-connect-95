@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { API_URL } from "@/services/api";
 
 export interface Song {
   id: string;
@@ -26,12 +26,18 @@ export const useMusicLibrary = () => {
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('songs')
-        .select('*')
-        .order('created_at', { ascending: !sortByRecent });
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/songs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch songs');
+      }
+
+      const data = await response.json();
       return data as Song[];
     }
   });

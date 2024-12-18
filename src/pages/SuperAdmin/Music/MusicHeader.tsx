@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { API_URL } from "@/services/api";
 
 export function MusicHeader() {
   const [isUploading, setIsUploading] = useState(false);
@@ -15,30 +15,22 @@ export function MusicHeader() {
     
     for (const file of Array.from(files)) {
       try {
-        // Upload file to Supabase Storage
-        const fileName = `${crypto.randomUUID()}-${file.name}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('songs')
-          .upload(fileName, file);
+        const formData = new FormData();
+        formData.append('file', file);
 
-        if (uploadError) throw uploadError;
+        const response = await fetch(`${API_URL}/admin/songs/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('songs')
-          .getPublicUrl(fileName);
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
 
-        // Save song metadata to database
-        const { error: insertError } = await supabase
-          .from('songs')
-          .insert({
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            file_url: publicUrl,
-            created_at: new Date().toISOString()
-          });
-
-        if (insertError) throw insertError;
-
+        const data = await response.json();
         toast.success(`${file.name} başarıyla yüklendi`);
       } catch (error: any) {
         console.error('Upload error:', error);
