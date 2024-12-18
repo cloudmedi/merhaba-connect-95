@@ -85,8 +85,8 @@ export function HeroSection() {
 
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1559070169-a3077159ee16?q=80&w=2940&auto=format&fit=crop"
-              alt="Cafe İç Mekan"
+              src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2940&auto=format&fit=crop"
+              alt="Modern Cafe İç Mekan"
               className="w-full h-[600px] object-cover rounded-2xl shadow-2xl"
             />
           </div>
