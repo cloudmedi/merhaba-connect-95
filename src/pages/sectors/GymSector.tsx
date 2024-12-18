@@ -8,43 +8,43 @@ export default function GymSector() {
   const testimonials = [
     {
       name: "Ahmet Yılmaz",
-      role: "Fitness Center Müdürü",
-      content: "MusicBiz ile spor salonumuzun atmosferi tamamen değişti. Üyelerimiz müzik seçimlerimizi sürekli övüyor.",
-      image: "https://images.unsplash.com/photo-1571732154690-f6d1c3e5178a?w=800&auto=format&fit=crop&q=60"
+      role: "Spor Salonu Sahibi",
+      content: "MusicBiz ile spor salonumun atmosferi tamamen değişti! Müşterilerim müzikten çok memnun.",
+      image: "https://randomuser.me/api/portraits/men/1.jpg"
     },
     {
-      name: "Ayşe Kaya",
-      role: "Yoga Stüdyo Sahibi",
-      content: "Farklı dersler için özelleştirilmiş playlist'ler sayesinde her aktivite için mükemmel bir ambiyans yaratabiliyoruz.",
-      image: "https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?w=800&auto=format&fit=crop&q=60"
+      name: "Elif Demir",
+      role: "Spor Salonu Yöneticisi",
+      content: "Müzik yönetimi çok kolay! Artık her antrenman için doğru müziği seçebiliyoruz.",
+      image: "https://randomuser.me/api/portraits/women/1.jpg"
     },
     {
-      name: "Mehmet Demir",
-      role: "CrossFit Box Sahibi",
-      content: "Yüksek enerjili workout playlist'leri ile antrenmanların verimliliği gözle görülür şekilde arttı.",
-      image: "https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=800&auto=format&fit=crop&q=60"
+      name: "Mehmet Can",
+      role: "Fitness Eğitmeni",
+      content: "Müzik motivasyonumuzu artırıyor. MusicBiz sayesinde antrenmanlar daha eğlenceli hale geldi.",
+      image: "https://randomuser.me/api/portraits/men/2.jpg"
     }
   ];
 
   const features = [
     {
-      title: "Özelleştirilmiş Müzik Programları",
-      description: "Her bölüm için ayrı ayrı hazırlanmış playlist'ler",
+      title: "Özel Playlist'ler",
+      description: "Her antrenman için özel olarak hazırlanmış playlist'ler.",
       icon: Music2
     },
     {
-      title: "Otomatik Programlama",
-      description: "Gün içi saatlere göre otomatik müzik değişimi",
-      icon: Calendar
-    },
-    {
-      title: "Ses Seviyesi Kontrolü",
-      description: "Bölgelere göre ayarlanabilir ses seviyeleri",
+      title: "Gerçek Zamanlı İzleme",
+      description: "Müzik akışını anlık olarak takip edin.",
       icon: Volume2
     },
     {
-      title: "7/24 Teknik Destek",
-      description: "Kesintisiz müzik yayını için sürekli destek",
+      title: "Programlama",
+      description: "Müzik akışını haftalık olarak programlayın.",
+      icon: Calendar
+    },
+    {
+      title: "Etkileşimli Deneyim",
+      description: "Müşterilerinizle etkileşimde bulunun.",
       icon: Clock
     }
   ];
@@ -139,9 +139,8 @@ export default function GymSector() {
                       className="w-full aspect-video object-cover"
                     />
                   </div>
-                </div>
-              </TabsContent>
-            ))}
+                </TabsContent>
+              ))}
           </Tabs>
         </div>
       </div>
