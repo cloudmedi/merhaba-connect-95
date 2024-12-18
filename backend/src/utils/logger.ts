@@ -71,10 +71,10 @@ interface LoggerStream {
 }
 
 // Morgan stream için logger stream oluştur
-const loggerStream: LoggerStream = {
+const stream: LoggerStream = {
   write: (message: string) => {
     logger.info(message.trim());
   }
 };
 
-export { logger, loggerStream };
+export { logger, stream };

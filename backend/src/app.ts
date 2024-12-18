@@ -3,8 +3,9 @@ import cors from 'cors';
 import { createServer } from 'http';
 import connectDB from './config/database';
 import { initializeWebSocket } from './config/websocket';
-import { logger } from './utils/logger';
+import { logger, stream } from './utils/logger';
 import { requestLogger, responseLogger } from './middleware/logger';
+import morgan from 'morgan';
 
 // Routes
 import adminAuthRoutes from './routes/admin/auth';
@@ -38,6 +39,9 @@ app.use((req, res, next) => {
 
 // Connect to MongoDB
 connectDB();
+
+// Morgan logger middleware
+app.use(morgan('combined', { stream }));
 
 // Logger middleware - MUST be before routes
 app.use(requestLogger);
