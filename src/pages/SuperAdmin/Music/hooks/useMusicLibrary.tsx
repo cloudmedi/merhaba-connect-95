@@ -23,24 +23,25 @@ export const useMusicLibrary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const { data: songs = [], isLoading, refetch } = useQuery({
+  const { data: songsData = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
       const response = await axios.get('/api/admin/songs');
-      return response.data;
+      return response.data || [];
     }
   });
 
-  // Güvenli bir şekilde genre'leri çıkart
+  // API'den gelen veriyi Song[] tipine dönüştür
+  const songs: Song[] = Array.isArray(songsData) ? songsData : [];
+
+  // Genre'leri güvenli bir şekilde çıkart
   const genres: string[] = Array.from(new Set(
-    songs
-      .filter((song: Song) => Array.isArray(song.genre) && song.genre.length > 0)
-      .reduce((acc: string[], song: Song) => {
-        if (song.genre) {
-          return [...acc, ...song.genre];
-        }
-        return acc;
-      }, [])
+    songs.reduce((acc: string[], song) => {
+      if (song.genre && Array.isArray(song.genre)) {
+        return [...acc, ...song.genre];
+      }
+      return acc;
+    }, [])
   )).sort();
 
   const totalCount = songs.length;
