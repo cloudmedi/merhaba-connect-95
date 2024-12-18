@@ -1,22 +1,23 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
+import { TrialForm } from "./TrialForm";
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
   
   return (
     <div className="relative bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            {/* Free Trial Badge */}
             <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 px-4 py-2 rounded-full">
               <Play className="w-4 h-4" />
               <span className="text-sm">14 Gün Ücretsiz Deneme - Kredi Kartı Gerekmez</span>
             </div>
 
-            {/* Hero Content */}
             <div className="space-y-6">
               <h1 className="text-4xl lg:text-6xl font-bold text-gray-900">
                 İşletmenizi{" "}
@@ -29,12 +30,11 @@ export function HeroSection() {
               </p>
             </div>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg"
                 className="bg-[#6E59A5] hover:bg-[#5A478A] text-white px-8"
-                onClick={() => navigate("/manager/register")}
+                onClick={() => setIsTrialFormOpen(true)}
               >
                 14 Gün Ücretsiz Deneyin
               </Button>
@@ -47,7 +47,6 @@ export function HeroSection() {
               </Button>
             </div>
 
-            {/* Features List */}
             <div className="grid grid-cols-2 gap-6 pt-8">
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
@@ -84,7 +83,6 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Hero Image */}
           <div className="relative">
             <img
               src="https://images.unsplash.com/photo-1559070169-a3077159ee16?q=80&w=2940&auto=format&fit=crop"
@@ -94,6 +92,11 @@ export function HeroSection() {
           </div>
         </div>
       </div>
+
+      <TrialForm 
+        open={isTrialFormOpen} 
+        onOpenChange={setIsTrialFormOpen}
+      />
     </div>
   );
 }
