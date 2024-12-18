@@ -17,10 +17,6 @@ export default function GymSector() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/20">
           <div className="max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-            <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-600 px-4 py-2 rounded-full w-fit mb-6 animate-fade-in-up">
-              <Play className="w-4 h-4" />
-              <span className="text-sm">14 Gün Ücretsiz Deneme</span>
-            </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fade-in-up delay-100">
               Spor Salonunuzu<br />
               <span className="text-purple-400">Müzikle Güçlendirin</span>
