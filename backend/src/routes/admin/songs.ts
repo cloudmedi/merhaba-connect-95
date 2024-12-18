@@ -48,29 +48,32 @@ router.post('/upload',
       const file = req.file;
       const bunnyId = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Bunny CDN URL'sini doğru şekilde oluştur
+      // Bunny CDN URL'sini oluştur
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
 
       logger.info(`Uploading to Bunny CDN: ${bunnyUrl}`);
+      logger.info('Using API Key:', bunnyConfig.apiKey ? 'API Key exists' : 'No API Key');
 
       const uploadResponse = await fetch(bunnyUrl, {
         method: 'PUT',
         headers: {
-          'AccessKey': bunnyConfig.apiKey || '',
+          'AccessKey': bunnyConfig.apiKey,
           'Content-Type': file.mimetype,
-          'Accept': 'application/json'
+          'Accept': '*/*'
         },
         body: file.buffer
       });
 
       if (!uploadResponse.ok) {
-        throw new Error(`Failed to upload to Bunny CDN: ${await uploadResponse.text()}`);
+        const responseText = await uploadResponse.text();
+        logger.error('Bunny CDN upload failed:', responseText);
+        throw new Error(`Failed to upload to Bunny CDN: ${responseText}`);
       }
 
       const user = (req as AuthRequest).user;
 
       const song = new Song({
-        title: req.body.title,
+        title: req.body.title || file.originalname,
         artist: req.body.artist,
         album: req.body.album,
         genre: req.body.genre,
@@ -102,8 +105,8 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
       const deleteResponse = await fetch(bunnyUrl, {
         method: 'DELETE',
         headers: {
-          'AccessKey': bunnyConfig.apiKey || '',
-          'Accept': 'application/json'
+          'AccessKey': bunnyConfig.apiKey,
+          'Accept': '*/*'
         }
       });
 
