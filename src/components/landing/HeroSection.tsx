@@ -3,76 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { TrialForm } from "./TrialForm";
-import { HeroFeatures } from "./HeroFeatures";
-import { PlaylistGrid } from "./PlaylistGrid";
-import { CallToAction } from "./CallToAction";
 
 export function HeroSection() {
   const navigate = useNavigate();
   const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
-  
-  const playlists = [
-    {
-      title: "CCM Christmas",
-      image: "https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=800&auto=format&fit=crop&q=60",
-      category: "CHRISTMAS"
-    },
-    {
-      title: "Xmas Pop",
-      image: "https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=800&auto=format&fit=crop&q=60",
-      category: "CHRISTMAS"
-    },
-    {
-      title: "Pop FM",
-      image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=60",
-      category: "POP"
-    },
-    {
-      title: "Store Christmas",
-      image: "https://images.unsplash.com/photo-1512389098783-66b81f86e199?w=800&auto=format&fit=crop&q=60",
-      category: "STORE"
-    },
-    {
-      title: "Christmas Party",
-      image: "https://images.unsplash.com/photo-1517230878791-4d28214057c2?w=800&auto=format&fit=crop&q=60",
-      category: "PARTY"
-    },
-    {
-      title: "Energy Booster",
-      image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60",
-      category: "HITS"
-    },
-    {
-      title: "Instrumental Christmas",
-      image: "https://images.unsplash.com/photo-1511715282680-fbf93a50e721?w=800&auto=format&fit=crop&q=60",
-      category: "CHRISTMAS"
-    },
-    {
-      title: "Restaurant Christmas",
-      image: "https://images.unsplash.com/photo-1481833761820-0509d3217039?w=800&auto=format&fit=crop&q=60",
-      category: "RESTAURANT"
-    },
-    {
-      title: "Jingle Bell Rock",
-      image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=60",
-      category: "ROCK"
-    },
-    {
-      title: "Bar Christmas",
-      image: "https://images.unsplash.com/photo-1482575832494-771f74bf6857?w=800&auto=format&fit=crop&q=60",
-      category: "BAR"
-    },
-    {
-      title: "Family-friendly Pop",
-      image: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=60",
-      category: "POP"
-    },
-    {
-      title: "Most Played Store",
-      image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&auto=format&fit=crop&q=60",
-      category: "STORE"
-    },
-  ];
   
   return (
     <div className="relative bg-white">
@@ -113,7 +47,40 @@ export function HeroSection() {
               </Button>
             </div>
 
-            <HeroFeatures />
+            <div className="grid grid-cols-2 gap-6 pt-8">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                  </svg>
+                </div>
+                <span className="text-gray-700">10.000+ Şarkı</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Haftalık Güncellemeler</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Sektöre Özel</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-[#6E59A5]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                  </svg>
+                </div>
+                <span className="text-gray-700">7/24 Destek</span>
+              </div>
+            </div>
           </div>
 
           <div className="relative">
@@ -124,11 +91,6 @@ export function HeroSection() {
             />
           </div>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <CallToAction />
-        <PlaylistGrid playlists={playlists} />
       </div>
 
       <TrialForm 
