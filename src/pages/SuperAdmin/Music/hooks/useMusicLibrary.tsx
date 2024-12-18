@@ -9,12 +9,11 @@ export interface Song {
   album?: string | null;
   genre?: string[] | null;
   duration?: number | null;
-  fileUrl: string;
-  artworkUrl?: string | null;
-  createdAt: string;
-  bunnyId?: string | null;
-  createdBy?: string | null;
-  updatedAt?: string | null;
+  file_url: string;
+  created_at: string;
+  bunny_id?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
 }
 
 export const useMusicLibrary = () => {
@@ -31,9 +30,13 @@ export const useMusicLibrary = () => {
     }
   });
 
-  // Fetch unique genres from songs
+  // Fetch unique genres from songs, safely handling undefined/null values
   const genres: string[] = Array.from(
-    new Set(songs.flatMap(song => song.genre || []))
+    new Set(
+      songs
+        .filter(song => Array.isArray(song.genre) && song.genre.length > 0)
+        .reduce((acc: string[], song) => [...acc, ...(song.genre || [])], [])
+    )
   ).sort();
 
   const totalCount = songs.length;
