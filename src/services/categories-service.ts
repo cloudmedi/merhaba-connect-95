@@ -7,6 +7,7 @@ export const categoryService = {
       const { data } = await axiosInstance.get('/admin/categories');
       return data;
     } catch (error) {
+      console.error('Error in getCategories:', error);
       toast.error("Failed to fetch categories");
       throw error;
     }
@@ -17,6 +18,7 @@ export const categoryService = {
       const { data } = await axiosInstance.post('/admin/categories', category);
       return data;
     } catch (error) {
+      console.error('Error in createCategory:', error);
       toast.error("Failed to create category");
       throw error;
     }
@@ -37,6 +39,7 @@ export const categoryService = {
       
       return data;
     } catch (error) {
+      console.error('Error in updateCategory:', error);
       toast.error("Failed to update category");
       throw error;
     }
@@ -47,6 +50,7 @@ export const categoryService = {
       if (!categoryId) {
         throw new Error('Category ID is missing');
       }
+      console.log('Deleting category with ID:', categoryId);
       await axiosInstance.delete(`/admin/categories/${categoryId}`);
     } catch (error) {
       console.error('Error in deleteCategory:', error);
@@ -60,7 +64,7 @@ export const categoryService = {
       const { data } = await axiosInstance.put('/admin/categories/positions', updates);
       return data;
     } catch (error) {
-      console.error('Error updating positions:', error);
+      console.error('Error in updatePositions:', error);
       toast.error("Failed to update category positions");
       throw error;
     }

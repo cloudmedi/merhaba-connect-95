@@ -42,7 +42,19 @@ export function CategoriesContent() {
   const handleEdit = async (updatedCategory: Category) => {
     try {
       console.log("Updating category with data:", updatedCategory);
-      await categoryService.updateCategory(updatedCategory);
+      const categoryId = updatedCategory._id || updatedCategory.id;
+      
+      if (!categoryId) {
+        console.error('No valid ID found for category:', updatedCategory);
+        toast.error("Invalid category ID");
+        return;
+      }
+
+      await categoryService.updateCategory({
+        ...updatedCategory,
+        id: categoryId
+      });
+      
       setIsDialogOpen(false);
       setEditingCategory(null);
       fetchCategories();
@@ -79,7 +91,7 @@ export function CategoriesContent() {
       newCategories.splice(newIndex, 0, movedCategory);
       
       const updates = newCategories.map((category, index) => ({
-        id: category.id || category._id,
+        id: category._id || category.id,
         position: index + 1
       }));
       
