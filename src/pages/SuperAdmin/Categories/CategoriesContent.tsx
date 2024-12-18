@@ -4,7 +4,7 @@ import { CategoriesTable } from "./CategoriesTable";
 import { CategoriesDialog } from "./CategoriesDialog";
 import { Category } from "./types";
 import { toast } from "sonner";
-import { categoryService } from "@/services/categories";
+import { categoryService } from "@/services/categories-service";
 
 export function CategoriesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -34,6 +34,7 @@ export function CategoriesContent() {
       toast.success("Category created successfully");
     } catch (error) {
       console.error('Error creating category:', error);
+      toast.error("Failed to create category");
     }
   };
 
@@ -47,6 +48,7 @@ export function CategoriesContent() {
       toast.success("Category updated successfully");
     } catch (error) {
       console.error('Error updating category:', error);
+      toast.error("Failed to update category");
     }
   };
 
@@ -57,6 +59,7 @@ export function CategoriesContent() {
       toast.success("Category deleted successfully");
     } catch (error) {
       console.error('Error deleting category:', error);
+      toast.error("Failed to delete category");
     }
   };
 

@@ -16,7 +16,7 @@ import {
 import { MoreHorizontal, Pencil, Trash, GripVertical } from "lucide-react";
 import { Category } from "./types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   DndContext,
   closestCenter,
@@ -34,7 +34,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface CategoriesTableProps {
+interface GenresTableProps {
   categories: Category[];
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
@@ -62,6 +62,16 @@ function SortableTableRow({ category, onEdit, onDelete }: {
     zIndex: isDragging ? 1 : 0,
   };
 
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    try {
+      return format(parseISO(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Invalid date:', dateString);
+      return '-';
+    }
+  };
+
   return (
     <TableRow ref={setNodeRef} style={style}>
       <TableCell className="w-[50px]">
@@ -77,7 +87,7 @@ function SortableTableRow({ category, onEdit, onDelete }: {
       <TableCell className="font-medium">{category.name}</TableCell>
       <TableCell className="hidden md:table-cell">{category.description}</TableCell>
       <TableCell className="hidden md:table-cell">
-        {format(new Date(category.created_at), 'MMM dd, yyyy')}
+        {formatDate(category.created_at)}
       </TableCell>
       <TableCell>
         <DropdownMenu>
@@ -105,7 +115,7 @@ function SortableTableRow({ category, onEdit, onDelete }: {
   );
 }
 
-export function CategoriesTable({ categories, onEdit, onDelete, onReorder }: CategoriesTableProps) {
+export function CategoriesTable({ categories, onEdit, onDelete, onReorder }: GenresTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
