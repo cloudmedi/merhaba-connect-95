@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/landing/Footer";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyPlaylists } from "@/components/landing/WeeklyPlaylists";
@@ -16,13 +16,36 @@ import {
 
 const sectors = [
   "Kafe & Restoran",
+  "Bar & Gece Kulübü",
+  "Fast Food",
+  "Fine Dining",
+  "Pastane & Fırın",
   "Spor Salonu",
+  "Yoga & Pilates Stüdyosu",
+  "Fitness Center",
+  "CrossFit Box",
   "Güzellik & SPA",
+  "Kuaför & Güzellik Merkezi",
+  "Masaj Salonu",
+  "Tırnak Bakım Salonu",
   "Mağaza",
+  "Giyim Mağazası",
+  "Elektronik Market",
+  "Süpermarket",
   "Otel",
+  "Butik Otel",
+  "Resort Otel",
+  "Tatil Köyü",
   "AVM",
   "Ofis",
-  "Diğer"
+  "Coworking Space",
+  "Plaza",
+  "Diş Kliniği",
+  "Hastane",
+  "Sağlık Merkezi",
+  "Eczane",
+  "Eğitim Kurumu",
+  "Spor Kompleksi"
 ];
 
 export default function Landing() {
@@ -48,9 +71,8 @@ export default function Landing() {
                 <PopoverTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    className="text-gray-600 gap-2 font-medium"
+                    className="text-gray-600 font-medium"
                   >
-                    <Building2 className="h-4 w-4" />
                     Sektörler
                   </Button>
                 </PopoverTrigger>
