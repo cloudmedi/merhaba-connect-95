@@ -40,6 +40,10 @@ export function CategoriesContent() {
 
   const handleEdit = async (updatedCategory: Category) => {
     try {
+      if (!updatedCategory.id) {
+        throw new Error('Category ID is missing');
+      }
+      
       const { id, name, description } = updatedCategory;
       await categoryService.updateCategory(id, { name, description });
       setIsDialogOpen(false);
