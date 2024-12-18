@@ -20,8 +20,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/register', authController.register);
+router.post('/register', (req, res) => authController.register(req, res));
 
-router.get('/verify', authController.verifyToken);
+router.get('/verify', (req, res) => authController.verifyToken(req, res));
 
 export default router;
