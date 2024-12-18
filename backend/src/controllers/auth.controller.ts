@@ -8,13 +8,17 @@ export class AuthController {
     try {
       const { email, password } = req.body;
 
+      console.log('Login attempt for email:', email);
+
       const user = await User.findOne({ email });
       if (!user) {
+        console.log('Login failed: User not found for email:', email);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const isValidPassword = await argon2.verify(user.password, password);
       if (!isValidPassword) {
+        console.log('Login failed: Invalid password for email:', email);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -24,10 +28,13 @@ export class AuthController {
         { expiresIn: '7d' }
       );
 
-      console.log('Login successful - Generated token:', {
-        token,
+      console.log('Login successful - Token details:', {
+        token: token.substring(0, 20) + '...',
         decoded: jwt.decode(token),
-        secret: process.env.JWT_SECRET ? 'Secret exists' : 'Using fallback secret'
+        expiresIn: '7d',
+        secret: process.env.JWT_SECRET ? 'Custom secret' : 'Default secret',
+        userId: user._id,
+        role: user.role
       });
 
       res.json({
@@ -52,8 +59,11 @@ export class AuthController {
     try {
       const { email, password, firstName, lastName, role, companyName } = req.body;
 
+      console.log('Registration attempt:', { email, firstName, lastName, role });
+
       const existingUser = await User.findOne({ email });
       if (existingUser) {
+        console.log('Registration failed: Email already exists:', email);
         return res.status(400).json({ error: 'Email already registered' });
       }
 
@@ -76,6 +86,13 @@ export class AuthController {
         process.env.JWT_SECRET || 'your-secret-key',
         { expiresIn: '24h' }
       );
+
+      console.log('Registration successful - Token details:', {
+        token: token.substring(0, 20) + '...',
+        decoded: jwt.decode(token),
+        userId: user._id,
+        role: user.role
+      });
 
       res.status(201).json({
         token,
@@ -100,32 +117,41 @@ export class AuthController {
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       console.log('Token verification request:', {
-        receivedToken: token,
-        authHeader: req.headers.authorization
+        receivedToken: token ? token.substring(0, 20) + '...' : 'No token',
+        authHeader: req.headers.authorization ? 'Present' : 'Missing'
       });
       
       if (!token) {
-        console.log('No token provided in request');
+        console.log('Token verification failed: No token provided');
         return res.status(401).json({ error: 'No token provided' });
       }
 
       console.log('Environment check:', {
         jwtSecretExists: !!process.env.JWT_SECRET,
-        nodeEnv: process.env.NODE_ENV
+        nodeEnv: process.env.NODE_ENV,
+        secretUsed: process.env.JWT_SECRET ? 'Custom secret' : 'Default secret'
       });
 
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-        console.log('Token successfully decoded:', {
+        console.log('Token verification - Decoded token:', {
           decoded,
-          expiresIn: new Date(decoded.exp * 1000).toISOString()
+          expiresIn: new Date(decoded.exp * 1000).toISOString(),
+          userId: decoded.userId,
+          role: decoded.role
         });
         
         const user = await User.findById(decoded.userId);
         if (!user) {
-          console.log('User not found for decoded token userId:', decoded.userId);
+          console.log('Token verification failed: User not found for ID:', decoded.userId);
           return res.status(401).json({ error: 'User not found' });
         }
+
+        console.log('Token verification successful for user:', {
+          userId: user._id,
+          email: user.email,
+          role: user.role
+        });
 
         const newToken = jwt.sign(
           { userId: user._id, role: user.role },
@@ -134,8 +160,9 @@ export class AuthController {
         );
 
         console.log('New token generated:', {
-          newToken,
-          decoded: jwt.decode(newToken)
+          token: newToken.substring(0, 20) + '...',
+          decoded: jwt.decode(newToken),
+          expiresIn: '7d'
         });
 
         res.json({ 
