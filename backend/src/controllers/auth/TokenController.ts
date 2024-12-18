@@ -52,10 +52,10 @@ export class TokenController {
         timestamp: new Date().toISOString()
       });
 
-      // Token geçerliyse, mevcut token'ı koruyoruz ve user bilgisini dönüyoruz
-      res.json({ 
+      // User bilgisini ve token'ı birlikte dönüyoruz
+      res.json({
         valid: true,
-        token: token, // Mevcut token'ı geri gönderiyoruz
+        token: token,
         user: {
           id: user._id,
           email: user.email,
