@@ -51,7 +51,18 @@ export function GenresContent() {
 
   const handleEdit = async (updatedGenre: Genre) => {
     try {
-      await axios.put(`/admin/genres/${updatedGenre.id}`, { 
+      const genreId = updatedGenre._id || updatedGenre.id;
+      if (!genreId) {
+        console.error('No valid ID found for genre:', updatedGenre);
+        toast({
+          title: "Error",
+          description: "Invalid genre ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await axios.put(`/admin/genres/${genreId}`, { 
         name: updatedGenre.name, 
         description: updatedGenre.description 
       });
@@ -74,6 +85,16 @@ export function GenresContent() {
 
   const handleDelete = async (id: string) => {
     try {
+      if (!id || id === 'undefined') {
+        console.error('Invalid genre ID:', id);
+        toast({
+          title: "Error",
+          description: "Invalid genre ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await axios.delete(`/admin/genres/${id}`);
       fetchGenres();
       toast({

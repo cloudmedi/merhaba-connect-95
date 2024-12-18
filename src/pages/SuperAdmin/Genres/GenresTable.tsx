@@ -35,6 +35,15 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
     }
   };
 
+  const handleDelete = (genre: Genre) => {
+    const genreId = genre._id || genre.id;
+    if (!genreId) {
+      console.error('No valid ID found for genre:', genre);
+      return;
+    }
+    onDelete(genreId);
+  };
+
   return (
     <div className="rounded-md border">
       <ScrollArea className="w-full overflow-auto">
@@ -50,7 +59,7 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
           </TableHeader>
           <TableBody>
             {genres.map((genre) => (
-              <TableRow key={genre.id}>
+              <TableRow key={genre._id || genre.id}>
                 <TableCell className="font-medium">{genre.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{genre.description}</TableCell>
                 <TableCell>{genre.songCount || 0}</TableCell>
@@ -71,7 +80,7 @@ export function GenresTable({ genres, onEdit, onDelete }: GenresTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => onDelete(genre.id)}
+                        onClick={() => handleDelete(genre)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         Delete
