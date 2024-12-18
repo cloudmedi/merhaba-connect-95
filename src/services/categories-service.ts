@@ -13,6 +13,9 @@ export const categoryService = {
   },
 
   updateCategory: async (id: string, data: { name: string; description: string }) => {
+    if (!id) {
+      throw new Error('Category ID is required for update');
+    }
     const response = await axiosInstance.put<Category>(`/admin/categories/${id}`, data);
     return response.data;
   },

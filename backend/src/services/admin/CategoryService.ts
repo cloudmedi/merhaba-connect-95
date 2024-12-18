@@ -29,7 +29,20 @@ export class CategoryService {
 
   async updateCategory(id: string, data: { name?: string; description?: string; position?: number }) {
     try {
-      const category = await Category.findByIdAndUpdate(id, data, { new: true });
+      if (!id) {
+        throw new Error('Category ID is required');
+      }
+
+      const category = await Category.findByIdAndUpdate(
+        id,
+        { $set: data },
+        { new: true, runValidators: true }
+      );
+
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
       return category;
     } catch (error) {
       throw error;
@@ -38,7 +51,10 @@ export class CategoryService {
 
   async deleteCategory(id: string) {
     try {
-      await Category.findByIdAndDelete(id);
+      const result = await Category.findByIdAndDelete(id);
+      if (!result) {
+        throw new Error('Category not found');
+      }
     } catch (error) {
       throw error;
     }
