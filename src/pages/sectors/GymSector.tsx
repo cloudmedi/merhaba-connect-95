@@ -182,7 +182,11 @@ export default function GymSector() {
           <p className="text-xl mb-8 opacity-90">
             14 günlük ücretsiz deneme ile MusicBiz'in spor salonunuza özel müzik çözümlerini keşfedin.
           </p>
-          <Button size="lg" variant="outline" className="text-white border-white hover:bg-white hover:text-[#6E59A5]">
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="text-white border-white hover:bg-white hover:text-[#6E59A5] px-8 py-6 text-lg font-medium"
+          >
             Hemen Başlayın
           </Button>
         </div>
