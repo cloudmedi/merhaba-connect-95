@@ -8,10 +8,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { API_URL } from "@/services/api";
 import axios from '@/lib/axios';
 
-interface Song {
+export interface Song {
   _id: string;
   title: string;
   artist?: string;
@@ -37,11 +36,7 @@ export function MusicContent() {
     queryKey: ['songs'],
     queryFn: async () => {
       const response = await axios.get('/admin/songs');
-      const transformedSongs = response.data.map((song: any) => ({
-        ...song,
-        id: song._id // Ensure we have both id and _id
-      }));
-      return transformedSongs;
+      return response.data as Song[];
     }
   });
 
