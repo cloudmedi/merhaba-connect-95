@@ -4,11 +4,11 @@ import { MusicActions } from "./MusicActions";
 import { MusicTable } from "./MusicTable";
 import { MusicFilters } from "./MusicFilters";
 import { useToast } from "@/hooks/use-toast";
-import { useMusicLibrary } from "./hooks/useMusicLibrary";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { API_URL } from "@/services/api";
 
 export function MusicContent() {
   const [selectedSongs, setSelectedSongs] = useState<any[]>([]);
@@ -17,20 +17,27 @@ export function MusicContent() {
   const navigate = useNavigate();
 
   const {
-    songs,
+    data: songs = [],
     isLoading,
-    filterGenre,
-    setFilterGenre,
-    sortByRecent,
-    setSortByRecent,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    itemsPerPage,
-    totalCount,
-    refetch,
-    genres
-  } = useMusicLibrary();
+    refetch
+  } = useQuery({
+    queryKey: ['songs'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/songs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch songs');
+      }
+
+      const data = await response.json();
+      return data;
+    }
+  });
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedSongs(checked ? songs : []);
@@ -46,12 +53,17 @@ export function MusicContent() {
 
   const handleDeleteSong = async (songId: string) => {
     try {
-      const { error } = await supabase
-        .from('songs')
-        .delete()
-        .eq('id', songId);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/songs/${songId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to delete song');
+      }
 
       toast({
         title: "Success",
@@ -70,20 +82,10 @@ export function MusicContent() {
 
   const handleBulkDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('songs')
-        .delete()
-        .in('id', selectedSongs.map(song => song.id));
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `${selectedSongs.length} songs have been deleted`,
-      });
-
+      for (const song of selectedSongs) {
+        await handleDeleteSong(song.id);
+      }
       setSelectedSongs([]);
-      refetch();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -114,6 +116,16 @@ export function MusicContent() {
     song.album?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Extract unique genres from songs
+  const genres = Array.from(new Set(
+    songs.reduce((acc: string[], song) => {
+      if (song.genre && Array.isArray(song.genre)) {
+        return [...acc, ...song.genre];
+      }
+      return acc;
+    }, [])
+  )).sort();
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center justify-between gap-4">
@@ -141,8 +153,8 @@ export function MusicContent() {
       </div>
       
       <MusicFilters
-        onGenreChange={(genre) => setFilterGenre(genre)}
-        onRecentChange={(recent) => setSortByRecent(recent)}
+        onGenreChange={() => {}}
+        onRecentChange={() => {}}
         onSearchChange={setSearchQuery}
         genres={genres}
         searchQuery={searchQuery}
@@ -153,12 +165,12 @@ export function MusicContent() {
         selectedSongs={selectedSongs}
         onSelectAll={handleSelectAll}
         onSelectSong={handleSelectSong}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={() => {}}
+        itemsPerPage={20}
         isLoading={isLoading}
-        totalCount={totalCount}
+        totalCount={filteredSongs.length}
         onDelete={handleDeleteSong}
       />
     </div>
