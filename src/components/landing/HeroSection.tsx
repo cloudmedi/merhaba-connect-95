@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { TrialForm } from "./TrialForm";
 
 export function HeroSection() {
-  const navigate = useNavigate();
   const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
   
   return (
@@ -28,23 +25,6 @@ export function HeroSection() {
               <p className="text-gray-600 text-lg max-w-xl">
                 Müzik direktörlerimiz tarafından özenle seçilmiş 10.000+ telifsiz şarkıya erişin. Her hafta güncellenen sektöre özel playlist'ler ile müşteri deneyimini zirveye taşıyın.
               </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg"
-                className="bg-[#6E59A5] hover:bg-[#5A478A] text-white px-8"
-                onClick={() => setIsTrialFormOpen(true)}
-              >
-                14 Gün Ücretsiz Deneyin
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                className="border-[#6E59A5] text-[#6E59A5] hover:bg-[#6E59A5] hover:text-white"
-              >
-                Örnek Müzikleri Dinleyin
-              </Button>
             </div>
 
             <div className="grid grid-cols-2 gap-6 pt-8">
