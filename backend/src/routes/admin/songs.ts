@@ -6,7 +6,7 @@ import { bunnyConfig } from '../../config/bunny';
 import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import fetch from 'node-fetch';
-import { parseFromBuffer } from 'music-metadata';
+import * as mm from 'music-metadata';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -49,10 +49,10 @@ router.post('/upload',
       const file = req.file;
       const bunnyId = `music/${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Extract metadata from the audio file using parseFromBuffer
+      // Extract metadata from the audio file using parseBuffer
       let metadata;
       try {
-        metadata = await parseFromBuffer(file.buffer);
+        metadata = await mm.parseBuffer(file.buffer);
         logger.info('Extracted metadata:', metadata);
       } catch (metadataError) {
         logger.error('Error extracting metadata:', metadataError);
