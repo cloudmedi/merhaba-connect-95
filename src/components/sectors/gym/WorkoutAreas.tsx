@@ -40,13 +40,20 @@ export function WorkoutAreas() {
   useEffect(() => {
     if (!api) return;
 
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+
     // Her 5 saniyede bir sonraki slide'a geç
     const interval = setInterval(() => {
       api.scrollNext();
     }, 5000);
 
     // Component unmount olduğunda interval'i temizle
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      api.off("select");
+    };
   }, [api]);
 
   return (
@@ -58,9 +65,6 @@ export function WorkoutAreas() {
           opts={{
             align: "start",
             loop: true
-          }}
-          onSelect={(api: any) => {
-            setCurrent(api.selectedScrollSnap());
           }}
         >
           <CarouselContent>
