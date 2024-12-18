@@ -25,7 +25,7 @@ export function HeroSection() {
                 </span>
               </h1>
               <p className="text-gray-600 text-lg max-w-xl">
-                Müzik direktörlerimiz tarafından özenle seçilmiş 50.000+ telifsiz şarkıya erişin. Her hafta güncellenen sektöre özel playlist'ler ile müşteri deneyimini zirveye taşıyın.
+                Müzik direktörlerimiz tarafından özenle seçilmiş 10.000+ telifsiz şarkıya erişin. Her hafta güncellenen sektöre özel playlist'ler ile müşteri deneyimini zirveye taşıyın.
               </p>
             </div>
 
@@ -55,7 +55,7 @@ export function HeroSection() {
                     <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
                   </svg>
                 </div>
-                <span className="text-gray-700">50.000+ Şarkı</span>
+                <span className="text-gray-700">10.000+ Şarkı</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center">
