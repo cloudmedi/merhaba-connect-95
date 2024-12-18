@@ -52,18 +52,21 @@ export class TokenController {
         timestamp: new Date().toISOString()
       });
 
+      // Kullanıcı bilgilerini ve token'ı birlikte dönüyoruz
+      const userData = {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isActive: user.isActive,
+        companyName: user.companyName
+      };
+
       res.json({
         valid: true,
-        token: token,
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          isActive: user.isActive,
-          companyName: user.companyName
-        }
+        user: userData,
+        token: token
       });
     } catch (error) {
       logger.error('Token verification error', {
