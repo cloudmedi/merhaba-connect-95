@@ -27,9 +27,9 @@ export function AssignManagersContent({
         if (!searchQuery) return true;
         const searchLower = searchQuery.toLowerCase();
         return (
-          m.email.toLowerCase().includes(searchLower) ||
-          m.first_name?.toLowerCase().includes(searchLower) ||
-          m.last_name?.toLowerCase().includes(searchLower)
+          m.email?.toLowerCase().includes(searchLower) ||
+          m.firstName?.toLowerCase().includes(searchLower) ||
+          m.lastName?.toLowerCase().includes(searchLower)
         );
       });
 
