@@ -31,8 +31,8 @@ export class PlaylistMutationService extends BasePlaylistService {
         ? data.assignedManagers.map((manager: any) => ({
             _id: manager._id,
             email: manager.email,
-            firstName: manager.firstName,
-            lastName: manager.lastName
+            firstName: manager.firstName || '',
+            lastName: manager.lastName || ''
           }))
         : existingPlaylist.assignedManagers;
 

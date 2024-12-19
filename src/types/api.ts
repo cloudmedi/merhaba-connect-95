@@ -45,17 +45,15 @@ export interface Playlist {
     createdAt: string;
     updatedAt: string;
   };
-  assignedManagers?: string[];
+  assignedManagers: Array<{
+    _id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  }>;
+  createdBy?: string;
   playCount: number;
+  lastPlayed?: string;
   createdAt: string;
   updatedAt: string;
-  company?: {
-    name: string;
-    _id: string;
-  } | null;
-  profiles?: Array<{
-    firstName: string;
-    lastName: string;
-    _id: string;
-  }> | null;
 }

@@ -23,7 +23,14 @@ export interface Playlist {
   songs: Song[];
   genre?: any;
   mood?: any;
+  assignedManagers: Array<{
+    _id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  }>;
   playCount: number;
+  lastPlayed?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +44,12 @@ export interface PlaylistCreateInput {
   genre?: string;
   mood?: string;
   songs?: string[];
+  assignedManagers?: Array<{
+    _id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  }>;
 }
 
 export interface PlaylistUpdateInput extends Partial<PlaylistCreateInput> {}
