@@ -16,7 +16,7 @@ export default function Landing() {
   const demoPlaylist = {
     id: 'demo-1',
     name: 'Featured Demo Playlist',
-    artwork_url: '/placeholder.svg'
+    artwork_url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2940&auto=format&fit=crop'
   };
 
   return (
