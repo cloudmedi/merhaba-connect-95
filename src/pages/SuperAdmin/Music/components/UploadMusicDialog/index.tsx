@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import axios from "@/lib/axios";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
 
@@ -31,8 +31,8 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
     for (const file of Array.from(files)) {
       if (!allowedTypes.includes(file.type)) {
         toast({
-          title: "Invalid file type",
-          description: `${file.name} is not a supported audio file`,
+          title: "Geçersiz dosya türü",
+          description: `${file.name} desteklenen bir ses dosyası değil`,
           variant: "destructive",
         });
         continue;
@@ -40,14 +40,13 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
       if (file.size > maxSize) {
         toast({
-          title: "File too large",
-          description: `${file.name} exceeds the 20MB limit`,
+          title: "Dosya çok büyük",
+          description: `${file.name} 20MB limitini aşıyor`,
           variant: "destructive",
         });
         continue;
       }
 
-      // Add file to progress tracking
       setUploadingFiles(prev => ({
         ...prev,
         [file.name]: {
@@ -58,34 +57,22 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
       }));
 
       try {
-        console.log('Starting upload for:', file.name);
-        
-        // Get the session for authentication
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          throw new Error('No active session');
-        }
-
-        // Create FormData object
         const formData = new FormData();
         formData.append('file', file);
 
-        // Call the upload-music edge function
-        const { data, error } = await supabase.functions.invoke('upload-music', {
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
+        const response = await axios.post('/admin/songs/upload', formData, {
+          onUploadProgress: (progressEvent) => {
+            const progress = (progressEvent.loaded / (progressEvent.total || file.size)) * 100;
+            setUploadingFiles(prev => ({
+              ...prev,
+              [file.name]: {
+                ...prev[file.name],
+                progress
+              }
+            }));
           }
         });
 
-        console.log('Upload response:', { data, error });
-
-        if (error) {
-          throw error;
-        }
-
-        // Update progress to show completion
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
@@ -95,12 +82,11 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           }
         }));
 
-        // Invalidate and refetch songs query
         await queryClient.invalidateQueries({ queryKey: ['songs'] });
 
         toast({
-          title: "Upload successful",
-          description: `${file.name} has been uploaded successfully`,
+          title: "Yükleme başarılı",
+          description: `${file.name} başarıyla yüklendi`,
         });
 
       } catch (error: any) {
@@ -111,13 +97,13 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
           [file.name]: {
             ...prev[file.name],
             status: 'error',
-            error: error.message || 'Failed to upload file'
+            error: error.message || 'Dosya yüklenirken hata oluştu'
           }
         }));
 
         toast({
-          title: "Upload failed",
-          description: error.message || 'Failed to upload file',
+          title: "Yükleme başarısız",
+          description: error.message || 'Dosya yüklenirken hata oluştu',
           variant: "destructive",
         });
       }
@@ -128,7 +114,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Upload Music</DialogTitle>
+          <DialogTitle>Müzik Yükle</DialogTitle>
         </DialogHeader>
 
         <UploadZone
@@ -140,7 +126,7 @@ export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps
 
         {Object.entries(uploadingFiles).length > 0 && (
           <div className="mt-6 space-y-4">
-            <div className="text-sm font-medium">Upload Progress</div>
+            <div className="text-sm font-medium">Yükleme Durumu</div>
             {Object.entries(uploadingFiles).map(([fileName, file]) => (
               <UploadProgress
                 key={fileName}
