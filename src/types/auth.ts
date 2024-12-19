@@ -3,9 +3,10 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive: boolean;
   companyId?: string;
+  companyName?: string;
   avatarUrl?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -26,7 +27,8 @@ export interface UserCreateInput {
   password: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'manager' | 'user';
+  companyName?: string;
 }
 
 export interface UserUpdateInput {
@@ -34,7 +36,7 @@ export interface UserUpdateInput {
   lastName?: string;
   email?: string;
   password?: string;
-  role?: string;
+  role?: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive?: boolean;
 }
 
