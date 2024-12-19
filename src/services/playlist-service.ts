@@ -25,7 +25,7 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      // First upload artwork if exists
+      // Handle artwork upload if it's a blob URL
       let artwork_url = data.artwork_url;
       if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
         const formData = new FormData();
@@ -41,7 +41,6 @@ export const playlistService = {
         artwork_url = uploadResponse.data.url;
       }
 
-      // Create playlist with uploaded artwork URL
       const playlistData = {
         ...data,
         artwork_url,
@@ -68,7 +67,6 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      // Handle artwork upload if needed
       let artwork_url = data.artwork_url;
       if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
         const formData = new FormData();

@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { playlistService } from "@/services/playlist-service";
+import axios from "@/lib/axios";
 import { toast } from "sonner";
 
 interface SavePlaylistParams {
@@ -32,17 +32,17 @@ export function usePlaylistMutations() {
         const formData = new FormData();
         formData.append('file', playlistData.artwork);
         
-        const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/upload-artwork`, {
-          method: 'POST',
-          body: formData
+        const uploadResponse = await axios.post('/admin/upload-artwork', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         });
         
-        if (!uploadResponse.ok) {
+        if (uploadResponse.status !== 200) {
           throw new Error('Failed to upload artwork');
         }
         
-        const uploadData = await uploadResponse.json();
-        artwork_url = uploadData.url;
+        artwork_url = uploadResponse.data.url;
       }
 
       const playlistPayload = {
@@ -54,18 +54,19 @@ export function usePlaylistMutations() {
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
         is_hero: playlistData.isHero || false,
-        songs: playlistData.selectedSongs.map((song: any) => song.id)
+        songs: playlistData.selectedSongs.map((song: any) => song._id)
       };
 
-      let playlist;
+      let response;
       if (isEditMode && existingPlaylist) {
-        playlist = await playlistService.updatePlaylist(existingPlaylist.id, playlistPayload);
+        response = await axios.put(`/admin/playlists/${existingPlaylist.id}`, playlistPayload);
       } else {
-        playlist = await playlistService.createPlaylist(playlistPayload);
+        response = await axios.post('/admin/playlists', playlistPayload);
       }
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
       onSuccess?.();
+      
     } catch (error: any) {
       console.error('Error saving playlist:', error);
       onError?.(error);

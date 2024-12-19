@@ -7,9 +7,9 @@ import { PlaylistSettings } from "@/components/playlists/PlaylistSettings";
 import { AssignManagersDialog } from "@/components/playlists/AssignManagersDialog";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMutations";
 import { toast } from "sonner";
+import axios from "@/lib/axios";
 
 export function PlaylistEditor() {
   const navigate = useNavigate();
@@ -50,26 +50,21 @@ export function PlaylistEditor() {
 
   const loadExistingPlaylistData = async () => {
     try {
-      const { data: playlistSongs } = await supabase
-        .from('playlist_songs')
-        .select('songs(*)')
-        .eq('playlist_id', existingPlaylist.id)
-        .order('position');
-
-      const { data: playlistCategories } = await supabase
-        .from('playlist_categories')
-        .select('categories(*)')
-        .eq('playlist_id', existingPlaylist.id);
+      const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
+        axios.get(`/admin/playlists/${existingPlaylist.id}/songs`),
+        axios.get(`/admin/playlists/${existingPlaylist.id}/categories`),
+        axios.get(`/admin/playlists/${existingPlaylist.id}/managers`)
+      ]);
 
       setPlaylistData({
         title: existingPlaylist.name,
         description: existingPlaylist.description || "",
         artwork: null,
         artwork_url: existingPlaylist.artwork_url || "",
-        selectedSongs: playlistSongs?.map(ps => ps.songs) || [],
-        selectedUsers: [],
+        selectedSongs: playlistSongs.data || [],
+        selectedUsers: assignedManagers.data || [],
         selectedGenres: existingPlaylist.genre_id ? [{ id: existingPlaylist.genre_id }] : [],
-        selectedCategories: playlistCategories?.map(pc => pc.categories) || [],
+        selectedCategories: playlistCategories.data || [],
         selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
         isCatalog: existingPlaylist.is_catalog || false,
         isPublic: existingPlaylist.is_public || false,
@@ -88,22 +83,16 @@ export function PlaylistEditor() {
         return;
       }
 
-      const assignments = managerIds.map(userId => ({
-        user_id: userId,
-        playlist_id: existingPlaylist.id,
-        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-        expires_at: expiresAt?.toISOString() || null,
-        notification_sent: false
-      }));
+      const response = await axios.post(`/admin/playlists/${existingPlaylist.id}/assign-managers`, {
+        managerIds,
+        scheduledAt: scheduledAt?.toISOString(),
+        expiresAt: expiresAt?.toISOString()
+      });
 
-      const { error } = await supabase
-        .from('playlist_assignments')
-        .insert(assignments);
-
-      if (error) throw error;
-
-      toast.success(`Playlist assigned to ${managerIds.length} managers`);
-      setIsAssignDialogOpen(false);
+      if (response.status === 200) {
+        toast.success(`Playlist assigned to ${managerIds.length} managers`);
+        setIsAssignDialogOpen(false);
+      }
     } catch (error: any) {
       console.error('Error assigning playlist:', error);
       toast.error(error.message || "Failed to assign playlist");
@@ -156,29 +145,7 @@ export function PlaylistEditor() {
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
           playlistId={existingPlaylist?.id || ''}
-          onAssign={async (managerIds, scheduledAt, expiresAt) => {
-            try {
-              const assignments = managerIds.map(userId => ({
-                user_id: userId,
-                playlist_id: existingPlaylist?.id,
-                scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-                expires_at: expiresAt?.toISOString() || null,
-                notification_sent: false
-              }));
-
-              const { error } = await supabase
-                .from('playlist_assignments')
-                .insert(assignments);
-
-              if (error) throw error;
-
-              toast.success(`Playlist assigned to ${managerIds.length} managers`);
-              setIsAssignDialogOpen(false);
-            } catch (error: any) {
-              console.error('Error assigning playlist:', error);
-              toast.error(error.message || "Failed to assign playlist");
-            }
-          }}
+          onAssign={handleAssignManagers}
         />
       </div>
     </div>
