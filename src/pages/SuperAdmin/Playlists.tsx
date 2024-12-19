@@ -18,7 +18,6 @@ export default function Playlists() {
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: playlists, isLoading } = useQuery({
@@ -30,20 +29,14 @@ export default function Playlists() {
     mutationFn: playlistService.deletePlaylist,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
-      toast({
-        title: "Success",
-        description: "Playlist deleted successfully",
-      });
+      toast.success("Playlist deleted successfully");
     }
   });
 
   const handlePlayPlaylist = (playlist: Playlist) => {
     setCurrentPlaylist(playlist);
     setIsPlayerVisible(true);
-    toast({
-      title: "Now Playing",
-      description: `Playing ${playlist.name}`,
-    });
+    toast.success(`Playing ${playlist.name}`);
   };
 
   const handleEdit = (playlist: Playlist) => {
@@ -60,8 +53,8 @@ export default function Playlists() {
           id: playlist._id,
           name: playlist.name,
           description: playlist.description,
-          artwork_url: playlist.artworkUrl,
-          is_public: playlist.isPublic,
+          artwork_url: playlist.artwork_url || playlist.artworkUrl,
+          is_public: playlist.is_public || playlist.isPublic,
           is_hero: playlist.isHero,
           genre: playlist.genre,
           mood: playlist.mood,
@@ -117,7 +110,7 @@ export default function Playlists() {
         <MusicPlayer 
           playlist={{
             title: currentPlaylist.name,
-            artwork: currentPlaylist.artworkUrl || "/placeholder.svg"
+            artwork: currentPlaylist.artwork_url || currentPlaylist.artworkUrl || "/placeholder.svg"
           }}
           onClose={() => {
             setIsPlayerVisible(false);
