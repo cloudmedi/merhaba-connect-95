@@ -5,6 +5,14 @@ import multer from 'multer';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import path from 'path';
 
+// Request tipini genişlet
+interface AuthRequest extends express.Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
+
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -34,7 +42,7 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
 });
 
 // Playlist CRUD
-router.post('/', async (req, res) => {
+router.post('/', async (req: AuthRequest, res) => {
   try {
     console.log('Creating playlist with data:', req.body);
     const playlistService = new PlaylistService(req.io);
@@ -53,7 +61,8 @@ router.post('/', async (req, res) => {
     res.json(playlist);
   } catch (error) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ error: 'Error creating playlist', details: error.message });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    res.status(500).json({ error: 'Error creating playlist', details: errorMessage });
   }
 });
 
