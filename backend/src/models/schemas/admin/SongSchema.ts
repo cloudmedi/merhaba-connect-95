@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const SongSchema = new mongoose.Schema({
   title: { 
@@ -32,7 +33,7 @@ const SongSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
-    sparse: true
+    default: () => `song_${uuidv4()}`
   },
   artworkUrl: { 
     type: String 
@@ -46,6 +47,5 @@ const SongSchema = new mongoose.Schema({
 });
 
 // Tekrarlanan index tanımını kaldırdık, schema tanımındaki unique: true yeterli
-// SongSchema.index({ bunnyId: 1 }, { unique: true, sparse: true });
 
 export const Song = mongoose.model('Song', SongSchema);

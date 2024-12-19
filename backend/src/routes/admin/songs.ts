@@ -7,6 +7,7 @@ import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
+import { v4 as uuidv4 } from 'uuid';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -53,12 +54,15 @@ router.post(
       const file = req.file;
       logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
 
-      const timestamp = Date.now();
-      const uniqueFileName = `${timestamp}-${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
+      // Benzersiz bir bunnyId oluştur
+      const uniqueBunnyId = `song_${uuidv4()}`;
+      const fileExtension = file.originalname.split('.').pop();
+      const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
+      
       logger.info(`Generated unique filename: ${uniqueFileName}`);
 
       uploadService = new ChunkUploadService((progress) => {
-        if (progress % 25 === 0) { // Sadece %25, %50, %75, %100'de log al
+        if (progress % 25 === 0) {
           logger.debug(`Upload progress: ${progress}%`);
         }
       });
@@ -75,15 +79,14 @@ router.post(
 
       const user = req.user;
 
-      // Benzersiz bunnyId ile yeni şarkı oluştur
       const song = new Song({
-        title: metadata.title,
+        title: metadata.title || file.originalname,
         artist: metadata.artist,
         album: metadata.album || null,
         genre: metadata.genre || [],
         duration: metadata.duration,
         fileUrl: fileUrl,
-        bunnyId: uniqueFileName,
+        bunnyId: uniqueBunnyId,
         artworkUrl: null,
         createdBy: user?.id
       });
