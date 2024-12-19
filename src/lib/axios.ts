@@ -28,4 +28,18 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+// Response interceptor'ı ekle
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized access - clearing token');
+      localStorage.removeItem('token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;
