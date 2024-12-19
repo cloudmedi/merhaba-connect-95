@@ -1,4 +1,4 @@
-import express, { Response, Request } from 'express';
+import express, { Response } from 'express';
 import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import multer from 'multer';
@@ -7,6 +7,7 @@ import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
+import { RequestHandler } from 'express';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -15,7 +16,7 @@ const upload = multer({
   }
 });
 
-interface AuthRequest extends Request {
+interface AuthRequest extends express.Request {
   user?: {
     id: string;
     role: string;
@@ -26,7 +27,7 @@ const router = express.Router();
 const metadataService = new MetadataService();
 
 // Get all songs
-router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/', authMiddleware as RequestHandler, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find();
     res.json(songs);
@@ -37,14 +38,13 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // Upload a new song
-router.post('/upload', 
-  authMiddleware, 
-  adminMiddleware, 
-  upload.single('file'), 
-  async (req: Request, res: Response) => {
+router.post(
+  '/upload',
+  authMiddleware as RequestHandler,
+  adminMiddleware as RequestHandler,
+  upload.single('file') as RequestHandler,
+  async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
     const uploadService = new ChunkUploadService((progress) => {
-      // WebSocket ile progress bilgisini gönder
-      // Not: WebSocket implementasyonu ayrıca yapılmalı
       logger.info(`Upload progress: ${progress}%`);
     });
 
@@ -56,13 +56,12 @@ router.post('/upload',
       const file = req.file;
       const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       
-      // Paralel işlemler
       const [metadata, fileUrl] = await Promise.all([
         metadataService.extractMetadata(file.buffer, fileName),
         uploadService.uploadFile(file.buffer, fileName)
       ]);
 
-      const user = (req as AuthRequest).user;
+      const user = req.user;
 
       const song = new Song({
         title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
@@ -86,7 +85,7 @@ router.post('/upload',
 });
 
 // Delete a song
-router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authMiddleware as RequestHandler, adminMiddleware as RequestHandler, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
