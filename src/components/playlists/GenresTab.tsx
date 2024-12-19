@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+import axios from "@/lib/axios";
 
 interface Genre {
   id: string;
@@ -22,17 +22,12 @@ export function GenresTab({ selectedGenres, onSelectGenre, onUnselectGenre }: Ge
 
   useEffect(() => {
     const fetchGenres = async () => {
-      const { data, error } = await supabase
-        .from('genres')
-        .select('*')
-        .ilike('name', `%${searchQuery}%`);
-      
-      if (error) {
+      try {
+        const { data } = await axios.get('/admin/genres');
+        setGenres(data);
+      } catch (error) {
         console.error('Error fetching genres:', error);
-        return;
       }
-      
-      setGenres(data || []);
     };
 
     fetchGenres();

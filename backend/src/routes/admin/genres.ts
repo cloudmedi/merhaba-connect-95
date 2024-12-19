@@ -1,5 +1,5 @@
 import express from 'express';
-import { Genre } from '../../models/admin/Genre';
+import { GenreService } from '../../services/admin/GenreService';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import { Request } from 'express';
 
@@ -11,11 +11,12 @@ interface AuthRequest extends Request {
 }
 
 const router = express.Router();
+const genreService = new GenreService();
 
 // Get all genres
 router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
-    const genres = await Genre.find().sort({ name: 1 });
+    const genres = await genreService.getAllGenres();
     res.json(genres);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch genres' });
@@ -25,11 +26,10 @@ router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) =
 // Create genre
 router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
-    const genre = new Genre({
+    const genre = await genreService.createGenre({
       ...req.body,
       createdBy: req.user?.id
     });
-    await genre.save();
     res.status(201).json(genre);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create genre' });
@@ -39,11 +39,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
 // Update genre
 router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
-    const genre = await Genre.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const genre = await genreService.updateGenre(req.params.id, req.body);
     res.json(genre);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update genre' });
@@ -53,7 +49,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 // Delete genre
 router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
-    await Genre.findByIdAndDelete(req.params.id);
+    await genreService.deleteGenre(req.params.id);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete genre' });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import axios from "@/lib/axios";
 import ContentLoader from 'react-content-loader';
 
 interface Category {
@@ -37,18 +37,14 @@ export function CategoriesTab({ selectedCategories, onSelectCategory, onUnselect
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .ilike('name', `%${searchQuery}%`);
-      
-      if (error) {
+      try {
+        const { data } = await axios.get('/admin/categories');
+        setCategories(data);
+      } catch (error) {
         console.error('Error fetching categories:', error);
-        return;
+      } finally {
+        setIsLoading(false);
       }
-      
-      setCategories(data || []);
-      setIsLoading(false);
     };
 
     fetchCategories();
