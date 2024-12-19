@@ -39,6 +39,7 @@ export function PlaylistsContent() {
   const handleEdit = (playlist: Playlist) => {
     console.log('Handling edit for playlist:', playlist);
     if (!playlist || !playlist._id) {
+      console.error('Invalid playlist data for editing:', playlist);
       toast.error("Invalid playlist data");
       return;
     }
