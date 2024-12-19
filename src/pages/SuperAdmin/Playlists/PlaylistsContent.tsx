@@ -48,7 +48,7 @@ export function PlaylistsContent() {
       state: {
         editMode: true,
         playlistData: {
-          id: playlist._id,
+          _id: playlist._id,
           name: playlist.name,
           description: playlist.description,
           artworkUrl: playlist.artworkUrl,

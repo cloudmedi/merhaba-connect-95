@@ -18,13 +18,13 @@ export function CreatePlaylist() {
   const { handleSavePlaylist } = usePlaylistMutations();
   const existingPlaylist = location.state?.playlistData;
   const { isAssignDialogOpen, setIsAssignDialogOpen, handleAssignManagers } = 
-    usePlaylistAssignment(existingPlaylist?.id);
+    usePlaylistAssignment(existingPlaylist?._id);
   
   const [playlistData, setPlaylistData] = useState({
     title: "",
     description: "",
     artwork: null as File | null,
-    artwork_url: "",
+    artworkUrl: "",
     selectedSongs: [],
     selectedGenres: [],
     selectedCategories: [],
@@ -53,12 +53,12 @@ export function CreatePlaylist() {
 
   const loadExistingPlaylistData = async () => {
     try {
-      console.log('Loading playlist details for ID:', existingPlaylist.id);
+      console.log('Loading playlist details for ID:', existingPlaylist._id);
       
       const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
-        axios.get(`/admin/playlists/${existingPlaylist.id}/songs`),
-        axios.get(`/admin/playlists/${existingPlaylist.id}/categories`),
-        axios.get(`/admin/playlists/${existingPlaylist.id}/managers`)
+        axios.get(`/admin/playlists/${existingPlaylist._id}/songs`),
+        axios.get(`/admin/playlists/${existingPlaylist._id}/categories`),
+        axios.get(`/admin/playlists/${existingPlaylist._id}/managers`)
       ]);
 
       console.log('Loaded playlist data:', {
@@ -71,14 +71,14 @@ export function CreatePlaylist() {
         title: existingPlaylist.name,
         description: existingPlaylist.description || "",
         artwork: null,
-        artwork_url: existingPlaylist.artwork_url || "",
+        artworkUrl: existingPlaylist.artworkUrl || "",
         selectedSongs: playlistSongs.data || [],
-        selectedGenres: existingPlaylist.genre ? [{ _id: existingPlaylist.genre }] : [],
+        selectedGenres: existingPlaylist.genre ? [existingPlaylist.genre] : [],
         selectedCategories: playlistCategories.data || [],
-        selectedMoods: existingPlaylist.mood ? [{ _id: existingPlaylist.mood }] : [],
-        isCatalog: existingPlaylist.is_catalog || false,
-        isPublic: existingPlaylist.is_public || false,
-        isHero: existingPlaylist.is_hero || false,
+        selectedMoods: existingPlaylist.mood ? [existingPlaylist.mood] : [],
+        isCatalog: false,
+        isPublic: existingPlaylist.isPublic || false,
+        isHero: existingPlaylist.isHero || false,
         assignedManagers: assignedManagers.data || []
       });
     } catch (error) {
@@ -133,7 +133,7 @@ export function CreatePlaylist() {
         <AssignManagersDialog
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
-          playlistId={existingPlaylist?.id || ''}
+          playlistId={existingPlaylist?._id || ''}
           initialSelectedManagers={playlistData.assignedManagers}
           onAssign={handleAssignManagers}
         />
