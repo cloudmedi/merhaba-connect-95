@@ -27,7 +27,7 @@ export function usePlaylistMutations() {
 
       console.log('Initial playlist data:', playlistData);
 
-      let artwork_url = playlistData.artwork_url;
+      let artworkUrl = playlistData.artwork_url;
 
       // Handle file upload if there's new artwork
       if (playlistData.artwork) {
@@ -42,22 +42,28 @@ export function usePlaylistMutations() {
         });
         
         console.log('Artwork upload response:', uploadResponse.data);
-        artwork_url = uploadResponse.data.url;
+        artworkUrl = uploadResponse.data.url;
       }
 
+      // Prepare payload according to MongoDB schema
       const playlistPayload = {
         name: playlistData.title,
         description: playlistData.description,
-        artwork_url,
-        genre_id: playlistData.selectedGenres?.[0]?._id || null,
-        mood_id: playlistData.selectedMoods?.[0]?._id || null,
-        is_public: playlistData.isPublic || false,
-        is_catalog: playlistData.isCatalog || false,
-        is_hero: playlistData.isHero || false,
-        songs: playlistData.selectedSongs.map((song: any) => song._id),
+        artworkUrl: artworkUrl,
+        isPublic: playlistData.isPublic || false,
+        isHero: playlistData.isHero || false,
+        genre: playlistData.selectedGenres?.[0]?._id || null,
+        mood: playlistData.selectedMoods?.[0]?._id || null,
         categories: playlistData.selectedCategories
           .filter((cat: any) => cat && cat._id)
-          .map((cat: any) => cat._id)
+          .map((cat: any) => cat._id),
+        songs: playlistData.selectedSongs.map((song: any, index: number) => ({
+          songId: song._id,
+          position: index
+        })),
+        assignedManagers: playlistData.assignedManagers
+          .filter((manager: any) => manager && manager._id)
+          .map((manager: any) => manager._id)
       };
 
       console.log('Sending playlist payload:', playlistPayload);
@@ -72,6 +78,8 @@ export function usePlaylistMutations() {
       console.log('Server response:', response.data);
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      
+      toast.success(`Playlist ${isEditMode ? 'updated' : 'created'} successfully`);
       onSuccess?.();
       
     } catch (error: any) {
@@ -80,6 +88,8 @@ export function usePlaylistMutations() {
         message: error.message,
         response: error.response?.data
       });
+      
+      toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} playlist`);
       onError?.(error);
       throw error;
     }
