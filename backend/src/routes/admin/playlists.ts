@@ -44,6 +44,10 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
 // Playlist CRUD
 router.post('/', async (req: AuthRequest, res) => {
   try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'User ID is required' });
+    }
+
     console.log('Creating playlist with data:', req.body);
     const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.createPlaylist({
@@ -56,7 +60,7 @@ router.post('/', async (req: AuthRequest, res) => {
       categories: req.body.categories || [],
       genre: req.body.genre_id,
       mood: req.body.mood_id,
-      createdBy: req.user?.id
+      createdBy: req.user.id // Artık req.user?.id kontrolü yukarıda yapıldığı için burada safe
     });
     res.json(playlist);
   } catch (error) {
