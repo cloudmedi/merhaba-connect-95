@@ -1,6 +1,7 @@
 import { BasePlaylistService } from './BasePlaylistService';
 import { Playlist } from '../../../models/common/Playlist';
 import { User } from '../../../models/admin/User';
+import { Types } from 'mongoose';
 
 export class PlaylistMutationService extends BasePlaylistService {
   async createPlaylist(data: any) {
@@ -28,7 +29,6 @@ export class PlaylistMutationService extends BasePlaylistService {
       }
 
       // Fetch manager details from User model if assignedManagers array exists
-      let assignedManagersData = existingPlaylist.assignedManagers;
       if (Array.isArray(data.assignedManagers)) {
         const managerIds = data.assignedManagers;
         const managers = await User.find(
@@ -36,17 +36,21 @@ export class PlaylistMutationService extends BasePlaylistService {
           'email firstName lastName'
         );
 
-        assignedManagersData = managers.map(manager => ({
+        // Create a new Playlist instance to properly initialize the DocumentArray
+        const tempPlaylist = new Playlist();
+        tempPlaylist.assignedManagers = managers.map(manager => ({
           _id: manager._id,
           email: manager.email,
           firstName: manager.firstName || '',
           lastName: manager.lastName || ''
         }));
+
+        // Use the properly initialized DocumentArray
+        data.assignedManagers = tempPlaylist.assignedManagers;
       }
 
       const updateData = {
         ...data,
-        assignedManagers: assignedManagersData,
         updatedAt: new Date()
       };
 
