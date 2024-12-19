@@ -48,12 +48,17 @@ router.post('/:id/assign-managers', async (req, res) => {
       return res.status(400).json({ error: 'managerIds must be an array' });
     }
 
+    // Validate that all IDs are non-empty strings
+    if (!managerIds.every(id => typeof id === 'string' && id.trim().length > 0)) {
+      return res.status(400).json({ error: 'All manager IDs must be valid strings' });
+    }
+
     const playlist = await playlistService.assignManagers(req.params.id, managerIds);
     console.log('Managers assigned successfully:', playlist);
     res.json(playlist);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error assigning managers:', error);
-    res.status(500).json({ error: 'Error assigning managers to playlist' });
+    res.status(500).json({ error: error.message || 'Error assigning managers to playlist' });
   }
 });
 

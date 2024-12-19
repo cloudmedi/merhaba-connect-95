@@ -1,5 +1,6 @@
 import { Playlist } from '../../models/common/Playlist';
 import { WebSocketService } from './WebSocketService';
+import { Types } from 'mongoose';
 
 export class PlaylistService {
   private wsService: WebSocketService;
@@ -137,19 +138,30 @@ export class PlaylistService {
         throw new Error('Playlist not found');
       }
 
-      // Perform the update with $set operator
+      // Convert string IDs to MongoDB ObjectIds
+      const validManagerIds = managerIds.map(id => {
+        try {
+          return new Types.ObjectId(id);
+        } catch (error) {
+          console.error('Invalid manager ID format:', id);
+          throw new Error(`Invalid manager ID format: ${id}`);
+        }
+      });
+
+      console.log('Converted manager IDs:', validManagerIds);
+
+      // Perform the update with $set operator and validated ObjectIds
       const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         { 
           $set: { 
-            assignedManagers: managerIds,
+            assignedManagers: validManagerIds,
             updatedAt: new Date()
           }
         },
         { 
           new: true,
-          runValidators: true,
-          upsert: false
+          runValidators: true
         }
       ).populate('assignedManagers');
 
@@ -160,15 +172,17 @@ export class PlaylistService {
 
       console.log('Updated playlist:', JSON.stringify(updatedPlaylist, null, 2));
 
-      // Double check if the update was successful
+      // Verify the update in database
       const verifyUpdate = await Playlist.findById(playlistId);
       console.log('Verification after update:', JSON.stringify(verifyUpdate, null, 2));
 
-      // Emit real-time update
-      this.wsService.emitPlaylistUpdate(updatedPlaylist.id, {
-        action: 'updated',
-        playlist: updatedPlaylist
-      });
+      // Emit real-time update if playlist was successfully updated
+      if (updatedPlaylist) {
+        this.wsService.emitPlaylistUpdate(updatedPlaylist._id, {
+          action: 'updated',
+          playlist: updatedPlaylist
+        });
+      }
 
       return updatedPlaylist;
     } catch (error) {

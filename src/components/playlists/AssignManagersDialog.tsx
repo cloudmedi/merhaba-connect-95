@@ -88,8 +88,11 @@ export function AssignManagersDialog({
         expiresAt
       });
 
-      const managerIds = selectedManagers.map(manager => manager._id);
+      // Ensure we're sending the correct ID format
+      const managerIds = selectedManagers.map(manager => manager._id.toString());
       
+      console.log('Sending manager IDs:', managerIds);
+
       await axios.post(`/admin/playlists/${playlistId}/assign-managers`, {
         managerIds,
         scheduledAt,
