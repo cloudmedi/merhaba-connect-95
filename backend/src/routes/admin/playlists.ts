@@ -8,8 +8,25 @@ import path from 'path';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Admin middleware'ini tüm route'lara uygula
 router.use(adminAuth);
+
+// Get single playlist
+router.get('/:id', async (req, res) => {
+  try {
+    console.log('Fetching playlist details for ID:', req.params.id);
+    const playlistService = new PlaylistService(req.io);
+    const playlist = await playlistService.getPlaylistById(req.params.id);
+    
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+    
+    res.json(playlist);
+  } catch (error) {
+    console.error('Error fetching playlist details:', error);
+    res.status(500).json({ error: 'Error fetching playlist details' });
+  }
+});
 
 router.post('/upload-artwork', upload.single('file'), async (req, res) => {
   try {
