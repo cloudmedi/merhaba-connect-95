@@ -25,6 +25,12 @@ export const playlistService = {
     genre?: string;
     mood?: string;
     songs?: string[];
+    assignedManagers?: Array<{
+      _id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+    }>;
   }) {
     try {
       console.log('Creating playlist with data:', data);
@@ -72,6 +78,12 @@ export const playlistService = {
     genre?: string;
     mood?: string;
     songs?: string[];
+    assignedManagers?: Array<{
+      _id: string;
+      email: string;
+      firstName?: string;
+      lastName?: string;
+    }>;
   }) {
     try {
       console.log('Updating playlist:', id);

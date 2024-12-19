@@ -14,6 +14,7 @@ export class PlaylistMutationService extends BasePlaylistService {
       
       return playlist;
     } catch (error) {
+      console.error('Error creating playlist:', error);
       throw error;
     }
   }
@@ -40,6 +41,8 @@ export class PlaylistMutationService extends BasePlaylistService {
         assignedManagers,
         updatedAt: new Date()
       };
+
+      console.log('Updating playlist with data:', updateData);
 
       const playlist = await Playlist.findByIdAndUpdate(
         id,
@@ -77,6 +80,7 @@ export class PlaylistMutationService extends BasePlaylistService {
         playlistId: id
       });
     } catch (error) {
+      console.error('Error deleting playlist:', error);
       throw error;
     }
   }
