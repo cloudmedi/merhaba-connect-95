@@ -25,6 +25,12 @@ export function usePlaylistMutations() {
         throw new Error("Please enter a playlist title");
       }
 
+      console.log('Initial playlist data:', {
+        selectedGenres: playlistData.selectedGenres,
+        selectedMoods: playlistData.selectedMoods,
+        selectedCategories: playlistData.selectedCategories
+      });
+
       let artwork_url = playlistData.artwork_url;
 
       // Handle file upload if there's new artwork
@@ -47,16 +53,19 @@ export function usePlaylistMutations() {
         name: playlistData.title,
         description: playlistData.description,
         artwork_url,
-        genre_id: playlistData.selectedGenres[0]?.id || null,
-        mood_id: playlistData.selectedMoods[0]?.id || null,
+        genre_id: playlistData.selectedGenres?.[0]?.id || null,
+        mood_id: playlistData.selectedMoods?.[0]?.id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
         is_hero: playlistData.isHero || false,
         songs: playlistData.selectedSongs.map((song: any) => song._id),
-        categories: playlistData.selectedCategories.map((cat: any) => cat.id)
+        categories: playlistData.selectedCategories
+          .filter((cat: any) => cat && cat.id)
+          .map((cat: any) => cat.id)
       };
 
-      console.log('Saving playlist with payload:', playlistPayload);
+      console.log('Sending playlist payload:', playlistPayload);
+      
       let response;
       if (isEditMode && existingPlaylist) {
         response = await axios.put(`/admin/playlists/${existingPlaylist.id}`, playlistPayload);
@@ -64,11 +73,17 @@ export function usePlaylistMutations() {
         response = await axios.post('/admin/playlists', playlistPayload);
       }
 
+      console.log('Server response:', response.data);
+
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
       onSuccess?.();
       
     } catch (error: any) {
       console.error('Error saving playlist:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data
+      });
       onError?.(error);
       throw error;
     }

@@ -9,6 +9,9 @@ interface PlaylistFormProps {
     description: string;
     artwork: File | null;
     artwork_url?: string;
+    selectedGenres: any[];
+    selectedMoods: any[];
+    selectedCategories: any[];
   };
   setPlaylistData: (data: any) => void;
 }
@@ -17,8 +20,18 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
   const handleArtworkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setPlaylistData((prev: any) => ({ ...prev, artwork: file }));
+      setPlaylistData((prev: any) => {
+        console.log('Updating artwork:', file);
+        return { ...prev, artwork: file };
+      });
     }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setPlaylistData((prev: any) => {
+      console.log(`Updating ${field}:`, value);
+      return { ...prev, [field]: value };
+    });
   };
 
   return (
@@ -28,7 +41,7 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
         <Input
           placeholder="Enter playlist name"
           value={playlistData.title}
-          onChange={(e) => setPlaylistData((prev: any) => ({ ...prev, title: e.target.value }))}
+          onChange={(e) => handleInputChange('title', e.target.value)}
         />
       </div>
       
@@ -37,7 +50,7 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
         <Textarea
           placeholder="Enter playlist description"
           value={playlistData.description}
-          onChange={(e) => setPlaylistData((prev: any) => ({ ...prev, description: e.target.value }))}
+          onChange={(e) => handleInputChange('description', e.target.value)}
         />
       </div>
       
