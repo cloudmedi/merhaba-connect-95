@@ -29,11 +29,9 @@ export function AssignManagersDialog({
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       console.log('Dialog opened with initial managers:', initialSelectedManagers);
-      // Ensure we only set valid manager objects
       const validManagers = (initialSelectedManagers || []).filter(manager => 
         manager && (manager._id || manager.id)
       );
@@ -52,17 +50,14 @@ export function AssignManagersDialog({
       
       console.log('Managers response:', response.data);
 
-      // Ensure we transform the data correctly and handle potential null values
       const transformedManagers = (response.data || [])
-        .filter((manager: any) => manager && manager._id) // Filter out invalid managers
+        .filter((manager: any) => manager && manager._id)
         .map((manager: any) => ({
           _id: manager._id,
           id: manager._id,
           email: manager.email || '',
           firstName: manager.firstName || '',
-          lastName: manager.lastName || '',
-          first_name: manager.firstName || '',
-          last_name: manager.lastName || ''
+          lastName: manager.lastName || ''
         }));
 
       setManagers(transformedManagers);
@@ -97,7 +92,6 @@ export function AssignManagersDialog({
         expiresAt
       });
 
-      // Ensure we only send valid manager IDs
       const managerIds = selectedManagers
         .filter(manager => manager && (manager._id || manager.id))
         .map(manager => (manager._id || manager.id).toString());

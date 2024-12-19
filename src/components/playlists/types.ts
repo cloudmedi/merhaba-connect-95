@@ -4,8 +4,6 @@ export interface Manager {
   email: string;
   firstName?: string;
   lastName?: string;
-  first_name?: string;
-  last_name?: string;
 }
 
 export interface PlaylistRowProps {
