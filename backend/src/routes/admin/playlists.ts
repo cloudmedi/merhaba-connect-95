@@ -5,8 +5,7 @@ import multer from 'multer';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import path from 'path';
 
-// Request tipini genişlet
-interface AuthRequest extends express.Request {
+interface AuthRequest extends Request {
   user?: {
     id: string;
     role: string;
@@ -20,7 +19,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.use(authMiddleware);
 
 // Add artwork upload endpoint using Bunny CDN
-router.post('/upload-artwork', upload.single('file'), async (req, res) => {
+router.post('/upload-artwork', upload.single('file'), async (req: AuthRequest, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -60,7 +59,7 @@ router.post('/', async (req: AuthRequest, res) => {
       categories: req.body.categories || [],
       genre: req.body.genre_id,
       mood: req.body.mood_id,
-      createdBy: req.user.id // Artık req.user?.id kontrolü yukarıda yapıldığı için burada safe
+      createdBy: req.user.id
     });
     res.json(playlist);
   } catch (error) {
@@ -70,7 +69,7 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlists = await playlistService.getAllPlaylists();
@@ -80,7 +79,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.updatePlaylist(req.params.id, req.body);
@@ -90,7 +89,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     await playlistService.deletePlaylist(req.params.id);
