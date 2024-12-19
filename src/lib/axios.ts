@@ -9,26 +9,36 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor'ı ekle
+// Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('Axios interceptor - Token:', token ? 'Token exists' : 'No token');
     
+    // Token varsa ekle
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    console.log('Axios interceptor - Final headers:', config.headers);
+
+    // Multipart form data için Content-Type header'ını değiştirme
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
+    }
+
+    console.log('Request config:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers
+    });
+
     return config;
   },
   (error) => {
-    console.error('Axios interceptor - Request error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor'ı ekle
+// Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
