@@ -10,6 +10,14 @@ const client = {
       } catch (error) {
         return { data: { user: null }, error };
       }
+    },
+    getSession: async () => {
+      try {
+        const response = await api.get('/auth/session');
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null, error };
+      }
     }
   },
   
@@ -77,14 +85,59 @@ const client = {
       } catch (error) {
         return { data: null, error };
       }
+    },
+
+    ilike: async (column: string, pattern: string) => {
+      try {
+        const response = await api.get(`/${table}?${column}=ilike.${pattern}`);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null, error };
+      }
+    },
+
+    or: async (conditions: string) => {
+      try {
+        const response = await api.get(`/${table}?or=${conditions}`);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null, error };
+      }
     }
   }),
 
-  // Websocket işlemleri için boş implementasyonlar
   channel: (name: string) => ({
-    on: () => ({ subscribe: () => {} }),
-    subscribe: () => {}
-  })
+    on: (event: string, filter: any, callback: Function) => ({
+      subscribe: (status?: Function) => {
+        // WebSocket bağlantısı için gerekli implementasyon
+        if (status) status('SUBSCRIBED');
+      }
+    }),
+    subscribe: (status?: Function) => {
+      if (status) status('SUBSCRIBED');
+    },
+    send: async (message: any) => {
+      try {
+        await api.post('/ws/send', message);
+        return { error: null };
+      } catch (error) {
+        return { error };
+      }
+    },
+    unsubscribe: () => {},
+    removeChannel: () => {}
+  }),
+
+  functions: {
+    invoke: async (functionName: string, payload?: any) => {
+      try {
+        const response = await api.post(`/functions/${functionName}`, payload);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null, error };
+      }
+    }
+  }
 };
 
 export { client as supabase };
