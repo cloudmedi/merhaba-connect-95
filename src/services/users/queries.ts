@@ -19,11 +19,6 @@ export const getUsersQuery = async (filters?: {
     }
 
     const response = await axios.get(url);
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
-
     return response.data;
   } catch (error) {
     console.error('Error in getUsersQuery:', error);
@@ -34,11 +29,6 @@ export const getUsersQuery = async (filters?: {
 export const getUserById = async (id: string) => {
   try {
     const response = await axios.get(`/admin/users/${id}`);
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch user');
-    }
-
     return response.data;
   } catch (error) {
     console.error('Error in getUserById:', error);
