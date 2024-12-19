@@ -13,12 +13,12 @@ interface UploadingFile {
   error?: string;
 }
 
-interface UploadMusicDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function UploadMusicDialog({ open, onOpenChange }: UploadMusicDialogProps) {
+export function UploadMusicDialog({ open, onOpenChange }: Props) {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
