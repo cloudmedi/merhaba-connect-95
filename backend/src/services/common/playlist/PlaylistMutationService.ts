@@ -1,5 +1,6 @@
 import { BasePlaylistService } from './BasePlaylistService';
 import { Playlist } from '../../../models/common/Playlist';
+import { User } from '../../../models/admin/User';
 
 export class PlaylistMutationService extends BasePlaylistService {
   async createPlaylist(data: any) {
@@ -26,19 +27,26 @@ export class PlaylistMutationService extends BasePlaylistService {
         throw new Error('Playlist not found');
       }
 
-      // Prepare manager data
-      const assignedManagers = Array.isArray(data.assignedManagers) 
-        ? data.assignedManagers.map((manager: any) => ({
-            _id: manager._id,
-            email: manager.email,
-            firstName: manager.firstName || '',
-            lastName: manager.lastName || ''
-          }))
-        : existingPlaylist.assignedManagers;
+      // Fetch manager details from User model if assignedManagers array exists
+      let assignedManagersData = existingPlaylist.assignedManagers;
+      if (Array.isArray(data.assignedManagers)) {
+        const managerIds = data.assignedManagers;
+        const managers = await User.find(
+          { _id: { $in: managerIds } },
+          'email firstName lastName'
+        );
+
+        assignedManagersData = managers.map(manager => ({
+          _id: manager._id,
+          email: manager.email,
+          firstName: manager.firstName || '',
+          lastName: manager.lastName || ''
+        }));
+      }
 
       const updateData = {
         ...data,
-        assignedManagers,
+        assignedManagers: assignedManagersData,
         updatedAt: new Date()
       };
 
