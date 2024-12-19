@@ -33,7 +33,11 @@ export function AssignManagersDialog({
   useEffect(() => {
     if (open) {
       console.log('Dialog opened with initial managers:', initialSelectedManagers);
-      setSelectedManagers(initialSelectedManagers);
+      // Ensure we only set valid manager objects
+      const validManagers = (initialSelectedManagers || []).filter(manager => 
+        manager && (manager._id || manager.id)
+      );
+      setSelectedManagers(validManagers);
       fetchManagers();
     }
   }, [open, initialSelectedManagers]);
@@ -48,15 +52,18 @@ export function AssignManagersDialog({
       
       console.log('Managers response:', response.data);
 
-      const transformedManagers = response.data.map((manager: any) => ({
-        _id: manager._id,
-        id: manager._id,
-        email: manager.email,
-        firstName: manager.firstName,
-        lastName: manager.lastName,
-        first_name: manager.firstName,
-        last_name: manager.lastName
-      }));
+      // Ensure we transform the data correctly and handle potential null values
+      const transformedManagers = (response.data || [])
+        .filter((manager: any) => manager && manager._id) // Filter out invalid managers
+        .map((manager: any) => ({
+          _id: manager._id,
+          id: manager._id,
+          email: manager.email || '',
+          firstName: manager.firstName || '',
+          lastName: manager.lastName || '',
+          first_name: manager.firstName || '',
+          last_name: manager.lastName || ''
+        }));
 
       setManagers(transformedManagers);
     } catch (error: any) {
@@ -68,6 +75,11 @@ export function AssignManagersDialog({
   };
 
   const handleSelectManager = (manager: Manager) => {
+    if (!manager || (!manager._id && !manager.id)) {
+      console.warn('Invalid manager object:', manager);
+      return;
+    }
+
     setSelectedManagers(prev => {
       const isSelected = prev.some(m => m._id === manager._id);
       if (isSelected) {
@@ -85,8 +97,10 @@ export function AssignManagersDialog({
         expiresAt
       });
 
-      // Ensure we're sending the correct ID format
-      const managerIds = selectedManagers.map(manager => manager._id.toString());
+      // Ensure we only send valid manager IDs
+      const managerIds = selectedManagers
+        .filter(manager => manager && (manager._id || manager.id))
+        .map(manager => (manager._id || manager.id).toString());
       
       console.log('Sending manager IDs:', managerIds);
 
