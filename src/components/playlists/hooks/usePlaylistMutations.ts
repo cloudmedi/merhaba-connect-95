@@ -29,15 +29,17 @@ export function usePlaylistMutations() {
 
       // Handle file upload if there's new artwork
       if (playlistData.artwork) {
+        console.log('Uploading artwork to:', '/admin/playlists/upload-artwork');
         const formData = new FormData();
         formData.append('file', playlistData.artwork);
         
-        const uploadResponse = await axios.post('/admin/upload-artwork', formData, {
+        const uploadResponse = await axios.post('/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
         
+        console.log('Artwork upload response:', uploadResponse.data);
         artwork_url = uploadResponse.data.url;
       }
 
@@ -54,6 +56,7 @@ export function usePlaylistMutations() {
         categories: playlistData.selectedCategories.map((cat: any) => cat.id)
       };
 
+      console.log('Saving playlist with payload:', playlistPayload);
       let response;
       if (isEditMode && existingPlaylist) {
         response = await axios.put(`/admin/playlists/${existingPlaylist.id}`, playlistPayload);
