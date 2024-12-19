@@ -6,13 +6,14 @@ import { logger } from '../../utils/logger';
 const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
 const MAX_RETRIES = 3;
 const TIMEOUT = 15000; // 15 seconds timeout
+const MAX_CONCURRENT_UPLOADS = 3;
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
   private isUploading: boolean = false;
-  private uploadPromises: Promise<boolean>[] = [];
   private totalChunks: number = 0;
   private uploadedChunks: number = 0;
+  private lastProgressUpdate: number = 0;
 
   constructor(private onProgress?: (progress: number) => void) {}
 
@@ -53,9 +54,7 @@ export class ChunkUploadService {
       }
 
       this.uploadedChunks++;
-      const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
-      this.onProgress?.(progress);
-      
+      this.updateProgress();
       return true;
     } catch (error) {
       if (retryCount < MAX_RETRIES && this.isUploading) {
@@ -64,6 +63,15 @@ export class ChunkUploadService {
         return this.uploadChunk(url, chunk, start, total, retryCount + 1);
       }
       throw error;
+    }
+  }
+
+  private updateProgress() {
+    const now = Date.now();
+    if (now - this.lastProgressUpdate > 100) { // Throttle updates to max 10 per second
+      const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
+      this.onProgress?.(progress);
+      this.lastProgressUpdate = now;
     }
   }
 
@@ -79,15 +87,13 @@ export class ChunkUploadService {
     this.isUploading = true;
     this.abortController = new AbortController();
     this.uploadedChunks = 0;
-    this.uploadPromises = [];
+    this.lastProgressUpdate = 0;
 
     try {
       const timestamp = Date.now();
       const uniqueFileName = `music/${timestamp}-${fileName}`;
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${uniqueFileName}`;
       
-      logger.debug('Starting upload for file:', uniqueFileName);
-
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, Math.min(i + CHUNK_SIZE, buffer.length)));
@@ -96,9 +102,8 @@ export class ChunkUploadService {
       this.totalChunks = chunks.length;
       
       // Paralel yükleme (3 chunk aynı anda)
-      const concurrencyLimit = 3;
-      for (let i = 0; i < chunks.length; i += concurrencyLimit) {
-        const chunkGroup = chunks.slice(i, i + concurrencyLimit);
+      for (let i = 0; i < chunks.length; i += MAX_CONCURRENT_UPLOADS) {
+        const chunkGroup = chunks.slice(i, i + MAX_CONCURRENT_UPLOADS);
         const uploadPromises = chunkGroup.map((chunk, index) => {
           const start = (i + index) * CHUNK_SIZE;
           return this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
@@ -108,7 +113,6 @@ export class ChunkUploadService {
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
-      logger.debug('File upload completed successfully:', cdnUrl);
       
       // Son progress güncellemesi
       this.onProgress?.(100);

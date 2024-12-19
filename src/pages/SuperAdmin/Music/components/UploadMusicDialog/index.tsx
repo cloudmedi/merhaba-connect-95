@@ -57,7 +57,10 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
             'Content-Type': 'multipart/form-data'
           },
           onUploadProgress: (progressEvent) => {
-            const progress = progressEvent.loaded / progressEvent.total * 100;
+            if (!progressEvent.total) return;
+            
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            
             setUploadingFiles(prev => ({
               ...prev,
               [file.name]: {
@@ -68,6 +71,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           }
         });
 
+        // Backend işlemi tamamlandığında
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
