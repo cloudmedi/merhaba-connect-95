@@ -5,13 +5,17 @@ export class PlaylistQueryService extends BasePlaylistService {
   async getAllPlaylists() {
     try {
       return await Playlist.find()
+        .populate({
+          path: 'assignedManagers',
+          select: 'email firstName lastName'  // Sadece ihtiyacımız olan alanları seçiyoruz
+        })
         .populate('songs.songId')
         .populate('categories')
         .populate('genre')
         .populate('mood')
-        .populate('assignedManagers')
         .sort({ createdAt: -1 });
     } catch (error) {
+      console.error('Error fetching playlists with managers:', error);
       throw error;
     }
   }
