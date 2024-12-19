@@ -1,5 +1,5 @@
 export interface Playlist {
-  _id: string;
+  _id: string;  // id yerine _id kullanıyoruz
   name: string;
   description?: string;
   isPublic: boolean;

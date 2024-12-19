@@ -27,7 +27,6 @@ export const playlistService = {
     try {
       console.log('Creating playlist with data:', data);
       
-      // Handle artwork upload if it's a blob URL
       let artworkUrl = data.artworkUrl;
       if (data.artworkUrl && data.artworkUrl.startsWith('blob:')) {
         console.log('Uploading artwork file...');
@@ -116,36 +115,6 @@ export const playlistService = {
     } catch (error) {
       console.error('Error deleting playlist:', error);
       toast.error('Failed to delete playlist');
-      throw error;
-    }
-  },
-
-  async getPlaylistSongs(id: string) {
-    try {
-      const response = await axiosInstance.get(`/admin/playlists/${id}/songs`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching playlist songs:', error);
-      throw error;
-    }
-  },
-
-  async getPlaylistCategories(id: string) {
-    try {
-      const response = await axiosInstance.get(`/admin/playlists/${id}/categories`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching playlist categories:', error);
-      throw error;
-    }
-  },
-
-  async getPlaylistManagers(id: string) {
-    try {
-      const response = await axiosInstance.get(`/admin/playlists/${id}/managers`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching playlist managers:', error);
       throw error;
     }
   }

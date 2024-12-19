@@ -1,87 +1,79 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
 interface PlaylistFormProps {
   playlistData: {
+    _id?: string;  // id yerine _id kullanıyoruz
     title: string;
     description: string;
     artwork: File | null;
-    artwork_url?: string;
-    selectedGenres: any[];
-    selectedMoods: any[];
-    selectedCategories: any[];
+    artwork_url: string;
   };
   setPlaylistData: (data: any) => void;
 }
 
 export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProps) {
-  const handleArtworkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const [previewUrl, setPreviewUrl] = useState<string>(playlistData.artwork_url || "");
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setPlaylistData((prev: any) => {
-        console.log('Updating artwork:', file);
-        return { ...prev, artwork: file };
-      });
+      setPlaylistData({ ...playlistData, artwork: file });
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setPlaylistData((prev: any) => {
-      console.log(`Updating ${field}:`, value);
-      return { ...prev, [field]: value };
-    });
-  };
-
   return (
-    <div className="space-y-4 w-[300px]">
-      <div>
-        <label className="text-sm font-medium">Playlist Name</label>
+    <div className="w-96 space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
         <Input
-          placeholder="Enter playlist name"
+          id="title"
           value={playlistData.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
+          onChange={(e) => setPlaylistData({ ...playlistData, title: e.target.value })}
+          placeholder="Enter playlist title"
         />
       </div>
-      
-      <div>
-        <label className="text-sm font-medium">Description</label>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
         <Textarea
-          placeholder="Enter playlist description"
+          id="description"
           value={playlistData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
+          onChange={(e) => setPlaylistData({ ...playlistData, description: e.target.value })}
+          placeholder="Enter playlist description"
         />
       </div>
-      
-      <div>
-        <label className="text-sm font-medium">Artwork</label>
-        <div className="mt-2 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
-             onClick={() => document.getElementById('artwork-upload')?.click()}>
-          {playlistData.artwork ? (
+
+      <div className="space-y-2">
+        <Label>Artwork</Label>
+        <div className="flex items-center gap-4">
+          {previewUrl && (
             <img
-              src={URL.createObjectURL(playlistData.artwork)}
+              src={previewUrl}
               alt="Playlist artwork"
-              className="w-full h-40 object-cover rounded"
+              className="w-24 h-24 object-cover rounded"
             />
-          ) : playlistData.artwork_url ? (
-            <img
-              src={playlistData.artwork_url}
-              alt="Playlist artwork"
-              className="w-full h-40 object-cover rounded"
-            />
-          ) : (
-            <div className="h-40 flex flex-col items-center justify-center text-gray-500">
-              <Upload className="w-8 h-8 mb-2" />
-              <span>Upload Artwork</span>
-            </div>
           )}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-24 h-24"
+            onClick={() => document.getElementById('artwork-upload')?.click()}
+          >
+            <Upload className="w-6 h-6" />
+          </Button>
           <input
             id="artwork-upload"
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handleArtworkUpload}
+            onChange={handleFileChange}
           />
         </div>
       </div>
