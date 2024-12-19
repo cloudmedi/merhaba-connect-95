@@ -62,18 +62,19 @@ app.use(morgan('combined', { stream }));
 app.use(requestLogger);
 app.use(responseLogger);
 
-// CORS configuration
+// CORS configuration - Güncellendi
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:4173'],
+  origin: ['http://localhost:3000', 'http://localhost:4173', 'http://localhost:4174', 'http://localhost:5173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization',
     'Cache-Control',
     'Pragma',
     'Expires',
-    'cache-control'
+    'cache-control',
+    'x-requested-with'
   ],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
@@ -91,7 +92,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes); // Ana auth route'ları
+app.use('/api/auth', authRoutes);
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/admin/categories', adminCategoriesRoutes);
