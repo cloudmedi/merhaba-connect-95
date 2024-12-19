@@ -8,17 +8,16 @@ import { PlaylistTabs } from "./PlaylistTabs";
 import { PlaylistSettings } from "./PlaylistSettings";
 import { AssignManagersDialog } from "./AssignManagersDialog";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
-import { usePlaylistAssignment } from "./hooks/usePlaylistAssignment";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
+import { Manager } from "./types";
 
 export function CreatePlaylist() {
   const navigate = useNavigate();
   const location = useLocation();
   const { handleSavePlaylist } = usePlaylistMutations();
   const existingPlaylist = location.state?.playlistData;
-  const { isAssignDialogOpen, setIsAssignDialogOpen, handleAssignManagers } = 
-    usePlaylistAssignment(existingPlaylist?._id);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
   const [playlistData, setPlaylistData] = useState({
     name: "",
@@ -32,7 +31,7 @@ export function CreatePlaylist() {
     isCatalog: false,
     isPublic: false,
     isHero: false,
-    assignedManagers: []
+    assignedManagers: [] as Manager[]
   });
 
   const isEditMode = location.state?.editMode;
@@ -41,50 +40,37 @@ export function CreatePlaylist() {
     if (isEditMode && existingPlaylist) {
       console.log('Loading existing playlist data:', existingPlaylist);
       loadExistingPlaylistData();
-    } else if (location.state?.selectedSongs) {
-      setPlaylistData(prev => ({
-        ...prev,
-        selectedSongs: Array.isArray(location.state.selectedSongs) 
-          ? location.state.selectedSongs 
-          : [location.state.selectedSongs]
-      }));
     }
-  }, [isEditMode, existingPlaylist, location.state]);
+  }, [isEditMode, existingPlaylist]);
 
   const loadExistingPlaylistData = async () => {
     try {
-      console.log('Loading playlist details for ID:', existingPlaylist._id);
-      
-      const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
-        axios.get(`/api/admin/playlists/${existingPlaylist._id}/songs`),
-        axios.get(`/api/admin/playlists/${existingPlaylist._id}/categories`),
-        axios.get(`/api/admin/playlists/${existingPlaylist._id}/managers`)
-      ]);
-
-      console.log('Loaded playlist data:', {
-        songs: playlistSongs.data,
-        categories: playlistCategories.data,
-        managers: assignedManagers.data
-      });
-
       setPlaylistData({
         name: existingPlaylist.name,
         description: existingPlaylist.description || "",
         artwork: null,
         artworkUrl: existingPlaylist.artworkUrl || "",
-        selectedSongs: playlistSongs.data || [],
+        selectedSongs: existingPlaylist.songs || [],
         selectedGenres: existingPlaylist.genre ? [existingPlaylist.genre] : [],
-        selectedCategories: playlistCategories.data || [],
+        selectedCategories: existingPlaylist.categories || [],
         selectedMoods: existingPlaylist.mood ? [existingPlaylist.mood] : [],
         isCatalog: false,
         isPublic: existingPlaylist.isPublic || false,
         isHero: existingPlaylist.isHero || false,
-        assignedManagers: assignedManagers.data || []
+        assignedManagers: existingPlaylist.assignedManagers || []
       });
     } catch (error) {
-      console.error('Error fetching playlist details:', error);
+      console.error('Error loading playlist details:', error);
       toast.error("Failed to load playlist details");
     }
+  };
+
+  const handleManagerSelection = (selectedManagers: Manager[]) => {
+    console.log('Selected managers:', selectedManagers);
+    setPlaylistData(prev => ({
+      ...prev,
+      assignedManagers: selectedManagers
+    }));
   };
 
   return (
@@ -125,7 +111,7 @@ export function CreatePlaylist() {
         >
           <Users className="w-4 h-4 mr-2" />
           {playlistData.assignedManagers.length > 0 
-            ? `Assigned to ${playlistData.assignedManagers.length} Manager${playlistData.assignedManagers.length > 1 ? 's' : ''}`
+            ? `${playlistData.assignedManagers.length} Manager${playlistData.assignedManagers.length > 1 ? 's' : ''} Selected`
             : "Assign to Managers"}
         </Button>
 
@@ -137,9 +123,8 @@ export function CreatePlaylist() {
         <AssignManagersDialog
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
-          playlistId={existingPlaylist?._id || ''}
           initialSelectedManagers={playlistData.assignedManagers}
-          onAssign={handleAssignManagers}
+          onManagersSelected={handleManagerSelection}
         />
       </div>
     </div>

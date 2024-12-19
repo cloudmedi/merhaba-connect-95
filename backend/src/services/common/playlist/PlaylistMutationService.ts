@@ -20,20 +20,27 @@ export class PlaylistMutationService extends BasePlaylistService {
 
   async updatePlaylist(id: string, data: any) {
     try {
-      // Önce mevcut playlist'i çekelim
       const existingPlaylist = await this.findPlaylistById(id);
       if (!existingPlaylist) {
         throw new Error('Playlist not found');
       }
 
-      // Update data'yı hazırlayalım ve mevcut assignedManagers'ı koruyalım
+      // Prepare manager data
+      const assignedManagers = Array.isArray(data.assignedManagers) 
+        ? data.assignedManagers.map((manager: any) => ({
+            _id: manager._id,
+            email: manager.email,
+            firstName: manager.firstName,
+            lastName: manager.lastName
+          }))
+        : existingPlaylist.assignedManagers;
+
       const updateData = {
         ...data,
-        assignedManagers: data.assignedManagers || existingPlaylist.assignedManagers,
+        assignedManagers,
         updatedAt: new Date()
       };
 
-      // Update işlemini gerçekleştirelim
       const playlist = await Playlist.findByIdAndUpdate(
         id,
         { $set: updateData },
@@ -45,8 +52,7 @@ export class PlaylistMutationService extends BasePlaylistService {
       .populate('songs.songId')
       .populate('categories')
       .populate('genre')
-      .populate('mood')
-      .populate('assignedManagers');
+      .populate('mood');
       
       if (playlist) {
         this.wsService.emitPlaylistUpdate(playlist._id.toString(), {
