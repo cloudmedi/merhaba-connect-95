@@ -129,60 +129,56 @@ export class PlaylistService {
 
   async assignManagers(playlistId: string, managerIds: string[]) {
     try {
-      console.log('Assigning managers to playlist:', { playlistId, managerIds });
+      console.log('Starting assignManagers operation:', { playlistId, managerIds });
 
-      // First verify the playlist exists
-      const existingPlaylist = await Playlist.findById(playlistId);
-      if (!existingPlaylist) {
-        console.error('Playlist not found:', playlistId);
-        throw new Error('Playlist not found');
+      // Step 1: Validate playlist ID
+      if (!Types.ObjectId.isValid(playlistId)) {
+        console.error('Invalid playlist ID format:', playlistId);
+        throw new Error('Invalid playlist ID format');
       }
 
-      // Convert string IDs to MongoDB ObjectIds
+      // Step 2: Validate and convert manager IDs
       const validManagerIds = managerIds.map(id => {
-        try {
-          return new Types.ObjectId(id);
-        } catch (error) {
+        if (!Types.ObjectId.isValid(id)) {
           console.error('Invalid manager ID format:', id);
           throw new Error(`Invalid manager ID format: ${id}`);
         }
+        return new Types.ObjectId(id);
       });
 
-      console.log('Converted manager IDs:', validManagerIds);
+      console.log('Validated manager IDs:', validManagerIds);
 
-      // Perform the update with $set operator and validated ObjectIds
-      const updatedPlaylist = await Playlist.findByIdAndUpdate(
-        playlistId,
-        { 
-          $set: { 
+      // Step 3: Atomic update operation
+      const updatedPlaylist = await Playlist.findOneAndUpdate(
+        { _id: new Types.ObjectId(playlistId) },
+        {
+          $set: {
             assignedManagers: validManagerIds,
             updatedAt: new Date()
           }
         },
-        { 
+        {
           new: true,
-          runValidators: true
+          runValidators: true,
+          session: null // Ensure atomic operation
         }
       ).populate('assignedManagers');
 
       if (!updatedPlaylist) {
-        console.error('Failed to update playlist:', playlistId);
-        throw new Error('Failed to update playlist');
+        console.error('Playlist not found:', playlistId);
+        throw new Error('Playlist not found');
       }
 
-      console.log('Updated playlist:', JSON.stringify(updatedPlaylist, null, 2));
+      console.log('Playlist updated successfully:', {
+        id: updatedPlaylist._id,
+        assignedManagers: updatedPlaylist.assignedManagers
+      });
 
-      // Verify the update in database
-      const verifyUpdate = await Playlist.findById(playlistId);
-      console.log('Verification after update:', JSON.stringify(verifyUpdate, null, 2));
-
-      // Emit real-time update if playlist was successfully updated
-      if (updatedPlaylist) {
-        this.wsService.emitPlaylistUpdate(updatedPlaylist._id.toString(), {
-          action: 'updated',
-          playlist: updatedPlaylist
-        });
-      }
+      // Step 4: Emit WebSocket update
+      this.wsService.emitPlaylistUpdate(updatedPlaylist._id.toString(), {
+        action: 'updated',
+        playlist: updatedPlaylist
+      });
 
       return updatedPlaylist;
     } catch (error) {
