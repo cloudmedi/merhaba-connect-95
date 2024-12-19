@@ -8,7 +8,7 @@ import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
 interface PlaylistRowProps {
   playlist: {
-    _id: string;  // id -> _id olarak değiştirildi
+    _id: string;  // id yerine _id kullanıyoruz
     name: string;
     artworkUrl?: string;  // artwork_url -> artworkUrl olarak değiştirildi
     created_at: string;
@@ -34,7 +34,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handleEdit = () => {
     console.log('Editing playlist:', playlist);
-    if (!playlist || !playlist._id) {  // id -> _id olarak değiştirildi
+    if (!playlist || !playlist._id) {
       console.error('Invalid playlist data for editing:', playlist);
       toast({
         title: "Error",
@@ -56,21 +56,21 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
       const { error } = await supabase
         .from('playlists')
         .update({ is_public: !playlist.is_public })
-        .eq('_id', playlist._id);  // id -> _id olarak değiştirildi
+        .eq('id', playlist._id);  // Supabase'de hala 'id' kullanıyoruz
 
       if (error) throw error;
 
       if (!playlist.is_public) {
         const { data: managers, error: managersError } = await supabase
           .from('profiles')
-          .select('_id')  // id -> _id olarak değiştirildi
+          .select('id') // Supabase'de 'id' kullanıyoruz
           .eq('role', 'manager');
 
         if (managersError) throw managersError;
 
         for (const manager of managers) {
           await createPlaylistAssignmentNotification(
-            manager._id,  // id -> _id olarak değiştirildi
+            manager.id,  // Supabase'den gelen id'yi kullan
             playlist.name,
             playlist._id,  // id -> _id olarak değiştirildi
             playlist.artworkUrl  // artwork_url -> artworkUrl olarak değiştirildi

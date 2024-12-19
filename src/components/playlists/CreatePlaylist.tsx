@@ -24,7 +24,7 @@ export function CreatePlaylist() {
     title: "",
     description: "",
     artwork: null as File | null,
-    artworkUrl: "",
+    artworkUrl: "",  // artwork_url -> artworkUrl olarak değiştirildi
     selectedSongs: [],
     selectedGenres: [],
     selectedCategories: [],
@@ -95,7 +95,10 @@ export function CreatePlaylist() {
         <PlaylistHeader
           onCancel={() => navigate("/super-admin/playlists")}
           onCreate={() => handleSavePlaylist({
-            playlistData,
+            playlistData: {
+              ...playlistData,
+              artwork_url: playlistData.artworkUrl // artworkUrl'i artwork_url olarak eşleştir
+            },
             isEditMode,
             existingPlaylist,
             onSuccess: () => {
