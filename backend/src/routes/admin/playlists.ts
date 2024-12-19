@@ -1,6 +1,6 @@
 import express from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
-import { adminAuth } from '../../middleware/auth';
+import { authMiddleware } from '../../middleware/auth.middleware';
 import multer from 'multer';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import path from 'path';
@@ -16,8 +16,8 @@ interface AuthRequest extends express.Request {
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Admin middleware'ini tüm route'lara uygula
-router.use(adminAuth);
+// Auth middleware'ini tüm route'lara uygula
+router.use(authMiddleware);
 
 // Add artwork upload endpoint using Bunny CDN
 router.post('/upload-artwork', upload.single('file'), async (req, res) => {
