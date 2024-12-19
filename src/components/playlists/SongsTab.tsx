@@ -27,6 +27,7 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
   };
 
   const handleRemoveSong = (songId: string) => {
+    console.log('Removing song with ID:', songId);
     onRemoveSong(songId);
   };
 
