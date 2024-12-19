@@ -11,7 +11,7 @@ import axios from "@/lib/axios";
 interface AssignManagersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAssign: (managerIds: string[], scheduledAt?: Date, expiresAt?: Date) => void;
+  onAssign: (managers: Manager[], scheduledAt?: Date, expiresAt?: Date) => void;
   playlistId: string;
   initialSelectedManagers?: Manager[];
 }
@@ -44,16 +44,28 @@ export function AssignManagersDialog({
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('/admin/users?role=manager');
-      setManagers(response.data.map((manager: any) => ({
-        id: manager._id,
+      console.log('Fetching managers...');
+      const response = await axios.get('/admin/users', {
+        params: { role: 'manager' }
+      });
+      
+      console.log('Managers response:', response.data);
+
+      // Backend veri yapısını frontend yapısına dönüştür
+      const transformedManagers = response.data.map((manager: any) => ({
+        _id: manager._id,
+        id: manager._id, // Geriye dönük uyumluluk için
         email: manager.email,
-        first_name: manager.firstName,
-        last_name: manager.lastName
-      })));
+        firstName: manager.firstName,
+        lastName: manager.lastName,
+        first_name: manager.firstName, // Geriye dönük uyumluluk için
+        last_name: manager.lastName // Geriye dönük uyumluluk için
+      }));
+
+      setManagers(transformedManagers);
     } catch (error: any) {
       console.error("Error fetching managers:", error);
-      toast.error(error.message || "Failed to load managers");
+      toast.error(error.response?.data?.error || "Yöneticiler yüklenirken bir hata oluştu");
     } finally {
       setIsLoading(false);
     }
@@ -61,9 +73,9 @@ export function AssignManagersDialog({
 
   const handleSelectManager = (manager: Manager) => {
     setSelectedManagers(prev => {
-      const isSelected = prev.some(m => m.id === manager.id);
+      const isSelected = prev.some(m => m._id === manager._id);
       if (isSelected) {
-        return prev.filter(m => m.id !== manager.id);
+        return prev.filter(m => m._id !== manager._id);
       }
       return [...prev, manager];
     });
@@ -71,24 +83,16 @@ export function AssignManagersDialog({
 
   const handleAssign = async () => {
     try {
-      const assignmentData = {
-        managerIds: selectedManagers.map(m => m.id),
-        scheduledAt: scheduledAt?.toISOString(),
-        expiresAt: expiresAt?.toISOString()
-      };
+      console.log('Assigning managers:', {
+        selectedManagers,
+        scheduledAt,
+        expiresAt
+      });
 
-      await axios.post(`/admin/playlists/${playlistId}/assign-managers`, assignmentData);
-
-      const message = selectedManagers.length > 0 
-        ? `Playlist assigned to ${selectedManagers.length} managers`
-        : "All manager assignments removed";
-      
-      toast.success(message);
-      onAssign(selectedManagers.map(m => m.id), scheduledAt, expiresAt);
-      onOpenChange(false);
+      await onAssign(selectedManagers, scheduledAt, expiresAt);
     } catch (error: any) {
-      console.error('Error assigning playlist:', error);
-      toast.error(error.message || "Failed to assign playlist");
+      console.error('Error assigning managers:', error);
+      toast.error("Yönetici atama işlemi başarısız oldu");
     }
   };
 
@@ -96,7 +100,7 @@ export function AssignManagersDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Assign to Managers</DialogTitle>
+          <DialogTitle>Yönetici Ata</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -116,12 +120,12 @@ export function AssignManagersDialog({
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              İptal
             </Button>
             <Button onClick={handleAssign}>
               {selectedManagers.length > 0 
-                ? `Assign (${selectedManagers.length})`
-                : "Remove All Assignments"}
+                ? `Ata (${selectedManagers.length})`
+                : "Tüm Atamaları Kaldır"}
             </Button>
           </div>
         </div>

@@ -1,9 +1,11 @@
 export interface Manager {
-  id: string;
+  _id: string;
+  id?: string; // Geriye dönük uyumluluk için
   email: string;
-  first_name: string | null;
-  last_name: string | null;
-  role?: string;
+  firstName?: string;
+  lastName?: string;
+  first_name?: string; // Geriye dönük uyumluluk için
+  last_name?: string; // Geriye dönük uyumluluk için
 }
 
 export interface PlaylistRowProps {
