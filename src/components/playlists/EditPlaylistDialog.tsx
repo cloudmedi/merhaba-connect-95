@@ -10,6 +10,7 @@ import { Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Playlist } from "@/types/api";
+import type { Manager } from "./types";
 
 interface EditPlaylistDialogProps {
   playlist: Playlist;
@@ -35,7 +36,12 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
     isCatalog: false,
     isPublic: playlist.isPublic,
     isHero: playlist.isHero,
-    assignedManagers: playlist.assignedManagers || []
+    assignedManagers: (playlist.assignedManagers || []).map(id => ({
+      id,
+      email: "",
+      first_name: null,
+      last_name: null
+    })) as Manager[]
   });
 
   const handleSubmit = async () => {

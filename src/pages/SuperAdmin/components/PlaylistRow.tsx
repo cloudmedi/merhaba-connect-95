@@ -7,15 +7,9 @@ import { EditPlaylistDialog } from "@/components/playlists/EditPlaylistDialog";
 import { useState } from "react";
 import axios from "@/lib/axios";
 import type { Playlist } from "@/types/api";
+import { PlaylistRowProps } from "@/components/playlists/types";
 
-interface PlaylistRowProps {
-  playlist: Playlist;
-  onPlay: (playlist: Playlist) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: () => void;
-}
-
-export function PlaylistRow({ playlist, onPlay, onDelete, onStatusChange }: PlaylistRowProps) {
+export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange }: PlaylistRowProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const getArtworkUrl = (url: string | null | undefined) => {
@@ -101,7 +95,10 @@ export function PlaylistRow({ playlist, onPlay, onDelete, onStatusChange }: Play
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => {
+                setIsEditDialogOpen(true);
+                onEdit(playlist);
+              }} className="cursor-pointer">
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handlePublishToggle} className="cursor-pointer">
