@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios";
 import { Song } from "@/types/playlist";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
+import { getSongsQuery } from "@/services/songs/queries";
 
 interface SongsTabProps {
   playlistData: any;
@@ -18,10 +18,7 @@ export function SongsTab({ playlistData, setPlaylistData }: SongsTabProps) {
 
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['songs'],
-    queryFn: async () => {
-      const response = await axios.get('/admin/songs');
-      return response.data;
-    }
+    queryFn: getSongsQuery
   });
 
   const handleSelectSong = (song: Song) => {
