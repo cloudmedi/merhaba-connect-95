@@ -27,10 +27,6 @@ export class PlaylistService {
     return this.queryService.getAllPlaylists();
   }
 
-  async getPlaylistById(id: string) {
-    return this.queryService.getPlaylistById(id);
-  }
-
   async getPlaylistSongs(playlistId: string) {
     return this.queryService.getPlaylistSongs(playlistId);
   }
