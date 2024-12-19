@@ -17,6 +17,7 @@ import adminGenresRoutes from './routes/admin/genres';
 import adminMoodsRoutes from './routes/admin/moods';
 import adminSongsRoutes from './routes/admin/songs';
 import adminPlaylistsRoutes from './routes/admin/playlists';
+import adminMetricsRoutes from './routes/admin/metrics';
 
 const app = express();
 const httpServer = createServer(app);
@@ -100,6 +101,7 @@ app.use('/api/admin/genres', adminGenresRoutes);
 app.use('/api/admin/moods', adminMoodsRoutes);
 app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
+app.use('/api/admin/metrics', adminMetricsRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
