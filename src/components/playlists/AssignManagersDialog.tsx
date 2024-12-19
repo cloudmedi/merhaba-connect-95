@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { ManagerList } from "./manager-selection/ManagerList";
 import { SchedulingSection } from "./manager-selection/SchedulingSection";
 import { AssignManagersContent } from "./manager-selection/AssignManagersContent";
 import { Manager } from "./types";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import axios from "@/lib/axios";
 
 interface AssignManagersDialogProps {
   open: boolean;
@@ -29,7 +28,6 @@ export function AssignManagersDialog({
   const [scheduledAt, setScheduledAt] = useState<Date>();
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
     if (open) {
@@ -46,21 +44,13 @@ export function AssignManagersDialog({
   const fetchManagers = async () => {
     try {
       setIsLoading(true);
-
-      if (!user?.id) {
-        toast.error("No authenticated user found. Please log in again.");
-        return;
-      }
-
-      const { data: managersData, error: managersError } = await supabase
-        .from("profiles")
-        .select("id, email, first_name, last_name, role, avatar_url")
-        .eq("role", "manager")
-        .eq("is_active", true);
-
-      if (managersError) throw managersError;
-
-      setManagers(managersData || []);
+      const response = await axios.get('/admin/users?role=manager');
+      setManagers(response.data.map((manager: any) => ({
+        id: manager._id,
+        email: manager.email,
+        first_name: manager.firstName,
+        last_name: manager.lastName
+      })));
     } catch (error: any) {
       console.error("Error fetching managers:", error);
       toast.error(error.message || "Failed to load managers");
@@ -81,38 +71,13 @@ export function AssignManagersDialog({
 
   const handleAssign = async () => {
     try {
-      // Önce mevcut atamaları temizle
-      const { error: deleteError } = await supabase
-        .from('playlist_assignments')
-        .delete()
-        .eq('playlist_id', playlistId);
+      const assignmentData = {
+        managerIds: selectedManagers.map(m => m.id),
+        scheduledAt: scheduledAt?.toISOString(),
+        expiresAt: expiresAt?.toISOString()
+      };
 
-      if (deleteError) throw deleteError;
-
-      // Yeni atamalar varsa ekle
-      if (selectedManagers.length > 0) {
-        const assignments = selectedManagers.map(manager => ({
-          user_id: manager.id,
-          playlist_id: playlistId,
-          scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-          expires_at: expiresAt?.toISOString() || null,
-          notification_sent: false
-        }));
-
-        const { error: insertError } = await supabase
-          .from('playlist_assignments')
-          .insert(assignments);
-
-        if (insertError) throw insertError;
-      }
-
-      // Playlist'in assigned_to alanını güncelle
-      const { error: updateError } = await supabase
-        .from('playlists')
-        .update({ assigned_to: selectedManagers.map(m => m.id) })
-        .eq('id', playlistId);
-
-      if (updateError) throw updateError;
+      await axios.post(`/admin/playlists/${playlistId}/assign-managers`, assignmentData);
 
       const message = selectedManagers.length > 0 
         ? `Playlist assigned to ${selectedManagers.length} managers`
