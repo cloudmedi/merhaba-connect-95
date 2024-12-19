@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { playlistService } from "@/services/playlist-service";
 import type { Playlist } from "@/types/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { toast } from "sonner";
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,6 +43,33 @@ export default function Playlists() {
     toast({
       title: "Now Playing",
       description: `Playing ${playlist.name}`,
+    });
+  };
+
+  const handleEdit = (playlist: Playlist) => {
+    console.log('Handling edit for playlist:', playlist);
+    if (!playlist || !playlist._id) {
+      toast.error("Invalid playlist data");
+      return;
+    }
+
+    navigate("create", {
+      state: {
+        editMode: true,
+        playlistData: {
+          id: playlist._id,
+          name: playlist.name,
+          description: playlist.description,
+          artwork_url: playlist.artworkUrl,
+          is_public: playlist.isPublic,
+          is_hero: playlist.isHero,
+          genre: playlist.genre,
+          mood: playlist.mood,
+          categories: playlist.categories,
+          songs: playlist.songs,
+          assigned_managers: playlist.assignedManagers
+        }
+      }
     });
   };
 
@@ -80,9 +108,7 @@ export default function Playlists() {
         <PlaylistsTable 
           playlists={filteredPlaylists}
           onPlay={handlePlayPlaylist}
-          onEdit={(playlist) => navigate("create", { 
-            state: { editMode: true, playlistData: playlist } 
-          })}
+          onEdit={handleEdit}
           onDelete={(id) => deletePlaylistMutation.mutate(id)}
           isLoading={isLoading}
         />
@@ -91,7 +117,7 @@ export default function Playlists() {
         <MusicPlayer 
           playlist={{
             title: currentPlaylist.name,
-            artwork: currentPlaylist.artwork_url || "/placeholder.svg"
+            artwork: currentPlaylist.artworkUrl || "/placeholder.svg"
           }}
           onClose={() => {
             setIsPlayerVisible(false);

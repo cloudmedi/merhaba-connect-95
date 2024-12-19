@@ -51,10 +51,17 @@ export function PlaylistsTable({ playlists, onPlay, onEdit, onDelete, isLoading 
             <TableBody>
               {playlists.map((playlist) => (
                 <PlaylistRow
-                  key={playlist.id}
+                  key={playlist._id}
                   playlist={playlist}
                   onPlay={onPlay}
-                  onEdit={onEdit}
+                  onEdit={() => {
+                    console.log('Editing playlist:', playlist);
+                    if (playlist && playlist._id) {
+                      onEdit(playlist);
+                    } else {
+                      console.error('Invalid playlist data:', playlist);
+                    }
+                  }}
                   onDelete={onDelete}
                   onStatusChange={handleStatusChange}
                 />

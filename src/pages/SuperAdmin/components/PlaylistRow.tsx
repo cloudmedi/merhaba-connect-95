@@ -32,9 +32,28 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
     return "/placeholder.svg";
   };
 
+  const handleEdit = () => {
+    console.log('Editing playlist:', playlist);
+    if (!playlist || !playlist.id) {
+      console.error('Invalid playlist data for editing:', playlist);
+      toast({
+        title: "Error",
+        description: "Cannot edit playlist: Invalid playlist data",
+        variant: "destructive",
+      });
+      return;
+    }
+    onEdit({
+      id: playlist.id,
+      name: playlist.name,
+      artwork_url: playlist.artwork_url,
+      is_public: playlist.is_public,
+      // Diğer gerekli alanları da ekleyin
+    });
+  };
+
   const handlePublishToggle = async () => {
     try {
-      // First update the playlist status
       const { error } = await supabase
         .from('playlists')
         .update({ is_public: !playlist.is_public })
@@ -42,9 +61,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
       if (error) throw error;
 
-      // If we're publishing (not unpublishing), send notifications to all managers
       if (!playlist.is_public) {
-        // Get all managers
         const { data: managers, error: managersError } = await supabase
           .from('profiles')
           .select('id')
@@ -52,7 +69,6 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
         if (managersError) throw managersError;
 
-        // Send notification to each manager
         for (const manager of managers) {
           await createPlaylistAssignmentNotification(
             manager.id,
@@ -138,7 +154,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={() => onEdit(playlist)} className="cursor-pointer">
+            <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handlePublishToggle} className="cursor-pointer">

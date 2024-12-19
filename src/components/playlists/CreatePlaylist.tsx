@@ -39,6 +39,7 @@ export function CreatePlaylist() {
 
   useEffect(() => {
     if (isEditMode && existingPlaylist) {
+      console.log('Loading existing playlist data:', existingPlaylist);
       loadExistingPlaylistData();
     } else if (location.state?.selectedSongs) {
       setPlaylistData(prev => ({
@@ -52,11 +53,19 @@ export function CreatePlaylist() {
 
   const loadExistingPlaylistData = async () => {
     try {
+      console.log('Loading playlist details for ID:', existingPlaylist.id);
+      
       const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
         axios.get(`/admin/playlists/${existingPlaylist.id}/songs`),
         axios.get(`/admin/playlists/${existingPlaylist.id}/categories`),
         axios.get(`/admin/playlists/${existingPlaylist.id}/managers`)
       ]);
+
+      console.log('Loaded playlist data:', {
+        songs: playlistSongs.data,
+        categories: playlistCategories.data,
+        managers: assignedManagers.data
+      });
 
       setPlaylistData({
         title: existingPlaylist.name,
@@ -64,9 +73,9 @@ export function CreatePlaylist() {
         artwork: null,
         artwork_url: existingPlaylist.artwork_url || "",
         selectedSongs: playlistSongs.data || [],
-        selectedGenres: existingPlaylist.genre_id ? [{ id: existingPlaylist.genre_id }] : [],
+        selectedGenres: existingPlaylist.genre ? [{ _id: existingPlaylist.genre }] : [],
         selectedCategories: playlistCategories.data || [],
-        selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
+        selectedMoods: existingPlaylist.mood ? [{ _id: existingPlaylist.mood }] : [],
         isCatalog: existingPlaylist.is_catalog || false,
         isPublic: existingPlaylist.is_public || false,
         isHero: existingPlaylist.is_hero || false,
