@@ -6,12 +6,21 @@ import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
 export function ServerStatus() {
-  const { data: metrics = [] } = useSystemMetrics();
-  const latestMetric = metrics[0] || {
-    server_uptime: 99.9,
-    response_time: 145,
-    error_rate: 0.1,
-  };
+  const { data: metric, isLoading } = useSystemMetrics();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!metric) {
+    return <div>No data available</div>;
+  }
+
+  // Son 24 saatlik veri için örnek data oluştur
+  const chartData = Array.from({ length: 24 }, (_, i) => ({
+    time: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toLocaleTimeString(),
+    responseTime: metric.response_time,
+  }));
 
   return (
     <div className="space-y-6">
@@ -25,7 +34,7 @@ export function ServerStatus() {
               <p className="text-sm font-medium text-gray-500">Server Uptime</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {latestMetric.server_uptime.toFixed(1)}%
+                  {metric.server_uptime.toFixed(1)}%
                 </h3>
                 <p className="text-sm text-[#6E59A5]">Last 30 days</p>
               </div>
@@ -42,7 +51,7 @@ export function ServerStatus() {
               <p className="text-sm font-medium text-gray-500">Response Time</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {latestMetric.response_time}ms
+                  {metric.response_time}ms
                 </h3>
                 <p className="text-sm text-blue-600">Average</p>
               </div>
@@ -59,7 +68,7 @@ export function ServerStatus() {
               <p className="text-sm font-medium text-gray-500">Error Rate</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {latestMetric.error_rate.toFixed(1)}%
+                  {metric.error_rate.toFixed(1)}%
                 </h3>
                 <p className="text-sm text-rose-600">Last hour</p>
               </div>
@@ -77,7 +86,7 @@ export function ServerStatus() {
             }}
           >
             <AreaChart 
-              data={metrics}
+              data={chartData}
               {...commonChartProps}
             >
               <defs>
@@ -88,18 +97,17 @@ export function ServerStatus() {
               </defs>
               <XAxis 
                 {...commonXAxisProps}
-                dataKey="measured_at"
-                tickFormatter={(value) => new Date(value).toLocaleTimeString()}
+                dataKey="time"
               />
               <YAxis {...commonYAxisProps} />
               <ChartTooltip />
               <Area
                 type="monotone"
-                dataKey="response_time"
+                dataKey="responseTime"
+                name="Response Time"
                 stroke="#6E59A5"
                 strokeWidth={2}
                 fill="url(#responseTimeGradient)"
-                {...commonChartProps}
               />
             </AreaChart>
           </ChartContainer>
