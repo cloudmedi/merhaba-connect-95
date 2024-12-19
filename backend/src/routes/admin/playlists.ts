@@ -2,31 +2,31 @@ import express from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
 import { adminAuth } from '../../middleware/auth';
 import multer from 'multer';
+import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import path from 'path';
 
 const router = express.Router();
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: './public/lovable-uploads/',
-    filename: (req, file, cb) => {
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-      cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
-    }
-  })
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Admin middleware'ini tüm route'lara uygula
 router.use(adminAuth);
 
-// Add artwork upload endpoint
+// Add artwork upload endpoint using Bunny CDN
 router.post('/upload-artwork', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const fileUrl = `/lovable-uploads/${req.file.filename}`;
+    const fileExtension = path.extname(req.file.originalname);
+    const uniqueFileName = `artwork/${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExtension}`;
+    
+    const uploadService = new ChunkUploadService();
+    const fileUrl = await uploadService.uploadFile(req.file.buffer, uniqueFileName);
+
+    console.log('Artwork uploaded to Bunny CDN:', fileUrl);
     res.json({ url: fileUrl });
+
   } catch (error) {
     console.error('Error uploading artwork:', error);
     res.status(500).json({ error: 'Error uploading artwork' });
