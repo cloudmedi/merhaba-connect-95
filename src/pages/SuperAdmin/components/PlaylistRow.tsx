@@ -6,15 +6,23 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
+// MongoDB yapısına uygun interface
 interface PlaylistRowProps {
   playlist: {
-    _id: string;  // id yerine _id kullanıyoruz
+    _id: string;  // MongoDB'de _id kullanılır
     name: string;
-    artworkUrl?: string;  // artwork_url -> artworkUrl olarak değiştirildi
-    created_at: string;
-    is_public: boolean;
-    company?: { name: string };
-    profiles?: { first_name: string; last_name: string }[];
+    artworkUrl?: string;  // MongoDB'deki field adı
+    createdAt: string;    // MongoDB'de camelCase kullanılır
+    isPublic: boolean;    // MongoDB'de camelCase kullanılır
+    company?: { 
+      name: string;
+      _id: string;
+    };
+    profiles?: { 
+      firstName: string;  // MongoDB'de camelCase kullanılır
+      lastName: string;   // MongoDB'de camelCase kullanılır
+      _id: string;
+    }[];
   };
   onPlay: (playlist: any) => void;
   onEdit: (playlist: any) => void;
@@ -44,43 +52,46 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
       return;
     }
     onEdit({
-      _id: playlist._id,  // id -> _id olarak değiştirildi
+      _id: playlist._id,
       name: playlist.name,
-      artworkUrl: playlist.artworkUrl,  // artwork_url -> artworkUrl olarak değiştirildi
-      is_public: playlist.is_public,
+      artworkUrl: playlist.artworkUrl,
+      isPublic: playlist.isPublic,
     });
   };
 
   const handlePublishToggle = async () => {
     try {
+      // Supabase'e gönderirken field adlarını Supabase formatına çeviriyoruz
       const { error } = await supabase
         .from('playlists')
-        .update({ is_public: !playlist.is_public })
-        .eq('id', playlist._id);  // Supabase'de hala 'id' kullanıyoruz
+        .update({ 
+          is_public: !playlist.isPublic  // Supabase'de snake_case kullanılır
+        })
+        .eq('id', playlist._id);  // Supabase'de 'id' kullanılır
 
       if (error) throw error;
 
-      if (!playlist.is_public) {
+      if (!playlist.isPublic) {
         const { data: managers, error: managersError } = await supabase
           .from('profiles')
-          .select('id') // Supabase'de 'id' kullanıyoruz
+          .select('id')  // Supabase'de 'id' kullanılır
           .eq('role', 'manager');
 
         if (managersError) throw managersError;
 
         for (const manager of managers) {
           await createPlaylistAssignmentNotification(
-            manager.id,  // Supabase'den gelen id'yi kullan
+            manager.id,
             playlist.name,
-            playlist._id,  // id -> _id olarak değiştirildi
-            playlist.artworkUrl  // artwork_url -> artworkUrl olarak değiştirildi
+            playlist._id,
+            playlist.artworkUrl
           );
         }
       }
 
       toast({
         title: "Success",
-        description: `Playlist ${playlist.is_public ? 'unpublished' : 'published'} successfully`,
+        description: `Playlist ${playlist.isPublic ? 'unpublished' : 'published'} successfully`,
       });
 
       onStatusChange();
@@ -100,7 +111,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
         <div className="flex items-center gap-4">
           <div className="relative group w-10 h-10">
             <img
-              src={getArtworkUrl(playlist.artworkUrl)}  // artwork_url -> artworkUrl olarak değiştirildi
+              src={getArtworkUrl(playlist.artworkUrl)}
               alt={playlist.name}
               className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
               onError={(e) => {
@@ -127,23 +138,23 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
       </TableCell>
       <TableCell className="hidden md:table-cell text-gray-600">
         {playlist.profiles?.[0]
-          ? `${playlist.profiles[0].first_name} ${playlist.profiles[0].last_name}`
+          ? `${playlist.profiles[0].firstName} ${playlist.profiles[0].lastName}`
           : "N/A"}
       </TableCell>
       <TableCell>
         <span
           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
-            playlist.is_public
+            playlist.isPublic
               ? "bg-emerald-100 text-emerald-800"
               : "bg-gray-100 text-gray-800"
           }`}
         >
-          {playlist.is_public ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-          {playlist.is_public ? "Public" : "Private"}
+          {playlist.isPublic ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+          {playlist.isPublic ? "Public" : "Private"}
         </span>
       </TableCell>
       <TableCell className="hidden md:table-cell text-gray-600">
-        {new Date(playlist.created_at).toLocaleDateString()}
+        {new Date(playlist.createdAt).toLocaleDateString()}
       </TableCell>
       <TableCell>
         <DropdownMenu>
@@ -157,7 +168,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handlePublishToggle} className="cursor-pointer">
-              {playlist.is_public ? "Unpublish" : "Publish"}
+              {playlist.isPublic ? "Unpublish" : "Publish"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onDelete(playlist._id)} className="text-red-600 cursor-pointer">
