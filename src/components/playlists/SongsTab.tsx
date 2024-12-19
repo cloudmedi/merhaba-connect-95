@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Music2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Song } from "@/types/playlist";
@@ -23,18 +23,18 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
   });
 
   const handleSelectSong = (song: Song) => {
-    const isSelected = selectedSongs.some((s: Song) => s._id === song._id);
-    
-    if (isSelected) {
-      onRemoveSong(song._id);
-    } else {
-      onAddSong(song);
-    }
+    onAddSong(song);
+  };
+
+  const handleRemoveSong = (songId: string) => {
+    onRemoveSong(songId);
   };
 
   const filteredSongs = songs.filter((song: Song) =>
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+    !selectedSongs.some(s => s._id === song._id) && (
+      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+    )
   );
 
   if (isLoading) {
@@ -47,7 +47,7 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Search songs..."
+            placeholder="Şarkı ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -55,49 +55,73 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
         </div>
       </div>
 
-      <ScrollArea className="h-[400px] rounded-md border p-4">
-        <div className="space-y-4">
-          {filteredSongs.map((song: Song) => {
-            const isSelected = selectedSongs.some((s: Song) => s._id === song._id);
-            
-            return (
-              <div
-                key={song._id}
-                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                  isSelected ? 'bg-purple-50 border-purple-200' : 'hover:bg-gray-50'
-                }`}
-                onClick={() => handleSelectSong(song)}
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={song.artworkUrl || "/placeholder.svg"}
-                    alt={song.title}
-                    className="w-12 h-12 rounded object-cover"
-                    onError={(e) => {
-                      const img = e.target as HTMLImageElement;
-                      img.src = "/placeholder.svg";
-                    }}
-                  />
-                  <div>
-                    <h4 className="font-medium text-sm">{song.title}</h4>
-                    <p className="text-sm text-gray-500">{song.artist || 'Unknown Artist'}</p>
-                  </div>
-                </div>
-                <Button
-                  variant={isSelected ? "default" : "ghost"}
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelectSong(song);
-                  }}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Seçilen Şarkılar */}
+        <div className="border rounded-lg p-4">
+          <h3 className="font-medium text-lg mb-4">Seçilen Şarkılar ({selectedSongs.length})</h3>
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-2">
+              {selectedSongs.map((song: Song) => (
+                <div
+                  key={song._id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-purple-50 border-purple-200"
                 >
-                  {isSelected ? 'Selected' : 'Select'}
-                </Button>
-              </div>
-            );
-          })}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                      <Music2 className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">{song.title}</h4>
+                      <p className="text-sm text-gray-500">{song.artist || 'Bilinmeyen Sanatçı'}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveSong(song._id)}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
+
+        {/* Tüm Şarkılar */}
+        <div className="border rounded-lg p-4">
+          <h3 className="font-medium text-lg mb-4">Tüm Şarkılar ({filteredSongs.length})</h3>
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-2">
+              {filteredSongs.map((song: Song) => (
+                <div
+                  key={song._id}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleSelectSong(song)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                      <Music2 className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm">{song.title}</h4>
+                      <p className="text-sm text-gray-500">{song.artist || 'Bilinmeyen Sanatçı'}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100"
+                  >
+                    Seç
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
     </div>
   );
 }
