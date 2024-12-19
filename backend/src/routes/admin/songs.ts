@@ -43,6 +43,8 @@ router.post(
   adminMiddleware,
   upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
+    let uploadService: ChunkUploadService | null = null;
+
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'Dosya yüklenmedi' });
@@ -51,51 +53,45 @@ router.post(
       const file = req.file;
       logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
 
-      // Dosya adını oluştur
       const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       logger.info(`Generated filename: ${fileName}`);
 
-      // Upload service oluştur
-      const uploadService = new ChunkUploadService((progress) => {
+      uploadService = new ChunkUploadService((progress) => {
         logger.info(`Upload progress: ${progress}%`);
       });
 
-      try {
-        // Dosyayı yükle
-        const fileUrl = await uploadService.uploadFile(file.buffer, fileName);
-        logger.info('File uploaded to CDN:', fileUrl);
+      const fileUrl = await uploadService.uploadFile(file.buffer, fileName);
+      logger.info('File uploaded to CDN:', fileUrl);
 
-        // Metadata çıkar
-        const metadata = await metadataService.extractMetadata(file.buffer, fileName);
-        logger.info('Metadata extracted:', metadata);
+      const metadata = await metadataService.extractMetadata(file.buffer, fileName);
+      logger.info('Metadata extracted:', metadata);
 
-        const user = req.user;
+      const user = req.user;
 
-        // Veritabanına kaydet
-        const song = new Song({
-          title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
-          artist: metadata?.artist || null,
-          album: metadata?.album || null,
-          genre: metadata?.genre ? [metadata.genre] : [],
-          duration: metadata?.duration || null,
-          fileUrl: fileUrl,
-          bunnyId: fileName,
-          artworkUrl: null,
-          createdBy: user?.id
-        });
+      const song = new Song({
+        title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
+        artist: metadata?.artist || null,
+        album: metadata?.album || null,
+        genre: metadata?.genre ? [metadata.genre] : [],
+        duration: metadata?.duration || null,
+        fileUrl: fileUrl,
+        bunnyId: fileName,
+        artworkUrl: null,
+        createdBy: user?.id
+      });
 
-        await song.save();
-        logger.info('Song saved to database:', song);
-        
-        res.status(201).json(song);
-
-      } catch (uploadError: any) {
-        logger.error('Error during upload process:', uploadError);
-        throw new Error(`Dosya yükleme hatası: ${uploadError.message}`);
-      }
+      await song.save();
+      logger.info('Song saved to database:', song);
+      
+      res.status(201).json(song);
 
     } catch (error: any) {
-      logger.error('Error uploading song:', error);
+      logger.error('Error during upload process:', error);
+      
+      if (uploadService) {
+        uploadService.cancel();
+      }
+
       res.status(400).json({ 
         error: 'Dosya yükleme hatası',
         details: error.message 

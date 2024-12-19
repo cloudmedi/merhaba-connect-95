@@ -4,6 +4,8 @@ import { bunnyConfig } from '../../config/bunny';
 import { logger } from '../../utils/logger';
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+const MAX_RETRIES = 3;
+const TIMEOUT = 30000; // 30 seconds timeout
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
@@ -20,7 +22,8 @@ export class ChunkUploadService {
     url: string, 
     chunk: Buffer, 
     start: number, 
-    total: number
+    total: number,
+    retryCount = 0
   ): Promise<boolean> {
     try {
       logger.info(`Uploading chunk: start=${start}, size=${chunk.length}, total=${total}`);
@@ -33,24 +36,22 @@ export class ChunkUploadService {
           'Content-Range': `bytes ${start}-${start + chunk.length - 1}/${total}`,
         },
         body: chunk,
-        signal: this.abortController?.signal
+        signal: this.abortController?.signal,
+        timeout: TIMEOUT
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error('Chunk upload failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText,
-          headers: response.headers
-        });
         throw new Error(`Chunk upload failed: ${response.status} - ${errorText}`);
       }
 
       logger.info(`Chunk uploaded successfully: start=${start}`);
       return true;
     } catch (error) {
-      logger.error('Chunk upload error:', error);
+      if (retryCount < MAX_RETRIES) {
+        logger.warn(`Retrying chunk upload (attempt ${retryCount + 1}): start=${start}`);
+        return this.uploadChunk(url, chunk, start, total, retryCount + 1);
+      }
       throw error;
     }
   }
@@ -63,7 +64,6 @@ export class ChunkUploadService {
     try {
       logger.info(`Starting file upload: ${fileName}, size: ${buffer.length} bytes`);
       
-      // Dosyayı chunk'lara böl
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, i + CHUNK_SIZE));
@@ -71,22 +71,23 @@ export class ChunkUploadService {
 
       logger.info(`File split into ${chunks.length} chunks`);
 
-      // Her chunk'ı sırayla yükle
-      for (let i = 0; i < chunks.length; i++) {
-        const start = i * CHUNK_SIZE;
-        const success = await this.uploadChunk(bunnyUrl, chunks[i], start, buffer.length);
+      let uploadedChunks = 0;
+      for (const chunk of chunks) {
+        const start = uploadedChunks * CHUNK_SIZE;
+        const success = await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
         
         if (!success) {
           throw new Error('Chunk upload failed');
         }
         
+        uploadedChunks++;
+        
         if (this.onProgress) {
-          const progress = ((i + 1) / chunks.length) * 100;
-          this.onProgress(progress);
+          const progress = (uploadedChunks / chunks.length) * 100;
+          this.onProgress(Math.min(progress, 100));
         }
       }
 
-      // Yükleme tamamlandı, CDN URL'ini döndür
       const cdnUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
       logger.info(`File upload completed: ${cdnUrl}`);
 
