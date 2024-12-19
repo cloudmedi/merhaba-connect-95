@@ -1,11 +1,12 @@
 export interface User {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   role: string;
+  isActive: boolean;
   companyId?: string;
-  isActive?: boolean;
+  avatarUrl?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,6 +21,14 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface UserCreateInput {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export interface UserUpdateInput {
   firstName?: string;
   lastName?: string;
@@ -30,7 +39,7 @@ export interface UserUpdateInput {
 }
 
 export interface LicenseUpdateInput {
-  type: 'trial' | 'basic' | 'premium';
+  type: string;
   startDate: string;
   endDate: string;
   quantity?: number;
