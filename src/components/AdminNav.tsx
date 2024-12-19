@@ -87,34 +87,42 @@ export function AdminNav() {
                 </h1>
               )}
             </div>
-            {!isCollapsed && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-[#9b87f5] text-white">
-                        {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user?.email}
-                      </p>
+          </div>
+
+          {/* Profil Avatar - Yeni Konum */}
+          <div className="mb-8">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center gap-2 px-2 py-1.5">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-[#9b87f5] text-white">
+                      {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!isCollapsed && (
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-medium">{user?.firstName} {user?.lastName}</span>
+                      <span className="text-xs text-gray-400">{user?.email}</span>
                     </div>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Çıkış Yap
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <button
