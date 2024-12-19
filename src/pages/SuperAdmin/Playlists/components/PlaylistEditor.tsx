@@ -8,6 +8,7 @@ import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMu
 import { usePlaylistAssignment } from "@/components/playlists/hooks/usePlaylistAssignment";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import axios from "@/lib/axios"; // Axios'u import ediyoruz
 
 export function PlaylistEditor() {
   const navigate = useNavigate();
