@@ -1,13 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-export interface ApiMetric {
-  id: string;
+interface ApiMetric {
   endpoint: string;
-  response_time: number;
-  total_requests: number;
-  error_count: number;
-  success_rate: number;
+  responseTime: number;
+  statusCode: number;
   method: string;
   timestamp: string;
 }
@@ -16,14 +13,9 @@ export const useApiMetrics = () => {
   return useQuery({
     queryKey: ["api-metrics"],
     queryFn: async () => {
-      const response = await api.get("/admin/reports/api-metrics", {
-        params: {
-          startDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Son 24 saat
-          endDate: new Date().toISOString()
-        }
-      });
-      return response.data as ApiMetric[];
+      const response = await api.get("/admin/metrics/api");
+      return response.data;
     },
-    refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile
+    refetchInterval: 1000 * 60 * 5,
   });
 };

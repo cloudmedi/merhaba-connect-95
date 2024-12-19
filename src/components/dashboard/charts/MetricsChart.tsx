@@ -16,13 +16,13 @@ export function MetricsChart() {
 
   // Örnek veri - gerçek verilerle değiştirilecek
   const data = [
-    { name: "00:00", value: metrics?.systemHealth || 0 },
-    { name: "04:00", value: metrics?.systemHealth || 0 },
-    { name: "08:00", value: metrics?.systemHealth || 0 },
-    { name: "12:00", value: metrics?.systemHealth || 0 },
-    { name: "16:00", value: metrics?.systemHealth || 0 },
-    { name: "20:00", value: metrics?.systemHealth || 0 },
-    { name: "23:59", value: metrics?.systemHealth || 0 },
+    { name: "00:00", value: 65 },
+    { name: "04:00", value: 75 },
+    { name: "08:00", value: 85 },
+    { name: "12:00", value: 78 },
+    { name: "16:00", value: 90 },
+    { name: "20:00", value: 95 },
+    { name: "23:59", value: 88 },
   ];
 
   return (

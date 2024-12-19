@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios";
+import api from "@/lib/api";
 
 export interface SystemMetric {
   activeUsers: number;
@@ -13,7 +13,7 @@ export const useSystemMetrics = () => {
   return useQuery({
     queryKey: ["system-metrics"],
     queryFn: async () => {
-      const response = await axios.get<SystemMetric>("/admin/metrics/system");
+      const response = await api.get("/admin/metrics/system");
       return response.data;
     },
     refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile

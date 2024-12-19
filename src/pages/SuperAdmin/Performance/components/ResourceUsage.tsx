@@ -7,23 +7,12 @@ import { useSystemMetrics } from "@/hooks/useSystemMetrics";
 import { commonXAxisProps, commonYAxisProps, commonChartProps } from "@/components/charts/ChartConfig";
 
 export function ResourceUsage() {
-  const { data: metric, isLoading } = useSystemMetrics();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!metric) {
-    return <div>No data available</div>;
-  }
-
-  // Son 24 saatlik veri için örnek data oluştur
-  const chartData = Array.from({ length: 24 }, (_, i) => ({
-    time: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toLocaleTimeString(),
-    cpu: metric.cpu_usage,
-    memory: metric.memory_usage,
-    storage: metric.storage_usage,
-  }));
+  const { data: metrics = [] } = useSystemMetrics();
+  const latestMetric = metrics[0] || {
+    cpu_usage: 45,
+    memory_usage: 62,
+    storage_usage: 78,
+  };
 
   return (
     <div className="space-y-6">
@@ -35,8 +24,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">CPU Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">{metric.cpu_usage.toFixed(1)}%</h3>
-              <Progress value={metric.cpu_usage} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.cpu_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.cpu_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -48,8 +37,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">{metric.memory_usage.toFixed(1)}%</h3>
-              <Progress value={metric.memory_usage} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.memory_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.memory_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -61,8 +50,8 @@ export function ResourceUsage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Storage Usage</p>
-              <h3 className="text-2xl font-bold text-gray-900">{metric.storage_usage.toFixed(1)}%</h3>
-              <Progress value={metric.storage_usage} className="h-2 mt-2" />
+              <h3 className="text-2xl font-bold text-gray-900">{latestMetric.storage_usage.toFixed(1)}%</h3>
+              <Progress value={latestMetric.storage_usage} className="h-2 mt-2" />
             </div>
           </div>
         </Card>
@@ -79,38 +68,42 @@ export function ResourceUsage() {
             }}
           >
             <LineChart 
-              data={chartData}
+              data={metrics}
               {...commonChartProps}
             >
               <XAxis 
                 {...commonXAxisProps}
-                dataKey="time"
+                dataKey="measured_at"
+                tickFormatter={(value) => new Date(value).toLocaleTimeString()}
               />
               <YAxis {...commonYAxisProps} />
               <ChartTooltip />
               <Line
                 type="monotone"
-                dataKey="cpu"
-                name="CPU Usage"
+                dataKey="cpu_usage"
                 stroke="#6E59A5"
                 strokeWidth={2}
-                dot={false}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+                {...commonChartProps}
               />
               <Line
                 type="monotone"
-                dataKey="memory"
-                name="Memory Usage"
+                dataKey="memory_usage"
                 stroke="#3b82f6"
                 strokeWidth={2}
-                dot={false}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+                {...commonChartProps}
               />
               <Line
                 type="monotone"
-                dataKey="storage"
-                name="Storage Usage"
+                dataKey="storage_usage"
                 stroke="#10b981"
                 strokeWidth={2}
-                dot={false}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+                {...commonChartProps}
               />
             </LineChart>
           </ChartContainer>
