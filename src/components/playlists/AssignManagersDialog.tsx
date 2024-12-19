@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ManagerList } from "./manager-selection/ManagerList";
-import { SchedulingSection } from "./manager-selection/SchedulingSection";
 import { AssignManagersContent } from "./manager-selection/AssignManagersContent";
 import { Manager } from "./types";
 import axios from "@/lib/axios";

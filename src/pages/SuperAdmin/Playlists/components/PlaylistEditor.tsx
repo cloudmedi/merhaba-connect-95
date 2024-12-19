@@ -62,6 +62,14 @@ export function PlaylistEditor() {
     }));
   };
 
+  const handleManagerSelection = (selectedManagers: Manager[]) => {
+    console.log('Selected managers:', selectedManagers);
+    setPlaylistData(prev => ({
+      ...prev,
+      assignedManagers: selectedManagers
+    }));
+  };
+
   return (
     <div className="flex gap-6 p-6 bg-white rounded-lg">
       <PlaylistForm 
