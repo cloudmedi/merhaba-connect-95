@@ -14,7 +14,7 @@ export const useSystemMetrics = () => {
     queryKey: ["system-metrics"],
     queryFn: async () => {
       const response = await api.get("/admin/metrics/system");
-      return response.data;
+      return response.data as SystemMetric;
     },
     refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile
   });

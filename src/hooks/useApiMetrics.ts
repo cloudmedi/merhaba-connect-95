@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
-interface ApiMetric {
+export interface ApiMetric {
   endpoint: string;
   responseTime: number;
   statusCode: number;
@@ -14,8 +14,8 @@ export const useApiMetrics = () => {
     queryKey: ["api-metrics"],
     queryFn: async () => {
       const response = await api.get("/admin/metrics/api");
-      return response.data;
+      return response.data as ApiMetric[];
     },
-    refetchInterval: 1000 * 60 * 5,
+    refetchInterval: 1000 * 60 * 5, // Her 5 dakikada bir yenile
   });
 };
