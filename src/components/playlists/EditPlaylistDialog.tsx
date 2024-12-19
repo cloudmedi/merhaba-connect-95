@@ -7,7 +7,7 @@ import { AssignManagersDialog } from "./AssignManagersDialog";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
 import { usePlaylistAssignment } from "./hooks/usePlaylistAssignment";
 import { Users } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { Playlist } from "@/types/api";
 import type { Manager } from "./types";
@@ -24,25 +24,57 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
   const { isAssignDialogOpen, setIsAssignDialogOpen, handleAssignManagers } = 
     usePlaylistAssignment(playlist._id);
 
+  const transformSongs = (songs: any[]) => {
+    return songs.map(song => ({
+      _id: song.songId._id,
+      title: song.songId.title,
+      artist: song.songId.artist,
+      album: song.songId.album,
+      duration: song.songId.duration,
+      fileUrl: song.songId.fileUrl,
+      artworkUrl: song.songId.artworkUrl
+    }));
+  };
+
   const [playlistData, setPlaylistData] = useState({
-    name: playlist.name,
-    description: playlist.description || "",
+    name: "",
+    description: "",
     artwork: null as File | null,
-    artworkUrl: playlist.artworkUrl || "",
-    selectedSongs: playlist.songs || [],
-    selectedGenres: playlist.genre ? [playlist.genre] : [],
-    selectedCategories: playlist.categories || [],
-    selectedMoods: playlist.mood ? [playlist.mood] : [],
+    artworkUrl: "",
+    selectedSongs: [],
+    selectedGenres: [],
+    selectedCategories: [],
+    selectedMoods: [],
     isCatalog: false,
-    isPublic: playlist.isPublic,
-    isHero: playlist.isHero,
-    assignedManagers: (playlist.assignedManagers || []).map(id => ({
-      id,
-      email: "",
-      first_name: null,
-      last_name: null
-    })) as Manager[]
+    isPublic: false,
+    isHero: false,
+    assignedManagers: [] as Manager[]
   });
+
+  useEffect(() => {
+    if (playlist) {
+      console.log('Loading playlist data:', playlist);
+      setPlaylistData({
+        name: playlist.name,
+        description: playlist.description || "",
+        artwork: null,
+        artworkUrl: playlist.artworkUrl || "",
+        selectedSongs: playlist.songs ? transformSongs(playlist.songs) : [],
+        selectedGenres: playlist.genre ? [playlist.genre] : [],
+        selectedCategories: playlist.categories || [],
+        selectedMoods: playlist.mood ? [playlist.mood] : [],
+        isCatalog: false,
+        isPublic: playlist.isPublic,
+        isHero: playlist.isHero,
+        assignedManagers: (playlist.assignedManagers || []).map(id => ({
+          id,
+          email: "",
+          first_name: null,
+          last_name: null
+        }))
+      });
+    }
+  }, [playlist]);
 
   const handleSubmit = async () => {
     try {

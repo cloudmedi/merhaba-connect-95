@@ -40,6 +40,7 @@ export function PlaylistsContent() {
   };
 
   const handleEdit = (playlist: Playlist) => {
+    console.log('Editing playlist:', playlist);
     setEditingPlaylist(playlist);
     setIsEditDialogOpen(true);
   };
