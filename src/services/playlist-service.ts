@@ -33,7 +33,7 @@ export const playlistService = {
         const blob = await response.blob();
         formData.append('file', blob, 'artwork.jpg');
         
-        // Using the correct endpoint for artwork upload
+        // Düzeltilen endpoint URL'i
         const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -75,7 +75,8 @@ export const playlistService = {
         const blob = await response.blob();
         formData.append('file', blob, 'artwork.jpg');
         
-        const uploadResponse = await axiosInstance.post('/admin/upload-artwork', formData, {
+        // Düzeltilen endpoint URL'i
+        const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
