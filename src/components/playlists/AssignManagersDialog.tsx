@@ -51,15 +51,14 @@ export function AssignManagersDialog({
       
       console.log('Managers response:', response.data);
 
-      // Backend veri yapısını frontend yapısına dönüştür
       const transformedManagers = response.data.map((manager: any) => ({
         _id: manager._id,
-        id: manager._id, // Geriye dönük uyumluluk için
+        id: manager._id,
         email: manager.email,
         firstName: manager.firstName,
         lastName: manager.lastName,
-        first_name: manager.firstName, // Geriye dönük uyumluluk için
-        last_name: manager.lastName // Geriye dönük uyumluluk için
+        first_name: manager.firstName,
+        last_name: manager.lastName
       }));
 
       setManagers(transformedManagers);
@@ -89,10 +88,20 @@ export function AssignManagersDialog({
         expiresAt
       });
 
+      const managerIds = selectedManagers.map(manager => manager._id);
+      
+      await axios.post(`/admin/playlists/${playlistId}/assign-managers`, {
+        managerIds,
+        scheduledAt,
+        expiresAt
+      });
+
       await onAssign(selectedManagers, scheduledAt, expiresAt);
+      toast.success("Yöneticiler başarıyla atandı");
+      onOpenChange(false);
     } catch (error: any) {
-      console.error('Error assigning managers:', error);
-      toast.error("Yönetici atama işlemi başarısız oldu");
+      console.error('Manager assignment error:', error);
+      toast.error(error.response?.data?.error || "Yönetici atama işlemi başarısız oldu");
     }
   };
 

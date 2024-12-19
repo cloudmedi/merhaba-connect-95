@@ -125,4 +125,29 @@ export class PlaylistService {
       throw error;
     }
   }
+
+  async assignManagers(playlistId: string, managerIds: string[]) {
+    try {
+      const playlist = await Playlist.findByIdAndUpdate(
+        playlistId,
+        { assignedManagers: managerIds },
+        { new: true }
+      ).populate('assignedManagers');
+
+      if (!playlist) {
+        throw new Error('Playlist not found');
+      }
+
+      // Emit real-time update
+      this.wsService.emitPlaylistUpdate(playlist.id, {
+        action: 'updated',
+        playlist
+      });
+
+      return playlist;
+    } catch (error) {
+      console.error('Error assigning managers:', error);
+      throw error;
+    }
+  }
 }

@@ -11,7 +11,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Admin middleware'ini tüm route'lara uygula
 router.use(adminAuth);
 
-// Add artwork upload endpoint using Bunny CDN
 router.post('/upload-artwork', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -30,6 +29,24 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
   } catch (error) {
     console.error('Error uploading artwork:', error);
     res.status(500).json({ error: 'Error uploading artwork' });
+  }
+});
+
+// Assign managers to playlist
+router.post('/:id/assign-managers', async (req, res) => {
+  try {
+    const playlistService = new PlaylistService(req.io);
+    const { managerIds } = req.body;
+    
+    if (!Array.isArray(managerIds)) {
+      return res.status(400).json({ error: 'managerIds must be an array' });
+    }
+
+    const playlist = await playlistService.assignManagers(req.params.id, managerIds);
+    res.json(playlist);
+  } catch (error) {
+    console.error('Error assigning managers:', error);
+    res.status(500).json({ error: 'Error assigning managers to playlist' });
   }
 });
 
