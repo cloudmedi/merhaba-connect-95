@@ -31,6 +31,34 @@ const router = createBrowserRouter([
     path: "/sectors/gym",
     element: <GymSector />,
   },
+  {
+    path: "/sectors/medical",
+    element: <GymSector />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/sectors/dental",
+    element: <GymSector />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/sectors/beauty",
+    element: <GymSector />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/sectors/spa",
+    element: <GymSector />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/pricing",
+    element: <Landing />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/about",
+    element: <Landing />, // Placeholder - replace with actual component when ready
+  },
+  {
+    path: "/contact",
+    element: <Landing />, // Placeholder - replace with actual component when ready
+  },
 ]);
 
 function App() {
