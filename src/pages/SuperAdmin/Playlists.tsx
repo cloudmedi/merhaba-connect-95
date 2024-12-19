@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { CreatePlaylist } from "@/components/playlists/CreatePlaylist";
 import { PlaylistsTable } from "./components/PlaylistsTable";
 import { MusicPlayer } from "@/components/MusicPlayer";
@@ -53,8 +52,8 @@ export default function Playlists() {
           id: playlist._id,
           name: playlist.name,
           description: playlist.description,
-          artwork_url: playlist.artwork_url || playlist.artworkUrl,
-          is_public: playlist.is_public || playlist.isPublic,
+          artwork_url: playlist.artwork_url,
+          is_public: playlist.is_public,
           is_hero: playlist.isHero,
           genre: playlist.genre,
           mood: playlist.mood,
@@ -110,7 +109,7 @@ export default function Playlists() {
         <MusicPlayer 
           playlist={{
             title: currentPlaylist.name,
-            artwork: currentPlaylist.artwork_url || currentPlaylist.artworkUrl || "/placeholder.svg"
+            artwork: currentPlaylist.artwork_url || "/placeholder.svg"
           }}
           onClose={() => {
             setIsPlayerVisible(false);

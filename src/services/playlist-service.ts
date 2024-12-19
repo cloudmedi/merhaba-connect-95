@@ -20,8 +20,8 @@ export const playlistService = {
     artwork_url?: string;
     is_public?: boolean;
     is_hero?: boolean;
-    genre_id?: string;
-    mood_id?: string;
+    genre?: string;
+    mood?: string;
     songs?: string[];
   }) {
     try {
@@ -69,8 +69,8 @@ export const playlistService = {
     artwork_url?: string;
     is_public?: boolean;
     is_hero?: boolean;
-    genre_id?: string;
-    mood_id?: string;
+    genre?: string;
+    mood?: string;
     songs?: string[];
   }) {
     try {
@@ -118,6 +118,36 @@ export const playlistService = {
     } catch (error) {
       console.error('Error deleting playlist:', error);
       toast.error('Failed to delete playlist');
+      throw error;
+    }
+  },
+
+  async getPlaylistSongs(id: string) {
+    try {
+      const response = await axiosInstance.get(`/admin/playlists/${id}/songs`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching playlist songs:', error);
+      throw error;
+    }
+  },
+
+  async getPlaylistCategories(id: string) {
+    try {
+      const response = await axiosInstance.get(`/admin/playlists/${id}/categories`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching playlist categories:', error);
+      throw error;
+    }
+  },
+
+  async getPlaylistManagers(id: string) {
+    try {
+      const response = await axiosInstance.get(`/admin/playlists/${id}/managers`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching playlist managers:', error);
       throw error;
     }
   }
