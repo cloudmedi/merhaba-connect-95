@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { logger } from '../utils/logger';
 
 dotenv.config();
 
@@ -10,13 +11,18 @@ export const bunnyConfig = {
 
 // Validate config
 if (!bunnyConfig.apiKey) {
-  console.error('BUNNY_API_KEY is not set in environment variables');
+  logger.error('BUNNY_API_KEY is not set in environment variables');
+  throw new Error('BUNNY_API_KEY is required');
 }
 
 if (!bunnyConfig.storageZoneName) {
-  console.error('BUNNY_STORAGE_ZONE_NAME is not set in environment variables');
+  logger.error('BUNNY_STORAGE_ZONE_NAME is not set in environment variables');
+  throw new Error('BUNNY_STORAGE_ZONE_NAME is required');
 }
 
 if (!bunnyConfig.baseUrl) {
-  console.error('BUNNY_STORAGE_HOST is not set in environment variables');
+  logger.error('BUNNY_STORAGE_HOST is not set in environment variables');
+  throw new Error('BUNNY_STORAGE_HOST is required');
 }
+
+export default bunnyConfig;

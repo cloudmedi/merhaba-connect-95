@@ -25,7 +25,6 @@ interface AuthRequest extends express.Request {
 const router = express.Router();
 const metadataService = new MetadataService();
 
-// Get all songs
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find();
@@ -36,7 +35,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Upload a new song
 router.post(
   '/upload',
   authMiddleware,
@@ -53,12 +51,18 @@ router.post(
       }
 
       const file = req.file;
+      logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
+
       const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
-      
+      logger.info(`Generated filename: ${fileName}`);
+
       const [metadata, fileUrl] = await Promise.all([
         metadataService.extractMetadata(file.buffer, fileName),
         uploadService.uploadFile(file.buffer, fileName)
       ]);
+
+      logger.info('Metadata extracted:', metadata);
+      logger.info('File uploaded to CDN:', fileUrl);
 
       const user = req.user;
 
@@ -75,6 +79,8 @@ router.post(
       });
 
       await song.save();
+      logger.info('Song saved to database:', song);
+      
       res.status(201).json(song);
 
     } catch (error: any) {
@@ -86,7 +92,6 @@ router.post(
     }
 });
 
-// Delete a song
 router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);

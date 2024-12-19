@@ -15,8 +15,11 @@ export class MetadataService {
       const cachedMetadata = metadataCache.get(cacheKey);
       
       if (cachedMetadata) {
+        logger.info('Using cached metadata for:', fileName);
         return cachedMetadata;
       }
+
+      logger.info('Extracting metadata for:', fileName);
 
       // Geçici dosya oluştur
       const tempFilePath = join(tmpdir(), `temp-${fileName}`);
@@ -25,9 +28,11 @@ export class MetadataService {
       try {
         // Geçici dosyadan süreyi al
         const duration = await getAudioDurationInSeconds(tempFilePath);
+        logger.info('Duration extracted:', duration);
 
         // Get other metadata using NodeID3
         const id3Metadata = NodeID3.read(buffer);
+        logger.info('ID3 metadata extracted:', id3Metadata);
 
         // Combine metadata
         const metadata = {
@@ -37,6 +42,7 @@ export class MetadataService {
 
         if (metadata) {
           metadataCache.set(cacheKey, metadata);
+          logger.info('Metadata cached for:', fileName);
         }
         
         return metadata;
@@ -44,6 +50,7 @@ export class MetadataService {
         // Geçici dosyayı temizle
         try {
           unlinkSync(tempFilePath);
+          logger.info('Temporary file cleaned up:', tempFilePath);
         } catch (error) {
           logger.error('Error cleaning up temporary file:', error);
         }

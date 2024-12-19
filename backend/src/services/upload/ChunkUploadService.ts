@@ -23,6 +23,8 @@ export class ChunkUploadService {
     total: number
   ): Promise<boolean> {
     try {
+      logger.info(`Uploading chunk: start=${start}, size=${chunk.length}, total=${total}`);
+      
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -35,9 +37,16 @@ export class ChunkUploadService {
       });
 
       if (!response.ok) {
-        throw new Error(`Chunk upload failed: ${response.statusText}`);
+        const errorText = await response.text();
+        logger.error('Chunk upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Chunk upload failed: ${response.status} - ${errorText}`);
       }
 
+      logger.info(`Chunk uploaded successfully: start=${start}`);
       return true;
     } catch (error) {
       logger.error('Chunk upload error:', error);
@@ -51,10 +60,14 @@ export class ChunkUploadService {
     const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
     
     try {
+      logger.info(`Starting file upload: ${fileName}, size: ${buffer.length} bytes`);
+      
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, i + CHUNK_SIZE));
       }
+
+      logger.info(`File split into ${chunks.length} chunks`);
 
       for (let i = 0; i < chunks.length; i++) {
         const start = i * CHUNK_SIZE;
@@ -70,7 +83,10 @@ export class ChunkUploadService {
         }
       }
 
-      return `https://${bunnyConfig.baseUrl}/${bunnyId}`;
+      const cdnUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
+      logger.info(`File upload completed: ${cdnUrl}`);
+
+      return cdnUrl;
     } catch (error) {
       logger.error('File upload error:', error);
       throw error;
