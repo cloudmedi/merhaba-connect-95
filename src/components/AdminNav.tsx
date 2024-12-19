@@ -9,8 +9,7 @@ import {
   ListMusic,
   ChevronLeft,
   Tag,
-  Menu,
-  Settings as SettingsIcon,
+  Settings,
   BarChart2,
   Bell,
   Activity,
@@ -19,17 +18,72 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/super-admin" },
-  { icon: Users, label: "Users", href: "/super-admin/users" },
-  { icon: Music2, label: "Music", href: "/super-admin/music" },
-  { icon: Tag, label: "Genres", href: "/super-admin/genres" },
-  { icon: FolderTree, label: "Categories", href: "/super-admin/categories" },
-  { icon: Heart, label: "Moods", href: "/super-admin/moods" },
-  { icon: ListMusic, label: "Playlists", href: "/super-admin/playlists" },
-  { icon: Bell, label: "Notifications", href: "/super-admin/notifications" },
-  { icon: Activity, label: "Performance", href: "/super-admin/performance" },
-  { icon: BarChart2, label: "Reports", href: "/super-admin/reports" },
-  { icon: SettingsIcon, label: "Settings", href: "/super-admin/settings" },
+  { 
+    title: "Ana Sayfa",
+    icon: LayoutDashboard, 
+    href: "/super-admin",
+    description: "Dashboard ve genel bakış"
+  },
+  { 
+    title: "Kullanıcılar", 
+    icon: Users, 
+    href: "/super-admin/users",
+    description: "Kullanıcı yönetimi"
+  },
+  { 
+    title: "Müzik", 
+    icon: Music2, 
+    href: "/super-admin/music",
+    description: "Müzik kütüphanesi"
+  },
+  { 
+    title: "Türler", 
+    icon: Tag, 
+    href: "/super-admin/genres",
+    description: "Müzik türleri"
+  },
+  { 
+    title: "Kategoriler", 
+    icon: FolderTree, 
+    href: "/super-admin/categories",
+    description: "Müzik kategorileri"
+  },
+  { 
+    title: "Ruh Halleri", 
+    icon: Heart, 
+    href: "/super-admin/moods",
+    description: "Müzik ruh halleri"
+  },
+  { 
+    title: "Çalma Listeleri", 
+    icon: ListMusic, 
+    href: "/super-admin/playlists",
+    description: "Playlist yönetimi"
+  },
+  { 
+    title: "Bildirimler", 
+    icon: Bell, 
+    href: "/super-admin/notifications",
+    description: "Sistem bildirimleri"
+  },
+  { 
+    title: "Performans", 
+    icon: Activity, 
+    href: "/super-admin/performance",
+    description: "Sistem performansı"
+  },
+  { 
+    title: "Raporlar", 
+    icon: BarChart2, 
+    href: "/super-admin/reports",
+    description: "Sistem raporları"
+  },
+  { 
+    title: "Ayarlar", 
+    icon: Settings, 
+    href: "/super-admin/settings",
+    description: "Sistem ayarları"
+  },
 ];
 
 export function AdminNav() {
@@ -39,20 +93,19 @@ export function AdminNav() {
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="icon"
         className="fixed top-4 left-4 z-50 md:hidden"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
-        <Menu className="h-6 w-6" />
+        <ChevronLeft className="h-6 w-6" />
       </Button>
 
       <nav
         className={cn(
-          "min-h-screen bg-gradient-to-b from-[#1A1F2C] to-[#2C3444] text-white transition-all duration-300 relative",
-          isCollapsed ? "w-20" : "w-64",
+          "min-h-screen bg-background border-r flex flex-col transition-all duration-300 relative",
+          isCollapsed ? "w-20" : "w-80",
           "fixed md:relative",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           "z-40"
@@ -61,7 +114,7 @@ export function AdminNav() {
         <div className="sticky top-0 p-6 flex flex-col h-screen">
           <div className="flex items-center justify-between mb-8">
             <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-              <Music2 className="h-8 w-8 text-[#9b87f5]" />
+              <Music2 className="h-8 w-8 text-primary" />
               {!isCollapsed && (
                 <h1 className="text-xl font-semibold tracking-tight">
                   Merhaba Music
@@ -70,19 +123,21 @@ export function AdminNav() {
             </div>
           </div>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute right-[-12px] top-8 bg-[#1A1F2C] p-1.5 rounded-full hover:bg-[#2C3444] transition-colors shadow-lg hidden md:block"
+            className="absolute right-[-12px] top-8 bg-background border rounded-full hover:bg-accent transition-colors shadow-md hidden md:flex"
           >
             <ChevronLeft
               className={cn(
-                "h-4 w-4 transition-transform text-[#9b87f5]",
+                "h-4 w-4 transition-transform",
                 isCollapsed && "rotate-180"
               )}
             />
-          </button>
+          </Button>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
@@ -93,16 +148,23 @@ export function AdminNav() {
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative group",
                     isActive
-                      ? "bg-[#9b87f5]/20 text-[#9b87f5]"
-                      : "text-gray-300 hover:bg-white/10",
-                    isCollapsed && "justify-center px-2"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    isCollapsed ? "justify-center" : "justify-start"
                   )}
-                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5", isActive && "text-[#9b87f5]")} />
-                  {!isCollapsed && item.label}
+                  <Icon className={cn("h-5 w-5 shrink-0")} />
+                  {!isCollapsed && (
+                    <span>{item.title}</span>
+                  )}
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-2 p-2 bg-popover text-popover-foreground rounded-md invisible opacity-0 translate-x-1 group-hover:visible group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    </div>
+                  )}
                 </Link>
               );
             })}
@@ -110,10 +172,9 @@ export function AdminNav() {
         </div>
       </nav>
 
-      {/* Overlay for mobile */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
