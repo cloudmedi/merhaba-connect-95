@@ -1,21 +1,21 @@
 import { API_URL } from "../api";
+import { Song } from "@/types/playlist";
 
-export const getSongsQuery = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/songs`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+export const getSongsQuery = async (): Promise<Song[]> => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/admin/songs`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch songs');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error in getSongsQuery:', error);
-    throw error;
+  if (!response.ok) {
+    console.error('Failed to fetch songs:', response.status, response.statusText);
+    throw new Error('Failed to fetch songs');
   }
+
+  return response.json();
 };
