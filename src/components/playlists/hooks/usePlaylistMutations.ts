@@ -26,6 +26,7 @@ export function usePlaylistMutations() {
       }
 
       console.log('Initial playlist data:', playlistData);
+      console.log('Assigned managers before transformation:', playlistData.assignedManagers);
 
       let artworkUrl = playlistData.artworkUrl;
 
@@ -45,6 +46,15 @@ export function usePlaylistMutations() {
         artworkUrl = uploadResponse.data.url;
       }
 
+      // Prepare managers data with validation
+      const assignedManagers = Array.isArray(playlistData.assignedManagers) 
+        ? playlistData.assignedManagers
+          .filter((manager: any) => manager && (manager._id || manager.id))
+          .map((manager: any) => manager._id || manager.id)
+        : [];
+
+      console.log('Processed assigned managers:', assignedManagers);
+
       // Prepare payload for MongoDB
       const playlistPayload = {
         name: playlistData.name,
@@ -61,23 +71,31 @@ export function usePlaylistMutations() {
           songId: song._id,
           position: index
         })),
-        assignedManagers: playlistData.assignedManagers
-          .filter((manager: any) => manager && manager._id)
-          .map((manager: any) => manager._id)
+        assignedManagers // Use the processed managers array
       };
 
       console.log('Sending playlist payload:', playlistPayload);
       
       let response;
       if (isEditMode && existingPlaylist) {
-        response = await axios.put(`/api/admin/playlists/${existingPlaylist._id}`, playlistPayload);
+        // For update, explicitly include the assignedManagers
+        response = await axios.put(`/api/admin/playlists/${existingPlaylist._id}`, {
+          ...playlistPayload,
+          assignedManagers // Ensure managers are included in update
+        });
       } else {
         response = await axios.post('/api/admin/playlists', playlistPayload);
       }
 
       console.log('Server response:', response.data);
 
+      // Invalidate both playlist queries and manager assignments
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      if (existingPlaylist?._id) {
+        await queryClient.invalidateQueries({ 
+          queryKey: ['playlist-managers', existingPlaylist._id] 
+        });
+      }
       
       onSuccess?.();
       

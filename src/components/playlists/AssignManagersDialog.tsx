@@ -29,15 +29,12 @@ export function AssignManagersDialog({
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      fetchManagers();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (open && initialSelectedManagers) {
+      console.log('Dialog opened with initial managers:', initialSelectedManagers);
       setSelectedManagers(initialSelectedManagers);
+      fetchManagers();
     }
   }, [open, initialSelectedManagers]);
 
