@@ -14,11 +14,11 @@ const PlaylistSchema = new mongoose.Schema({
   genre: { type: mongoose.Schema.Types.ObjectId, ref: 'Genre' },
   mood: { type: mongoose.Schema.Types.ObjectId, ref: 'Mood' },
   artworkUrl: { type: String },
-  assignedManagers: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User',
-    required: false 
-  }],
+  assignedManagers: { 
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+    required: false
+  },
   lastPlayed: { type: Date },
   playCount: { type: Number, default: 0 }
 }, {

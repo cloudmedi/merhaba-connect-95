@@ -67,8 +67,11 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
         isPublic: playlist.isPublic,
         isHero: playlist.isHero,
         assignedManagers: (playlist.assignedManagers || []).map(id => ({
-          id,
+          _id: id,
+          id: id,
           email: "",
+          firstName: null,
+          lastName: null,
           first_name: null,
           last_name: null
         }))

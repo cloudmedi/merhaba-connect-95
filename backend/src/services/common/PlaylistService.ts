@@ -130,23 +130,34 @@ export class PlaylistService {
     try {
       console.log('Assigning managers to playlist:', { playlistId, managerIds });
 
-      const playlist = await Playlist.findByIdAndUpdate(
-        playlistId,
-        { 
-          $set: { assignedManagers: managerIds }
-        },
-        { 
-          new: true,
-          runValidators: true 
-        }
-      ).populate('assignedManagers');
-
-      if (!playlist) {
+      // First verify the playlist exists
+      const existingPlaylist = await Playlist.findById(playlistId);
+      if (!existingPlaylist) {
         console.error('Playlist not found:', playlistId);
         throw new Error('Playlist not found');
       }
 
-      console.log('Updated playlist:', playlist);
+      // Perform the update with $set operator
+      const playlist = await Playlist.findByIdAndUpdate(
+        playlistId,
+        { 
+          $set: { 
+            assignedManagers: managerIds,
+            updatedAt: new Date()
+          }
+        },
+        { 
+          new: true,
+          runValidators: true,
+          upsert: false
+        }
+      ).populate('assignedManagers');
+
+      console.log('Updated playlist:', JSON.stringify(playlist, null, 2));
+
+      // Double check if the update was successful
+      const verifyUpdate = await Playlist.findById(playlistId);
+      console.log('Verification after update:', JSON.stringify(verifyUpdate, null, 2));
 
       // Emit real-time update
       this.wsService.emitPlaylistUpdate(playlist.id, {
