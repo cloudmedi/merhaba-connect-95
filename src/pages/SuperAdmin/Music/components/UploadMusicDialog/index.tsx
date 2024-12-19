@@ -29,23 +29,16 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
     const maxSize = 100 * 1024 * 1024; // 100MB
 
     for (const file of Array.from(files)) {
-      // Dosya tipi kontrolü
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`${file.name} desteklenen bir ses dosyası değil`, {
-          icon: <AlertCircle className="h-5 w-5" />
-        });
+        toast.error(`${file.name} desteklenen bir ses dosyası değil`);
         continue;
       }
 
-      // Dosya boyutu kontrolü
       if (file.size > maxSize) {
-        toast.error(`${file.name} 100MB limitini aşıyor`, {
-          icon: <AlertCircle className="h-5 w-5" />
-        });
+        toast.error(`${file.name} 100MB limitini aşıyor`);
         continue;
       }
 
-      // Yükleme durumunu başlat
       setUploadingFiles(prev => ({
         ...prev,
         [file.name]: {
@@ -56,7 +49,6 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
       }));
 
       try {
-        console.log('Uploading file:', file.name);
         const formData = new FormData();
         formData.append('file', file);
 
@@ -65,19 +57,16 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
             'Content-Type': 'multipart/form-data'
           },
           onUploadProgress: (progressEvent) => {
-            const progress = (progressEvent.loaded / (progressEvent.total || file.size)) * 100;
-            console.log('Upload progress:', progress);
+            const progress = progressEvent.loaded / progressEvent.total * 100;
             setUploadingFiles(prev => ({
               ...prev,
               [file.name]: {
                 ...prev[file.name],
-                progress
+                progress: Math.min(progress, 99)
               }
             }));
           }
         });
-
-        console.log('Upload response:', response.data);
 
         setUploadingFiles(prev => ({
           ...prev,
@@ -89,27 +78,21 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
         }));
 
         await queryClient.invalidateQueries({ queryKey: ['songs'] });
-
         toast.success(`${file.name} başarıyla yüklendi`);
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        console.error('Error response:', error.response?.data);
-        
-        const errorMessage = error.response?.data?.error || error.message || 'Dosya yüklenirken hata oluştu';
         
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
             ...prev[file.name],
             status: 'error',
-            error: errorMessage
+            error: error.response?.data?.error || error.message
           }
         }));
 
-        toast.error(`${file.name}: ${errorMessage}`, {
-          icon: <AlertCircle className="h-5 w-5" />
-        });
+        toast.error(`${file.name}: ${error.response?.data?.error || 'Yükleme hatası'}`);
       }
     }
   };

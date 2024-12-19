@@ -6,13 +6,13 @@ import { logger } from '../../utils/logger';
 const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
 const MAX_RETRIES = 3;
 const TIMEOUT = 15000; // 15 seconds timeout
-const PROGRESS_THRESHOLDS = [25, 50, 75, 100];
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
   private isUploading: boolean = false;
-  private lastLoggedThreshold: number = 0;
   private uploadPromises: Promise<boolean>[] = [];
+  private totalChunks: number = 0;
+  private uploadedChunks: number = 0;
 
   constructor(private onProgress?: (progress: number) => void) {}
 
@@ -22,18 +22,6 @@ export class ChunkUploadService {
       this.abortController.abort();
       logger.debug('Upload cancelled');
     }
-  }
-
-  private shouldLogProgress(progress: number): boolean {
-    const nextThreshold = PROGRESS_THRESHOLDS.find(threshold => 
-      threshold > this.lastLoggedThreshold && progress >= threshold
-    );
-    
-    if (nextThreshold) {
-      this.lastLoggedThreshold = nextThreshold;
-      return true;
-    }
-    return false;
   }
 
   private async uploadChunk(
@@ -64,10 +52,14 @@ export class ChunkUploadService {
         throw new Error(`Upload failed with status: ${response.status}`);
       }
 
+      this.uploadedChunks++;
+      const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
+      this.onProgress?.(progress);
+      
       return true;
     } catch (error) {
       if (retryCount < MAX_RETRIES && this.isUploading) {
-        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Exponential backoff with max 5s
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.uploadChunk(url, chunk, start, total, retryCount + 1);
       }
@@ -86,7 +78,7 @@ export class ChunkUploadService {
 
     this.isUploading = true;
     this.abortController = new AbortController();
-    this.lastLoggedThreshold = 0;
+    this.uploadedChunks = 0;
     this.uploadPromises = [];
 
     try {
@@ -101,10 +93,9 @@ export class ChunkUploadService {
         chunks.push(buffer.slice(i, Math.min(i + CHUNK_SIZE, buffer.length)));
       }
 
-      const totalChunks = chunks.length;
-      let uploadedChunks = 0;
-
-      // Parallel chunk uploads with concurrency limit
+      this.totalChunks = chunks.length;
+      
+      // Paralel yükleme (3 chunk aynı anda)
       const concurrencyLimit = 3;
       for (let i = 0; i < chunks.length; i += concurrencyLimit) {
         const chunkGroup = chunks.slice(i, i + concurrencyLimit);
@@ -114,21 +105,14 @@ export class ChunkUploadService {
         });
 
         await Promise.all(uploadPromises);
-        uploadedChunks += chunkGroup.length;
-
-        const progress = Math.floor((uploadedChunks / totalChunks) * 100);
-        
-        if (this.shouldLogProgress(progress)) {
-          logger.debug(`Upload progress: ${progress}%`);
-        }
-
-        if (this.onProgress) {
-          this.onProgress(Math.min(progress, 100));
-        }
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
       logger.debug('File upload completed successfully:', cdnUrl);
+      
+      // Son progress güncellemesi
+      this.onProgress?.(100);
+      
       return cdnUrl;
 
     } catch (error) {
