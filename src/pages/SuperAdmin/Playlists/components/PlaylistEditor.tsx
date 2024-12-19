@@ -8,7 +8,6 @@ import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMu
 import { usePlaylistAssignment } from "@/components/playlists/hooks/usePlaylistAssignment";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import axios from "@/lib/axios"; // Axios'u import ediyoruz
 
 export function PlaylistEditor() {
   const navigate = useNavigate();
@@ -38,45 +37,22 @@ export function PlaylistEditor() {
   useEffect(() => {
     if (isEditMode && existingPlaylist) {
       console.log('Loading existing playlist data:', existingPlaylist);
-      loadExistingPlaylistData();
-    }
-  }, [isEditMode, existingPlaylist]);
-
-  const loadExistingPlaylistData = async () => {
-    try {
-      console.log('Loading playlist details for ID:', existingPlaylist._id);
-      
-      const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
-        axios.get(`/admin/playlists/${existingPlaylist._id}/songs`),
-        axios.get(`/admin/playlists/${existingPlaylist._id}/categories`),
-        axios.get(`/admin/playlists/${existingPlaylist._id}/managers`)
-      ]);
-
-      console.log('Loaded playlist data:', {
-        songs: playlistSongs.data,
-        categories: playlistCategories.data,
-        managers: assignedManagers.data
-      });
-
       setPlaylistData({
         name: existingPlaylist.name,
         description: existingPlaylist.description || "",
         artwork: null,
         artworkUrl: existingPlaylist.artworkUrl || "",
-        selectedSongs: playlistSongs.data || [],
+        selectedSongs: existingPlaylist.songs || [],
         selectedGenres: existingPlaylist.genre ? [existingPlaylist.genre] : [],
-        selectedCategories: playlistCategories.data || [],
+        selectedCategories: existingPlaylist.categories || [],
         selectedMoods: existingPlaylist.mood ? [existingPlaylist.mood] : [],
         isCatalog: false,
         isPublic: existingPlaylist.isPublic || false,
         isHero: existingPlaylist.isHero || false,
-        assignedManagers: assignedManagers.data || []
+        assignedManagers: existingPlaylist.assignedManagers || []
       });
-    } catch (error) {
-      console.error('Error fetching playlist details:', error);
-      toast.error("Failed to load playlist details");
     }
-  };
+  }, [isEditMode, existingPlaylist]);
 
   const handleRemoveSong = (songId: string) => {
     console.log('Removing song:', songId);
