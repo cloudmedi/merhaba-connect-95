@@ -2,101 +2,70 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
-import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Playlist } from "@/types/api";
-import type { GridPlaylist } from "@/components/dashboard/types";
+import { Search, Plus } from "lucide-react";
+import { PlaylistsTable } from "../components/PlaylistsTable";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { playlistService } from "@/services/playlist-service";
+import type { Playlist } from "@/types/api";
+import { toast } from "sonner";
 
 export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['playlists'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          company:company_id(name),
-          profiles:created_by(first_name, last_name)
-        `)
-        .order('created_at', { ascending: false });
+    queryFn: playlistService.getPlaylists
+  });
 
-      if (error) throw error;
-      return data as unknown as Playlist[];
+  const deletePlaylistMutation = useMutation({
+    mutationFn: playlistService.deletePlaylist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      toast.success("Playlist deleted successfully");
     }
   });
 
-  const { data: playlistSongs } = useQuery({
-    queryKey: ['playlist-songs', currentPlaylist?.id],
-    queryFn: async () => {
-      if (!currentPlaylist?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url
-          )
-        `)
-        .eq('playlist_id', currentPlaylist.id)
-        .order('position');
+  const handlePlayPlaylist = (playlist: Playlist) => {
+    setCurrentPlaylist(playlist);
+    setIsPlayerVisible(true);
+    toast.success(`Playing ${playlist.name}`);
+  };
 
-      if (error) {
-        console.error('Error fetching playlist songs:', error);
-        throw error;
+  const handleEdit = (playlist: Playlist) => {
+    console.log('Handling edit for playlist:', playlist);
+    if (!playlist || !playlist._id) {
+      toast.error("Invalid playlist data");
+      return;
+    }
+
+    navigate("create", {
+      state: {
+        editMode: true,
+        playlistData: {
+          id: playlist._id,
+          name: playlist.name,
+          description: playlist.description,
+          artworkUrl: playlist.artworkUrl,
+          isPublic: playlist.isPublic,
+          isHero: playlist.isHero,
+          genre: playlist.genre,
+          mood: playlist.mood,
+          categories: playlist.categories,
+          songs: playlist.songs,
+          assignedManagers: playlist.assignedManagers
+        }
       }
+    });
+  };
 
-      return data;
-    },
-    enabled: !!currentPlaylist?.id
-  });
-
-  const filteredPlaylists = playlists?.filter(playlist =>
+  const filteredPlaylists = playlists?.filter(playlist => 
     playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
-
-  const transformPlaylistForGrid = (playlist: Playlist): GridPlaylist => {
-    const defaultArtwork = "/placeholder.svg";
-    const artworkUrl = playlist.artwork_url || defaultArtwork;
-    
-    return {
-      id: playlist.id,
-      title: playlist.name,
-      artwork_url: artworkUrl,
-      genre: "Various",
-      mood: "Various",
-    };
-  };
-
-  const businessPlaylists = filteredPlaylists
-    .filter(p => !p.is_public)
-    .map(transformPlaylistForGrid);
-
-  const publicPlaylists = filteredPlaylists
-    .filter(p => p.is_public)
-    .map(transformPlaylistForGrid);
-
-  const getFullUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    if (url.startsWith('cloud-media/')) {
-      return url.replace('cloud-media/', 'https://cloud-media.b-cdn.net/');
-    }
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
-  };
 
   return (
     <div className="space-y-8">
@@ -119,36 +88,24 @@ export function PlaylistsContent() {
         </Button>
       </div>
 
-      <div className="space-y-12">
-        <PlaylistGrid 
-          title="Business Playlists" 
-          description="Private playlists for business use"
-          playlists={businessPlaylists}
-          isLoading={isLoading}
-        />
-        
-        <PlaylistGrid 
-          title="Public Playlists" 
-          description="Playlists available to all users"
-          playlists={publicPlaylists}
-          isLoading={isLoading}
-        />
-      </div>
+      <PlaylistsTable 
+        playlists={filteredPlaylists}
+        onPlay={handlePlayPlaylist}
+        onEdit={handleEdit}
+        onDelete={(id) => deletePlaylistMutation.mutate(id)}
+        isLoading={isLoading}
+      />
 
-      {currentPlaylist && playlistSongs && playlistSongs.length > 0 && (
+      {isPlayerVisible && currentPlaylist && (
         <MusicPlayer
           playlist={{
-            title: currentPlaylist.title,
-            artwork: currentPlaylist.artwork_url,
-            songs: playlistSongs.map(ps => ({
-              id: ps.songs.id,
-              title: ps.songs.title,
-              artist: ps.songs.artist || "Unknown Artist",
-              duration: ps.songs.duration?.toString() || "0:00",
-              file_url: getFullUrl(ps.songs.file_url)
-            }))
+            title: currentPlaylist.name,
+            artwork: currentPlaylist.artworkUrl || "/placeholder.svg"
           }}
-          onClose={() => setCurrentPlaylist(null)}
+          onClose={() => {
+            setIsPlayerVisible(false);
+            setCurrentPlaylist(null);
+          }}
         />
       )}
     </div>
