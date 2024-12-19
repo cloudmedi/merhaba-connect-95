@@ -128,15 +128,25 @@ export class PlaylistService {
 
   async assignManagers(playlistId: string, managerIds: string[]) {
     try {
+      console.log('Assigning managers to playlist:', { playlistId, managerIds });
+
       const playlist = await Playlist.findByIdAndUpdate(
         playlistId,
-        { assignedManagers: managerIds },
-        { new: true }
+        { 
+          $set: { assignedManagers: managerIds }
+        },
+        { 
+          new: true,
+          runValidators: true 
+        }
       ).populate('assignedManagers');
 
       if (!playlist) {
+        console.error('Playlist not found:', playlistId);
         throw new Error('Playlist not found');
       }
+
+      console.log('Updated playlist:', playlist);
 
       // Emit real-time update
       this.wsService.emitPlaylistUpdate(playlist.id, {
@@ -146,7 +156,7 @@ export class PlaylistService {
 
       return playlist;
     } catch (error) {
-      console.error('Error assigning managers:', error);
+      console.error('Error in assignManagers:', error);
       throw error;
     }
   }

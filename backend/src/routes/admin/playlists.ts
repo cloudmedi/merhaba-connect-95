@@ -35,14 +35,21 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
 // Assign managers to playlist
 router.post('/:id/assign-managers', async (req, res) => {
   try {
+    console.log('Received assign managers request:', {
+      playlistId: req.params.id,
+      body: req.body
+    });
+
     const playlistService = new PlaylistService(req.io);
     const { managerIds } = req.body;
     
     if (!Array.isArray(managerIds)) {
+      console.error('Invalid managerIds:', managerIds);
       return res.status(400).json({ error: 'managerIds must be an array' });
     }
 
     const playlist = await playlistService.assignManagers(req.params.id, managerIds);
+    console.log('Managers assigned successfully:', playlist);
     res.json(playlist);
   } catch (error) {
     console.error('Error assigning managers:', error);
