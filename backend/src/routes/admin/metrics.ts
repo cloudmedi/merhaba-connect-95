@@ -1,6 +1,6 @@
 import express from 'express';
 import { User } from '../../models/admin/User';
-import { Song } from '../../models/admin/Song';
+import { Song } from '../../models/schemas/admin/SongSchema';
 import { Playlist } from '../../models/common/Playlist';
 import { adminAuth } from '../../middleware/auth';
 import { logger } from '../../utils/logger';
