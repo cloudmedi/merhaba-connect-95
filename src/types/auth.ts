@@ -1,46 +1,34 @@
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: 'super_admin' | 'admin' | 'manager' | 'user';
-  companyId?: string;
-  company?: {
-    id: string;
-    name: string;
-    subscriptionStatus?: string;
-    subscriptionEndsAt?: string | null;
-  };
+  firstName: string | null;
+  lastName: string | null;
+  role: UserRole;
   isActive: boolean;
+  companyName?: string;
+  avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
-  avatarUrl?: string | null;
-  license?: {
-    id: string;
-    type: string;
-    startDate: string;
-    endDate: string | null;
-  };
 }
+
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'user';
 
 export interface UserCreateInput {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  role?: 'admin' | 'manager' | 'user';
-  companyId?: string;
-  companyName?: string;  // Added this field
+  firstName?: string;
+  lastName?: string;
+  role?: UserRole;
+  companyName?: string;
 }
 
 export interface UserUpdateInput {
   firstName?: string;
   lastName?: string;
-  role?: 'admin' | 'manager' | 'user';
+  role?: UserRole;
   isActive?: boolean;
   password?: string;
-  companyId?: string;
-  companyName?: string;  // Added this field
+  companyName?: string;
 }
 
 export interface AuthResponse {
@@ -51,9 +39,4 @@ export interface AuthResponse {
 export interface LoginCredentials {
   email: string;
   password: string;
-}
-
-export interface LicenseUpdateInput {
-  type: string;
-  endDate: string;
 }

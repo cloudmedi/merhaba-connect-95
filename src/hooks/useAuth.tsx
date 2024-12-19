@@ -13,40 +13,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  console.log('AuthProvider rendering');
-  
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-    console.log('Initial user state setup');
     return authService.getUser();
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Auth initialization effect running');
-    
     const initializeAuth = async () => {
       try {
-        console.log('Starting auth initialization');
         const token = authService.getToken();
-        console.log('Current token status:', { hasToken: !!token });
         
         if (token) {
-          console.log('Token found, verifying...');
           const { isValid, user: verifiedUser } = await authService.verifyToken();
-          console.log('Token verification result:', { isValid, hasUser: !!verifiedUser });
           
           if (isValid && verifiedUser) {
-            console.log('Setting verified user in state');
             setUser(verifiedUser);
             authService.setUser(verifiedUser);
           } else {
-            console.log('Token invalid or no user data, logging out');
             await authService.logout();
             setUser(null);
           }
         } else {
-          console.log('No token found during initialization');
           setUser(null);
         }
       } catch (error) {
@@ -54,7 +42,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         await authService.logout();
         setUser(null);
       } finally {
-        console.log('Auth initialization completed');
         setLoading(false);
       }
     };
@@ -64,9 +51,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Login attempt started');
       const response = await authService.login({ email, password });
-      console.log('Login successful:', { hasUser: !!response.user });
       setUser(response.user);
       authService.setUser(response.user);
       toast.success('Successfully logged in');
@@ -85,7 +70,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     role: string;
   }) => {
     try {
-      console.log('Registration started');
       await authService.register(userData);
       toast.success('Registration successful');
     } catch (error: any) {
@@ -97,7 +81,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const logout = async () => {
     try {
-      console.log('Logout started');
       await authService.logout();
       setUser(null);
       toast.success('Successfully logged out');
@@ -123,12 +106,10 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const useAuth = () => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
-
-export { AuthProvider, useAuth };
