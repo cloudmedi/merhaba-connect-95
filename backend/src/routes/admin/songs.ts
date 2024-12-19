@@ -66,16 +66,21 @@ router.post(
       const metadata = await metadataService.extractMetadata(file.buffer, fileName);
       logger.info('Metadata extracted:', metadata);
 
+      if (!metadata) {
+        throw new Error('Failed to extract metadata');
+      }
+
       const user = req.user;
 
+      // Create new song with unique bunnyId
       const song = new Song({
-        title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
-        artist: metadata?.artist || null,
-        album: metadata?.album || null,
-        genre: metadata?.genre ? [metadata.genre] : [],
-        duration: metadata?.duration || null,
+        title: metadata.title,
+        artist: metadata.artist,
+        album: metadata.album || null,
+        genre: metadata.genre || [],
+        duration: metadata.duration || null,
         fileUrl: fileUrl,
-        bunnyId: fileName,
+        bunnyId: fileName, // Use the unique fileName as bunnyId
         artworkUrl: null,
         createdBy: user?.id
       });

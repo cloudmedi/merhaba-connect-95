@@ -34,11 +34,17 @@ export class MetadataService {
         const id3Metadata = NodeID3.read(buffer);
         logger.info('ID3 metadata extracted:', id3Metadata);
 
-        // Combine metadata
+        // Combine metadata and ensure all fields are properly set
         const metadata = {
-          ...id3Metadata,
-          duration: Math.round(duration) // Round to nearest second
+          title: id3Metadata?.title || fileName.replace(/\.[^/.]+$/, ""),
+          artist: id3Metadata?.artist || "Unknown Artist",
+          album: id3Metadata?.album || null,
+          genre: id3Metadata?.genre ? [id3Metadata.genre] : [],
+          duration: Math.round(duration),
+          raw: id3Metadata // Store raw metadata for debugging
         };
+
+        logger.info('Final processed metadata:', metadata);
 
         if (metadata) {
           metadataCache.set(cacheKey, metadata);
@@ -57,7 +63,7 @@ export class MetadataService {
       }
     } catch (error) {
       logger.error('Metadata extraction error:', error);
-      return null;
+      throw error; // Hataları yukarı fırlat
     }
   }
 }
