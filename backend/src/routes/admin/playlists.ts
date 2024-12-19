@@ -24,12 +24,45 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
     const uploadService = new ChunkUploadService();
     const fileUrl = await uploadService.uploadFile(req.file.buffer, uniqueFileName);
 
-    console.log('Artwork uploaded to Bunny CDN:', fileUrl);
+    console.log('Artwork uploaded:', fileUrl);
     res.json({ url: fileUrl });
 
   } catch (error) {
     console.error('Error uploading artwork:', error);
     res.status(500).json({ error: 'Error uploading artwork' });
+  }
+});
+
+// Get playlist songs
+router.get('/:id/songs', async (req, res) => {
+  try {
+    const playlistService = new PlaylistService(req.io);
+    const songs = await playlistService.getPlaylistSongs(req.params.id);
+    res.json(songs);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching playlist songs' });
+  }
+});
+
+// Get playlist categories
+router.get('/:id/categories', async (req, res) => {
+  try {
+    const playlistService = new PlaylistService(req.io);
+    const categories = await playlistService.getPlaylistCategories(req.params.id);
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching playlist categories' });
+  }
+});
+
+// Get playlist managers
+router.get('/:id/managers', async (req, res) => {
+  try {
+    const playlistService = new PlaylistService(req.io);
+    const managers = await playlistService.getPlaylistManagers(req.params.id);
+    res.json(managers);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching playlist managers' });
   }
 });
 

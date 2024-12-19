@@ -99,36 +99,28 @@ export class PlaylistService {
     }
   }
 
-  async getPlaylistById(id: string) {
+  async getPlaylistSongs(playlistId: string) {
     try {
-      return await Playlist.findById(id)
-        .populate('songs.songId')
-        .populate('categories')
-        .populate('genre')
-        .populate('mood')
-        .populate('assignedManagers');
+      const playlist = await Playlist.findById(playlistId).populate('songs.songId');
+      return playlist?.songs || [];
     } catch (error) {
       throw error;
     }
   }
 
-  async assignManagersToPlaylist(playlistId: string, managerIds: string[]) {
+  async getPlaylistCategories(playlistId: string) {
     try {
-      const playlist = await Playlist.findByIdAndUpdate(
-        playlistId,
-        { assignedManagers: managerIds },
-        { new: true }
-      ).populate('assignedManagers');
-      
-      if (playlist) {
-        // Emit real-time update
-        this.wsService.emitPlaylistUpdate(playlist.id, {
-          action: 'managers-assigned',
-          playlist
-        });
-      }
-      
-      return playlist;
+      const playlist = await Playlist.findById(playlistId).populate('categories');
+      return playlist?.categories || [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getPlaylistManagers(playlistId: string) {
+    try {
+      const playlist = await Playlist.findById(playlistId).populate('assignedManagers');
+      return playlist?.assignedManagers || [];
     } catch (error) {
       throw error;
     }
