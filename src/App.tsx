@@ -3,9 +3,38 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from '@/hooks/useAuth';
 import Index from "./pages/Index";
-import Landing from "./pages/Landing";
-import GymSector from "./pages/sectors/GymSector";
+import Manager from "./pages/Manager";
+import SuperAdmin from "./pages/SuperAdmin";
+import ManagerLogin from "./pages/Manager/Auth/Login";
+import ManagerRegister from "./pages/Manager/Auth/Register";
+import SuperAdminLogin from "./pages/SuperAdmin/Auth/Login";
+import SuperAdminRegister from "./pages/SuperAdmin/Auth/Register";
+import Dashboard from "./pages/SuperAdmin/Dashboard";
+import Users from "./pages/SuperAdmin/Users";
+import Music from "./pages/SuperAdmin/Music";
+import Genres from "./pages/SuperAdmin/Genres";
+import Categories from "./pages/SuperAdmin/Categories";
+import Moods from "./pages/SuperAdmin/Moods";
+import Playlists from "./pages/SuperAdmin/Playlists";
+import { PlaylistDetail as SuperAdminPlaylistDetail } from "./pages/SuperAdmin/Playlists/PlaylistDetail";
+import Notifications from "./pages/SuperAdmin/Notifications";
+import Performance from "./pages/SuperAdmin/Performance";
+import Reports from "./pages/SuperAdmin/Reports";
+import Settings from "./pages/SuperAdmin/Settings";
 import { ErrorState } from '@/components/ErrorState';
+import ManagerDashboard from "./pages/Manager/Dashboard";
+import { DeviceList } from "./pages/Manager/Devices/DeviceList";
+import { DeviceDetail } from "./pages/Manager/Devices/DeviceDetail";
+import { DeviceGroups } from "./pages/Manager/Devices/DeviceGroups";
+import { GroupDetail } from "./pages/Manager/Devices/GroupDetail";
+import { DeviceMaintenance } from "./pages/Manager/Devices/DeviceMaintenance";
+import ManagerPlaylists from "./pages/Manager/Playlists";
+import Schedule from "./pages/Manager/Schedule";
+import Announcements from "./pages/Manager/Announcements";
+import ManagerSettings from "./pages/Manager/Settings";
+import ProfileSettings from "./pages/Manager/Settings/Profile";
+import { PlaylistDetail as ManagerPlaylistDetail } from "./pages/Manager/Playlists/PlaylistDetail";
+import { CategoryPlaylists } from "./pages/Manager/Playlists/CategoryPlaylists";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,40 +53,64 @@ const router = createBrowserRouter([
     errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
   },
   {
-    path: "/landing",
-    element: <Landing />,
+    path: "/manager",
+    element: <Manager />,
+    errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
+    children: [
+      { index: true, element: <ManagerDashboard /> },
+      { 
+        path: "devices",
+        children: [
+          { index: true, element: <DeviceList /> },
+          { path: ":deviceId", element: <DeviceDetail /> },
+          { path: "groups", element: <DeviceGroups /> },
+          { path: "groups/:groupId", element: <GroupDetail /> },
+          { path: "maintenance", element: <DeviceMaintenance /> },
+        ]
+      },
+      { path: "playlists", element: <ManagerPlaylists /> },
+      { path: "playlists/category/:categoryId", element: <CategoryPlaylists /> },
+      { path: "playlists/:id", element: <ManagerPlaylistDetail /> },
+      { path: "schedule/*", element: <Schedule /> },
+      { path: "announcements/*", element: <Announcements /> },
+      { path: "settings", element: <ManagerSettings /> },
+      { path: "settings/profile", element: <ProfileSettings /> },
+    ],
   },
   {
-    path: "/sectors/gym",
-    element: <GymSector />,
+    path: "/manager/login",
+    element: <ManagerLogin />,
   },
   {
-    path: "/sectors/medical",
-    element: <GymSector />, // Placeholder - replace with actual component when ready
+    path: "/manager/register",
+    element: <ManagerRegister />,
   },
   {
-    path: "/sectors/dental",
-    element: <GymSector />, // Placeholder - replace with actual component when ready
+    path: "/super-admin",
+    element: <SuperAdmin />,
+    errorElement: <ErrorState error="Sayfa bulunamadı" onRetry={() => window.location.reload()} />,
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: "users/*", element: <Users /> },
+      { path: "music/*", element: <Music /> },
+      { path: "genres/*", element: <Genres /> },
+      { path: "categories/*", element: <Categories /> },
+      { path: "moods/*", element: <Moods /> },
+      { path: "playlists", element: <Playlists /> },
+      { path: "playlists/:id", element: <SuperAdminPlaylistDetail /> },
+      { path: "notifications/*", element: <Notifications /> },
+      { path: "performance/*", element: <Performance /> },
+      { path: "reports/*", element: <Reports /> },
+      { path: "settings/*", element: <Settings /> },
+    ],
   },
   {
-    path: "/sectors/beauty",
-    element: <GymSector />, // Placeholder - replace with actual component when ready
+    path: "/super-admin/login",
+    element: <SuperAdminLogin />,
   },
   {
-    path: "/sectors/spa",
-    element: <GymSector />, // Placeholder - replace with actual component when ready
-  },
-  {
-    path: "/pricing",
-    element: <Landing />, // Placeholder - replace with actual component when ready
-  },
-  {
-    path: "/about",
-    element: <Landing />, // Placeholder - replace with actual component when ready
-  },
-  {
-    path: "/contact",
-    element: <Landing />, // Placeholder - replace with actual component when ready
+    path: "/super-admin/register",
+    element: <SuperAdminRegister />,
   },
 ]);
 

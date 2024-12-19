@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Music2, Building2, ArrowRight } from "lucide-react";
-import { useState } from "react";
-import { TrialForm } from "@/components/landing/TrialForm";
+import { Music2, Building2 } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
-  const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
+
+  console.log("Index page rendering"); // Debug için log ekledim
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -21,27 +20,7 @@ export default function Index() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ArrowRight className="h-5 w-5" />
-                Landing Page
-              </CardTitle>
-              <CardDescription>
-                Ürün özellikleri ve tanıtım
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full bg-white text-gray-900 border border-gray-200 hover:bg-gray-50" 
-                onClick={() => navigate("/landing")}
-              >
-                Ürünü İncele
-              </Button>
-            </CardContent>
-          </Card>
-
+        <div className="grid md:grid-cols-2 gap-6">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -49,7 +28,7 @@ export default function Index() {
                 Super Admin Panel
               </CardTitle>
               <CardDescription>
-                Merkezi yönetim sistemi
+                Central management system for all branches
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -57,7 +36,7 @@ export default function Index() {
                 className="w-full bg-primary" 
                 onClick={() => navigate("/super-admin")}
               >
-                Giriş Yap
+                Access Super Admin
               </Button>
             </CardContent>
           </Card>
@@ -69,25 +48,21 @@ export default function Index() {
                 Manager Panel
               </CardTitle>
               <CardDescription>
-                Şube yönetim paneli
+                Branch management dashboard
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
-                className="w-full bg-[#6E59A5] hover:bg-[#5A478A] text-white"
-                onClick={() => setIsTrialFormOpen(true)}
+                className="w-full"
+                variant="secondary"
+                onClick={() => navigate("/manager")}
               >
-                Ücretsiz Deneyin
+                Access Manager Panel
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      <TrialForm 
-        open={isTrialFormOpen} 
-        onOpenChange={setIsTrialFormOpen}
-      />
     </div>
   );
 }
