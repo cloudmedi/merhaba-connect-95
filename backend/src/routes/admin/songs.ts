@@ -54,7 +54,6 @@ router.post(
       const file = req.file;
       logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
 
-      // Benzersiz bir bunnyId oluştur
       const uniqueBunnyId = `song_${uuidv4()}`;
       const fileExtension = file.originalname.split('.').pop();
       const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
@@ -118,7 +117,12 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     }
 
     if (song.bunnyId) {
-      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${song.bunnyId}`;
+      const fileExtension = song.fileUrl.split('.').pop();
+      const fileName = `${song.bunnyId}.${fileExtension}`;
+      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/music/${fileName}`;
+      
+      logger.info(`Attempting to delete file from Bunny CDN: ${bunnyUrl}`);
+      
       const deleteResponse = await fetch(bunnyUrl, {
         method: 'DELETE',
         headers: {
@@ -128,16 +132,34 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
       });
 
       if (!deleteResponse.ok) {
-        logger.error('Failed to delete file from Bunny CDN:', await deleteResponse.text());
+        const errorText = await deleteResponse.text();
+        logger.error('Failed to delete file from Bunny CDN:', {
+          status: deleteResponse.status,
+          statusText: deleteResponse.statusText,
+          error: errorText,
+          url: bunnyUrl
+        });
+        
+        // Dosya zaten silinmiş olabilir, bu durumda devam ediyoruz
+        if (deleteResponse.status !== 404) {
+          throw new Error(`Failed to delete file from CDN: ${errorText}`);
+        }
+      } else {
+        logger.info('Successfully deleted file from Bunny CDN');
       }
     }
 
     await Song.findByIdAndDelete(req.params.id);
+    logger.info(`Song ${req.params.id} successfully deleted`);
+    
     res.json({ message: 'Şarkı başarıyla silindi' });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error deleting song:', error);
-    res.status(500).json({ error: 'Şarkı silinirken hata oluştu' });
+    res.status(500).json({ 
+      error: 'Şarkı silinirken hata oluştu',
+      details: error.message 
+    });
   }
 });
 
