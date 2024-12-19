@@ -2,35 +2,20 @@ import { Button } from "@/components/ui/button";
 import { MoreVertical, Play, Globe, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { EditPlaylistDialog } from "@/components/playlists/EditPlaylistDialog";
 import { useState } from "react";
 import axios from "@/lib/axios";
+import type { Playlist } from "@/types/api";
 
 interface PlaylistRowProps {
-  playlist: {
-    _id: string;
-    name: string;
-    artworkUrl?: string;
-    createdAt: string;
-    isPublic: boolean;
-    company?: { 
-      name: string;
-      _id: string;
-    };
-    profiles?: { 
-      firstName: string;
-      lastName: string;
-      _id: string;
-    }[];
-  };
-  onPlay: (playlist: any) => void;
+  playlist: Playlist;
+  onPlay: (playlist: Playlist) => void;
   onDelete: (id: string) => void;
   onStatusChange: () => void;
 }
 
 export function PlaylistRow({ playlist, onPlay, onDelete, onStatusChange }: PlaylistRowProps) {
-  const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const getArtworkUrl = (url: string | null | undefined) => {
@@ -47,19 +32,12 @@ export function PlaylistRow({ playlist, onPlay, onDelete, onStatusChange }: Play
       });
 
       if (response.data) {
-        toast({
-          title: "Success",
-          description: `Playlist ${playlist.isPublic ? 'unpublished' : 'published'} successfully`,
-        });
+        toast.success(`Playlist ${playlist.isPublic ? 'unpublished' : 'published'} successfully`);
         onStatusChange();
       }
     } catch (error: any) {
       console.error('Error toggling playlist publish state:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update playlist",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to update playlist");
     }
   };
 
