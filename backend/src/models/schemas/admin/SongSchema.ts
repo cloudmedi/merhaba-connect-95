@@ -45,7 +45,7 @@ const SongSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Bunny ID için index
-SongSchema.index({ bunnyId: 1 }, { unique: true, sparse: true });
+// Tekrarlanan index tanımını kaldırdık, schema tanımındaki unique: true yeterli
+// SongSchema.index({ bunnyId: 1 }, { unique: true, sparse: true });
 
 export const Song = mongoose.model('Song', SongSchema);
