@@ -17,9 +17,9 @@ export const playlistService = {
   async createPlaylist(data: {
     name: string;
     description?: string;
-    artwork_url?: string;
-    is_public?: boolean;
-    is_hero?: boolean;
+    artworkUrl?: string;
+    isPublic?: boolean;
+    isHero?: boolean;
     genre?: string;
     mood?: string;
     songs?: string[];
@@ -28,15 +28,14 @@ export const playlistService = {
       console.log('Creating playlist with data:', data);
       
       // Handle artwork upload if it's a blob URL
-      let artwork_url = data.artwork_url;
-      if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
+      let artworkUrl = data.artworkUrl;
+      if (data.artworkUrl && data.artworkUrl.startsWith('blob:')) {
         console.log('Uploading artwork file...');
         const formData = new FormData();
-        const response = await fetch(data.artwork_url);
+        const response = await fetch(data.artworkUrl);
         const blob = await response.blob();
         formData.append('file', blob, 'artwork.jpg');
         
-        console.log('Sending artwork to:', '/admin/playlists/upload-artwork');
         const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -44,12 +43,12 @@ export const playlistService = {
         });
         
         console.log('Artwork upload response:', uploadResponse.data);
-        artwork_url = uploadResponse.data.url;
+        artworkUrl = uploadResponse.data.url;
       }
 
       const playlistData = {
         ...data,
-        artwork_url,
+        artworkUrl,
       };
 
       console.log('Sending playlist data:', playlistData);
@@ -66,9 +65,9 @@ export const playlistService = {
   async updatePlaylist(id: string, data: {
     name?: string;
     description?: string;
-    artwork_url?: string;
-    is_public?: boolean;
-    is_hero?: boolean;
+    artworkUrl?: string;
+    isPublic?: boolean;
+    isHero?: boolean;
     genre?: string;
     mood?: string;
     songs?: string[];
@@ -76,15 +75,14 @@ export const playlistService = {
     try {
       console.log('Updating playlist:', id, 'with data:', data);
       
-      let artwork_url = data.artwork_url;
-      if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
+      let artworkUrl = data.artworkUrl;
+      if (data.artworkUrl && data.artworkUrl.startsWith('blob:')) {
         console.log('Uploading new artwork file...');
         const formData = new FormData();
-        const response = await fetch(data.artwork_url);
+        const response = await fetch(data.artworkUrl);
         const blob = await response.blob();
         formData.append('file', blob, 'artwork.jpg');
         
-        console.log('Sending artwork to:', '/admin/playlists/upload-artwork');
         const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -92,12 +90,12 @@ export const playlistService = {
         });
         
         console.log('Artwork upload response:', uploadResponse.data);
-        artwork_url = uploadResponse.data.url;
+        artworkUrl = uploadResponse.data.url;
       }
 
       const playlistData = {
         ...data,
-        artwork_url,
+        artworkUrl,
       };
 
       console.log('Sending updated playlist data:', playlistData);

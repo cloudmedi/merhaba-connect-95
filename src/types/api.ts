@@ -2,16 +2,20 @@ export interface Playlist {
   _id: string;
   name: string;
   description?: string;
-  artwork_url?: string;
-  is_public?: boolean;
-  isHero?: boolean;
+  isPublic: boolean;
+  isHero: boolean;
+  artworkUrl?: string;
+  songs?: Array<{
+    songId: string;
+    position: number;
+  }>;
+  categories?: any[];
   genre?: any;
   mood?: any;
-  categories?: any[];
-  songs?: any[];
-  assignedManagers?: any[];
-  created_at: string;
-  updated_at: string;
+  assignedManagers?: string[];
+  playCount: number;
+  createdAt: string;
+  updatedAt: string;
   company?: {
     name: string;
   } | null;
