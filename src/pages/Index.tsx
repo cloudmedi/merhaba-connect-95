@@ -6,14 +6,12 @@ import { Music2, Building2 } from "lucide-react";
 export default function Index() {
   const navigate = useNavigate();
 
-  console.log("Index page rendering"); // Debug için log ekledim
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white flex items-center justify-center p-4">
       <div className="container max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-            Music Management System
+            Merhaba Music
           </h1>
           <p className="text-lg text-gray-600">
             Professional music management solution for businesses
