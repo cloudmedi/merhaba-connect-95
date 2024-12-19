@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { MainNav } from "@/components/landing/MainNav";
 import { NewFooter } from "@/components/landing/NewFooter";
-import { ArrowRight, BarChart3, Mail, CheckCircle2, Activity, MessageSquare } from "lucide-react";
+import { Features } from "@/components/landing/Features";
+import { SystemStats } from "@/components/dashboard/SystemStats";
+import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
+import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
+import { MessageCircle, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { TrialForm } from "@/components/landing/TrialForm";
 
@@ -36,72 +40,132 @@ export default function Landing() {
             </div>
             <div className="relative">
               <div className="absolute -z-10 w-[500px] h-[500px] bg-[#F3F0FF] rounded-full blur-3xl opacity-30 -right-20 -top-20" />
-              <img
-                src="/lovable-uploads/7146bd9c-32ac-47d5-b3cf-60bbaa083785.png"
-                alt="Dashboard Preview"
-                className="w-full rounded-2xl"
-              />
+              <HeroPlaylist />
             </div>
           </div>
         </div>
       </section>
 
       {/* Core Features */}
-      <section className="py-20 bg-[#CCFF99] rounded-[40px] mx-4 my-8">
+      <Features />
+
+      {/* Stats Section */}
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Core Features
-            </h2>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <SystemStats />
+            </div>
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold">
+                Easily customize all your business reports
+              </h2>
+              <p className="text-gray-600">
+                Get detailed insights into your business performance with customizable reports and analytics.
+              </p>
+              <Button 
+                className="bg-[#8A2BE2] hover:bg-[#7B1FA2] rounded-full"
+                onClick={() => setIsTrialFormOpen(true)}
+              >
+                Learn More
+              </Button>
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <MessageSquare className="w-6 h-6 text-[#8A2BE2]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Contact Management</h3>
-              <p className="text-gray-600">Manage all your customer interactions in one place.</p>
+        </div>
+      </section>
+
+      {/* Analytics Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-purple-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold">
+                Speed up your analysis
+              </h2>
+              <p className="text-gray-600">
+                Powerful analytics tools to help you make better decisions faster.
+              </p>
+              <Button 
+                className="bg-[#8A2BE2] hover:bg-[#7B1FA2] rounded-full"
+                onClick={() => setIsTrialFormOpen(true)}
+              >
+                Try Now
+              </Button>
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <Activity className="w-6 h-6 text-[#8A2BE2]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Sales Automation</h3>
-              <p className="text-gray-600">Automate your sales process and close more deals.</p>
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <PlaylistGrid />
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <Mail className="w-6 h-6 text-[#8A2BE2]" />
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            People are loving to using our software
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-2xl shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 space-y-4">
+                  <div className="flex text-yellow-400">
+                    {"★".repeat(5)}
+                  </div>
+                  <p className="text-gray-600">
+                    "The platform has transformed how we manage our music. The analytics and reporting features are invaluable."
+                  </p>
+                  <div>
+                    <h4 className="font-semibold">Sarah Johnson</h4>
+                    <p className="text-sm text-gray-500">Fitness Center Manager</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Email Integration</h3>
-              <p className="text-gray-600">Seamlessly integrate with your email workflow.</p>
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <CheckCircle2 className="w-6 h-6 text-[#8A2BE2]" />
+            <div className="bg-white p-6 rounded-2xl shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 space-y-4">
+                  <div className="flex text-yellow-400">
+                    {"★".repeat(5)}
+                  </div>
+                  <p className="text-gray-600">
+                    "Easy to use, great selection of music, and excellent customer support. Highly recommended!"
+                  </p>
+                  <div>
+                    <h4 className="font-semibold">Michael Chen</h4>
+                    <p className="text-sm text-gray-500">Restaurant Owner</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Task and Activity</h3>
-              <p className="text-gray-600">Track and manage all your tasks efficiently.</p>
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <BarChart3 className="w-6 h-6 text-[#8A2BE2]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Reporting and Analytics</h3>
-              <p className="text-gray-600">Get insights with powerful reporting tools.</p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-2xl">
-              <div className="w-12 h-12 bg-[#8A2BE2] bg-opacity-10 rounded-xl flex items-center justify-center mb-6">
-                <MessageSquare className="w-6 h-6 text-[#8A2BE2]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Customer Support</h3>
-              <p className="text-gray-600">Provide excellent support to your customers.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-[#8A2BE2] py-16">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h2 className="text-3xl font-bold text-white">
+              Ready to see a personalized demo?
+            </h2>
+            <div className="flex justify-center gap-4">
+              <Button 
+                variant="secondary"
+                size="lg"
+                className="rounded-full"
+                onClick={() => setIsTrialFormOpen(true)}
+              >
+                Get Started
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                className="rounded-full bg-transparent text-white border-white hover:bg-white/10"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Talk to Sales
+              </Button>
             </div>
           </div>
         </div>
