@@ -17,7 +17,8 @@ export const authService = {
     lastName: string;
     role: string;
   }): Promise<AuthResponse> {
-    const response = await api.post('/auth/register', userData);
+    // Var olan admin register endpoint'ini kullan
+    const response = await api.post('/admin/auth/register', userData);
     return response.data;
   },
 
