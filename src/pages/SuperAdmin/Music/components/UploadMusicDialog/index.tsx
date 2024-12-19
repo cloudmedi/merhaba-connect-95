@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "@/lib/axios";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
+import { AlertCircle } from "lucide-react";
 
 interface UploadingFile {
   file: File;
@@ -21,32 +22,30 @@ interface Props {
 export function UploadMusicDialog({ open, onOpenChange }: Props) {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
   const [isDragging, setIsDragging] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleFileSelect = async (files: FileList) => {
     const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 100 * 1024 * 1024; // 100MB
 
     for (const file of Array.from(files)) {
+      // Dosya tipi kontrolü
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: "Geçersiz dosya türü",
-          description: `${file.name} desteklenen bir ses dosyası değil`,
-          variant: "destructive",
+        toast.error(`${file.name} desteklenen bir ses dosyası değil`, {
+          icon: <AlertCircle className="h-5 w-5" />
         });
         continue;
       }
 
+      // Dosya boyutu kontrolü
       if (file.size > maxSize) {
-        toast({
-          title: "Dosya çok büyük",
-          description: `${file.name} 20MB limitini aşıyor`,
-          variant: "destructive",
+        toast.error(`${file.name} 100MB limitini aşıyor`, {
+          icon: <AlertCircle className="h-5 w-5" />
         });
         continue;
       }
 
+      // Yükleme durumunu başlat
       setUploadingFiles(prev => ({
         ...prev,
         [file.name]: {
@@ -57,12 +56,17 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
       }));
 
       try {
+        console.log('Uploading file:', file.name);
         const formData = new FormData();
         formData.append('file', file);
 
         const response = await axios.post('/admin/songs/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
           onUploadProgress: (progressEvent) => {
             const progress = (progressEvent.loaded / (progressEvent.total || file.size)) * 100;
+            console.log('Upload progress:', progress);
             setUploadingFiles(prev => ({
               ...prev,
               [file.name]: {
@@ -72,6 +76,8 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
             }));
           }
         });
+
+        console.log('Upload response:', response.data);
 
         setUploadingFiles(prev => ({
           ...prev,
@@ -84,27 +90,25 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
 
         await queryClient.invalidateQueries({ queryKey: ['songs'] });
 
-        toast({
-          title: "Yükleme başarılı",
-          description: `${file.name} başarıyla yüklendi`,
-        });
+        toast.success(`${file.name} başarıyla yüklendi`);
 
       } catch (error: any) {
         console.error('Upload error:', error);
+        console.error('Error response:', error.response?.data);
+        
+        const errorMessage = error.response?.data?.error || error.message || 'Dosya yüklenirken hata oluştu';
         
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
             ...prev[file.name],
             status: 'error',
-            error: error.message || 'Dosya yüklenirken hata oluştu'
+            error: errorMessage
           }
         }));
 
-        toast({
-          title: "Yükleme başarısız",
-          description: error.message || 'Dosya yüklenirken hata oluştu',
-          variant: "destructive",
+        toast.error(`${file.name}: ${errorMessage}`, {
+          icon: <AlertCircle className="h-5 w-5" />
         });
       }
     }

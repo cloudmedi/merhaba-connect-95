@@ -8,7 +8,6 @@ import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
 
-// Multer konfigürasyonu güncellendi
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
