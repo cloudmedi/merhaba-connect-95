@@ -105,19 +105,19 @@ export function AdminNav() {
       <nav
         className={cn(
           "min-h-screen bg-background border-r flex flex-col transition-all duration-300 relative",
-          isCollapsed ? "w-20" : "w-80",
+          isCollapsed ? "w-16" : "w-64", // Genişliği azalttık
           "fixed md:relative",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           "z-40"
         )}
       >
-        <div className="sticky top-0 p-6 flex flex-col h-screen">
-          <div className="flex items-center justify-between mb-8">
-            <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-              <Music2 className="h-8 w-8 text-primary" />
+        <div className="sticky top-0 p-4 flex flex-col h-screen"> {/* Padding'i azalttık */}
+          <div className="flex items-center justify-between mb-6"> {/* Margin'i azalttık */}
+            <div className={cn("flex items-center gap-2", isCollapsed && "justify-center")}> {/* Gap'i azalttık */}
+              <Music2 className="h-6 w-6 text-primary" /> {/* Icon boyutunu küçülttük */}
               {!isCollapsed && (
-                <h1 className="text-xl font-semibold tracking-tight">
-                  Merhaba Music
+                <h1 className="text-lg font-semibold tracking-tight"> {/* Font boyutunu küçülttük */}
+                  Music
                 </h1>
               )}
             </div>
@@ -127,7 +127,7 @@ export function AdminNav() {
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute right-[-12px] top-8 bg-background border rounded-full hover:bg-accent transition-colors shadow-md hidden md:flex"
+            className="absolute right-[-12px] top-6 bg-background border rounded-full hover:bg-accent transition-colors shadow-md hidden md:flex"
           >
             <ChevronLeft
               className={cn(
@@ -148,14 +148,14 @@ export function AdminNav() {
                   to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative group",
+                    "flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-all relative group", // Padding'i azalttık
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                     isCollapsed ? "justify-center" : "justify-start"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 shrink-0")} />
+                  <Icon className={cn("h-4 w-4 shrink-0")} /> {/* Icon boyutunu küçülttük */}
                   {!isCollapsed && (
                     <span>{item.title}</span>
                   )}
