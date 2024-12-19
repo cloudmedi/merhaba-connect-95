@@ -23,6 +23,7 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
   });
 
   const handleSelectSong = (song: Song) => {
+    console.log('Selecting song:', song);
     onAddSong(song);
   };
 
@@ -79,7 +80,10 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveSong(song._id)}
+                    onClick={() => {
+                      console.log('Remove button clicked for song:', song._id);
+                      handleRemoveSong(song._id);
+                    }}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <X className="w-4 h-4" />

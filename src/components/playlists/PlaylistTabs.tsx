@@ -12,9 +12,10 @@ interface PlaylistTabsProps {
     selectedCategories: any[];
   };
   setPlaylistData: (data: any) => void;
+  onRemoveSong?: (songId: string) => void;
 }
 
-export function PlaylistTabs({ playlistData, setPlaylistData }: PlaylistTabsProps) {
+export function PlaylistTabs({ playlistData, setPlaylistData, onRemoveSong }: PlaylistTabsProps) {
   return (
     <Tabs defaultValue="songs" className="w-full">
       <TabsList className="w-full">
@@ -31,10 +32,13 @@ export function PlaylistTabs({ playlistData, setPlaylistData }: PlaylistTabsProp
             ...prev,
             selectedSongs: [...prev.selectedSongs, song]
           }))}
-          onRemoveSong={(songId) => setPlaylistData((prev: any) => ({
-            ...prev,
-            selectedSongs: prev.selectedSongs.filter((s: any) => s.id !== songId)
-          }))}
+          onRemoveSong={(songId) => {
+            console.log('Removing song with ID:', songId);
+            setPlaylistData((prev: any) => ({
+              ...prev,
+              selectedSongs: prev.selectedSongs.filter((s: any) => s._id !== songId)
+            }));
+          }}
         />
       </TabsContent>
 
