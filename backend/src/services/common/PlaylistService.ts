@@ -138,7 +138,7 @@ export class PlaylistService {
       }
 
       // Perform the update with $set operator
-      const playlist = await Playlist.findByIdAndUpdate(
+      const updatedPlaylist = await Playlist.findByIdAndUpdate(
         playlistId,
         { 
           $set: { 
@@ -153,19 +153,24 @@ export class PlaylistService {
         }
       ).populate('assignedManagers');
 
-      console.log('Updated playlist:', JSON.stringify(playlist, null, 2));
+      if (!updatedPlaylist) {
+        console.error('Failed to update playlist:', playlistId);
+        throw new Error('Failed to update playlist');
+      }
+
+      console.log('Updated playlist:', JSON.stringify(updatedPlaylist, null, 2));
 
       // Double check if the update was successful
       const verifyUpdate = await Playlist.findById(playlistId);
       console.log('Verification after update:', JSON.stringify(verifyUpdate, null, 2));
 
       // Emit real-time update
-      this.wsService.emitPlaylistUpdate(playlist.id, {
+      this.wsService.emitPlaylistUpdate(updatedPlaylist.id, {
         action: 'updated',
-        playlist
+        playlist: updatedPlaylist
       });
 
-      return playlist;
+      return updatedPlaylist;
     } catch (error) {
       console.error('Error in assignManagers:', error);
       throw error;
