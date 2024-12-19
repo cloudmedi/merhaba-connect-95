@@ -39,8 +39,8 @@ export const playlistService = {
         console.log('Sending artwork to:', '/admin/playlists/upload-artwork');
         const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+            'Content-Type': 'multipart/form-data'
+          }
         });
         
         console.log('Artwork upload response:', uploadResponse.data);
@@ -87,8 +87,8 @@ export const playlistService = {
         console.log('Sending artwork to:', '/admin/playlists/upload-artwork');
         const uploadResponse = await axiosInstance.post('/admin/playlists/upload-artwork', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+            'Content-Type': 'multipart/form-data'
+          }
         });
         
         console.log('Artwork upload response:', uploadResponse.data);
