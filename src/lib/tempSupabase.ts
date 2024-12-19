@@ -1,11 +1,9 @@
 import api from './api';
 
-// Geçici uyumluluk katmanı - Supabase'den Node.js'e geçiş için
+// Temporary compatibility layer while we migrate from Supabase to Node.js backend
 export const supabase = {
   auth: {
     getUser: async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return { data: { user: null }, error: null };
       try {
         const response = await api.get('/auth/verify');
         return { data: { user: response.data.user }, error: null };
