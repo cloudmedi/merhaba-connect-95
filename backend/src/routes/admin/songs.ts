@@ -7,7 +7,6 @@ import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
-import { RequestHandler } from 'express';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -27,7 +26,7 @@ const router = express.Router();
 const metadataService = new MetadataService();
 
 // Get all songs
-router.get('/', authMiddleware as RequestHandler, async (req: AuthRequest, res: Response) => {
+router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find();
     res.json(songs);
@@ -40,9 +39,9 @@ router.get('/', authMiddleware as RequestHandler, async (req: AuthRequest, res: 
 // Upload a new song
 router.post(
   '/upload',
-  authMiddleware as RequestHandler,
-  adminMiddleware as RequestHandler,
-  upload.single('file') as RequestHandler,
+  authMiddleware,
+  adminMiddleware,
+  upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
     const uploadService = new ChunkUploadService((progress) => {
       logger.info(`Upload progress: ${progress}%`);
@@ -85,7 +84,7 @@ router.post(
 });
 
 // Delete a song
-router.delete('/:id', authMiddleware as RequestHandler, adminMiddleware as RequestHandler, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
