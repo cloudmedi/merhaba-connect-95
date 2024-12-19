@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import axios from '@/lib/axios';
 import { toast } from 'sonner';
 
 export function usePlaylistAssignment(playlistId: string) {
@@ -12,36 +12,11 @@ export function usePlaylistAssignment(playlistId: string) {
         return;
       }
 
-      // Önce mevcut atamaları temizle
-      const { error: deleteError } = await supabase
-        .from('playlist_assignments')
-        .delete()
-        .eq('playlist_id', playlistId);
-
-      if (deleteError) throw deleteError;
-
-      // Yeni atamaları ekle
-      const assignments = managerIds.map(userId => ({
-        user_id: userId,
-        playlist_id: playlistId,
-        scheduled_at: scheduledAt?.toISOString() || new Date().toISOString(),
-        expires_at: expiresAt?.toISOString() || null,
-        notification_sent: false
-      }));
-
-      const { error: insertError } = await supabase
-        .from('playlist_assignments')
-        .insert(assignments);
-
-      if (insertError) throw insertError;
-
-      // Playlist'in assigned_to alanını güncelle
-      const { error: updateError } = await supabase
-        .from('playlists')
-        .update({ assigned_to: managerIds })
-        .eq('id', playlistId);
-
-      if (updateError) throw updateError;
+      await axios.post(`/admin/playlists/${playlistId}/assign-managers`, {
+        managerIds,
+        scheduledAt: scheduledAt?.toISOString(),
+        expiresAt: expiresAt?.toISOString()
+      });
 
       toast.success(`Playlist assigned to ${managerIds.length} managers`);
       setIsAssignDialogOpen(false);

@@ -38,10 +38,6 @@ export function usePlaylistMutations() {
           }
         });
         
-        if (uploadResponse.status !== 200) {
-          throw new Error('Failed to upload artwork');
-        }
-        
         artwork_url = uploadResponse.data.url;
       }
 
@@ -54,7 +50,8 @@ export function usePlaylistMutations() {
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
         is_hero: playlistData.isHero || false,
-        songs: playlistData.selectedSongs.map((song: any) => song._id)
+        songs: playlistData.selectedSongs.map((song: any) => song._id),
+        categories: playlistData.selectedCategories.map((cat: any) => cat.id)
       };
 
       let response;

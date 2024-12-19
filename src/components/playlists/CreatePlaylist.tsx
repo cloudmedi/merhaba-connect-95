@@ -7,9 +7,9 @@ import { PlaylistHeader } from "./PlaylistHeader";
 import { PlaylistTabs } from "./PlaylistTabs";
 import { PlaylistSettings } from "./PlaylistSettings";
 import { AssignManagersDialog } from "./AssignManagersDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
 import { usePlaylistAssignment } from "./hooks/usePlaylistAssignment";
+import axios from "@/lib/axios";
 import { toast } from "sonner";
 
 export function CreatePlaylist() {
@@ -53,30 +53,9 @@ export function CreatePlaylist() {
   const loadExistingPlaylistData = async () => {
     try {
       const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
-        supabase
-          .from('playlist_songs')
-          .select('songs(*)')
-          .eq('playlist_id', existingPlaylist.id)
-          .order('position'),
-        
-        supabase
-          .from('playlist_categories')
-          .select('categories(*)')
-          .eq('playlist_id', existingPlaylist.id),
-        
-        supabase
-          .from('playlist_assignments')
-          .select(`
-            user_id,
-            profiles:user_id (
-              id,
-              first_name,
-              last_name,
-              email,
-              avatar_url
-            )
-          `)
-          .eq('playlist_id', existingPlaylist.id)
+        axios.get(`/admin/playlists/${existingPlaylist.id}/songs`),
+        axios.get(`/admin/playlists/${existingPlaylist.id}/categories`),
+        axios.get(`/admin/playlists/${existingPlaylist.id}/managers`)
       ]);
 
       setPlaylistData({
@@ -84,14 +63,14 @@ export function CreatePlaylist() {
         description: existingPlaylist.description || "",
         artwork: null,
         artwork_url: existingPlaylist.artwork_url || "",
-        selectedSongs: playlistSongs.data?.map(ps => ps.songs) || [],
+        selectedSongs: playlistSongs.data || [],
         selectedGenres: existingPlaylist.genre_id ? [{ id: existingPlaylist.genre_id }] : [],
-        selectedCategories: playlistCategories.data?.map(pc => pc.categories) || [],
+        selectedCategories: playlistCategories.data || [],
         selectedMoods: existingPlaylist.mood_id ? [{ id: existingPlaylist.mood_id }] : [],
         isCatalog: existingPlaylist.is_catalog || false,
         isPublic: existingPlaylist.is_public || false,
         isHero: existingPlaylist.is_hero || false,
-        assignedManagers: assignedManagers.data?.map(am => am.profiles) || []
+        assignedManagers: assignedManagers.data || []
       });
     } catch (error) {
       console.error('Error fetching playlist details:', error);
