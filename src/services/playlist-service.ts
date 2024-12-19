@@ -14,18 +14,7 @@ export const playlistService = {
     }
   },
 
-  async getPlaylistById(id: string) {
-    try {
-      const response = await axiosInstance.get<Playlist>(`/admin/playlists/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching playlist:', error);
-      toast.error('Failed to load playlist details');
-      throw error;
-    }
-  },
-
-  async createPlaylist(input: {
+  async createPlaylist(data: {
     name: string;
     description?: string;
     artwork_url?: string;
@@ -36,7 +25,7 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      const response = await axiosInstance.post<Playlist>('/admin/playlists', input);
+      const response = await axiosInstance.post<Playlist>('/admin/playlists', data);
       toast.success('Playlist created successfully');
       return response.data;
     } catch (error) {
@@ -46,7 +35,7 @@ export const playlistService = {
     }
   },
 
-  async updatePlaylist(id: string, input: {
+  async updatePlaylist(id: string, data: {
     name?: string;
     description?: string;
     artwork_url?: string;
@@ -57,7 +46,7 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, input);
+      const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, data);
       toast.success('Playlist updated successfully');
       return response.data;
     } catch (error) {

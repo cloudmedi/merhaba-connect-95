@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { playlistService } from "@/services/playlist-service";
+import { toast } from "sonner";
 
 interface SavePlaylistParams {
   playlistData: any;
@@ -24,30 +25,23 @@ export function usePlaylistMutations() {
         throw new Error("Please enter a playlist title");
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
       let artwork_url = playlistData.artwork_url;
+
+      // Handle file upload if there's new artwork
       if (playlistData.artwork) {
-        const reader = new FileReader();
-        const fileBase64Promise = new Promise((resolve) => {
-          reader.onload = () => {
-            const base64 = reader.result?.toString().split(',')[1];
-            resolve(base64);
-          };
+        const formData = new FormData();
+        formData.append('file', playlistData.artwork);
+        
+        const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/upload-artwork`, {
+          method: 'POST',
+          body: formData
         });
-        reader.readAsDataURL(playlistData.artwork);
-        const fileBase64 = await fileBase64Promise;
-
-        const { data: uploadData, error: uploadError } = await supabase.functions.invoke('upload-artwork', {
-          body: {
-            fileData: fileBase64,
-            fileName: `${crypto.randomUUID()}.${playlistData.artwork.name.split('.').pop()}`,
-            contentType: playlistData.artwork.type
-          }
-        });
-
-        if (uploadError) throw uploadError;
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload artwork');
+        }
+        
+        const uploadData = await uploadResponse.json();
         artwork_url = uploadData.url;
       }
 
@@ -59,91 +53,15 @@ export function usePlaylistMutations() {
         mood_id: playlistData.selectedMoods[0]?.id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
-        is_hero: playlistData.isHero || false
+        is_hero: playlistData.isHero || false,
+        songs: playlistData.selectedSongs.map((song: any) => song.id)
       };
 
       let playlist;
       if (isEditMode && existingPlaylist) {
-        // Update playlist
-        const { data, error } = await supabase
-          .from('playlists')
-          .update(playlistPayload)
-          .eq('id', existingPlaylist.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        playlist = data;
-
-        // Update categories with UPSERT
-        if (playlistData.selectedCategories.length > 0) {
-          const { error: categoryError } = await supabase
-            .from('playlist_categories')
-            .upsert(
-              playlistData.selectedCategories.map((category: any) => ({
-                playlist_id: playlist.id,
-                category_id: category.id
-              })),
-              { onConflict: 'playlist_id,category_id' }
-            );
-
-          if (categoryError) throw categoryError;
-        }
-
-        // Update songs with UPSERT
-        if (playlistData.selectedSongs.length > 0) {
-          const { error: songError } = await supabase
-            .from('playlist_songs')
-            .upsert(
-              playlistData.selectedSongs.map((song: any, index: number) => ({
-                playlist_id: playlist.id,
-                song_id: song.id,
-                position: index
-              })),
-              { onConflict: 'playlist_id,song_id' }
-            );
-
-          if (songError) throw songError;
-        }
+        playlist = await playlistService.updatePlaylist(existingPlaylist.id, playlistPayload);
       } else {
-        // Create new playlist
-        const { data, error } = await supabase
-          .from('playlists')
-          .insert([playlistPayload])
-          .select()
-          .single();
-
-        if (error) throw error;
-        playlist = data;
-
-        // Handle playlist categories
-        if (playlistData.selectedCategories.length > 0) {
-          const categoryAssignments = playlistData.selectedCategories.map((category: any) => ({
-            playlist_id: playlist.id,
-            category_id: category.id
-          }));
-
-          const { error: categoryError } = await supabase
-            .from('playlist_categories')
-            .insert(categoryAssignments);
-
-          if (categoryError) throw categoryError;
-        }
-
-        // Handle playlist songs
-        if (playlistData.selectedSongs.length > 0) {
-          const songAssignments = playlistData.selectedSongs.map((song: any, index: number) => ({
-            playlist_id: playlist.id,
-            song_id: song.id,
-            position: index
-          }));
-
-          const { error: songError } = await supabase
-            .from('playlist_songs')
-            .insert(songAssignments);
-
-          if (songError) throw songError;
-        }
+        playlist = await playlistService.createPlaylist(playlistPayload);
       }
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
