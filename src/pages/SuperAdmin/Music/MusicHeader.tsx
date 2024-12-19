@@ -1,71 +1,65 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import { UploadMusicDialog } from "./components/UploadMusicDialog";
 import { toast } from "sonner";
+import { API_URL } from "@/services/api";
 
 export function MusicHeader() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
-    const maxSize = 20 * 1024 * 1024; // 20MB
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    const validFiles = files.filter(file => {
-      if (!allowedTypes.includes(file.type)) {
-        toast.error(`${file.name} desteklenen bir ses dosyası değil`);
-        return false;
+    setIsUploading(true);
+    
+    for (const file of Array.from(files)) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_URL}/admin/songs/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        toast.success(`${file.name} başarıyla yüklendi`);
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        toast.error(`${file.name} yüklenirken hata oluştu: ${error.message}`);
       }
-      if (file.size > maxSize) {
-        toast.error(`${file.name} 20MB limitini aşıyor`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length > 0) {
-      setSelectedFiles(validFiles);
-      setIsDialogOpen(true);
     }
-  };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+    setIsUploading(false);
+    event.target.value = ''; // Reset input
   };
 
   return (
     <div className="flex gap-4">
       <input
-        ref={fileInputRef}
         type="file"
+        id="music-upload"
         accept="audio/*"
         multiple
         className="hidden"
-        onChange={handleFileSelect}
+        onChange={handleFileChange}
       />
       <Button
-        onClick={handleUploadClick}
+        onClick={() => document.getElementById('music-upload')?.click()}
         className="bg-[#FFD700] text-black hover:bg-[#E6C200]"
+        disabled={isUploading}
       >
         <Upload className="w-4 h-4 mr-2" />
-        Müzik Yükle
+        {isUploading ? 'Yükleniyor...' : 'Müzik Yükle'}
       </Button>
-
-      <UploadMusicDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        selectedFiles={selectedFiles}
-        onClose={() => {
-          setIsDialogOpen(false);
-          setSelectedFiles([]);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }}
-      />
     </div>
   );
 }

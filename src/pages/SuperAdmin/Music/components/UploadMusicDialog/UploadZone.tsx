@@ -48,10 +48,10 @@ export function UploadZone({
         onChange={(e) => e.target.files && onFileSelect(e.target.files)}
       />
       <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-      <div className="text-lg font-medium mb-2">Ses dosyalarını sürükle ve bırak</div>
-      <div className="text-sm text-gray-500 mb-4">veya dosya seçmek için tıkla</div>
+      <div className="text-lg font-medium mb-2">Drag and drop your audio files</div>
+      <div className="text-sm text-gray-500 mb-4">or click to browse</div>
       <div className="text-xs text-gray-400">
-        Desteklenen formatlar: MP3, WAV, OGG (maksimum 20MB)
+        Supported formats: MP3, WAV, OGG (up to 20MB)
       </div>
     </div>
   );
