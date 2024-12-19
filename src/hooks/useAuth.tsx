@@ -1,78 +1,113 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import api from '@/lib/api';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar_url?: string;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService } from '@/services/auth';
+import { User } from '@/types/auth';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
   loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: { email: string; password: string; firstName: string; lastName: string; role: string }) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
+    return authService.getUser();
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await api.get('/auth/user');
-        setUser(response.data);
+    const initializeAuth = async () => {
+      try {
+        const token = authService.getToken();
+        
+        if (token) {
+          const { isValid, user: verifiedUser } = await authService.verifyToken();
+          
+          if (isValid && verifiedUser) {
+            setUser(verifiedUser);
+          } else {
+            await authService.logout();
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        await authService.logout();
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    initializeAuth();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
-    } catch (error) {
-      console.error('Login failed:', error);
+      const response = await authService.login({ email, password });
+      setUser(response.user);
+      toast.success('Giriş başarılı');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.response?.data?.message || 'Giriş başarısız');
+      throw error;
+    }
+  };
+
+  const register = async (userData: { 
+    email: string; 
+    password: string; 
+    firstName: string; 
+    lastName: string;
+    role: string;
+  }) => {
+    try {
+      await authService.register(userData);
+      toast.success('Kayıt başarılı');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(error.response?.data?.message || 'Kayıt başarısız');
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
-      localStorage.removeItem('token');
+      await authService.logout();
       setUser(null);
-    } catch (error) {
-      console.error('Logout failed:', error);
+      toast.success('Çıkış yapıldı');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast.error('Çıkış yapılırken hata oluştu');
       throw error;
     }
   };
 
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
