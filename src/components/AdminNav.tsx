@@ -56,6 +56,20 @@ export function AdminNav() {
     }
   };
 
+  const getInitials = () => {
+    if (!user) return "?";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) {
+      return user.firstName[0].toUpperCase();
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return "?";
+  };
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -134,7 +148,7 @@ export function AdminNav() {
                 <Button variant="ghost" className="w-full flex items-center gap-2 px-2 py-1.5">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-[#9b87f5] text-white">
-                      {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
+                      {getInitials()}
                     </AvatarFallback>
                   </Avatar>
                   {!isCollapsed && (
