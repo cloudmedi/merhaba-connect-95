@@ -1,25 +1,28 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import multer from 'multer';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import path from 'path';
 
+// Extend Request type to include user and file properties
 interface AuthRequest extends Request {
   user?: {
     id: string;
     role: string;
   };
+  io?: any;
+  file?: Express.Multer.File;
 }
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Auth middleware'ini tüm route'lara uygula
+// Apply auth middleware to all routes
 router.use(authMiddleware);
 
 // Add artwork upload endpoint using Bunny CDN
-router.post('/upload-artwork', upload.single('file'), async (req: AuthRequest, res) => {
+router.post('/upload-artwork', upload.single('file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -41,7 +44,7 @@ router.post('/upload-artwork', upload.single('file'), async (req: AuthRequest, r
 });
 
 // Playlist CRUD
-router.post('/', async (req: AuthRequest, res) => {
+router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({ error: 'User ID is required' });
@@ -69,7 +72,7 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
-router.get('/', async (req: AuthRequest, res) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlists = await playlistService.getAllPlaylists();
@@ -79,7 +82,7 @@ router.get('/', async (req: AuthRequest, res) => {
   }
 });
 
-router.put('/:id', async (req: AuthRequest, res) => {
+router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.updatePlaylist(req.params.id, req.body);
@@ -89,7 +92,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
   }
 });
 
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const playlistService = new PlaylistService(req.io);
     await playlistService.deletePlaylist(req.params.id);
