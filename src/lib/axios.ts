@@ -9,7 +9,6 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor'ı ekle
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -19,6 +18,12 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // URL'deki tekrarlanan api/ kısmını temizle
+    if (config.url?.startsWith('api/')) {
+      config.url = config.url.substring(4);
+    }
+    
+    console.log('Axios interceptor - Final URL:', config.url);
     console.log('Axios interceptor - Final headers:', config.headers);
     return config;
   },
@@ -28,7 +33,6 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor'ı ekle
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
