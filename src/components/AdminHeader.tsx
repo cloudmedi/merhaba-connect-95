@@ -1,82 +1,128 @@
-import { LogOut, Settings, User } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { 
+  Bell, 
+  Search, 
+  Settings, 
+  LogOut, 
+  User,
+  HelpCircle,
+  MessageSquare,
+  Menu
+} from "lucide-react";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 export function AdminHeader() {
-  const { user, logout } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifications] = useState([
+    { id: 1, message: "Yeni kullanıcı kaydı", time: "5 dk önce" },
+    { id: 2, message: "Sistem güncellemesi", time: "1 saat önce" },
+  ]);
+  
+  const navigate = useNavigate();
 
-  const getInitials = () => {
-    if (!user) return "?";
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user.firstName) {
-      return user.firstName[0].toUpperCase();
-    }
-    if (user.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "?";
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    // Implement logout logic
+    navigate("/login");
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
-      <div className="px-4 md:px-8 h-16 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Welcome back</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Welcome back</p>
-            <p className="text-sm font-medium text-gray-900">{user?.firstName || 'Admin'}</p>
+    <header className="border-b bg-white">
+      <div className="flex h-16 items-center px-4 gap-4">
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Search Bar */}
+        <div className="flex-1 md:flex-initial md:w-96">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Ara..."
+              className="pl-8 bg-gray-50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
+        </div>
+
+        <div className="ml-auto flex items-center gap-4">
+          {/* Quick Access Buttons */}
+          <Button variant="ghost" size="icon" onClick={() => navigate("/help")}>
+            <HelpCircle className="h-5 w-5 text-gray-500" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" onClick={() => navigate("/messages")}>
+            <MessageSquare className="h-5 w-5 text-gray-500" />
+          </Button>
+
+          {/* Notifications */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="outline-none">
-              <Avatar className="h-8 w-8 cursor-pointer transition-opacity hover:opacity-90">
-                <AvatarFallback className="bg-[#6E59A5] text-white">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5 text-gray-500" />
+                {notifications.length > 0 && (
+                  <Badge 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-red-500"
+                  >
+                    {notifications.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel>Bildirimler</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notifications.map((notification) => (
+                <DropdownMenuItem key={notification.id} className="flex flex-col items-start p-3">
+                  <span className="font-medium">{notification.message}</span>
+                  <span className="text-sm text-gray-500">{notification.time}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Profile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Avatar>
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback>AD</AvatarFallback>
+                </Avatar>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/super-admin/settings/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
+              <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                Profil
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/super-admin/settings" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Ayarlar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
+                Çıkış Yap
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
