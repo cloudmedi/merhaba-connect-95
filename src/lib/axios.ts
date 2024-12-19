@@ -12,23 +12,22 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    console.log('Axios interceptor - Token:', token ? 'Token exists' : 'No token');
+    console.log('Request URL:', config.url);
+    console.log('Full URL:', API_URL + config.url);
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     
     // URL'deki tekrarlanan api/ kısmını temizle
-    if (config.url?.startsWith('api/')) {
-      config.url = config.url.substring(4);
+    if (config.url?.startsWith('/api/')) {
+      config.url = config.url.substring(4); // Remove leading /api
     }
     
-    console.log('Axios interceptor - Final URL:', config.url);
-    console.log('Axios interceptor - Final headers:', config.headers);
     return config;
   },
   (error) => {
-    console.error('Axios interceptor - Request error:', error);
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -38,8 +37,11 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.error('Response error:', error);
+    console.error('Error config:', error.config);
+    console.error('Error response:', error.response);
+    
     if (error.response?.status === 401) {
-      console.error('Unauthorized access - clearing token');
       localStorage.removeItem('token');
     }
     return Promise.reject(error);

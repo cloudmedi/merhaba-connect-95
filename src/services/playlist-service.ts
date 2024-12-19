@@ -5,7 +5,9 @@ import type { Playlist } from '../types/api';
 export const playlistService = {
   async getPlaylists() {
     try {
+      console.log('Fetching playlists...');
       const response = await axiosInstance.get<Playlist[]>('/admin/playlists');
+      console.log('Playlists response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching playlists:', error);
@@ -72,7 +74,8 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      console.log('Updating playlist:', id, 'with data:', data);
+      console.log('Updating playlist:', id);
+      console.log('Update data:', data);
       
       let artworkUrl = data.artworkUrl;
       if (data.artworkUrl && data.artworkUrl.startsWith('blob:')) {
@@ -97,8 +100,12 @@ export const playlistService = {
         artworkUrl,
       };
 
-      console.log('Sending updated playlist data:', playlistData);
+      console.log('Sending update request to:', `/admin/playlists/${id}`);
+      console.log('Update payload:', playlistData);
+      
       const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, playlistData);
+      console.log('Update response:', response.data);
+      
       toast.success('Playlist updated successfully');
       return response.data;
     } catch (error) {
