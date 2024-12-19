@@ -10,13 +10,17 @@ const TIMEOUT = 30000; // 30 seconds timeout
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
   private isUploading: boolean = false;
+  private uploadPromise: Promise<any> | null = null;
 
   constructor(private onProgress?: (progress: number) => void) {}
 
   public cancel() {
-    if (this.abortController) {
-      this.abortController.abort();
+    if (this.isUploading) {
       this.isUploading = false;
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+      logger.info('Upload cancelled');
     }
   }
 
@@ -52,6 +56,7 @@ export class ChunkUploadService {
       return true;
     } catch (error) {
       if (retryCount < MAX_RETRIES && this.isUploading) {
+        logger.warn(`Retrying chunk upload (attempt ${retryCount + 1})`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return this.uploadChunk(url, chunk, start, total, retryCount + 1);
       }
@@ -64,12 +69,21 @@ export class ChunkUploadService {
       throw new Error('Another upload is in progress');
     }
 
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Invalid buffer provided');
+    }
+
+    if (!fileName) {
+      throw new Error('Invalid filename provided');
+    }
+
     this.isUploading = true;
     this.abortController = new AbortController();
-    const bunnyId = `music/${fileName}`;
-    const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
-    
+
     try {
+      const bunnyId = `music/${fileName}`;
+      const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
+      
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, i + CHUNK_SIZE));
@@ -97,6 +111,7 @@ export class ChunkUploadService {
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
+      logger.info('File upload completed successfully');
       return cdnUrl;
     } catch (error) {
       logger.error('File upload error:', error);
@@ -104,6 +119,7 @@ export class ChunkUploadService {
     } finally {
       this.isUploading = false;
       this.abortController = null;
+      this.uploadPromise = null;
     }
   }
 }
