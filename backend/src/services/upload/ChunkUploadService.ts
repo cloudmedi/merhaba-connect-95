@@ -57,6 +57,8 @@ export class ChunkUploadService {
       this.updateProgress();
       return true;
     } catch (error) {
+      logger.error(`Chunk upload error (attempt ${retryCount + 1}):`, error);
+      
       if (retryCount < MAX_RETRIES && this.isUploading) {
         const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -72,6 +74,7 @@ export class ChunkUploadService {
       const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
       this.onProgress?.(progress);
       this.lastProgressUpdate = now;
+      logger.debug(`Upload progress: ${progress}%`);
     }
   }
 
@@ -90,8 +93,7 @@ export class ChunkUploadService {
     this.lastProgressUpdate = 0;
 
     try {
-      const timestamp = Date.now();
-      const uniqueFileName = `music/${timestamp}-${fileName}`;
+      const uniqueFileName = `music/${fileName}`;
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${uniqueFileName}`;
       
       const chunks: Buffer[] = [];
@@ -100,6 +102,7 @@ export class ChunkUploadService {
       }
 
       this.totalChunks = chunks.length;
+      logger.info(`Starting upload of ${fileName} in ${chunks.length} chunks`);
       
       // Paralel yükleme (3 chunk aynı anda)
       for (let i = 0; i < chunks.length; i += MAX_CONCURRENT_UPLOADS) {
@@ -113,6 +116,7 @@ export class ChunkUploadService {
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
+      logger.info(`Upload completed: ${cdnUrl}`);
       
       // Son progress güncellemesi
       this.onProgress?.(100);

@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import axios from "@/lib/axios";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
-import { AlertCircle } from "lucide-react";
 
 interface UploadingFile {
   file: File;
@@ -65,7 +64,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
               ...prev,
               [file.name]: {
                 ...prev[file.name],
-                progress: Math.min(progress, 99)
+                progress: Math.min(progress, 99) // Backend işlemi bitene kadar 100% gösterme
               }
             }));
           }
