@@ -47,13 +47,13 @@ export function usePlaylistMutations() {
         name: playlistData.title,
         description: playlistData.description,
         artwork_url,
-        genre_id: playlistData.selectedGenres[0]?.id || null,
-        mood_id: playlistData.selectedMoods[0]?.id || null,
+        genre_id: playlistData.selectedGenres[0]?._id || null,
+        mood_id: playlistData.selectedMoods[0]?._id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
         is_hero: playlistData.isHero || false,
         songs: playlistData.selectedSongs.map((song: any) => song._id),
-        categories: playlistData.selectedCategories.map((cat: any) => cat.id)
+        categories: playlistData.selectedCategories.map((cat: any) => cat._id)
       };
 
       console.log('Saving playlist with payload:', playlistPayload);
