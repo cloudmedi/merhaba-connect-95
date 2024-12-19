@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import { bunnyConfig } from '../../config/bunny';
 import { logger } from '../../utils/logger';
 
-const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
@@ -34,7 +34,11 @@ export class ChunkUploadService {
         signal: this.abortController?.signal
       });
 
-      return response.ok;
+      if (!response.ok) {
+        throw new Error(`Chunk upload failed: ${response.statusText}`);
+      }
+
+      return true;
     } catch (error) {
       logger.error('Chunk upload error:', error);
       throw error;
@@ -54,7 +58,11 @@ export class ChunkUploadService {
 
       for (let i = 0; i < chunks.length; i++) {
         const start = i * CHUNK_SIZE;
-        await this.uploadChunk(bunnyUrl, chunks[i], start, buffer.length);
+        const success = await this.uploadChunk(bunnyUrl, chunks[i], start, buffer.length);
+        
+        if (!success) {
+          throw new Error('Chunk upload failed');
+        }
         
         if (this.onProgress) {
           const progress = ((i + 1) / chunks.length) * 100;
@@ -62,7 +70,7 @@ export class ChunkUploadService {
         }
       }
 
-      return `https://cloud-media.b-cdn.net/${bunnyId}`;
+      return `https://${bunnyConfig.baseUrl}/${bunnyId}`;
     } catch (error) {
       logger.error('File upload error:', error);
       throw error;

@@ -11,7 +11,7 @@ import { MetadataService } from '../../services/upload/MetadataService';
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 100 * 1024 * 1024 // 100MB limit
   }
 });
 
@@ -49,7 +49,7 @@ router.post(
 
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: 'Dosya yüklenmedi' });
       }
 
       const file = req.file;
@@ -67,7 +67,7 @@ router.post(
         artist: metadata?.artist || null,
         album: metadata?.album || null,
         genre: metadata?.genre ? [metadata.genre] : [],
-        duration: null,
+        duration: metadata?.duration || null,
         fileUrl: fileUrl,
         bunnyId: fileName,
         artworkUrl: null,
@@ -77,9 +77,12 @@ router.post(
       await song.save();
       res.status(201).json(song);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error uploading song:', error);
-      res.status(500).json({ error: 'Failed to upload song' });
+      res.status(400).json({ 
+        error: 'Dosya yükleme hatası',
+        details: error.message 
+      });
     }
 });
 
@@ -88,7 +91,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
-      return res.status(404).json({ error: 'Song not found' });
+      return res.status(404).json({ error: 'Şarkı bulunamadı' });
     }
 
     if (song.bunnyId) {
@@ -107,11 +110,11 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     }
 
     await Song.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Song deleted successfully' });
+    res.json({ message: 'Şarkı başarıyla silindi' });
 
   } catch (error) {
     logger.error('Error deleting song:', error);
-    res.status(500).json({ error: 'Failed to delete song' });
+    res.status(500).json({ error: 'Şarkı silinirken hata oluştu' });
   }
 });
 
