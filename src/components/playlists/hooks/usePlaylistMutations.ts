@@ -21,21 +21,21 @@ export function usePlaylistMutations() {
     onError
   }: SavePlaylistParams) => {
     try {
-      if (!playlistData.title) {
-        throw new Error("Please enter a playlist title");
+      if (!playlistData.name) {
+        throw new Error("Please enter a playlist name");
       }
 
       console.log('Initial playlist data:', playlistData);
 
-      let artworkUrl = playlistData.artwork_url;
+      let artworkUrl = playlistData.artworkUrl;
 
       // Handle file upload if there's new artwork
       if (playlistData.artwork) {
-        console.log('Uploading artwork to:', '/admin/playlists/upload-artwork');
+        console.log('Uploading artwork to:', '/api/admin/playlists/upload-artwork');
         const formData = new FormData();
         formData.append('file', playlistData.artwork);
         
-        const uploadResponse = await axios.post('/admin/playlists/upload-artwork', formData, {
+        const uploadResponse = await axios.post('/api/admin/playlists/upload-artwork', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -45,13 +45,13 @@ export function usePlaylistMutations() {
         artworkUrl = uploadResponse.data.url;
       }
 
-      // Prepare payload according to MongoDB schema
+      // Prepare payload for MongoDB
       const playlistPayload = {
-        name: playlistData.title,
+        name: playlistData.name,
         description: playlistData.description,
-        artworkUrl: artworkUrl,
-        isPublic: playlistData.isPublic || false,
-        isHero: playlistData.isHero || false,
+        artworkUrl,
+        isPublic: playlistData.isPublic,
+        isHero: playlistData.isHero,
         genre: playlistData.selectedGenres?.[0]?._id || null,
         mood: playlistData.selectedMoods?.[0]?._id || null,
         categories: playlistData.selectedCategories
@@ -70,16 +70,15 @@ export function usePlaylistMutations() {
       
       let response;
       if (isEditMode && existingPlaylist) {
-        response = await axios.put(`/admin/playlists/${existingPlaylist.id}`, playlistPayload);
+        response = await axios.put(`/api/admin/playlists/${existingPlaylist._id}`, playlistPayload);
       } else {
-        response = await axios.post('/admin/playlists', playlistPayload);
+        response = await axios.post('/api/admin/playlists', playlistPayload);
       }
 
       console.log('Server response:', response.data);
 
       await queryClient.invalidateQueries({ queryKey: ['playlists'] });
       
-      toast.success(`Playlist ${isEditMode ? 'updated' : 'created'} successfully`);
       onSuccess?.();
       
     } catch (error: any) {
@@ -89,7 +88,6 @@ export function usePlaylistMutations() {
         response: error.response?.data
       });
       
-      toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'create'} playlist`);
       onError?.(error);
       throw error;
     }

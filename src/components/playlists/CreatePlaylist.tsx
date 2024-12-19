@@ -89,16 +89,17 @@ export function CreatePlaylist() {
 
   return (
     <div className="flex gap-6 p-6 bg-white rounded-lg">
-      <PlaylistForm playlistData={playlistData} setPlaylistData={setPlaylistData} />
+      <PlaylistForm 
+        playlistData={playlistData} 
+        setPlaylistData={setPlaylistData}
+        isEditMode={isEditMode}
+      />
       
       <div className="flex-1 space-y-6">
         <PlaylistHeader
           onCancel={() => navigate("/super-admin/playlists")}
           onCreate={() => handleSavePlaylist({
-            playlistData: {
-              ...playlistData,
-              artworkUrl: playlistData.artworkUrl
-            },
+            playlistData,
             isEditMode,
             existingPlaylist,
             onSuccess: () => {

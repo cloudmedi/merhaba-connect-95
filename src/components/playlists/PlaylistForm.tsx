@@ -3,21 +3,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 interface PlaylistFormProps {
   playlistData: {
-    _id?: string;  // id yerine _id kullanıyoruz
-    title: string;
+    name: string;
     description: string;
     artwork: File | null;
-    artwork_url: string;
+    artworkUrl: string;
   };
   setPlaylistData: (data: any) => void;
+  isEditMode?: boolean;
 }
 
-export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProps) {
-  const [previewUrl, setPreviewUrl] = useState<string>(playlistData.artwork_url || "");
+export function PlaylistForm({ playlistData, setPlaylistData, isEditMode }: PlaylistFormProps) {
+  const [previewUrl, setPreviewUrl] = useState<string>(playlistData.artworkUrl || "");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,15 +28,20 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
     }
   };
 
+  const handleRemoveArtwork = () => {
+    setPlaylistData({ ...playlistData, artwork: null, artworkUrl: "" });
+    setPreviewUrl("");
+  };
+
   return (
     <div className="w-96 space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="name">Name</Label>
         <Input
-          id="title"
-          value={playlistData.title}
-          onChange={(e) => setPlaylistData({ ...playlistData, title: e.target.value })}
-          placeholder="Enter playlist title"
+          id="name"
+          value={playlistData.name}
+          onChange={(e) => setPlaylistData({ ...playlistData, name: e.target.value })}
+          placeholder="Enter playlist name"
         />
       </div>
 
@@ -52,29 +57,39 @@ export function PlaylistForm({ playlistData, setPlaylistData }: PlaylistFormProp
 
       <div className="space-y-2">
         <Label>Artwork</Label>
-        <div className="flex items-center gap-4">
-          {previewUrl && (
-            <img
-              src={previewUrl}
-              alt="Playlist artwork"
-              className="w-24 h-24 object-cover rounded"
-            />
+        <div className="flex flex-col gap-4">
+          {(previewUrl || playlistData.artworkUrl) && (
+            <div className="relative w-full aspect-square">
+              <img
+                src={previewUrl || playlistData.artworkUrl}
+                alt="Playlist artwork"
+                className="w-full h-full object-cover rounded-lg"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2"
+                onClick={handleRemoveArtwork}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           )}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-24 h-24"
-            onClick={() => document.getElementById('artwork-upload')?.click()}
-          >
-            <Upload className="w-6 h-6" />
-          </Button>
-          <input
-            id="artwork-upload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+          <div className="flex items-center justify-center w-full">
+            <label className="w-full cursor-pointer">
+              <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg hover:bg-gray-50 transition-colors">
+                <Upload className="w-8 h-8 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-500">Click to upload artwork</p>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </label>
+          </div>
         </div>
       </div>
     </div>
