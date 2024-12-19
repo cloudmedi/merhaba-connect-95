@@ -30,20 +30,24 @@ export class PlaylistMutationService extends BasePlaylistService {
 
       // Fetch manager details from User model if assignedManagers array exists
       if (Array.isArray(data.assignedManagers)) {
-        const managerIds = data.assignedManagers;
+        const managerIds = data.assignedManagers.map(id => new Types.ObjectId(id));
         const managers = await User.find(
           { _id: { $in: managerIds } },
           'email firstName lastName'
         );
 
-        // Create a new Playlist instance to properly initialize the DocumentArray
+        // Initialize a new playlist instance for proper typing
         const tempPlaylist = new Playlist();
-        tempPlaylist.assignedManagers = managers.map(manager => ({
-          _id: manager._id,
-          email: manager.email,
-          firstName: manager.firstName || '',
-          lastName: manager.lastName || ''
-        }));
+        
+        // Add each manager to the DocumentArray using create method
+        managers.forEach(manager => {
+          tempPlaylist.assignedManagers.push({
+            _id: manager._id,
+            email: manager.email,
+            firstName: manager.firstName || '',
+            lastName: manager.lastName || ''
+          });
+        });
 
         // Use the properly initialized DocumentArray
         data.assignedManagers = tempPlaylist.assignedManagers;
