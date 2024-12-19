@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import axios from "@/lib/axios";
+import { toast } from "sonner";
 
 interface Mood {
   id: string;
@@ -29,6 +30,7 @@ export function MoodsTab({ selectedMoods, onSelectMood, onUnselectMood }: MoodsT
         setMoods(data || []);
       } catch (error) {
         console.error('Error fetching moods:', error);
+        toast.error("Failed to load moods");
       }
     };
 
