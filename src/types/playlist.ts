@@ -1,10 +1,16 @@
 export interface Song {
-  id: string;
+  _id: string;
+  id?: string;
   title: string;
   artist?: string;
+  album?: string;
   duration?: number;
   fileUrl?: string;
+  file_url?: string;
   artworkUrl?: string;
+  artwork_url?: string;
+  bunnyId?: string;
+  genre?: string[];
 }
 
 export interface Playlist {

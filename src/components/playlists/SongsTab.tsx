@@ -9,11 +9,12 @@ import DataTableLoader from "@/components/loaders/DataTableLoader";
 import { getSongsQuery } from "@/services/songs/queries";
 
 interface SongsTabProps {
-  playlistData: any;
-  setPlaylistData: (data: any) => void;
+  selectedSongs: Song[];
+  onAddSong: (song: Song) => void;
+  onRemoveSong: (songId: string) => void;
 }
 
-export function SongsTab({ playlistData, setPlaylistData }: SongsTabProps) {
+export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: songs = [], isLoading } = useQuery({
@@ -22,18 +23,12 @@ export function SongsTab({ playlistData, setPlaylistData }: SongsTabProps) {
   });
 
   const handleSelectSong = (song: Song) => {
-    const isSelected = playlistData.selectedSongs.some((s: Song) => s._id === song._id);
+    const isSelected = selectedSongs.some((s: Song) => s._id === song._id);
     
     if (isSelected) {
-      setPlaylistData({
-        ...playlistData,
-        selectedSongs: playlistData.selectedSongs.filter((s: Song) => s._id !== song._id)
-      });
+      onRemoveSong(song._id);
     } else {
-      setPlaylistData({
-        ...playlistData,
-        selectedSongs: [...playlistData.selectedSongs, song]
-      });
+      onAddSong(song);
     }
   };
 
@@ -63,7 +58,7 @@ export function SongsTab({ playlistData, setPlaylistData }: SongsTabProps) {
       <ScrollArea className="h-[400px] rounded-md border p-4">
         <div className="space-y-4">
           {filteredSongs.map((song: Song) => {
-            const isSelected = playlistData.selectedSongs.some((s: Song) => s._id === song._id);
+            const isSelected = selectedSongs.some((s: Song) => s._id === song._id);
             
             return (
               <div
