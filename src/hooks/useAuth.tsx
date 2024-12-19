@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           if (isValid && verifiedUser) {
             setUser(verifiedUser);
-            authService.setUser(verifiedUser);
           } else {
             await authService.logout();
             setUser(null);
@@ -53,11 +52,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
-      authService.setUser(response.user);
-      toast.success('Successfully logged in');
+      toast.success('Giriş başarılı');
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Error logging in');
+      toast.error(error.response?.data?.message || 'Giriş başarısız');
       throw error;
     }
   };
@@ -71,10 +69,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }) => {
     try {
       await authService.register(userData);
-      toast.success('Registration successful');
+      toast.success('Kayıt başarılı');
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(error.message || 'Error during registration');
+      toast.error(error.response?.data?.message || 'Kayıt başarısız');
       throw error;
     }
   };
@@ -83,10 +81,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await authService.logout();
       setUser(null);
-      toast.success('Successfully logged out');
+      toast.success('Çıkış yapıldı');
     } catch (error: any) {
       console.error('Logout error:', error);
-      toast.error(error.message || 'Error logging out');
+      toast.error('Çıkış yapılırken hata oluştu');
       throw error;
     }
   };

@@ -40,3 +40,10 @@ export interface LoginCredentials {
   email: string;
   password: string;
 }
+
+export interface LicenseUpdateInput {
+  type: 'trial' | 'basic' | 'premium';
+  startDate: string;
+  endDate: string;
+  quantity?: number;
+}
