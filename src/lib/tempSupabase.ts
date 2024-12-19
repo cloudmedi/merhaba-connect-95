@@ -1,6 +1,6 @@
 import api from './api';
 
-// Temporary compatibility layer while we migrate from Supabase to Node.js backend
+// Node.js backend'e geçiş için geçici uyumluluk katmanı
 export const supabase = {
   auth: {
     getUser: async () => {

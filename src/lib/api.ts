@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor for auth token
+// Token ekleme
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -18,12 +18,10 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor for auth errors
+// Hata yönetimi
 api.interceptors.response.use(
   (response) => response,
   (error) => {
