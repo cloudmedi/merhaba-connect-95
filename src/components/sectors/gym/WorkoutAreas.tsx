@@ -3,7 +3,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const areas = [
   {
@@ -35,6 +35,24 @@ const areas = [
 export function WorkoutAreas() {
   const [api, setApi] = useState<any>();
   const [current, setCurrent] = useState(0);
+  const [autoPlayInterval, setAutoPlayInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const startAutoPlay = useCallback(() => {
+    if (!isPaused) {
+      const interval = setInterval(() => {
+        api?.scrollNext();
+      }, 5000);
+      setAutoPlayInterval(interval);
+    }
+  }, [api, isPaused]);
+
+  const stopAutoPlay = useCallback(() => {
+    if (autoPlayInterval) {
+      clearInterval(autoPlayInterval);
+      setAutoPlayInterval(null);
+    }
+  }, [autoPlayInterval]);
 
   useEffect(() => {
     if (!api) return;
@@ -43,17 +61,23 @@ export function WorkoutAreas() {
       setCurrent(api.selectedScrollSnap());
     });
 
-    // Her 5 saniyede bir sonraki slide'a geç
-    const interval = setInterval(() => {
-      api.scrollNext();
-    }, 5000);
+    startAutoPlay();
 
-    // Component unmount olduğunda interval'i temizle
     return () => {
-      clearInterval(interval);
+      stopAutoPlay();
       api.off("select");
     };
-  }, [api]);
+  }, [api, startAutoPlay, stopAutoPlay]);
+
+  const handleMouseEnter = () => {
+    setIsPaused(true);
+    stopAutoPlay();
+  };
+
+  const handleMouseLeave = () => {
+    setIsPaused(false);
+    startAutoPlay();
+  };
 
   return (
     <div className="bg-[#F1F0FB] py-20">
@@ -65,6 +89,10 @@ export function WorkoutAreas() {
             align: "start",
             loop: true
           }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleMouseEnter}
+          onTouchEnd={handleMouseLeave}
         >
           <CarouselContent>
             {areas.map((area) => (
@@ -87,7 +115,6 @@ export function WorkoutAreas() {
           </CarouselContent>
         </Carousel>
 
-        {/* Slide indikatörleri */}
         <div className="flex justify-center gap-2 mt-8">
           {areas.map((_, index) => (
             <button
