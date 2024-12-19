@@ -53,17 +53,20 @@ router.post(
       const file = req.file;
       logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
 
-      const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
-      logger.info(`Generated filename: ${fileName}`);
+      const timestamp = Date.now();
+      const uniqueFileName = `${timestamp}-${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
+      logger.info(`Generated unique filename: ${uniqueFileName}`);
 
       uploadService = new ChunkUploadService((progress) => {
-        logger.info(`Upload progress: ${progress}%`);
+        if (progress % 25 === 0) { // Sadece %25, %50, %75, %100'de log al
+          logger.debug(`Upload progress: ${progress}%`);
+        }
       });
 
-      const fileUrl = await uploadService.uploadFile(file.buffer, fileName);
+      const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
       logger.info('File uploaded to CDN:', fileUrl);
 
-      const metadata = await metadataService.extractMetadata(file.buffer, fileName);
+      const metadata = await metadataService.extractMetadata(file.buffer, uniqueFileName);
       logger.info('Metadata extracted:', metadata);
 
       if (!metadata) {
@@ -72,15 +75,15 @@ router.post(
 
       const user = req.user;
 
-      // Create new song with unique bunnyId
+      // Benzersiz bunnyId ile yeni şarkı oluştur
       const song = new Song({
         title: metadata.title,
         artist: metadata.artist,
         album: metadata.album || null,
         genre: metadata.genre || [],
-        duration: metadata.duration || null,
+        duration: metadata.duration,
         fileUrl: fileUrl,
-        bunnyId: fileName, // Use the unique fileName as bunnyId
+        bunnyId: uniqueFileName,
         artworkUrl: null,
         createdBy: user?.id
       });

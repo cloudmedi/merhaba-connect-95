@@ -5,65 +5,81 @@ import { getAudioDurationInSeconds } from 'get-audio-duration';
 import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import crypto from 'crypto';
 
 const metadataCache = new Cache<string, any>(60 * 60 * 1000); // 1 hour cache
 
 export class MetadataService {
+  private generateMetadataHash(buffer: Buffer): string {
+    return crypto.createHash('sha256').update(buffer).digest('hex');
+  }
+
+  private validateMetadata(metadata: any): boolean {
+    if (!metadata) return false;
+    
+    // Temel alanların varlığını kontrol et
+    const requiredFields = ['title', 'artist', 'duration'];
+    const hasRequiredFields = requiredFields.every(field => 
+      metadata[field] !== undefined && metadata[field] !== null
+    );
+
+    // Süre kontrolü
+    const isValidDuration = typeof metadata.duration === 'number' && metadata.duration > 0;
+
+    return hasRequiredFields && isValidDuration;
+  }
+
   public async extractMetadata(buffer: Buffer, fileName: string): Promise<any> {
     try {
-      const cacheKey = `metadata_${fileName}`;
-      const cachedMetadata = metadataCache.get(cacheKey);
+      const metadataHash = this.generateMetadataHash(buffer);
+      const cacheKey = `metadata_${metadataHash}`;
       
+      const cachedMetadata = metadataCache.get(cacheKey);
       if (cachedMetadata) {
-        logger.info('Using cached metadata for:', fileName);
+        logger.debug('Using cached metadata for:', fileName);
         return cachedMetadata;
       }
 
       logger.info('Extracting metadata for:', fileName);
 
-      // Geçici dosya oluştur
       const tempFilePath = join(tmpdir(), `temp-${fileName}`);
       writeFileSync(tempFilePath, buffer);
 
       try {
-        // Geçici dosyadan süreyi al
         const duration = await getAudioDurationInSeconds(tempFilePath);
-        logger.info('Duration extracted:', duration);
+        logger.debug('Duration extracted:', duration);
 
-        // Get other metadata using NodeID3
         const id3Metadata = NodeID3.read(buffer);
-        logger.info('ID3 metadata extracted:', id3Metadata);
+        logger.debug('ID3 metadata extracted:', id3Metadata);
 
-        // Combine metadata and ensure all fields are properly set
         const metadata = {
           title: id3Metadata?.title || fileName.replace(/\.[^/.]+$/, ""),
           artist: id3Metadata?.artist || "Unknown Artist",
           album: id3Metadata?.album || null,
           genre: id3Metadata?.genre ? [id3Metadata.genre] : [],
           duration: Math.round(duration),
-          raw: id3Metadata // Store raw metadata for debugging
+          raw: id3Metadata
         };
 
-        logger.info('Final processed metadata:', metadata);
-
-        if (metadata) {
-          metadataCache.set(cacheKey, metadata);
-          logger.info('Metadata cached for:', fileName);
+        if (!this.validateMetadata(metadata)) {
+          throw new Error('Invalid or incomplete metadata');
         }
+
+        logger.info('Final processed metadata:', metadata);
+        metadataCache.set(cacheKey, metadata);
         
         return metadata;
       } finally {
-        // Geçici dosyayı temizle
         try {
           unlinkSync(tempFilePath);
-          logger.info('Temporary file cleaned up:', tempFilePath);
+          logger.debug('Temporary file cleaned up:', tempFilePath);
         } catch (error) {
           logger.error('Error cleaning up temporary file:', error);
         }
       }
     } catch (error) {
       logger.error('Metadata extraction error:', error);
-      throw error; // Hataları yukarı fırlat
+      throw error;
     }
   }
 }

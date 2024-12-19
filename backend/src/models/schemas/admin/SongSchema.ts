@@ -20,7 +20,9 @@ const SongSchema = new mongoose.Schema({
     trim: true 
   }],
   duration: { 
-    type: Number 
+    type: Number,
+    required: true,
+    min: 0
   },
   fileUrl: { 
     type: String, 
@@ -29,6 +31,7 @@ const SongSchema = new mongoose.Schema({
   bunnyId: { 
     type: String,
     unique: true,
+    required: true,
     sparse: true
   },
   artworkUrl: { 
@@ -42,5 +45,7 @@ const SongSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Tek bir index tanımlaması yeterli, ikincisini kaldırdık
+// Bunny ID için index
+SongSchema.index({ bunnyId: 1 }, { unique: true, sparse: true });
+
 export const Song = mongoose.model('Song', SongSchema);
