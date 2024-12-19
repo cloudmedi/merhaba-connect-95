@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { API_URL } from "@/services/api";
+import axios from '@/lib/axios';
 
 export interface Song {
   id: string;
@@ -26,19 +26,8 @@ export const useMusicLibrary = () => {
   const { data: songs = [], isLoading, refetch } = useQuery({
     queryKey: ['songs', filterGenre, sortByRecent, currentPage],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/admin/songs`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch songs');
-      }
-
-      const data = await response.json();
-      return data as Song[];
+      const response = await axios.get('/admin/songs');
+      return response.data as Song[];
     }
   });
 

@@ -1,4 +1,4 @@
-import { API_URL } from "../api";
+import axios from '@/lib/axios';
 
 export const getUsersQuery = async (filters?: {
   search?: string;
@@ -8,8 +8,7 @@ export const getUsersQuery = async (filters?: {
   expiry?: string;
 }) => {
   try {
-    const token = localStorage.getItem('token');
-    let url = `${API_URL}/admin/users`;
+    let url = '/admin/users';
 
     if (filters) {
       const params = new URLSearchParams();
@@ -19,17 +18,13 @@ export const getUsersQuery = async (filters?: {
       url += `?${params.toString()}`;
     }
 
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await axios.get(url);
 
     if (!response.ok) {
       throw new Error('Failed to fetch users');
     }
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Error in getUsersQuery:', error);
     throw error;
@@ -38,18 +33,13 @@ export const getUsersQuery = async (filters?: {
 
 export const getUserById = async (id: string) => {
   try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await axios.get(`/admin/users/${id}`);
 
     if (!response.ok) {
       throw new Error('Failed to fetch user');
     }
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Error in getUserById:', error);
     throw error;

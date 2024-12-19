@@ -1,16 +1,9 @@
 import { UserCreateInput } from "@/types/user";
-import { API_URL } from "../api";
+import axios from '@/lib/axios';
 
 export const createUser = async (userData: UserCreateInput) => {
   try {
-    const response = await fetch(`${API_URL}/admin/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(userData),
-    });
+    const response = await axios.post('/admin/users', userData);
 
     if (!response.ok) {
       const error = await response.json();
@@ -25,14 +18,7 @@ export const createUser = async (userData: UserCreateInput) => {
 
 export const updateUser = async (id: string, updates: any) => {
   try {
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(updates),
-    });
+    const response = await axios.put(`/admin/users/${id}`, updates);
 
     if (!response.ok) {
       const error = await response.json();
@@ -47,12 +33,7 @@ export const updateUser = async (id: string, updates: any) => {
 
 export const deleteUser = async (id: string) => {
   try {
-    const response = await fetch(`${API_URL}/admin/users/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-    });
+    const response = await axios.delete(`/admin/users/${id}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -69,14 +50,7 @@ export const toggleUserStatus = async (id: string, isActive: boolean) => {
 
 export const renewLicense = async (userId: string, licenseData: any) => {
   try {
-    const response = await fetch(`${API_URL}/admin/users/${userId}/license`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify(licenseData),
-    });
+    const response = await axios.put(`/admin/users/${userId}/license`, licenseData);
 
     if (!response.ok) {
       const error = await response.json();
