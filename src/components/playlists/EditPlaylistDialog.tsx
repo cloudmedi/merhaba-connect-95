@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlaylistForm } from "./PlaylistForm";
@@ -5,7 +6,6 @@ import { PlaylistTabs } from "./PlaylistTabs";
 import { PlaylistSettings } from "./PlaylistSettings";
 import { AssignManagersDialog } from "./AssignManagersDialog";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
-import { useState } from "react";
 import { toast } from "sonner";
 import type { Playlist } from "@/types/api";
 import type { Manager } from "./types";
@@ -33,8 +33,31 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
     isCatalog: false,
     isPublic: playlist.isPublic,
     isHero: playlist.isHero,
-    assignedManagers: playlist.assignedManagers || []
+    assignedManagers: [] as Manager[]
   });
+
+  useEffect(() => {
+    if (open && playlist.assignedManagers) {
+      // Convert string[] to Manager[]
+      const managers = playlist.assignedManagers.map(manager => {
+        if (typeof manager === 'string') {
+          return {
+            _id: manager,
+            id: manager,
+            email: '',
+            firstName: '',
+            lastName: ''
+          };
+        }
+        return manager;
+      });
+      
+      setPlaylistData(prev => ({
+        ...prev,
+        assignedManagers: managers
+      }));
+    }
+  }, [open, playlist.assignedManagers]);
 
   const handleManagerSelection = (selectedManagers: Manager[]) => {
     console.log('Selected managers:', selectedManagers);
@@ -42,27 +65,6 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
       ...prev,
       assignedManagers: selectedManagers
     }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await handleSavePlaylist({
-        playlistData,
-        isEditMode: true,
-        existingPlaylist: playlist,
-        onSuccess: () => {
-          toast.success("Playlist updated successfully");
-          onSuccess?.();
-          onOpenChange(false);
-        },
-        onError: (error) => {
-          toast.error(error.message || "Failed to update playlist");
-        }
-      });
-    } catch (error) {
-      console.error("Error updating playlist:", error);
-      toast.error("Failed to update playlist");
-    }
   };
 
   return (
@@ -85,6 +87,16 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
               setPlaylistData={setPlaylistData}
             />
 
+            <Button
+              onClick={() => setIsAssignDialogOpen(true)}
+              className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200"
+              size="lg"
+            >
+              {playlistData.assignedManagers.length > 0 
+                ? `${playlistData.assignedManagers.length} Manager${playlistData.assignedManagers.length > 1 ? 's' : ''} Selected`
+                : "Assign to Managers"}
+            </Button>
+
             <PlaylistTabs
               playlistData={playlistData}
               setPlaylistData={setPlaylistData}
@@ -94,7 +106,19 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit}>
+              <Button onClick={() => handleSavePlaylist({
+                playlistData,
+                isEditMode: true,
+                existingPlaylist: playlist,
+                onSuccess: () => {
+                  toast.success("Playlist updated successfully");
+                  onSuccess?.();
+                  onOpenChange(false);
+                },
+                onError: (error) => {
+                  toast.error(error.message || "Failed to update playlist");
+                }
+              })}>
                 Save Changes
               </Button>
             </div>
