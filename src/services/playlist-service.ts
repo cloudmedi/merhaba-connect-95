@@ -9,7 +9,7 @@ export const playlistService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching playlists:', error);
-      toast.error('Playlist\'ler yüklenirken bir hata oluştu');
+      toast.error('Failed to load playlists');
       throw error;
     }
   },
@@ -20,7 +20,7 @@ export const playlistService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching playlist:', error);
-      toast.error('Playlist detayları yüklenirken bir hata oluştu');
+      toast.error('Failed to load playlist details');
       throw error;
     }
   },
@@ -37,11 +37,11 @@ export const playlistService = {
   }) {
     try {
       const response = await axiosInstance.post<Playlist>('/admin/playlists', input);
-      toast.success('Playlist başarıyla oluşturuldu');
+      toast.success('Playlist created successfully');
       return response.data;
     } catch (error) {
       console.error('Error creating playlist:', error);
-      toast.error('Playlist oluşturulurken bir hata oluştu');
+      toast.error('Failed to create playlist');
       throw error;
     }
   },
@@ -58,11 +58,11 @@ export const playlistService = {
   }) {
     try {
       const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, input);
-      toast.success('Playlist başarıyla güncellendi');
+      toast.success('Playlist updated successfully');
       return response.data;
     } catch (error) {
       console.error('Error updating playlist:', error);
-      toast.error('Playlist güncellenirken bir hata oluştu');
+      toast.error('Failed to update playlist');
       throw error;
     }
   },
@@ -70,10 +70,10 @@ export const playlistService = {
   async deletePlaylist(id: string) {
     try {
       await axiosInstance.delete(`/admin/playlists/${id}`);
-      toast.success('Playlist başarıyla silindi');
+      toast.success('Playlist deleted successfully');
     } catch (error) {
       console.error('Error deleting playlist:', error);
-      toast.error('Playlist silinirken bir hata oluştu');
+      toast.error('Failed to delete playlist');
       throw error;
     }
   }

@@ -8,61 +8,35 @@ import { PlaylistsTable } from "./components/PlaylistsTable";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Playlist } from "@/types/api";
+import { playlistService } from "@/services/playlist-service";
+import type { Playlist } from "@/types/api";
 import { DashboardLayout } from "@/components/DashboardLayout";
-
-interface PlaylistResponse {
-  id: string;
-  name: string;
-  description?: string;
-  artwork_url?: string;
-  created_at: string;
-  is_public: boolean;
-  company: { name: string } | null;
-  profiles: { first_name: string; last_name: string }[] | null;
-}
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
-  const [currentPlaylist, setCurrentPlaylist] = useState<PlaylistResponse | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ['playlists'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          company:company_id(name),
-          profiles:created_by(first_name, last_name)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as unknown as PlaylistResponse[];
-    }
+    queryFn: playlistService.getPlaylists
   });
 
   const deletePlaylistMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('playlists')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: playlistService.deletePlaylist,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      toast({
+        title: "Success",
+        description: "Playlist deleted successfully",
+      });
     }
   });
 
-  const handlePlayPlaylist = (playlist: PlaylistResponse) => {
+  const handlePlayPlaylist = (playlist: Playlist) => {
     setCurrentPlaylist(playlist);
     setIsPlayerVisible(true);
     toast({
@@ -115,7 +89,6 @@ export default function Playlists() {
       </div>
       {isPlayerVisible && currentPlaylist && (
         <MusicPlayer 
-          key={currentPlaylist.id}
           playlist={{
             title: currentPlaylist.name,
             artwork: currentPlaylist.artwork_url || "/placeholder.svg"
