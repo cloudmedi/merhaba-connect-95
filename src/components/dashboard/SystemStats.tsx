@@ -63,7 +63,10 @@ export function SystemStats() {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="relative overflow-hidden group hover:shadow-lg transition-all duration-200">
+            <Card 
+              key={index} 
+              className="relative overflow-hidden group hover:shadow-lg transition-all duration-200"
+            >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 rounded-lg ${stat.bgColor}`}>
@@ -89,7 +92,8 @@ export function SystemStats() {
               </div>
               <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#6E59A5] to-[#9b87f5] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
             </Card>
-          ))}
+          );
+        })}
       </div>
     </div>
   );
