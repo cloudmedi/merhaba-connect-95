@@ -30,7 +30,7 @@ export class PlaylistMutationService extends BasePlaylistService {
 
       // Fetch manager details from User model if assignedManagers array exists
       if (Array.isArray(data.assignedManagers)) {
-        const managerIds = data.assignedManagers.map(id => new Types.ObjectId(id));
+        const managerIds = data.assignedManagers.map((id: string) => new Types.ObjectId(id));
         const managers = await User.find(
           { _id: { $in: managerIds } },
           'email firstName lastName'
