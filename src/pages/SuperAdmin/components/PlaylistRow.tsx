@@ -8,9 +8,9 @@ import { createPlaylistAssignmentNotification } from "@/utils/notifications";
 
 interface PlaylistRowProps {
   playlist: {
-    id: string;
+    _id: string;  // id -> _id olarak değiştirildi
     name: string;
-    artwork_url?: string;
+    artworkUrl?: string;  // artwork_url -> artworkUrl olarak değiştirildi
     created_at: string;
     is_public: boolean;
     company?: { name: string };
@@ -34,7 +34,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handleEdit = () => {
     console.log('Editing playlist:', playlist);
-    if (!playlist || !playlist.id) {
+    if (!playlist || !playlist._id) {  // id -> _id olarak değiştirildi
       console.error('Invalid playlist data for editing:', playlist);
       toast({
         title: "Error",
@@ -44,11 +44,10 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
       return;
     }
     onEdit({
-      id: playlist.id,
+      _id: playlist._id,  // id -> _id olarak değiştirildi
       name: playlist.name,
-      artwork_url: playlist.artwork_url,
+      artworkUrl: playlist.artworkUrl,  // artwork_url -> artworkUrl olarak değiştirildi
       is_public: playlist.is_public,
-      // Diğer gerekli alanları da ekleyin
     });
   };
 
@@ -57,24 +56,24 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
       const { error } = await supabase
         .from('playlists')
         .update({ is_public: !playlist.is_public })
-        .eq('id', playlist.id);
+        .eq('_id', playlist._id);  // id -> _id olarak değiştirildi
 
       if (error) throw error;
 
       if (!playlist.is_public) {
         const { data: managers, error: managersError } = await supabase
           .from('profiles')
-          .select('id')
+          .select('_id')  // id -> _id olarak değiştirildi
           .eq('role', 'manager');
 
         if (managersError) throw managersError;
 
         for (const manager of managers) {
           await createPlaylistAssignmentNotification(
-            manager.id,
+            manager._id,  // id -> _id olarak değiştirildi
             playlist.name,
-            playlist.id,
-            playlist.artwork_url
+            playlist._id,  // id -> _id olarak değiştirildi
+            playlist.artworkUrl  // artwork_url -> artworkUrl olarak değiştirildi
           );
         }
       }
@@ -96,12 +95,12 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
   };
 
   return (
-    <TableRow key={playlist.id} className="hover:bg-gray-50/50">
+    <TableRow key={playlist._id} className="hover:bg-gray-50/50">
       <TableCell>
         <div className="flex items-center gap-4">
           <div className="relative group w-10 h-10">
             <img
-              src={getArtworkUrl(playlist.artwork_url)}
+              src={getArtworkUrl(playlist.artworkUrl)}  // artwork_url -> artworkUrl olarak değiştirildi
               alt={playlist.name}
               className="w-full h-full object-cover rounded group-hover:opacity-75 transition-opacity"
               onError={(e) => {
@@ -161,7 +160,7 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
               {playlist.is_public ? "Unpublish" : "Publish"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(playlist.id)} className="text-red-600 cursor-pointer">
+            <DropdownMenuItem onClick={() => onDelete(playlist._id)} className="text-red-600 cursor-pointer">
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
