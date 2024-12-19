@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import axios from "@/lib/axios";
-import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Mood {
   id: string;
@@ -23,15 +22,17 @@ export function MoodsTab({ selectedMoods, onSelectMood, onUnselectMood }: MoodsT
 
   useEffect(() => {
     const fetchMoods = async () => {
-      try {
-        const { data } = await axios.get('/admin/moods', {
-          params: { search: searchQuery }
-        });
-        setMoods(data || []);
-      } catch (error) {
+      const { data, error } = await supabase
+        .from('moods')
+        .select('*')
+        .ilike('name', `%${searchQuery}%`);
+      
+      if (error) {
         console.error('Error fetching moods:', error);
-        toast.error("Failed to load moods");
+        return;
       }
+      
+      setMoods(data || []);
     };
 
     fetchMoods();

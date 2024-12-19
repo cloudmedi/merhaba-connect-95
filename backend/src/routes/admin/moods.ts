@@ -13,14 +13,12 @@ interface AuthRequest extends Request {
 const router = express.Router();
 const moodService = new MoodService();
 
-// Get all moods with search
+// Get all moods
 router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
   try {
-    const searchQuery = req.query.search as string;
-    const moods = await moodService.getAllMoods(searchQuery);
+    const moods = await moodService.getAllMoods();
     res.json(moods);
   } catch (error) {
-    console.error('Error fetching moods:', error);
     res.status(500).json({ error: 'Failed to fetch moods' });
   }
 });
@@ -34,7 +32,6 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
     });
     res.status(201).json(mood);
   } catch (error) {
-    console.error('Error creating mood:', error);
     res.status(500).json({ error: 'Failed to create mood' });
   }
 });
@@ -45,7 +42,6 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
     const mood = await moodService.updateMood(req.params.id, req.body);
     res.json(mood);
   } catch (error) {
-    console.error('Error updating mood:', error);
     res.status(500).json({ error: 'Failed to update mood' });
   }
 });
@@ -56,7 +52,6 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     await moodService.deleteMood(req.params.id);
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting mood:', error);
     res.status(500).json({ error: 'Failed to delete mood' });
   }
 });
