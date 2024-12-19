@@ -178,7 +178,7 @@ export class PlaylistService {
 
       // Emit real-time update if playlist was successfully updated
       if (updatedPlaylist) {
-        this.wsService.emitPlaylistUpdate(updatedPlaylist._id, {
+        this.wsService.emitPlaylistUpdate(updatedPlaylist._id.toString(), {
           action: 'updated',
           playlist: updatedPlaylist
         });
