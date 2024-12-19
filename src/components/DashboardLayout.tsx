@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { AdminNav } from "./AdminNav";
-import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -64,14 +63,12 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
                 <p className="text-sm font-medium text-gray-900">{user?.firstName || 'Admin'}</p>
               </div>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-[#6E59A5] text-white">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger className="outline-none">
+                  <Avatar className="h-8 w-8 cursor-pointer transition-opacity hover:opacity-90">
+                    <AvatarFallback className="bg-[#6E59A5] text-white">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
@@ -87,7 +84,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Logout</span>
                   </DropdownMenuItem>
