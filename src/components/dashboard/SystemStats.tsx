@@ -6,8 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function SystemStats() {
   const { data: metrics, isLoading } = useSystemMetrics();
 
-  console.log('Current metrics:', metrics);
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
