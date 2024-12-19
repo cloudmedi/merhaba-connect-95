@@ -25,7 +25,29 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      const response = await axiosInstance.post<Playlist>('/admin/playlists', data);
+      // First upload artwork if exists
+      let artwork_url = data.artwork_url;
+      if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
+        const formData = new FormData();
+        const response = await fetch(data.artwork_url);
+        const blob = await response.blob();
+        formData.append('file', blob, 'artwork.jpg');
+        
+        const uploadResponse = await axiosInstance.post('/admin/upload-artwork', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        artwork_url = uploadResponse.data.url;
+      }
+
+      // Create playlist with uploaded artwork URL
+      const playlistData = {
+        ...data,
+        artwork_url,
+      };
+
+      const response = await axiosInstance.post<Playlist>('/admin/playlists', playlistData);
       toast.success('Playlist created successfully');
       return response.data;
     } catch (error) {
@@ -46,7 +68,28 @@ export const playlistService = {
     songs?: string[];
   }) {
     try {
-      const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, data);
+      // Handle artwork upload if needed
+      let artwork_url = data.artwork_url;
+      if (data.artwork_url && data.artwork_url.startsWith('blob:')) {
+        const formData = new FormData();
+        const response = await fetch(data.artwork_url);
+        const blob = await response.blob();
+        formData.append('file', blob, 'artwork.jpg');
+        
+        const uploadResponse = await axiosInstance.post('/admin/upload-artwork', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        artwork_url = uploadResponse.data.url;
+      }
+
+      const playlistData = {
+        ...data,
+        artwork_url,
+      };
+
+      const response = await axiosInstance.put<Playlist>(`/admin/playlists/${id}`, playlistData);
       toast.success('Playlist updated successfully');
       return response.data;
     } catch (error) {

@@ -1,134 +1,111 @@
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string | null;
-  duration: number | null;
-  artwork_url?: string;
-  file_url: string;
-}
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import axios from "@/lib/axios";
+import { Song } from "@/types/playlist";
+import DataTableLoader from "@/components/loaders/DataTableLoader";
 
 interface SongsTabProps {
-  selectedSongs: Song[];
-  onAddSong: (song: Song) => void;
-  onRemoveSong: (songId: string) => void;
+  playlistData: any;
+  setPlaylistData: (data: any) => void;
 }
 
-export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabProps) {
+export function SongsTab({ playlistData, setPlaylistData }: SongsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [availableSongs, setAvailableSongs] = useState<Song[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('songs')
-          .select('*')
-          .ilike('title', `%${searchQuery}%`);
+  const { data: songs = [], isLoading } = useQuery({
+    queryKey: ['songs'],
+    queryFn: async () => {
+      const response = await axios.get('/admin/songs');
+      return response.data;
+    }
+  });
 
-        if (error) throw error;
-        setAvailableSongs(data || []);
-      } catch (error) {
-        console.error('Error fetching songs:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSongs();
-  }, [searchQuery]);
-
-  const formatDuration = (duration: number | null) => {
-    if (!duration) return "0:00";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const handleSelectSong = (song: Song) => {
+    const isSelected = playlistData.selectedSongs.some((s: Song) => s._id === song._id);
+    
+    if (isSelected) {
+      setPlaylistData({
+        ...playlistData,
+        selectedSongs: playlistData.selectedSongs.filter((s: Song) => s._id !== song._id)
+      });
+    } else {
+      setPlaylistData({
+        ...playlistData,
+        selectedSongs: [...playlistData.selectedSongs, song]
+      });
+    }
   };
+
+  const filteredSongs = songs.filter((song: Song) =>
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+  );
+
+  if (isLoading) {
+    return <DataTableLoader />;
+  }
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search songs..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h3 className="font-medium mb-2">Available Songs</h3>
-          <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
-            {isLoading ? (
-              <div className="p-4 text-center">Loading songs...</div>
-            ) : availableSongs.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No songs found
-              </div>
-            ) : (
-              availableSongs
-                .filter(song => !selectedSongs.some(s => s.id === song.id))
-                .map(song => (
-                  <div key={song.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
-                    <div>
-                      <p className="font-medium">{song.title}</p>
-                      <p className="text-sm text-gray-500">
-                        {song.artist || 'Unknown Artist'} • {formatDuration(song.duration)}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onAddSong(song)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Selected Songs ({selectedSongs.length})</h3>
-          <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
-            {selectedSongs.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Music className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No songs selected</p>
-                <p className="text-sm">Add songs from the list</p>
-              </div>
-            ) : (
-              selectedSongs.map((song, index) => (
-                <div key={song.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">{index + 1}</span>
-                      <div>
-                        <p className="font-medium">{song.title}</p>
-                        <p className="text-sm text-gray-500">
-                          {song.artist || 'Unknown Artist'} • {formatDuration(song.duration)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onRemoveSong(song.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search songs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
       </div>
+
+      <ScrollArea className="h-[400px] rounded-md border p-4">
+        <div className="space-y-4">
+          {filteredSongs.map((song: Song) => {
+            const isSelected = playlistData.selectedSongs.some((s: Song) => s._id === song._id);
+            
+            return (
+              <div
+                key={song._id}
+                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                  isSelected ? 'bg-purple-50 border-purple-200' : 'hover:bg-gray-50'
+                }`}
+                onClick={() => handleSelectSong(song)}
+              >
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={song.artworkUrl || "/placeholder.svg"}
+                    alt={song.title}
+                    className="w-12 h-12 rounded object-cover"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      img.src = "/placeholder.svg";
+                    }}
+                  />
+                  <div>
+                    <h4 className="font-medium text-sm">{song.title}</h4>
+                    <p className="text-sm text-gray-500">{song.artist || 'Unknown Artist'}</p>
+                  </div>
+                </div>
+                <Button
+                  variant={isSelected ? "default" : "ghost"}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectSong(song);
+                  }}
+                >
+                  {isSelected ? 'Selected' : 'Select'}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
