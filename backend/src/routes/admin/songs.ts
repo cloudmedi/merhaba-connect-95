@@ -8,10 +8,13 @@ import { logger } from '../../utils/logger';
 import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
 import { MetadataService } from '../../services/upload/MetadataService';
 
-const upload = multer({ 
-  storage: multer.memoryStorage(),
+// Multer konfigürasyonu güncellendi
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+    files: 1
   }
 });
 
@@ -41,10 +44,6 @@ router.post(
   adminMiddleware,
   upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
-    const uploadService = new ChunkUploadService((progress) => {
-      logger.info(`Upload progress: ${progress}%`);
-    });
-
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'Dosya yüklenmedi' });
@@ -53,35 +52,48 @@ router.post(
       const file = req.file;
       logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
 
+      // Dosya adını oluştur
       const fileName = `${generateRandomString(8)}-${sanitizeFileName(file.originalname)}`;
       logger.info(`Generated filename: ${fileName}`);
 
-      const [metadata, fileUrl] = await Promise.all([
-        metadataService.extractMetadata(file.buffer, fileName),
-        uploadService.uploadFile(file.buffer, fileName)
-      ]);
-
-      logger.info('Metadata extracted:', metadata);
-      logger.info('File uploaded to CDN:', fileUrl);
-
-      const user = req.user;
-
-      const song = new Song({
-        title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
-        artist: metadata?.artist || null,
-        album: metadata?.album || null,
-        genre: metadata?.genre ? [metadata.genre] : [],
-        duration: metadata?.duration || null,
-        fileUrl: fileUrl,
-        bunnyId: fileName,
-        artworkUrl: null,
-        createdBy: user?.id
+      // Upload service oluştur
+      const uploadService = new ChunkUploadService((progress) => {
+        logger.info(`Upload progress: ${progress}%`);
       });
 
-      await song.save();
-      logger.info('Song saved to database:', song);
-      
-      res.status(201).json(song);
+      try {
+        // Dosyayı yükle
+        const fileUrl = await uploadService.uploadFile(file.buffer, fileName);
+        logger.info('File uploaded to CDN:', fileUrl);
+
+        // Metadata çıkar
+        const metadata = await metadataService.extractMetadata(file.buffer, fileName);
+        logger.info('Metadata extracted:', metadata);
+
+        const user = req.user;
+
+        // Veritabanına kaydet
+        const song = new Song({
+          title: metadata?.title || file.originalname.replace(/\.[^/.]+$/, ""),
+          artist: metadata?.artist || null,
+          album: metadata?.album || null,
+          genre: metadata?.genre ? [metadata.genre] : [],
+          duration: metadata?.duration || null,
+          fileUrl: fileUrl,
+          bunnyId: fileName,
+          artworkUrl: null,
+          createdBy: user?.id
+        });
+
+        await song.save();
+        logger.info('Song saved to database:', song);
+        
+        res.status(201).json(song);
+
+      } catch (uploadError: any) {
+        logger.error('Error during upload process:', uploadError);
+        throw new Error(`Dosya yükleme hatası: ${uploadError.message}`);
+      }
 
     } catch (error: any) {
       logger.error('Error uploading song:', error);

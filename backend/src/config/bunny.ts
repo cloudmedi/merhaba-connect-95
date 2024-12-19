@@ -25,4 +25,11 @@ if (!bunnyConfig.baseUrl) {
   throw new Error('BUNNY_STORAGE_HOST is required');
 }
 
+// Log config (sensitive data masked)
+logger.info('Bunny CDN Configuration:', {
+  storageZoneName: bunnyConfig.storageZoneName,
+  baseUrl: bunnyConfig.baseUrl,
+  apiKey: `${bunnyConfig.apiKey.substring(0, 4)}...${bunnyConfig.apiKey.substring(bunnyConfig.apiKey.length - 4)}`
+});
+
 export default bunnyConfig;

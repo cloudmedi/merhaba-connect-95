@@ -41,7 +41,8 @@ export class ChunkUploadService {
         logger.error('Chunk upload failed:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorText
+          error: errorText,
+          headers: response.headers
         });
         throw new Error(`Chunk upload failed: ${response.status} - ${errorText}`);
       }
@@ -62,6 +63,7 @@ export class ChunkUploadService {
     try {
       logger.info(`Starting file upload: ${fileName}, size: ${buffer.length} bytes`);
       
+      // Dosyayı chunk'lara böl
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, i + CHUNK_SIZE));
@@ -69,6 +71,7 @@ export class ChunkUploadService {
 
       logger.info(`File split into ${chunks.length} chunks`);
 
+      // Her chunk'ı sırayla yükle
       for (let i = 0; i < chunks.length; i++) {
         const start = i * CHUNK_SIZE;
         const success = await this.uploadChunk(bunnyUrl, chunks[i], start, buffer.length);
@@ -83,6 +86,7 @@ export class ChunkUploadService {
         }
       }
 
+      // Yükleme tamamlandı, CDN URL'ini döndür
       const cdnUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
       logger.info(`File upload completed: ${cdnUrl}`);
 
