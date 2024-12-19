@@ -25,11 +25,7 @@ export function usePlaylistMutations() {
         throw new Error("Please enter a playlist title");
       }
 
-      console.log('Initial playlist data:', {
-        selectedGenres: playlistData.selectedGenres,
-        selectedMoods: playlistData.selectedMoods,
-        selectedCategories: playlistData.selectedCategories
-      });
+      console.log('Initial playlist data:', playlistData);
 
       let artwork_url = playlistData.artwork_url;
 
@@ -53,15 +49,15 @@ export function usePlaylistMutations() {
         name: playlistData.title,
         description: playlistData.description,
         artwork_url,
-        genre_id: playlistData.selectedGenres?.[0]?.id || null,
-        mood_id: playlistData.selectedMoods?.[0]?.id || null,
+        genre_id: playlistData.selectedGenres?.[0]?._id || null,
+        mood_id: playlistData.selectedMoods?.[0]?._id || null,
         is_public: playlistData.isPublic || false,
         is_catalog: playlistData.isCatalog || false,
         is_hero: playlistData.isHero || false,
         songs: playlistData.selectedSongs.map((song: any) => song._id),
         categories: playlistData.selectedCategories
-          .filter((cat: any) => cat && cat.id)
-          .map((cat: any) => cat.id)
+          .filter((cat: any) => cat && cat._id)
+          .map((cat: any) => cat._id)
       };
 
       console.log('Sending playlist payload:', playlistPayload);
