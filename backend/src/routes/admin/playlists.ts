@@ -36,24 +36,11 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
 // Playlist CRUD
 router.post('/', async (req, res) => {
   try {
-    console.log('Creating playlist with data:', req.body);
     const playlistService = new PlaylistService(req.io);
-    const playlist = await playlistService.createPlaylist({
-      name: req.body.name,
-      description: req.body.description,
-      isPublic: req.body.is_public,
-      isHero: req.body.is_hero,
-      artworkUrl: req.body.artwork_url,
-      songs: req.body.songs?.map((songId: string) => ({ songId, position: 0 })) || [],
-      categories: req.body.categories || [],
-      genre: req.body.genre_id,
-      mood: req.body.mood_id,
-      createdBy: req.user?.id
-    });
+    const playlist = await playlistService.createPlaylist(req.body);
     res.json(playlist);
   } catch (error) {
-    console.error('Error creating playlist:', error);
-    res.status(500).json({ error: 'Error creating playlist', details: error.message });
+    res.status(500).json({ error: 'Error creating playlist' });
   }
 });
 
