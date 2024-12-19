@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import { validateBunnyCredentials } from './utils/bunnyValidator';
 
 // Routes
+import authRoutes from './routes/auth.routes';
 import adminAuthRoutes from './routes/admin/auth';
 import adminUsersRoutes from './routes/admin/users';
 import adminCategoriesRoutes from './routes/admin/categories';
@@ -90,6 +91,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use('/api/auth', authRoutes); // Ana auth route'ları
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/admin/categories', adminCategoriesRoutes);
