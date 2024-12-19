@@ -3,24 +3,22 @@ import { MoreVertical, Play, Globe, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { createPlaylistAssignmentNotification } from "@/utils/notifications";
+import axios from "@/lib/axios";
 
-// MongoDB yapısına uygun interface
 interface PlaylistRowProps {
   playlist: {
-    _id: string;  // MongoDB'de _id kullanılır
+    _id: string;
     name: string;
-    artworkUrl?: string;  // MongoDB'deki field adı
-    createdAt: string;    // MongoDB'de camelCase kullanılır
-    isPublic: boolean;    // MongoDB'de camelCase kullanılır
+    artworkUrl?: string;
+    createdAt: string;
+    isPublic: boolean;
     company?: { 
       name: string;
       _id: string;
     };
     profiles?: { 
-      firstName: string;  // MongoDB'de camelCase kullanılır
-      lastName: string;   // MongoDB'de camelCase kullanılır
+      firstName: string;
+      lastName: string;
       _id: string;
     }[];
   };
@@ -61,40 +59,17 @@ export function PlaylistRow({ playlist, onPlay, onEdit, onDelete, onStatusChange
 
   const handlePublishToggle = async () => {
     try {
-      // Supabase'e gönderirken field adlarını Supabase formatına çeviriyoruz
-      const { error } = await supabase
-        .from('playlists')
-        .update({ 
-          is_public: !playlist.isPublic  // Supabase'de snake_case kullanılır
-        })
-        .eq('id', playlist._id);  // Supabase'de 'id' kullanılır
-
-      if (error) throw error;
-
-      if (!playlist.isPublic) {
-        const { data: managers, error: managersError } = await supabase
-          .from('profiles')
-          .select('id')  // Supabase'de 'id' kullanılır
-          .eq('role', 'manager');
-
-        if (managersError) throw managersError;
-
-        for (const manager of managers) {
-          await createPlaylistAssignmentNotification(
-            manager.id,
-            playlist.name,
-            playlist._id,
-            playlist.artworkUrl
-          );
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: `Playlist ${playlist.isPublic ? 'unpublished' : 'published'} successfully`,
+      const response = await axios.put(`/api/admin/playlists/${playlist._id}`, {
+        isPublic: !playlist.isPublic
       });
 
-      onStatusChange();
+      if (response.data) {
+        toast({
+          title: "Success",
+          description: `Playlist ${playlist.isPublic ? 'unpublished' : 'published'} successfully`,
+        });
+        onStatusChange();
+      }
     } catch (error: any) {
       console.error('Error toggling playlist publish state:', error);
       toast({

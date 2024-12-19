@@ -21,10 +21,10 @@ export function CreatePlaylist() {
     usePlaylistAssignment(existingPlaylist?._id);
   
   const [playlistData, setPlaylistData] = useState({
-    title: "",
+    name: "",
     description: "",
     artwork: null as File | null,
-    artworkUrl: "",  // artwork_url -> artworkUrl olarak değiştirildi
+    artworkUrl: "",
     selectedSongs: [],
     selectedGenres: [],
     selectedCategories: [],
@@ -56,9 +56,9 @@ export function CreatePlaylist() {
       console.log('Loading playlist details for ID:', existingPlaylist._id);
       
       const [playlistSongs, playlistCategories, assignedManagers] = await Promise.all([
-        axios.get(`/admin/playlists/${existingPlaylist._id}/songs`),
-        axios.get(`/admin/playlists/${existingPlaylist._id}/categories`),
-        axios.get(`/admin/playlists/${existingPlaylist._id}/managers`)
+        axios.get(`/api/admin/playlists/${existingPlaylist._id}/songs`),
+        axios.get(`/api/admin/playlists/${existingPlaylist._id}/categories`),
+        axios.get(`/api/admin/playlists/${existingPlaylist._id}/managers`)
       ]);
 
       console.log('Loaded playlist data:', {
@@ -68,7 +68,7 @@ export function CreatePlaylist() {
       });
 
       setPlaylistData({
-        title: existingPlaylist.name,
+        name: existingPlaylist.name,
         description: existingPlaylist.description || "",
         artwork: null,
         artworkUrl: existingPlaylist.artworkUrl || "",
@@ -97,7 +97,7 @@ export function CreatePlaylist() {
           onCreate={() => handleSavePlaylist({
             playlistData: {
               ...playlistData,
-              artwork_url: playlistData.artworkUrl // artworkUrl'i artwork_url olarak eşleştir
+              artworkUrl: playlistData.artworkUrl
             },
             isEditMode,
             existingPlaylist,
