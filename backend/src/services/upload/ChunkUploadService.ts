@@ -10,16 +10,13 @@ const TIMEOUT = 30000; // 30 seconds timeout
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
   private isUploading: boolean = false;
-  private uploadPromise: Promise<any> | null = null;
 
   constructor(private onProgress?: (progress: number) => void) {}
 
   public cancel() {
-    if (this.isUploading) {
+    if (this.isUploading && this.abortController) {
       this.isUploading = false;
-      if (this.abortController) {
-        this.abortController.abort();
-      }
+      this.abortController.abort();
       logger.info('Upload cancelled');
     }
   }
@@ -41,7 +38,7 @@ export class ChunkUploadService {
         headers: {
           'AccessKey': bunnyConfig.apiKey,
           'Content-Type': 'application/octet-stream',
-          'Content-Range': `bytes ${start}-${start + chunk.length - 1}/${total}`,
+          'Content-Range': `bytes ${start}-${start + chunk.length - 1}/${total}`
         },
         body: chunk,
         signal: this.abortController?.signal,
@@ -49,8 +46,7 @@ export class ChunkUploadService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Chunk upload failed: ${response.status} - ${errorText}`);
+        throw new Error(`Upload failed with status: ${response.status}`);
       }
 
       return true;
@@ -84,28 +80,27 @@ export class ChunkUploadService {
       const bunnyId = `music/${fileName}`;
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${bunnyId}`;
       
-      const chunks: Buffer[] = [];
-      for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
-        chunks.push(buffer.slice(i, i + CHUNK_SIZE));
-      }
-
+      // Calculate total chunks
+      const totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);
       let uploadedChunks = 0;
-      for (const chunk of chunks) {
+
+      // Upload chunks sequentially
+      for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         if (!this.isUploading) {
           throw new Error('Upload cancelled');
         }
 
-        const start = uploadedChunks * CHUNK_SIZE;
-        const success = await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
+        const chunk = buffer.slice(i, Math.min(i + CHUNK_SIZE, buffer.length));
+        const success = await this.uploadChunk(bunnyUrl, chunk, i, buffer.length);
         
         if (!success) {
           throw new Error('Chunk upload failed');
         }
-        
+
         uploadedChunks++;
         
         if (this.onProgress) {
-          const progress = Math.floor((uploadedChunks / chunks.length) * 100);
+          const progress = Math.floor((uploadedChunks / totalChunks) * 100);
           this.onProgress(Math.min(progress, 100));
         }
       }
@@ -113,13 +108,13 @@ export class ChunkUploadService {
       const cdnUrl = `https://cloud-media.b-cdn.net/${bunnyId}`;
       logger.info('File upload completed successfully');
       return cdnUrl;
+
     } catch (error) {
       logger.error('File upload error:', error);
       throw error;
     } finally {
       this.isUploading = false;
       this.abortController = null;
-      this.uploadPromise = null;
     }
   }
 }
