@@ -1,34 +1,15 @@
-import { API_URL } from "../api";
+import axiosInstance from '@/lib/axios';
 import { Song } from "@/types/playlist";
 
 export const getSongsQuery = async (): Promise<Song[]> => {
-  console.log('Fetching songs...');
-  const token = localStorage.getItem('token');
-  console.log('Token from localStorage:', token);
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
-  };
-
-  // Token varsa veya yoksa her durumda Authorization header'ı ekle
-  headers.Authorization = `Bearer ${token || ''}`;
+  console.log('Fetching songs using axios instance...');
   
-  console.log('Request headers:', headers);
-
-  const response = await fetch(`${API_URL}/admin/songs`, {
-    headers: headers
-  });
-
-  if (!response.ok) {
-    console.error('Failed to fetch songs:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries())
-    });
-    throw new Error('Failed to fetch songs');
+  try {
+    const response = await axiosInstance.get('/admin/songs');
+    console.log('Songs response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching songs:', error);
+    throw error;
   }
-
-  return response.json();
 };
