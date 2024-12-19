@@ -12,6 +12,13 @@ import { TrialForm } from "@/components/landing/TrialForm";
 export default function Landing() {
   const [isTrialFormOpen, setIsTrialFormOpen] = useState(false);
 
+  // Sample playlist data for demo purposes
+  const demoPlaylist = {
+    id: 'demo-1',
+    name: 'Featured Demo Playlist',
+    artwork_url: '/placeholder.svg'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       <MainNav />
@@ -40,7 +47,10 @@ export default function Landing() {
             </div>
             <div className="relative">
               <div className="absolute -z-10 w-[500px] h-[500px] bg-[#F3F0FF] rounded-full blur-3xl opacity-30 -right-20 -top-20" />
-              <HeroPlaylist />
+              <HeroPlaylist 
+                playlist={demoPlaylist}
+                isLoading={false}
+              />
             </div>
           </div>
         </div>
@@ -93,7 +103,11 @@ export default function Landing() {
               </Button>
             </div>
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <PlaylistGrid />
+              <PlaylistGrid 
+                title="Featured Playlists"
+                playlists={[]}
+                isLoading={false}
+              />
             </div>
           </div>
         </div>
