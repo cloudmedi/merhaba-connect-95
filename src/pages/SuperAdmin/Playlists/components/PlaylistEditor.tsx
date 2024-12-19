@@ -8,14 +8,14 @@ import { usePlaylistMutations } from "@/components/playlists/hooks/usePlaylistMu
 import { usePlaylistAssignment } from "@/components/playlists/hooks/usePlaylistAssignment";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { Manager } from "@/components/playlists/types";
 
 export function PlaylistEditor() {
   const navigate = useNavigate();
   const location = useLocation();
   const { handleSavePlaylist } = usePlaylistMutations();
   const existingPlaylist = location.state?.playlistData;
-  const { isAssignDialogOpen, setIsAssignDialogOpen, handleAssignManagers } = 
-    usePlaylistAssignment(existingPlaylist?._id);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   
   const [playlistData, setPlaylistData] = useState({
     name: "",
@@ -29,7 +29,7 @@ export function PlaylistEditor() {
     isCatalog: false,
     isPublic: false,
     isHero: false,
-    assignedManagers: []
+    assignedManagers: [] as Manager[]
   });
 
   const isEditMode = location.state?.editMode;
@@ -110,9 +110,8 @@ export function PlaylistEditor() {
         <AssignManagersDialog
           open={isAssignDialogOpen}
           onOpenChange={setIsAssignDialogOpen}
-          playlistId={existingPlaylist?._id || ''}
           initialSelectedManagers={playlistData.assignedManagers}
-          onAssign={handleAssignManagers}
+          onManagersSelected={handleManagerSelection}
         />
       </div>
     </div>

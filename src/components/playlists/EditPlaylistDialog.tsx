@@ -5,9 +5,7 @@ import { PlaylistTabs } from "./PlaylistTabs";
 import { PlaylistSettings } from "./PlaylistSettings";
 import { AssignManagersDialog } from "./AssignManagersDialog";
 import { usePlaylistMutations } from "./hooks/usePlaylistMutations";
-import { usePlaylistAssignment } from "./hooks/usePlaylistAssignment";
-import { Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { Playlist } from "@/types/api";
 import type { Manager } from "./types";
@@ -21,63 +19,30 @@ interface EditPlaylistDialogProps {
 
 export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: EditPlaylistDialogProps) {
   const { handleSavePlaylist } = usePlaylistMutations();
-  const { isAssignDialogOpen, setIsAssignDialogOpen, handleAssignManagers } = 
-    usePlaylistAssignment(playlist._id);
-
-  const transformSongs = (songs: any[]) => {
-    return songs.map(song => ({
-      _id: song.songId._id,
-      title: song.songId.title,
-      artist: song.songId.artist,
-      album: song.songId.album,
-      duration: song.songId.duration,
-      fileUrl: song.songId.fileUrl,
-      artworkUrl: song.songId.artworkUrl
-    }));
-  };
-
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  
   const [playlistData, setPlaylistData] = useState({
-    name: "",
-    description: "",
+    name: playlist.name,
+    description: playlist.description || "",
     artwork: null as File | null,
-    artworkUrl: "",
-    selectedSongs: [],
-    selectedGenres: [],
-    selectedCategories: [],
-    selectedMoods: [],
+    artworkUrl: playlist.artworkUrl || "",
+    selectedSongs: playlist.songs || [],
+    selectedGenres: playlist.genre ? [playlist.genre] : [],
+    selectedCategories: playlist.categories || [],
+    selectedMoods: playlist.mood ? [playlist.mood] : [],
     isCatalog: false,
-    isPublic: false,
-    isHero: false,
-    assignedManagers: [] as Manager[]
+    isPublic: playlist.isPublic,
+    isHero: playlist.isHero,
+    assignedManagers: playlist.assignedManagers || []
   });
 
-  useEffect(() => {
-    if (playlist) {
-      console.log('Loading playlist data:', playlist);
-      setPlaylistData({
-        name: playlist.name,
-        description: playlist.description || "",
-        artwork: null,
-        artworkUrl: playlist.artworkUrl || "",
-        selectedSongs: playlist.songs ? transformSongs(playlist.songs) : [],
-        selectedGenres: playlist.genre ? [playlist.genre] : [],
-        selectedCategories: playlist.categories || [],
-        selectedMoods: playlist.mood ? [playlist.mood] : [],
-        isCatalog: false,
-        isPublic: playlist.isPublic,
-        isHero: playlist.isHero,
-        assignedManagers: (playlist.assignedManagers || []).map(id => ({
-          _id: id,
-          id: id,
-          email: "",
-          firstName: null,
-          lastName: null,
-          first_name: null,
-          last_name: null
-        }))
-      });
-    }
-  }, [playlist]);
+  const handleManagerSelection = (selectedManagers: Manager[]) => {
+    console.log('Selected managers:', selectedManagers);
+    setPlaylistData(prev => ({
+      ...prev,
+      assignedManagers: selectedManagers
+    }));
+  };
 
   const handleSubmit = async () => {
     try {
@@ -120,17 +85,6 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
               setPlaylistData={setPlaylistData}
             />
 
-            <Button
-              onClick={() => setIsAssignDialogOpen(true)}
-              className="w-full bg-purple-100 text-purple-600 hover:bg-purple-200"
-              size="lg"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              {playlistData.assignedManagers.length > 0 
-                ? `Assigned to ${playlistData.assignedManagers.length} Manager${playlistData.assignedManagers.length > 1 ? 's' : ''}`
-                : "Assign to Managers"}
-            </Button>
-
             <PlaylistTabs
               playlistData={playlistData}
               setPlaylistData={setPlaylistData}
@@ -148,9 +102,8 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
             <AssignManagersDialog
               open={isAssignDialogOpen}
               onOpenChange={setIsAssignDialogOpen}
-              playlistId={playlist._id}
               initialSelectedManagers={playlistData.assignedManagers}
-              onAssign={handleAssignManagers}
+              onManagersSelected={handleManagerSelection}
             />
           </div>
         </div>
