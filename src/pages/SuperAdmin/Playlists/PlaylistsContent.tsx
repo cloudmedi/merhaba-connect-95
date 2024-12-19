@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import { PlaylistsTable } from "../components/PlaylistsTable";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import { EditPlaylistDialog } from "@/components/playlists/EditPlaylistDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { playlistService } from "@/services/playlist-service";
 import type { Playlist } from "@/types/api";
@@ -14,6 +15,8 @@ export function PlaylistsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -37,31 +40,8 @@ export function PlaylistsContent() {
   };
 
   const handleEdit = (playlist: Playlist) => {
-    console.log('Handling edit for playlist:', playlist);
-    if (!playlist || !playlist._id) {
-      console.error('Invalid playlist data for editing:', playlist);
-      toast.error("Invalid playlist data");
-      return;
-    }
-
-    navigate("create", {
-      state: {
-        editMode: true,
-        playlistData: {
-          _id: playlist._id,
-          name: playlist.name,
-          description: playlist.description,
-          artworkUrl: playlist.artworkUrl,
-          isPublic: playlist.isPublic,
-          isHero: playlist.isHero,
-          genre: playlist.genre,
-          mood: playlist.mood,
-          categories: playlist.categories,
-          songs: playlist.songs,
-          assignedManagers: playlist.assignedManagers
-        }
-      }
-    });
+    setEditingPlaylist(playlist);
+    setIsEditDialogOpen(true);
   };
 
   const filteredPlaylists = playlists?.filter(playlist => 
@@ -106,6 +86,19 @@ export function PlaylistsContent() {
           onClose={() => {
             setIsPlayerVisible(false);
             setCurrentPlaylist(null);
+          }}
+        />
+      )}
+
+      {editingPlaylist && (
+        <EditPlaylistDialog
+          playlist={editingPlaylist}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['playlists'] });
+            setIsEditDialogOpen(false);
+            setEditingPlaylist(null);
           }}
         />
       )}
