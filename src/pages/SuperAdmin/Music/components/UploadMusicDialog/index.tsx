@@ -56,54 +56,85 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           throw new Error('Oturum bulunamadı');
         }
 
-        // Axios ile dosya yükleme isteği
-        const uploadResponse = await axios.post('/admin/songs/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          },
-          onUploadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        // EventSource ile gerçek zamanlı ilerleme takibi
+        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`);
+        
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Upload progress event:', data);
+
+            if (data.progress !== undefined) {
               setUploadingFiles(prev => ({
                 ...prev,
                 [file.name]: {
                   ...prev[file.name],
-                  progress: progress
+                  progress: data.progress
                 }
               }));
             }
+
+            if (data.type === 'complete') {
+              eventSource.close();
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: 100,
+                  status: 'completed'
+                }
+              }));
+              queryClient.invalidateQueries({ queryKey: ['songs'] });
+              toast.success(`${file.name} başarıyla yüklendi`);
+            }
+
+            if (data.type === 'error') {
+              eventSource.close();
+              throw new Error(data.error);
+            }
+          } catch (error) {
+            console.error('Event data parsing error:', error);
+            eventSource.close();
+            handleUploadError(file.name, 'Event verisi işlenemedi');
           }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('EventSource error:', error);
+          eventSource.close();
+          handleUploadError(file.name, 'Bağlantı hatası oluştu');
+        };
+
+        // Dosya yükleme isteği
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/songs/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
         });
 
-        if (uploadResponse.status === 200) {
-          setUploadingFiles(prev => ({
-            ...prev,
-            [file.name]: {
-              ...prev[file.name],
-              progress: 100,
-              status: 'completed'
-            }
-          }));
-          queryClient.invalidateQueries({ queryKey: ['songs'] });
-          toast.success(`${file.name} başarıyla yüklendi`);
-        } else {
-          throw new Error('Yükleme başarısız oldu');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        setUploadingFiles(prev => ({
-          ...prev,
-          [file.name]: {
-            ...prev[file.name],
-            status: 'error',
-            error: error.message || 'Yükleme sırasında bir hata oluştu'
-          }
-        }));
-        toast.error(`${file.name}: ${error.message || 'Yükleme sırasında bir hata oluştu'}`);
+        handleUploadError(file.name, error.message || 'Yükleme sırasında bir hata oluştu');
       }
     }
+  };
+
+  const handleUploadError = (fileName: string, errorMessage: string) => {
+    setUploadingFiles(prev => ({
+      ...prev,
+      [fileName]: {
+        ...prev[fileName],
+        status: 'error',
+        error: errorMessage
+      }
+    }));
+    toast.error(`${fileName}: ${errorMessage}`);
   };
 
   return (
