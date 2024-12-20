@@ -16,15 +16,20 @@ export class PlaylistService {
 
   async getHeroPlaylist(managerId?: string) {
     try {
-      console.log('Fetching hero playlist for manager:', managerId);
+      console.log('Fetching playlists for manager:', managerId);
       
-      // Önce manager'a atanmış veya public playlistleri bul
-      const query = managerId ? {
+      if (!managerId) {
+        console.log('No manager ID provided, returning null');
+        return null;
+      }
+
+      // Manager'a atanmış veya public playlistleri bul
+      const query = {
         $or: [
           { isPublic: true },
           { 'assignedManagers._id': managerId }
         ]
-      } : { isHero: true };
+      };
 
       const playlist = await Playlist.findOne(query)
         .populate('songs.songId')
