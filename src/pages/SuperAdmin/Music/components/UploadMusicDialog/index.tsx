@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
-
-interface UploadingFile {
-  file: File;
-  progress: number;
-  status: 'uploading' | 'completed' | 'error';
-  error?: string;
-}
+import { useUploadProgress } from "./hooks/useUploadProgress";
+import { useEventSource } from "./hooks/useEventSource";
 
 interface Props {
   open: boolean;
@@ -18,14 +12,25 @@ interface Props {
 }
 
 export function UploadMusicDialog({ open, onOpenChange }: Props) {
-  const [uploadingFiles, setUploadingFiles] = useState<Record<string, UploadingFile>>({});
   const [isDragging, setIsDragging] = useState(false);
   const queryClient = useQueryClient();
+  const token = localStorage.getItem('token');
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('UploadingFiles state changed:', uploadingFiles);
-  }, [uploadingFiles]);
+  const {
+    uploadingFiles,
+    handleProgress,
+    handleError,
+    handleComplete,
+    addFile,
+    removeFile
+  } = useUploadProgress();
+
+  useEventSource({
+    token,
+    onProgress: handleProgress,
+    onError: handleError,
+    onComplete: handleComplete
+  });
 
   const handleFileSelect = async (files: FileList) => {
     console.log('File selection started:', Array.from(files).map(f => f.name));
@@ -34,107 +39,26 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
 
     for (const file of Array.from(files)) {
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`${file.name} desteklenen bir ses dosyası değil`);
+        handleError(file.name, `${file.name} desteklenen bir ses dosyası değil`);
         continue;
       }
 
       if (file.size > maxSize) {
-        toast.error(`${file.name} 100MB limitini aşıyor`);
+        handleError(file.name, `${file.name} 100MB limitini aşıyor`);
         continue;
       }
 
       console.log('Processing file:', file.name, 'Size:', file.size);
-
-      setUploadingFiles(prev => ({
-        ...prev,
-        [file.name]: {
-          file,
-          progress: 0,
-          status: 'uploading'
-        }
-      }));
+      addFile(file);
 
       const formData = new FormData();
       formData.append('file', file);
 
       try {
-        const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('Oturum bulunamadı');
         }
 
-        console.log('Creating EventSource connection for:', file.name);
-        const eventSource = new EventSource(
-          `${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`
-        );
-
-        // Handle connection open
-        eventSource.onopen = () => {
-          console.log('EventSource connection opened for:', file.name);
-        };
-
-        // Handle progress updates
-        eventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('Received event data:', {
-              type: data.type,
-              fileName: data.fileName,
-              progress: data.progress,
-              raw: event.data
-            });
-
-            if (data.type === 'progress' && data.fileName === file.name) {
-              console.log('Updating progress for:', file.name, 'to:', data.progress);
-              setUploadingFiles(prev => {
-                const newState = {
-                  ...prev,
-                  [file.name]: {
-                    ...prev[file.name],
-                    progress: data.progress
-                  }
-                };
-                console.log('New uploadingFiles state:', newState);
-                return newState;
-              });
-            }
-
-            if (data.type === 'complete') {
-              console.log('Upload completed for:', file.name);
-              eventSource.close();
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: 100,
-                  status: 'completed'
-                }
-              }));
-              queryClient.invalidateQueries({ queryKey: ['songs'] });
-              toast.success(`${file.name} başarıyla yüklendi`);
-            }
-
-            if (data.type === 'error') {
-              console.error('Error event received:', data);
-              eventSource.close();
-              throw new Error(data.error);
-            }
-          } catch (error) {
-            console.error('Event data parsing error:', error);
-            eventSource.close();
-            handleUploadError(file.name, 'Event verisi işlenemedi');
-          }
-        };
-
-        // Handle EventSource errors
-        eventSource.onerror = (error) => {
-          console.error('EventSource error for:', file.name, error);
-          eventSource.close();
-          handleUploadError(file.name, 'Bağlantı hatası oluştu');
-        };
-
-        // Start the actual file upload
-        console.log('Starting file upload for:', file.name);
         const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/songs/upload`, {
           method: 'POST',
           headers: {
@@ -147,33 +71,21 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        queryClient.invalidateQueries({ queryKey: ['songs'] });
+
       } catch (error: any) {
-        console.error('Upload error for:', file.name, error);
-        handleUploadError(file.name, error.message || 'Yükleme sırasında bir hata oluştu');
+        console.error('Upload error:', error);
+        handleError(file.name, error.message || 'Yükleme sırasında bir hata oluştu');
       }
     }
   };
 
-  const handleUploadError = (fileName: string, errorMessage: string) => {
-    console.error('Handling upload error for:', fileName, errorMessage);
-    setUploadingFiles(prev => ({
-      ...prev,
-      [fileName]: {
-        ...prev[fileName],
-        status: 'error',
-        error: errorMessage
-      }
-    }));
-    toast.error(`${fileName}: ${errorMessage}`);
-  };
-
-  // Cleanup function to close EventSource connections when dialog closes
   useEffect(() => {
     if (!open) {
       console.log('Dialog closed, cleaning up uploadingFiles state');
-      setUploadingFiles({});
+      Object.keys(uploadingFiles).forEach(removeFile);
     }
-  }, [open]);
+  }, [open, uploadingFiles, removeFile]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,13 +108,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
               <UploadProgress
                 key={fileName}
                 file={{ name: fileName, ...file }}
-                onRemove={() => {
-                  setUploadingFiles(prev => {
-                    const newFiles = { ...prev };
-                    delete newFiles[fileName];
-                    return newFiles;
-                  });
-                }}
+                onRemove={() => removeFile(fileName)}
               />
             ))}
           </div>
