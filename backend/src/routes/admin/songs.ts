@@ -24,7 +24,7 @@ interface AuthRequest extends express.Request {
 
 const router = express.Router();
 
-// Tüm şarkıları getir
+// Get all songs
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -35,10 +35,9 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Şarkı yükle - EventSource endpoint
+// EventSource endpoint for upload progress
 router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: Response) => {
   try {
-    // Set headers for EventSource
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -47,7 +46,6 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
       'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     });
 
-    // Keep connection alive
     const keepAlive = setInterval(() => {
       if (!res.writableEnded) {
         res.write(': keepalive\n\n');
@@ -61,7 +59,6 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
       }
     });
 
-    // Send initial connection success event
     res.write('data: {"type":"connected"}\n\n');
 
   } catch (error) {
@@ -73,6 +70,7 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
   }
 });
 
+// Upload endpoint
 router.post(
   '/upload',
   authMiddleware,
@@ -104,7 +102,7 @@ router.post(
     }
 });
 
-// Şarkı sil
+// Delete song
 router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);

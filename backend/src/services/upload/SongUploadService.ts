@@ -35,7 +35,7 @@ export class SongUploadService {
       const fileExtension = file.originalname.split('.').pop();
       const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
 
-      // Progress callback'i oluştur
+      // Initialize upload service with progress callback
       this.uploadService = new ChunkUploadService((progress) => {
         this.sendProgress(res, { 
           type: 'progress', 
@@ -44,7 +44,7 @@ export class SongUploadService {
         });
       });
 
-      // Client bağlantısı koptuğunda
+      // Handle client disconnection
       res.on('close', () => {
         this.isClientConnected = false;
         if (this.uploadService) {
@@ -52,7 +52,7 @@ export class SongUploadService {
         }
       });
 
-      // Dosya yükleme
+      // Start file upload
       this.sendProgress(res, { type: 'status', status: 'uploading' });
       const fileUrl = await this.uploadService.uploadFile(file.buffer, uniqueFileName);
       
@@ -60,7 +60,7 @@ export class SongUploadService {
         throw new Error('File upload failed');
       }
 
-      // Metadata çıkarma
+      // Extract metadata
       this.sendProgress(res, { type: 'status', status: 'processing' });
       const metadata = await this.metadataService.extractMetadata(file.buffer, file.originalname);
       
@@ -68,7 +68,7 @@ export class SongUploadService {
         throw new Error('Failed to extract metadata');
       }
 
-      // MongoDB'ye kaydetme
+      // Save to MongoDB
       const song = new Song({
         title: metadata.title || file.originalname.replace(/\.[^/.]+$/, ""),
         artist: metadata.artist || 'Unknown Artist',
@@ -81,14 +81,16 @@ export class SongUploadService {
         createdBy: userId
       });
 
+      logger.info('Attempting to save song to MongoDB:', song);
       const savedSong = await song.save();
       
       if (!savedSong) {
         throw new Error('Failed to save song to database');
       }
 
-      logger.info('Song saved to MongoDB:', savedSong);
+      logger.info('Song saved successfully:', savedSong);
       
+      // Send completion response
       if (this.isClientConnected && !res.writableEnded) {
         this.sendProgress(res, { 
           type: 'complete', 

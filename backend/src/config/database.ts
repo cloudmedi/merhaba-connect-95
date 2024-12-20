@@ -15,27 +15,27 @@ const connectDB = async () => {
     };
 
     mongoose.connection.on('connected', () => {
-      logger.info('MongoDB bağlantısı başarılı');
+      logger.info('MongoDB connection successful');
     });
 
     mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB bağlantı hatası:', err);
+      logger.error('MongoDB connection error:', err);
     });
 
     mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB bağlantısı kesildi');
+      logger.warn('MongoDB connection lost');
     });
 
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
-      logger.info('MongoDB bağlantısı kapatıldı - Uygulama sonlandırılıyor');
+      logger.info('MongoDB connection closed - Application terminating');
       process.exit(0);
     });
 
     const conn = await mongoose.connect(mongoUri, options);
-    logger.info(`MongoDB Bağlandı: ${conn.connection.host}`);
+    logger.info(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    logger.error('MongoDB bağlantı hatası:', error);
+    logger.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
