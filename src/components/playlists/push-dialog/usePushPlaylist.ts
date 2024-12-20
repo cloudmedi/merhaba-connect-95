@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import { toast } from "sonner";
-import { REALTIME_CHANNEL_PREFIX, PLAYLIST_SYNC_EVENT } from "@/integrations/supabase/presence/types";
+import { PLAYLIST_SYNC_EVENT } from "@/integrations/supabase/presence/types";
 
-export function usePushPlaylist(playlistId: string, playlistTitle: string, onClose: () => void) {
+export function usePushPlaylist(playlistId: string) {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const handlePush = async (deviceTokens: string[]) => {
@@ -15,61 +15,33 @@ export function usePushPlaylist(playlistId: string, playlistTitle: string, onClo
       setIsSyncing(true);
       console.log('Starting playlist sync for device tokens:', deviceTokens);
 
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          playlist_songs (
-            songs (
-              id,
-              title,
-              artist,
-              file_url,
-              bunny_id
-            )
-          )
-        `)
-        .eq('id', playlistId)
-        .single();
+      const { data: playlist } = await api.get(`/admin/playlists/${playlistId}`);
 
-      if (playlistError) throw playlistError;
+      // Send sync request to API
+      const { data } = await api.post('/admin/devices/sync-playlist', {
+        playlistId,
+        deviceTokens,
+        playlist: {
+          id: playlist.id,
+          name: playlist.name,
+          songs: playlist.songs.map((song: any) => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist || '',
+            file_url: song.bunny_id 
+              ? `https://cloud-media.b-cdn.net/${song.bunny_id}`
+              : song.file_url,
+            bunny_id: song.bunny_id
+          }))
+        }
+      });
 
-      const songs = playlist.playlist_songs.map((ps: any) => ({
-        ...ps.songs,
-        file_url: ps.songs.bunny_id 
-          ? `https://cloud-media.b-cdn.net/${ps.songs.bunny_id}`
-          : ps.songs.file_url
-      }));
-
-      // Send to each device using tokens
-      for (const token of deviceTokens) {
-        if (!token) continue;
-
-        const channelName = `${REALTIME_CHANNEL_PREFIX}${token}`;
-        const channel = supabase.channel(channelName);
-        
-        console.log(`Sending playlist to channel: ${channelName}`);
-        
-        await channel.subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await channel.send({
-              type: 'broadcast',
-              event: 'broadcast',
-              payload: {
-                type: PLAYLIST_SYNC_EVENT,
-                playlist: {
-                  id: playlist.id,
-                  name: playlist.name,
-                  songs: songs
-                }
-              }
-            });
-            console.log('Playlist sent successfully to device:', token);
-          }
-        });
+      if (data.success) {
+        return { success: true };
+      } else {
+        throw new Error(data.error || "Playlist sync failed");
       }
 
-      return { success: true };
     } catch (error: any) {
       console.error('Error pushing playlist:', error);
       return { 

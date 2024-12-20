@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import type { DeviceCategory } from "@/pages/Manager/Devices/hooks/types";
 import type { PushDialogDevice } from "./types";
 
@@ -7,34 +7,12 @@ export function useDeviceQuery() {
   return useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
+      console.log('Fetching devices...');
       
-      if (!userData.user) {
-        console.log('No user found');
-        return [];
-      }
-
-      console.log('User ID:', userData.user.id);
+      const { data } = await api.get('/admin/devices');
       
-      const { data, error } = await supabase
-        .from('devices')
-        .select(`
-          *,
-          branches (
-            id,
-            name,
-            company_id
-          )
-        `)
-        .eq('created_by', userData.user.id);
-
-      if (error) {
-        console.error('Error fetching devices:', error);
-        throw error;
-      }
-
       // Ensure category is of type DeviceCategory
-      return (data || []).map(device => ({
+      return (data || []).map((device: any) => ({
         ...device,
         category: validateDeviceCategory(device.category)
       })) as PushDialogDevice[];
