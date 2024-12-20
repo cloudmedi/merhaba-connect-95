@@ -46,20 +46,23 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
       'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     });
 
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+
+    // Keep connection alive
     const keepAlive = setInterval(() => {
       if (!res.writableEnded) {
         res.write(': keepalive\n\n');
       }
     }, 15000);
 
+    // Cleanup on client disconnect
     req.on('close', () => {
       clearInterval(keepAlive);
       if (!res.writableEnded) {
         res.end();
       }
     });
-
-    res.write('data: {"type":"connected"}\n\n');
 
   } catch (error) {
     logger.error('Error establishing EventSource connection:', error);
@@ -82,6 +85,7 @@ router.post(
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
+      // Set up SSE headers
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -90,13 +94,29 @@ router.post(
       });
 
       const uploadService = new SongUploadService();
-      await uploadService.uploadSong(req.file, req.user?.id, res);
+      
+      // Pass progress callback
+      const progressCallback = (progress: number) => {
+        if (!res.writableEnded) {
+          res.write(`data: ${JSON.stringify({
+            type: 'progress',
+            fileName: req.file?.originalname,
+            progress
+          })}\n\n`);
+        }
+      };
+
+      await uploadService.uploadSong(req.file, req.user?.id, progressCallback, res);
 
     } catch (error: any) {
       logger.error('Error during upload process:', error);
       
       if (!res.writableEnded) {
-        res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+        res.write(`data: ${JSON.stringify({ 
+          type: 'error', 
+          error: error.message,
+          fileName: req.file?.originalname
+        })}\n\n`);
         res.end();
       }
     }

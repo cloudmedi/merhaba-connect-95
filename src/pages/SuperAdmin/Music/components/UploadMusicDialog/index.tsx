@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,16 +55,25 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           throw new Error('Oturum bulunamadı');
         }
 
+        // Create EventSource for progress updates
         const eventSource = new EventSource(
           `${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`
         );
 
+        console.log('EventSource created:', eventSource.url);
+
+        // Handle connection open
+        eventSource.onopen = () => {
+          console.log('EventSource connection opened');
+        };
+
+        // Handle progress updates
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
             console.log('Upload progress event:', data);
 
-            if (data.progress !== undefined) {
+            if (data.type === 'progress' && data.fileName === file.name) {
               setUploadingFiles(prev => ({
                 ...prev,
                 [file.name]: {
@@ -99,12 +108,14 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           }
         };
 
+        // Handle EventSource errors
         eventSource.onerror = (error) => {
           console.error('EventSource error:', error);
           eventSource.close();
           handleUploadError(file.name, 'Bağlantı hatası oluştu');
         };
 
+        // Start the actual file upload
         const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/songs/upload`, {
           method: 'POST',
           headers: {
@@ -135,6 +146,13 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
     }));
     toast.error(`${fileName}: ${errorMessage}`);
   };
+
+  // Cleanup function to close EventSource connections when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setUploadingFiles({});
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

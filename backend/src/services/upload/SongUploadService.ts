@@ -29,6 +29,7 @@ export class SongUploadService {
   public async uploadSong(
     file: Express.Multer.File,
     userId: string | undefined,
+    onProgress: (progress: number) => void,
     res: Response
   ) {
     try {
@@ -39,6 +40,7 @@ export class SongUploadService {
       // Initialize upload service with progress callback
       this.uploadService = new ChunkUploadService((progress) => {
         console.log(`Progress callback triggered: ${progress}%`);
+        onProgress(progress);
         this.sendProgress(res, { 
           type: 'progress', 
           progress,
