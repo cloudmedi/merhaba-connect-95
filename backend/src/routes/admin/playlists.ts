@@ -1,13 +1,9 @@
 import express from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
 import { adminAuth } from '../../middleware/auth';
-import multer from 'multer';
-import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
-import path from 'path';
 import { AuthRequest } from '../../types/express';
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(adminAuth);
 
@@ -28,10 +24,10 @@ router.get('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlists = await playlistService.getAllPlaylists();
-    res.json(playlists);
+    return res.json(playlists);
   } catch (error: any) {
     console.error('Error fetching playlists:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to fetch playlists',
       details: error.message 
     });
@@ -43,10 +39,10 @@ router.post('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.createPlaylist(req.body);
-    res.status(201).json(playlist);
+    return res.status(201).json(playlist);
   } catch (error: any) {
     console.error('Error creating playlist:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to create playlist',
       details: error.message 
     });
@@ -63,10 +59,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
     const playlistService = new PlaylistService(req.io);
     const playlist = await playlistService.updatePlaylist(id, req.body);
-    res.json(playlist);
+    return res.json(playlist);
   } catch (error: any) {
     console.error('Error updating playlist:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to update playlist',
       details: error.message 
     });
@@ -78,10 +74,10 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
     await playlistService.deletePlaylist(req.params.id);
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error: any) {
     console.error('Error deleting playlist:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to delete playlist',
       details: error.message 
     });
