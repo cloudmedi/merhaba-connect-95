@@ -30,10 +30,10 @@ router.post('/register', async (req, res) => {
     await newToken.save();
     logger.info('New token registered:', { token, macAddress });
 
-    res.json(newToken);
+    return res.json(newToken);
   } catch (error) {
     logger.error('Token registration error:', error);
-    res.status(500).json({ error: 'Token kaydedilemedi' });
+    return res.status(500).json({ error: 'Token kaydedilemedi' });
   }
 });
 
