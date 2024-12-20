@@ -10,7 +10,7 @@ export class TokenService {
 
   generateToken(userId: Types.ObjectId, role: string): string {
     return jwt.sign(
-      { userId, role },
+      { userId: userId.toString(), role },
       this.jwtSecret,
       { expiresIn: '7d' }
     );

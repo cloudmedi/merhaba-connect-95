@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import * as argon2 from 'argon2';
-import { User } from '../../models/admin/User';
+import { User, IUser } from '../../models/admin/User';
 import { logger } from '../../utils/logger';
 import { TokenService } from '../../services/TokenService';
+import { Types } from 'mongoose';
 
 export class LoginController {
   private tokenService: TokenService;
@@ -40,7 +41,9 @@ export class LoginController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const token = this.tokenService.generateToken(user._id, user.role);
+      // Ensure user._id is converted to ObjectId if needed
+      const userId = Types.ObjectId.isValid(user._id) ? user._id : new Types.ObjectId(user._id);
+      const token = this.tokenService.generateToken(userId, user.role);
 
       logger.info('Login successful', {
         userId: user._id,
