@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { createDeviceToken } from '../utils/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
-import type { SystemInfo } from '../types/electron';
+import type { SystemInfo } from './types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
