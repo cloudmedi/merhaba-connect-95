@@ -1,4 +1,4 @@
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 import { User, UserCreateInput, UserUpdateInput, LicenseUpdateInput } from '@/types/auth';
 
 export const userService = {
