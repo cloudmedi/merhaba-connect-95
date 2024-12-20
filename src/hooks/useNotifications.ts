@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 
 export interface Notification {
   id: string;
@@ -52,7 +52,7 @@ export function useNotifications() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'notification') {
-        const newNotification = {
+        const newNotification: Notification = {
           id: data.id,
           title: data.title,
           message: data.message,
