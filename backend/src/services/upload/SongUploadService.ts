@@ -70,11 +70,11 @@ export class SongUploadService {
 
       // MongoDB'ye kaydetme
       const song = new Song({
-        title: metadata.title || file.originalname.replace(/\.[^/.]+$/, ""),
-        artist: metadata.artist || 'Unknown Artist',
+        title: metadata.title,
+        artist: metadata.artist,
         album: metadata.album || null,
         genre: metadata.genre || [],
-        duration: metadata.duration || 0,
+        duration: metadata.duration,
         fileUrl: fileUrl,
         bunnyId: uniqueBunnyId,
         artworkUrl: null,
@@ -82,6 +82,11 @@ export class SongUploadService {
       });
 
       const savedSong = await song.save();
+      
+      if (!savedSong) {
+        throw new Error('Failed to save song to database');
+      }
+
       logger.info('Song saved to MongoDB:', savedSong);
       
       if (this.isClientConnected && !res.writableEnded) {
