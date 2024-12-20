@@ -9,11 +9,16 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(managerMiddleware);
 
-// Hero playlist endpoint'i
+// Hero playlist endpoint'i - Sadece public hero playlist'i gösterilir
 router.get('/hero', async (_req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(_req.io);
     const heroPlaylist = await playlistService.getHeroPlaylist();
+    
+    if (!heroPlaylist?.isPublic) {
+      return res.status(404).json({ error: 'Hero playlist not found' });
+    }
+    
     return res.json(heroPlaylist);
   } catch (error) {
     console.error('Error fetching hero playlist:', error);
@@ -21,7 +26,7 @@ router.get('/hero', async (_req: AuthRequest, res) => {
   }
 });
 
-// Get manager's playlists - Sadece görüntüleme
+// Get manager's playlists - Sadece public ve kendine atanmış playlist'ler
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);

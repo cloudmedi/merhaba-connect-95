@@ -34,9 +34,12 @@ export class PlaylistQueryService extends BasePlaylistService {
 
       console.log('Fetching playlists for manager:', managerId);
       
-      // Manager'a atanmış playlistleri getir
+      // Manager'a atanmış ve public playlistleri getir
       const playlists = await Playlist.find({
-        'assignedManagers._id': new Types.ObjectId(managerId)
+        $or: [
+          { 'assignedManagers._id': new Types.ObjectId(managerId) },
+          { isPublic: true }
+        ]
       })
         .populate('songs.songId')
         .populate('categories')
@@ -44,6 +47,7 @@ export class PlaylistQueryService extends BasePlaylistService {
         .populate('mood')
         .sort({ createdAt: -1 });
 
+      console.log(`Found ${playlists.length} playlists for manager`);
       return playlists;
     } catch (error) {
       console.error('Error fetching manager playlists:', error);
