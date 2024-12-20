@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, History, AlertCircle, Bell, Info, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 
 interface NotificationRecord {
   id: number;
