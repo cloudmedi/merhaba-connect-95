@@ -11,7 +11,7 @@ export class LoginController {
     this.tokenService = new TokenService();
   }
 
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<Response> {
     try {
       const { email, password } = req.body;
 
@@ -49,7 +49,7 @@ export class LoginController {
         timestamp: new Date().toISOString()
       });
 
-      res.json({
+      return res.json({
         token,
         user: {
           id: user._id,
@@ -67,7 +67,7 @@ export class LoginController {
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString()
       });
-      res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }
 }
