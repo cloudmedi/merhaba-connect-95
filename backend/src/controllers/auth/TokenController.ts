@@ -17,11 +17,13 @@ export class TokenController {
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
 
+      console.log('Token verification - Request headers:', req.headers);
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       logger.info('Token verification request', {
         tokenExists: !!token,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        headers: req.headers
       });
       
       if (!token) {
@@ -31,7 +33,9 @@ export class TokenController {
         return res.status(401).json({ error: 'No token provided' });
       }
 
+      console.log('Token verification - Attempting to verify token');
       const decoded = this.tokenService.verifyToken(token);
+      console.log('Token verification - Decoded payload:', decoded);
       
       if (!decoded) {
         logger.warn('Token verification failed: Invalid token', {
@@ -40,7 +44,9 @@ export class TokenController {
         return res.status(401).json({ error: 'Invalid token' });
       }
 
+      console.log('Token verification - Looking up user:', decoded.userId);
       const user = await User.findById(decoded.userId);
+      console.log('Token verification - User found:', user ? 'Yes' : 'No');
       
       if (!user) {
         logger.warn('Token verification failed: User not found', {
@@ -68,12 +74,15 @@ export class TokenController {
         companyName: user.companyName
       };
 
+      console.log('Token verification - Sending response with user data:', userData);
+
       return res.json({
         valid: true,
         user: userData,
         token
       });
     } catch (error) {
+      console.error('Token verification - Error:', error);
       logger.error('Token verification error', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
