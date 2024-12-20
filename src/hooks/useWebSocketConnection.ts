@@ -12,14 +12,12 @@ export function useWebSocketConnection() {
       try {
         console.log('Initializing Socket.IO connection...');
         
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        
         if (socketRef.current?.connected) {
           console.log('Closing existing connection');
           socketRef.current.close();
         }
 
-        socketRef.current = io(API_URL, {
+        socketRef.current = io('http://localhost:5001', {
           transports: ['websocket'],
           reconnection: true,
           reconnectionDelay: 1000,
@@ -35,12 +33,10 @@ export function useWebSocketConnection() {
 
         socketRef.current.on('playlist-updated', (data) => {
           console.log('Playlist update received:', data);
-          // Playlist güncellemelerini handle et
         });
 
         socketRef.current.on('device-status', (data) => {
           console.log('Device status update:', data);
-          // Cihaz durum güncellemelerini handle et
         });
 
         socketRef.current.on('notification', (data) => {

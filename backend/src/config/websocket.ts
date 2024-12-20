@@ -1,11 +1,12 @@
 import { Server } from 'socket.io';
-import { Server as HTTPServer } from 'http';
+import { createServer } from 'http';
 import { logger } from '../utils/logger';
 
-export const initializeWebSocket = (httpServer: HTTPServer) => {
-  const io = new Server(httpServer, {
+export const initializeWebSocket = () => {
+  const wsServer = createServer();
+  const io = new Server(wsServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:3000',
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
       methods: ['GET', 'POST']
     },
     pingTimeout: 60000,
@@ -44,8 +45,9 @@ export const initializeWebSocket = (httpServer: HTTPServer) => {
     });
   });
 
-  io.on('connect_error', (error) => {
-    logger.error('WebSocket bağlantı hatası:', error);
+  const WEBSOCKET_PORT = process.env.WEBSOCKET_PORT || 5001;
+  wsServer.listen(WEBSOCKET_PORT, () => {
+    logger.info(`WebSocket server running on port ${WEBSOCKET_PORT}`);
   });
 
   return io;
