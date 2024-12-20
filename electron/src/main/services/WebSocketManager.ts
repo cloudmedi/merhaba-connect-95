@@ -1,60 +1,103 @@
 import { BrowserWindow } from 'electron';
-import { WebSocketConnectionManager } from './WebSocketConnectionManager';
-import { TokenValidationManager } from './TokenValidationManager';
+import WebSocket from 'ws';
+import { verifyDeviceToken } from '../../utils/deviceToken';
 
 export class WebSocketManager {
-  private connectionManager: WebSocketConnectionManager | null = null;
-  private tokenValidator: TokenValidationManager;
+  private ws: WebSocket | null = null;
+  private reconnectAttempts = 0;
+  private readonly maxReconnectAttempts = 5;
+  private readonly reconnectDelay = 3000;
+  private isConnecting = false;
 
   constructor(
     private deviceToken: string,
     private win: BrowserWindow | null
-  ) {
-    this.tokenValidator = new TokenValidationManager(deviceToken);
-    this.initialize();
+  ) {}
+
+  async connect() {
+    if (this.isConnecting) {
+      console.log('Connection attempt already in progress');
+      return;
+    }
+
+    this.isConnecting = true;
+
+    try {
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('Max reconnection attempts reached');
+        this.notifyRenderer('connection-failed');
+        return;
+      }
+
+      const isValid = await verifyDeviceToken(this.deviceToken);
+      if (!isValid) {
+        console.error('Invalid device token');
+        this.notifyRenderer('connection-failed');
+        return;
+      }
+
+      this.ws = new WebSocket(`ws://localhost:5001?token=${this.deviceToken}`);
+
+      this.ws.onopen = () => {
+        console.log('WebSocket connection established');
+        this.reconnectAttempts = 0;
+        this.isConnecting = false;
+        this.notifyRenderer('connected');
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data.toString());
+          console.log('WebSocket message received:', data);
+          this.notifyRenderer('message', data);
+        } catch (error) {
+          console.error('Error processing message:', error);
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.handleConnectionError();
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        this.handleConnectionError();
+      };
+
+    } catch (error) {
+      console.error('Error creating WebSocket connection:', error);
+      this.handleConnectionError();
+    }
   }
 
-  private async initialize() {
-    try {
-      console.log('Initializing WebSocket manager...');
+  private handleConnectionError() {
+    this.isConnecting = false;
+    this.reconnectAttempts++;
+    this.notifyRenderer('disconnected');
 
-      const isValid = await this.tokenValidator.validateToken();
-      if (!isValid) {
-        console.error('Invalid or expired device token');
-        if (this.win) {
-          this.win.webContents.send('websocket-error', 'Invalid or expired device token');
-        }
-        return;
-      }
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      console.log(`Reconnecting in ${this.reconnectDelay}ms... (Attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.connect(), this.reconnectDelay);
+    }
+  }
 
-      const supabaseUrl = process.env.VITE_SUPABASE_URL;
-      const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('Missing Supabase configuration');
-        return;
-      }
-
-      this.connectionManager = new WebSocketConnectionManager(
-        this.deviceToken,
-        this.win,
-        supabaseUrl,
-        supabaseKey
-      );
-
-      await this.connectionManager.connect();
-    } catch (error) {
-      console.error('Error initializing WebSocket manager:', error);
+  private notifyRenderer(status: 'connected' | 'disconnected' | 'connection-failed' | 'message', data?: any) {
+    if (this.win) {
+      this.win.webContents.send(`websocket-${status}`, data);
     }
   }
 
   async sendPlaylist(playlist: any) {
-    try {
-      if (!this.connectionManager) {
-        throw new Error('WebSocket connection not initialized');
-      }
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return { success: false, error: 'WebSocket not connected' };
+    }
 
-      console.log('Sending playlist via WebSocket:', playlist);
+    try {
+      this.ws.send(JSON.stringify({
+        type: 'sync_playlist',
+        payload: { playlist }
+      }));
       return { success: true };
     } catch (error) {
       console.error('Error sending playlist:', error);
@@ -65,10 +108,12 @@ export class WebSocketManager {
     }
   }
 
-  async disconnect() {
-    if (this.connectionManager) {
-      this.connectionManager.disconnect();
-      this.connectionManager = null;
+  disconnect() {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
     }
+    this.isConnecting = false;
+    this.reconnectAttempts = 0;
   }
 }
