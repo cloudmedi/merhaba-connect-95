@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { User } from "../types";
-import { supabase } from "@/integrations/supabase/client";
+import { userService } from "@/services/users";
 import { toast } from "sonner";
 
 interface EditUserDialogProps {
@@ -20,25 +20,21 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    role: user.role as 'super_admin' | 'admin' | 'manager' | 'user'
+    role: user.role,
+    companyName: user.companyName
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          role: formData.role,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
+      await userService.updateUser(user.id, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        role: formData.role,
+        companyName: formData.companyName
+      });
 
       toast.success('User updated successfully');
       onUpdate();
@@ -98,10 +94,22 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="companyName">Company Name</Label>
+            <Input
+              id="companyName"
+              value={formData.companyName}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                companyName: e.target.value
+              }))}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <Select
               value={formData.role}
-              onValueChange={(value: 'super_admin' | 'admin' | 'manager' | 'user') => setFormData(prev => ({
+              onValueChange={(value) => setFormData(prev => ({
                 ...prev,
                 role: value
               }))}
@@ -110,7 +118,6 @@ export function EditUserDialog({ user, isOpen, onClose, onUpdate }: EditUserDial
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="user">User</SelectItem>
