@@ -47,10 +47,10 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
         }
       }));
 
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
+      const formData = new FormData();
+      formData.append('file', file);
 
+      try {
         const response = await axios.post('/admin/songs/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -60,17 +60,18 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
             
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             
+            // Backend'den gelen gerçek progress'i kullan
             setUploadingFiles(prev => ({
               ...prev,
               [file.name]: {
                 ...prev[file.name],
-                progress: Math.min(progress, 99) // Backend işlemi bitene kadar 100% gösterme
+                progress: progress
               }
             }));
           }
         });
 
-        // Backend işlemi tamamlandığında
+        // Backend işlemi başarılı olduğunda
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
