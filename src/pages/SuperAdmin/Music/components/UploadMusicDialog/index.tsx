@@ -65,8 +65,6 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
         const reader = response.body?.getReader();
         if (!reader) throw new Error('Stream reader not available');
 
-        let receivedLength = 0;
-
         while (true) {
           const { done, value } = await reader.read();
           
@@ -86,7 +84,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
               const data = JSON.parse(event.slice(6));
               console.log('Received SSE data:', data);
 
-              if (data.progress !== undefined) {
+              if (data.type === 'progress') {
                 setUploadingFiles(prev => ({
                   ...prev,
                   [file.name]: {

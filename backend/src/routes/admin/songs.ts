@@ -63,7 +63,7 @@ router.post(
 
       // Progress güncellemelerini gönderen fonksiyon
       const sendProgress = (progress: number) => {
-        res.write(`data: ${JSON.stringify({ progress })}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
       };
 
       uploadService = new ChunkUploadService(sendProgress);
