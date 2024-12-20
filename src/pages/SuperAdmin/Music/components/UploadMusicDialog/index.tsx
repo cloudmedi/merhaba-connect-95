@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
+import axios from "@/lib/axios";
 
 interface UploadingFile {
   file: File;
@@ -51,50 +52,61 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
 
       try {
         const token = localStorage.getItem('token');
-        const eventSource = new EventSource(`http://localhost:5000/api/admin/songs/upload?token=${token}`);
+        if (!token) {
+          throw new Error('Oturum bulunamadı');
+        }
+
+        // EventSource bağlantısı
+        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`);
         let uploadComplete = false;
 
         eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log('Upload progress:', data);
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Upload progress:', data);
 
-          if (data.progress !== undefined) {
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                progress: data.progress
-              }
-            }));
-          }
+            if (data.progress !== undefined) {
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: data.progress
+                }
+              }));
+            }
 
-          if (data.type === 'complete') {
-            uploadComplete = true;
+            if (data.type === 'complete') {
+              uploadComplete = true;
+              eventSource.close();
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: 100,
+                  status: 'completed'
+                }
+              }));
+              queryClient.invalidateQueries({ queryKey: ['songs'] });
+              toast.success(`${file.name} başarıyla yüklendi`);
+            }
+
+            if (data.type === 'error') {
+              uploadComplete = true;
+              eventSource.close();
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  status: 'error',
+                  error: data.error
+                }
+              }));
+              toast.error(`${file.name}: ${data.error}`);
+            }
+          } catch (error) {
+            console.error('Event data parsing error:', error);
             eventSource.close();
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                progress: 100,
-                status: 'completed'
-              }
-            }));
-            queryClient.invalidateQueries({ queryKey: ['songs'] });
-            toast.success(`${file.name} başarıyla yüklendi`);
-          }
-
-          if (data.type === 'error') {
-            uploadComplete = true;
-            eventSource.close();
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                status: 'error',
-                error: data.error
-              }
-            }));
-            toast.error(`${file.name}: ${data.error}`);
+            handleUploadError(file.name, 'Event verisi işlenemedi');
           }
         };
 
@@ -102,23 +114,14 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           console.error('EventSource error:', error);
           if (!uploadComplete) {
             eventSource.close();
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                status: 'error',
-                error: 'Bağlantı hatası oluştu'
-              }
-            }));
-            toast.error(`${file.name}: Bağlantı hatası oluştu`);
+            handleUploadError(file.name, 'SSE bağlantı hatası');
           }
         };
 
-        // Send the actual file upload request
-        const response = await fetch('http://localhost:5000/api/admin/songs/upload', {
-          method: 'POST',
-          body: formData,
+        // Dosya yükleme isteği
+        const response = await axios.post('/admin/songs/upload', formData, {
           headers: {
+            'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${token}`
           }
         });
@@ -129,17 +132,21 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        setUploadingFiles(prev => ({
-          ...prev,
-          [file.name]: {
-            ...prev[file.name],
-            status: 'error',
-            error: error.message
-          }
-        }));
-        toast.error(`${file.name}: ${error.message}`);
+        handleUploadError(file.name, error.message || 'Yükleme sırasında bir hata oluştu');
       }
     }
+  };
+
+  const handleUploadError = (fileName: string, errorMessage: string) => {
+    setUploadingFiles(prev => ({
+      ...prev,
+      [fileName]: {
+        ...prev[fileName],
+        status: 'error',
+        error: errorMessage
+      }
+    }));
+    toast.error(`${fileName}: ${errorMessage}`);
   };
 
   return (
