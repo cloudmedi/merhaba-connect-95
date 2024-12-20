@@ -95,7 +95,7 @@ export class ChunkUploadService {
     if (!this.isUploading || !this.onProgressCallback) return;
 
     const now = Date.now();
-    if (now - this.lastProgressUpdate > 100) {
+    if (now - this.lastProgressUpdate > 100) { // Throttle updates to every 100ms
       const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
       try {
         this.onProgressCallback(progress);
