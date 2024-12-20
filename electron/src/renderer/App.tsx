@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { initSupabase } from '../integrations/supabase/client';
-import { createDeviceToken } from '../integrations/supabase/deviceToken';
+import { createDeviceToken } from '../utils/deviceToken';
 import { TokenDisplay } from './components/TokenDisplay';
 import type { SystemInfo } from '../types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
 import { DeviceInfo } from './components/DeviceInfo';
-
-interface TokenData {
-  token: string;
-  expires_at?: string;
-  status?: string;
-  mac_address?: string;
-}
 
 function App() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
@@ -28,8 +20,6 @@ function App() {
         setIsLoading(true);
         setError(null);
         
-        await initSupabase();
-        
         const macAddress = await window.electronAPI.getMacAddress();
         console.log('MAC Address:', macAddress);
         
@@ -42,8 +32,9 @@ function App() {
         console.log('System Info:', sysInfo);
 
         const tokenData = await createDeviceToken(macAddress);
-        if (tokenData && 'token' in tokenData) {
+        if (tokenData && tokenData.token) {
           setDeviceToken(tokenData.token);
+          await window.electronAPI.registerDevice({ token: tokenData.token });
           toast.success('Cihaz başarıyla kaydedildi');
         } else {
           throw new Error('Invalid token data received');

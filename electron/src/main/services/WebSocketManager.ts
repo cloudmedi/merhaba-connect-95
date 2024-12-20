@@ -88,26 +88,6 @@ export class WebSocketManager {
     }
   }
 
-  async sendPlaylist(playlist: any) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      return { success: false, error: 'WebSocket not connected' };
-    }
-
-    try {
-      this.ws.send(JSON.stringify({
-        type: 'sync_playlist',
-        payload: { playlist }
-      }));
-      return { success: true };
-    } catch (error) {
-      console.error('Error sending playlist:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
-    }
-  }
-
   disconnect() {
     if (this.ws) {
       this.ws.close();
