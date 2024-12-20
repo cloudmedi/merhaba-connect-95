@@ -38,11 +38,13 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 // Şarkı yükle - EventSource endpoint
 router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: Response) => {
   try {
+    // Set headers for EventSource
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     });
 
     // Keep connection alive
@@ -71,7 +73,6 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
   }
 });
 
-// Şarkı yükle - POST endpoint
 router.post(
   '/upload',
   authMiddleware,

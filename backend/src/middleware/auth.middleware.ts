@@ -7,11 +7,13 @@ interface AuthRequest extends Request {
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    // Check for token in Authorization header or query parameter
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token as string;
 
     console.log('Auth middleware - Received token:', {
       token: token ? 'Token exists' : 'No token',
-      authHeader: req.headers.authorization
+      authHeader: req.headers.authorization,
+      queryToken: req.query.token
     });
 
     if (!token) {
