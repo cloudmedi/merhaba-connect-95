@@ -1,132 +1,79 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { User } from '../../models/admin/User';
-import { License } from '../../models/admin/License';
 import { adminAuth } from '../../middleware/auth';
-import * as argon2 from 'argon2';
+import { logger } from '../../utils/logger';
 
 const router = express.Router();
 
-// Get all users with their licenses
-router.get('/', adminAuth, async (req, res) => {
+// Get all users
+router.get('/', adminAuth, async (_req: Request, res: Response) => {
   try {
     const users = await User.find().select('-password');
-    
-    // Her kullanıcı için lisans bilgisini License tablosundan çekelim
-    const usersWithLicenses = await Promise.all(users.map(async (user) => {
-      const license = await License.findOne({ 
-        userId: user._id,
-        isActive: true 
-      }).sort({ endDate: -1 }); // En son lisansı getir
-      
-      return {
-        ...user.toObject(),
-        license: license ? {
-          id: license._id,
-          type: license.type,
-          startDate: license.startDate,
-          endDate: license.endDate
-        } : null
-      };
-    }));
-
-    res.json(usersWithLicenses);
+    res.json(users);
   } catch (error) {
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Create user with license
-router.post('/', async (req, res) => {
+// Create user
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role, companyName, license } = req.body;
-    
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-
-    // Hash password
-    const hashedPassword = await argon2.hash(password);
-
-    // Create user
-    const user = new User({
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      role: role || 'manager',
-      companyName,
-      isActive: true
-    });
-
+    const user = new User(req.body);
     await user.save();
-
-    // Create license if provided
-    if (license) {
-      const licenseDoc = new License({
-        userId: user._id,
-        type: license.type,
-        startDate: license.start_date,
-        endDate: license.end_date,
-        quantity: license.quantity,
-        isActive: true
-      });
-
-      await licenseDoc.save();
-    }
-
-    // Return user without password using object destructuring
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    
-    res.status(201).json(userWithoutPassword);
+    res.status(201).json(user);
   } catch (error) {
-    console.error('Create user error:', error);
+    logger.error('Error creating user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Get user by ID
-router.get('/:id', adminAuth, async (req, res) => {
+router.get('/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
     res.json(user);
   } catch (error) {
+    logger.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Update user
-router.put('/:id', adminAuth, async (req, res) => {
+router.put('/:id', adminAuth, async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, role, isActive } = req.body;
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { firstName, lastName, role, isActive },
+      req.body,
       { new: true }
     ).select('-password');
-
+    
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
     res.json(user);
   } catch (error) {
+    logger.error('Error updating user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Delete user
-router.delete('/:id', adminAuth, async (req, res) => {
+router.delete('/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
+    logger.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
