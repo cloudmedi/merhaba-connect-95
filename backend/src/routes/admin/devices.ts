@@ -1,7 +1,7 @@
 import express from 'express';
 import { Device } from '../../models/manager/Device';
 import { authMiddleware } from '../../middleware/auth.middleware';
-import { adminMiddleware } from '../../middleware/manager.middleware';
+import { adminMiddleware } from '../../middleware/auth.middleware';
 import { logger } from '../../utils/logger';
 
 const router = express.Router();
@@ -36,10 +36,10 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
-    res.json(device);
+    return res.json(device);
   } catch (error) {
     logger.error('Error updating device:', error);
-    res.status(500).json({ error: 'Failed to update device' });
+    return res.status(500).json({ error: 'Failed to update device' });
   }
 });
 
@@ -50,10 +50,10 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Error deleting device:', error);
-    res.status(500).json({ error: 'Failed to delete device' });
+    return res.status(500).json({ error: 'Failed to delete device' });
   }
 });
 
