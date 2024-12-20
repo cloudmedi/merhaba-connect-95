@@ -18,9 +18,22 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      const response = await api.get(`/admin/playlists/${id}`);
+      console.log('Fetching playlist with ID:', id);
+      const response = await api.get(`/manager/playlists/${id}`);
+      console.log('Playlist response:', response.data);
       return response.data;
     }
+  });
+
+  const { data: playlistSongs } = useQuery({
+    queryKey: ['playlist-songs', id],
+    queryFn: async () => {
+      console.log('Fetching playlist songs for ID:', id);
+      const response = await api.get(`/manager/playlist-songs/${id}`);
+      console.log('Playlist songs response:', response.data);
+      return response.data;
+    },
+    enabled: !!id
   });
 
   if (isLoading) {
