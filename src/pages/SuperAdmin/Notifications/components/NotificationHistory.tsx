@@ -57,7 +57,7 @@ export function NotificationHistory() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const response = await api.put('/notifications/mark-all-read');
+      const response = await api.put('/api/admin/notifications/mark-all-read');
       
       if (response.status === 200) {
         setNotifications(prevNotifications =>
