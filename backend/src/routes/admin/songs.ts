@@ -24,6 +24,7 @@ interface AuthRequest extends express.Request {
 
 const router = express.Router();
 
+// Tüm şarkıları getir
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
@@ -34,6 +35,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Şarkı yükle
 router.post(
   '/upload',
   authMiddleware,
@@ -65,6 +67,7 @@ router.post(
     }
 });
 
+// Şarkı sil
 router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const song = await Song.findById(req.params.id);
