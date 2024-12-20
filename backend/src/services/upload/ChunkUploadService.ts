@@ -13,6 +13,7 @@ export class ChunkUploadService {
   private totalChunks: number = 0;
   private uploadedChunks: number = 0;
   private lastProgressUpdate: number = 0;
+  private uploadPromise: Promise<string> | null = null;
 
   constructor(private onProgress?: (progress: number) => void) {}
 
@@ -20,7 +21,8 @@ export class ChunkUploadService {
     if (this.isUploading && this.abortController) {
       this.isUploading = false;
       this.abortController.abort();
-      logger.debug('Upload cancelled');
+      logger.info('Upload cancelled');
+      throw new Error('Upload cancelled by user');
     }
   }
 
@@ -105,6 +107,9 @@ export class ChunkUploadService {
       
       // Upload chunks sequentially to maintain order
       for (let i = 0; i < chunks.length; i++) {
+        if (!this.isUploading) {
+          throw new Error('Upload cancelled');
+        }
         const chunk = chunks[i];
         const start = i * CHUNK_SIZE;
         await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
@@ -120,6 +125,7 @@ export class ChunkUploadService {
 
     } catch (error) {
       logger.error('File upload error:', error);
+      this.isUploading = false;
       throw error;
     } finally {
       this.isUploading = false;

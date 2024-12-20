@@ -69,8 +69,13 @@ router.post(
       });
 
       uploadService = new ChunkUploadService((progress) => {
-        const data = JSON.stringify({ progress });
-        res.write(`data: ${data}\n\n`);
+        try {
+          const data = JSON.stringify({ progress });
+          res.write(`data: ${data}\n\n`);
+        } catch (error) {
+          logger.error('Error sending progress update:', error);
+          throw error; // Yüklemeyi durdurmak için hatayı yeniden fırlat
+        }
       });
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
@@ -107,11 +112,20 @@ router.post(
       logger.error('Error during upload process:', error);
       
       if (uploadService) {
-        uploadService.cancel();
+        try {
+          uploadService.cancel();
+        } catch (cancelError) {
+          logger.error('Error cancelling upload:', cancelError);
+        }
       }
 
-      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
-      res.end();
+      // Hata durumunda client'a bildir
+      try {
+        res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+        res.end();
+      } catch (writeError) {
+        logger.error('Error sending error message to client:', writeError);
+      }
     }
 });
 
