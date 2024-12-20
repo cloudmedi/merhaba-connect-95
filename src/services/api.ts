@@ -36,12 +36,12 @@ api.interceptors.response.use(
 // Playlist servisleri
 export const playlistService = {
   getHeroPlaylist: async () => {
-    const response = await api.get('/playlists/hero');
+    const response = await api.get('/manager/playlists/hero');
     return response.data;
   },
 
   getCategories: async (search?: string) => {
-    const response = await api.get('/categories', {
+    const response = await api.get('/manager/categories', {
       params: { search }
     });
     return response.data;
