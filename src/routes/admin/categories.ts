@@ -6,7 +6,6 @@ import { Request } from 'express';
 interface AuthRequest extends Request {
   user?: {
     id: string;
-    role: string;
   };
 }
 
@@ -14,7 +13,7 @@ const router = express.Router();
 const categoryService = new CategoryService();
 
 // Get all categories
-router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response) => {
   try {
     const categories = await categoryService.getAllCategories();
     res.json(categories);
@@ -28,7 +27,7 @@ router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: 
 });
 
 // Create category
-router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const category = await categoryService.createCategory({
       ...req.body,
@@ -45,7 +44,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
 });
 
 // Update category
-router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -65,7 +64,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 });
 
 // Delete category
-router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();
