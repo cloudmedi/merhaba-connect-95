@@ -69,8 +69,8 @@ router.post(
       });
 
       uploadService = new ChunkUploadService((progress) => {
-        res.write(`data: ${JSON.stringify({ progress })}\n\n`);
-        res.flush(); // Ensure data is sent immediately
+        const data = JSON.stringify({ progress });
+        res.write(`data: ${data}\n\n`);
       });
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
@@ -146,7 +146,6 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
           url: bunnyUrl
         });
         
-        // Dosya zaten silinmiş olabilir, bu durumda devam ediyoruz
         if (deleteResponse.status !== 404) {
           throw new Error(`Failed to delete file from CDN: ${errorText}`);
         }
