@@ -2,9 +2,9 @@ import fetch from 'node-fetch';
 import { bunnyConfig } from '../../config/bunny';
 import { logger } from '../../utils/logger';
 
-const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
+const CHUNK_SIZE = 5 * 1024 * 1024; // Increased to 5MB chunks for better performance
 const MAX_RETRIES = 3;
-const TIMEOUT = 15000; // 15 seconds timeout
+const TIMEOUT = 30000; // Increased timeout to 30 seconds
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
@@ -95,9 +95,11 @@ export class ChunkUploadService {
     if (!this.isUploading || !this.onProgressCallback) return;
 
     const now = Date.now();
-    if (now - this.lastProgressUpdate > 100) { // Throttle updates to every 100ms
+    // Update progress more frequently (every 50ms instead of 100ms)
+    if (now - this.lastProgressUpdate > 50) {
       const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
       try {
+        console.log(`Upload progress: ${progress}%`);
         this.onProgressCallback(progress);
         this.lastProgressUpdate = now;
       } catch (error) {
@@ -123,6 +125,7 @@ export class ChunkUploadService {
       const uniqueFileName = `music/${fileName}`;
       const bunnyUrl = `https://${bunnyConfig.baseUrl}/${bunnyConfig.storageZoneName}/${uniqueFileName}`;
       
+      // Create chunks
       const chunks: Buffer[] = [];
       for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
         chunks.push(buffer.slice(i, Math.min(i + CHUNK_SIZE, buffer.length)));
@@ -131,6 +134,12 @@ export class ChunkUploadService {
       this.totalChunks = chunks.length;
       logger.info(`Starting upload of ${fileName} in ${chunks.length} chunks`);
       
+      // Send initial progress update
+      if (this.onProgressCallback) {
+        this.onProgressCallback(0);
+      }
+
+      // Upload chunks sequentially
       for (let i = 0; i < chunks.length; i++) {
         if (!this.isUploading) {
           return '';
@@ -146,6 +155,7 @@ export class ChunkUploadService {
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
       logger.info(`Upload completed: ${cdnUrl}`);
       
+      // Send final progress update
       if (this.isUploading && this.onProgressCallback) {
         this.onProgressCallback(100);
       }

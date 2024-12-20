@@ -17,6 +17,7 @@ export class SongUploadService {
   private sendProgress(res: Response, data: any) {
     if (this.isClientConnected && !res.writableEnded) {
       try {
+        console.log('Sending progress update:', data);
         res.write(`data: ${JSON.stringify(data)}\n\n`);
       } catch (error) {
         logger.error('Error sending progress:', error);
@@ -37,15 +38,18 @@ export class SongUploadService {
 
       // Initialize upload service with progress callback
       this.uploadService = new ChunkUploadService((progress) => {
+        console.log(`Progress callback triggered: ${progress}%`);
         this.sendProgress(res, { 
           type: 'progress', 
           progress,
-          status: 'uploading'
+          status: 'uploading',
+          fileName: file.originalname
         });
       });
 
       // Handle client disconnection
       res.on('close', () => {
+        console.log('Client disconnected');
         this.isClientConnected = false;
         if (this.uploadService) {
           this.uploadService.cancel();
@@ -53,7 +57,14 @@ export class SongUploadService {
       });
 
       // Start file upload
-      this.sendProgress(res, { type: 'status', status: 'uploading' });
+      this.sendProgress(res, { 
+        type: 'status', 
+        status: 'uploading',
+        fileName: file.originalname,
+        progress: 0
+      });
+
+      console.log('Starting file upload...');
       const fileUrl = await this.uploadService.uploadFile(file.buffer, uniqueFileName);
       
       if (!fileUrl) {
@@ -61,7 +72,14 @@ export class SongUploadService {
       }
 
       // Extract metadata
-      this.sendProgress(res, { type: 'status', status: 'processing' });
+      console.log('Extracting metadata...');
+      this.sendProgress(res, { 
+        type: 'status', 
+        status: 'processing',
+        fileName: file.originalname,
+        progress: 100
+      });
+
       const metadata = await this.metadataService.extractMetadata(file.buffer, file.originalname);
       
       if (!metadata) {
@@ -69,6 +87,7 @@ export class SongUploadService {
       }
 
       // Save to MongoDB
+      console.log('Saving to MongoDB...');
       const song = new Song({
         title: metadata.title || file.originalname.replace(/\.[^/.]+$/, ""),
         artist: metadata.artist || 'Unknown Artist',
@@ -95,7 +114,9 @@ export class SongUploadService {
         this.sendProgress(res, { 
           type: 'complete', 
           song: savedSong,
-          status: 'completed'
+          status: 'completed',
+          fileName: file.originalname,
+          progress: 100
         });
         res.end();
       }
@@ -111,7 +132,8 @@ export class SongUploadService {
         this.sendProgress(res, { 
           type: 'error', 
           error: error.message || 'Upload failed',
-          status: 'error'
+          status: 'error',
+          fileName: file.originalname
         });
         res.end();
       }
