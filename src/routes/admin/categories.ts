@@ -31,7 +31,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
   try {
     const category = await categoryService.createCategory({
       ...req.body,
-      createdBy: req.user?.id || ''
+      createdBy: req.user?.id
     });
     res.status(201).json(category);
   } catch (error: any) {
@@ -53,11 +53,6 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
     }
 
     const category = await categoryService.updateCategory(id, req.body);
-    if (!category) {
-      res.status(404).json({ error: 'Category not found' });
-      return;
-    }
-    
     res.json(category);
   } catch (error: any) {
     console.error('Error updating category:', error);
