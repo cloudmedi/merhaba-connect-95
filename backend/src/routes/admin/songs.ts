@@ -37,22 +37,38 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
 // Şarkı yükle - EventSource endpoint
 router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: Response) => {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*'
-  });
+  try {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
 
-  // Keep connection alive
-  const keepAlive = setInterval(() => {
-    res.write(': keepalive\n\n');
-  }, 15000);
+    // Keep connection alive
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) {
+        res.write(': keepalive\n\n');
+      }
+    }, 15000);
 
-  req.on('close', () => {
-    clearInterval(keepAlive);
-    res.end();
-  });
+    req.on('close', () => {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        res.end();
+      }
+    });
+
+    // Send initial connection success event
+    res.write('data: {"type":"connected"}\n\n');
+
+  } catch (error) {
+    logger.error('Error establishing EventSource connection:', error);
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Connection failed' })}\n\n`);
+      res.end();
+    }
+  }
 });
 
 // Şarkı yükle - POST endpoint
