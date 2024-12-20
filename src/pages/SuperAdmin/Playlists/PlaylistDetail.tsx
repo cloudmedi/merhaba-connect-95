@@ -6,7 +6,7 @@ import { MusicPlayer } from "@/components/MusicPlayer";
 import { PushPlaylistDialog } from "@/components/playlists/push-dialog/PushPlaylistDialog";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 export function PlaylistDetail() {
@@ -80,7 +80,7 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <PlaylistHeader
           onBack={() => navigate("/manager")}
-          artworkUrl={playlist.artwork_url}
+          artworkUrl={playlist.artworkUrl}
           name={playlist.name}
           genreName={playlist.genre?.name}
           moodName={playlist.mood?.name}
@@ -102,7 +102,7 @@ export function PlaylistDetail() {
           <MusicPlayer
             playlist={{
               title: playlist.name,
-              artwork: playlist.artwork_url || "/placeholder.svg",
+              artwork: playlist.artworkUrl || "/placeholder.svg",
               songs: playlist.songs.map((song: any) => ({
                 id: song.id,
                 title: song.title,
