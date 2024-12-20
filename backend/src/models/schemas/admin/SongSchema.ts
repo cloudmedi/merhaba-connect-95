@@ -46,6 +46,4 @@ const SongSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Tekrarlanan index tanımını kaldırdık, schema tanımındaki unique: true yeterli
-
 export const Song = mongoose.model('Song', SongSchema);
