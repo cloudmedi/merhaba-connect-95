@@ -14,7 +14,7 @@ export async function createDeviceToken(macAddress: string): Promise<{ token: st
       macAddress
     });
 
-    console.log('Token saved to MongoDB:', data);
+    console.log('Token registration response:', data);
 
     if (!data.token) {
       throw new Error('No token received from server');
@@ -33,6 +33,7 @@ export async function createDeviceToken(macAddress: string): Promise<{ token: st
 export async function verifyDeviceToken(token: string): Promise<boolean> {
   try {
     const { data } = await api.post('/manager/devices/verify', { token });
+    console.log('Token verification response:', data);
     return data.valid;
   } catch (error) {
     console.error('Error verifying device token:', error);

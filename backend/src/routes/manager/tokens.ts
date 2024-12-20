@@ -8,19 +8,22 @@ router.post('/register', async (req, res) => {
   try {
     const { token, macAddress } = req.body;
     
+    logger.info('Token registration request received:', { token, macAddress });
+    
     if (!token || !macAddress) {
+      logger.error('Missing required fields:', { token: !!token, macAddress: !!macAddress });
       return res.status(400).json({ error: 'Token ve MAC adresi gerekli' });
     }
-    
-    logger.info('Token registration attempt:', { token, macAddress });
 
     // MAC adresi kontrolü
     let existingToken = await Token.findOne({ macAddress });
+    logger.info('Existing token check:', { exists: !!existingToken, macAddress });
     
     if (existingToken) {
-      logger.info('Updating existing token for MAC address:', macAddress);
+      logger.info('Updating existing token:', { oldToken: existingToken.token, newToken: token });
       existingToken.token = token;
       await existingToken.save();
+      logger.info('Token updated successfully:', existingToken);
       return res.json(existingToken);
     }
 
@@ -31,8 +34,9 @@ router.post('/register', async (req, res) => {
       isUsed: false
     });
 
+    logger.info('Creating new token:', { token, macAddress });
     await newToken.save();
-    logger.info('New token registered:', { token, macAddress });
+    logger.info('New token created successfully:', newToken);
 
     return res.json(newToken);
   } catch (error) {
