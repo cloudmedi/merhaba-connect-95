@@ -1,103 +1,66 @@
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 
 export function useWebSocketConnection() {
-  const wsRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const initializeWebSocket = async () => {
       try {
-        console.log('Initializing WebSocket connection...');
+        console.log('Initializing Socket.IO connection...');
         
-        // Get current user's token
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.error('No active session found');
-          toast.error('Oturum bulunamadı');
-          return;
-        }
-
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        if (!supabaseUrl) {
-          console.error('Supabase URL not found');
-          toast.error('Bağlantı bilgileri eksik');
-          return;
-        }
-
-        const wsUrl = `${supabaseUrl.replace('https://', 'wss://')}/functions/v1/sync-playlist`;
-        console.log('Connecting to WebSocket URL:', wsUrl);
-
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        
+        if (socketRef.current?.connected) {
           console.log('Closing existing connection');
-          wsRef.current.close();
+          socketRef.current.close();
         }
 
-        wsRef.current = new WebSocket(wsUrl);
+        socketRef.current = io(API_URL, {
+          transports: ['websocket'],
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
+          reconnectionAttempts: 5
+        });
         
-        wsRef.current.onopen = () => {
-          console.log('WebSocket connection established');
+        socketRef.current.on('connect', () => {
+          console.log('Socket.IO connection established');
           setIsConnected(true);
-          // Send authentication message
-          if (wsRef.current) {
-            console.log('Sending authentication message');
-            wsRef.current.send(JSON.stringify({
-              type: 'authenticate',
-              payload: {
-                token: session.access_token
-              }
-            }));
-          }
-        };
+          toast.success('WebSocket bağlantısı kuruldu');
+        });
 
-        wsRef.current.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('WebSocket message received:', data);
-            
-            switch (data.type) {
-              case 'auth_success':
-                console.log('WebSocket authenticated successfully');
-                toast.success('WebSocket bağlantısı kuruldu');
-                break;
-              case 'sync_success':
-                toast.success('Playlist senkronizasyonu başarılı');
-                break;
-              case 'sync_error':
-                console.error('Sync error:', data.payload);
-                toast.error(data.payload.message || 'Senkronizasyon başarısız');
-                break;
-              case 'presence_update':
-                console.log('Device presence updated:', data.payload);
-                break;
-              case 'error':
-                console.error('WebSocket error:', data.payload);
-                toast.error(data.payload.message || 'Bir hata oluştu');
-                break;
-              default:
-                console.log('Unhandled message type:', data.type);
-            }
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
+        socketRef.current.on('playlist-updated', (data) => {
+          console.log('Playlist update received:', data);
+          // Playlist güncellemelerini handle et
+        });
 
-        wsRef.current.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          setIsConnected(false);
+        socketRef.current.on('device-status', (data) => {
+          console.log('Device status update:', data);
+          // Cihaz durum güncellemelerini handle et
+        });
+
+        socketRef.current.on('notification', (data) => {
+          console.log('Notification received:', data);
+          toast.info(data.message);
+        });
+
+        socketRef.current.on('error', (error) => {
+          console.error('Socket.IO error:', error);
           toast.error('WebSocket bağlantı hatası');
-        };
+        });
 
-        wsRef.current.onclose = () => {
-          console.log('WebSocket connection closed');
+        socketRef.current.on('disconnect', (reason) => {
+          console.log('Socket.IO disconnected:', reason);
           setIsConnected(false);
-          // Attempt to reconnect after a delay
-          reconnectTimeoutRef.current = setTimeout(initializeWebSocket, 5000);
-        };
+          toast.error('WebSocket bağlantısı koptu');
+        });
+
       } catch (error) {
-        console.error('Error initializing WebSocket:', error);
+        console.error('Error initializing Socket.IO:', error);
         setIsConnected(false);
         toast.error('WebSocket bağlantısı kurulamadı');
       }
@@ -109,31 +72,31 @@ export function useWebSocketConnection() {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
       }
     };
   }, []);
 
-  const sendMessage = (message: any) => {
-    if (!wsRef.current) {
-      console.error('WebSocket not initialized');
+  const sendMessage = (event: string, data: any) => {
+    if (!socketRef.current) {
+      console.error('Socket.IO not initialized');
       toast.error('WebSocket bağlantısı hazır değil');
       return;
     }
 
-    if (wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('WebSocket is not connected');
+    if (!socketRef.current.connected) {
+      console.error('Socket.IO is not connected');
       toast.error('WebSocket bağlantısı kopuk');
       return;
     }
 
     try {
-      console.log('Sending WebSocket message:', message);
-      wsRef.current.send(JSON.stringify(message));
+      console.log('Sending Socket.IO message:', { event, data });
+      socketRef.current.emit(event, data);
     } catch (error) {
-      console.error('Error sending WebSocket message:', error);
+      console.error('Error sending Socket.IO message:', error);
       toast.error('Mesaj gönderilemedi');
     }
   };
