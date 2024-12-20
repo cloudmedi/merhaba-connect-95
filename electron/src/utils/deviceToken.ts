@@ -2,21 +2,27 @@ import api from '../lib/api';
 
 export async function createDeviceToken(macAddress: string): Promise<{ token: string; status: string }> {
   try {
-    console.log('Checking device token for MAC:', macAddress);
+    console.log('Creating device token for MAC:', macAddress);
     
-    const { data } = await api.post('/manager/devices/register', {
-      macAddress,
-      systemInfo: await window.electronAPI.getSystemInfo()
+    // 6 haneli random token oluştur
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('Generated token:', token);
+
+    // Token'ı MongoDB'ye kaydet
+    const { data } = await api.post('/manager/tokens/register', {
+      token,
+      macAddress
     });
+
+    console.log('Token saved to MongoDB:', data);
 
     if (!data.token) {
       throw new Error('No token received from server');
     }
 
-    console.log('Device token received:', data);
     return {
       token: data.token,
-      status: data.status
+      status: 'active'
     };
   } catch (error) {
     console.error('Error in createDeviceToken:', error);

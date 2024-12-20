@@ -4,15 +4,18 @@ import { logger } from '../../utils/logger';
 
 const router = express.Router();
 
-// Token kaydetme endpoint'i
 router.post('/register', async (req, res) => {
   try {
     const { token, macAddress } = req.body;
     
+    if (!token || !macAddress) {
+      return res.status(400).json({ error: 'Token ve MAC adresi gerekli' });
+    }
+    
     logger.info('Token registration attempt:', { token, macAddress });
 
     // MAC adresi kontrolü
-    const existingToken = await Token.findOne({ macAddress });
+    let existingToken = await Token.findOne({ macAddress });
     
     if (existingToken) {
       logger.info('Updating existing token for MAC address:', macAddress);
@@ -24,7 +27,8 @@ router.post('/register', async (req, res) => {
     // Yeni token oluştur
     const newToken = new Token({
       token,
-      macAddress
+      macAddress,
+      isUsed: false
     });
 
     await newToken.save();
