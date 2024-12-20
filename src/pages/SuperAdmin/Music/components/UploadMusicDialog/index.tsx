@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "@/lib/axios";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
 
@@ -59,56 +58,73 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           }
         });
 
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
         const reader = response.body?.getReader();
         if (!reader) throw new Error('Stream reader not available');
 
+        let receivedLength = 0;
+
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          
+          if (done) {
+            console.log('Upload complete');
+            break;
+          }
 
+          // SSE mesajlarını parse et
           const text = new TextDecoder().decode(value);
           const events = text.split('\n\n').filter(Boolean);
 
           for (const event of events) {
-            const data = JSON.parse(event.replace('data: ', ''));
+            if (!event.startsWith('data: ')) continue;
+            
+            try {
+              const data = JSON.parse(event.slice(6));
+              console.log('Received SSE data:', data);
 
-            if (data.progress !== undefined) {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: data.progress
-                }
-              }));
-            }
+              if (data.progress !== undefined) {
+                setUploadingFiles(prev => ({
+                  ...prev,
+                  [file.name]: {
+                    ...prev[file.name],
+                    progress: data.progress
+                  }
+                }));
+              }
 
-            if (data.type === 'complete') {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: 100,
-                  status: 'completed'
-                }
-              }));
-              await queryClient.invalidateQueries({ queryKey: ['songs'] });
-              toast.success(`${file.name} başarıyla yüklendi`);
-            }
+              if (data.type === 'complete') {
+                setUploadingFiles(prev => ({
+                  ...prev,
+                  [file.name]: {
+                    ...prev[file.name],
+                    progress: 100,
+                    status: 'completed'
+                  }
+                }));
+                await queryClient.invalidateQueries({ queryKey: ['songs'] });
+                toast.success(`${file.name} başarıyla yüklendi`);
+              }
 
-            if (data.type === 'error') {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  status: 'error',
-                  error: data.error
-                }
-              }));
-              toast.error(`${file.name}: ${data.error}`);
+              if (data.type === 'error') {
+                setUploadingFiles(prev => ({
+                  ...prev,
+                  [file.name]: {
+                    ...prev[file.name],
+                    status: 'error',
+                    error: data.error
+                  }
+                }));
+                toast.error(`${file.name}: ${data.error}`);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
             }
           }
         }
-
       } catch (error: any) {
         console.error('Upload error:', error);
         

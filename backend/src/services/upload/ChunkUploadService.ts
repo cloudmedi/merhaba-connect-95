@@ -13,6 +13,8 @@ export class ChunkUploadService {
   private isUploading: boolean = false;
   private totalChunks: number = 0;
   private uploadedChunks: number = 0;
+  private totalBytes: number = 0;
+  private uploadedBytes: number = 0;
   private lastProgressUpdate: number = 0;
 
   constructor(private onProgress?: (progress: number) => void) {}
@@ -54,7 +56,9 @@ export class ChunkUploadService {
       }
 
       this.uploadedChunks++;
+      this.uploadedBytes += chunk.length;
       this.updateProgress();
+      
       return true;
     } catch (error) {
       logger.error(`Chunk upload error (attempt ${retryCount + 1}):`, error);
@@ -71,10 +75,10 @@ export class ChunkUploadService {
   private updateProgress() {
     const now = Date.now();
     if (now - this.lastProgressUpdate > 100) { // Throttle updates to max 10 per second
-      const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
+      const progress = Math.floor((this.uploadedBytes / this.totalBytes) * 100);
       this.onProgress?.(progress);
       this.lastProgressUpdate = now;
-      logger.debug(`Upload progress: ${progress}%`);
+      logger.debug(`Upload progress: ${progress}% (${this.uploadedBytes}/${this.totalBytes} bytes)`);
     }
   }
 
@@ -90,6 +94,8 @@ export class ChunkUploadService {
     this.isUploading = true;
     this.abortController = new AbortController();
     this.uploadedChunks = 0;
+    this.uploadedBytes = 0;
+    this.totalBytes = buffer.length;
     this.lastProgressUpdate = 0;
 
     try {
@@ -102,7 +108,7 @@ export class ChunkUploadService {
       }
 
       this.totalChunks = chunks.length;
-      logger.info(`Starting upload of ${fileName} in ${chunks.length} chunks`);
+      logger.info(`Starting upload of ${fileName} (${buffer.length} bytes) in ${chunks.length} chunks`);
       
       // Paralel yükleme (3 chunk aynı anda)
       for (let i = 0; i < chunks.length; i += MAX_CONCURRENT_UPLOADS) {
