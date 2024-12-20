@@ -16,11 +16,14 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
   const [isColorLoading, setIsColorLoading] = useState(false);
 
   useEffect(() => {
+    console.log("Hero Playlist Data:", playlist); // Debug için eklendi
+    console.log("Artwork URL:", playlist?.artworkUrl); // Debug için eklendi
+
     const loadDominantColor = async () => {
-      if (playlist?.artwork_url) {
+      if (playlist?.artworkUrl) {
         setIsColorLoading(true);
         try {
-          const { primary } = await extractDominantColor(playlist.artwork_url);
+          const { primary } = await extractDominantColor(playlist.artworkUrl);
           const solidColor = primary.replace(/[\d.]+\)$/g, '1)');
           setDominantColor(solidColor);
         } catch (error) {
@@ -32,13 +35,14 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
     };
 
     loadDominantColor();
-  }, [playlist?.artwork_url]);
+  }, [playlist?.artworkUrl]);
 
   if (isLoading || isColorLoading) {
     return <HeroLoader />;
   }
 
   if (!playlist) {
+    console.log("No playlist data available"); // Debug için eklendi
     return null;
   }
 
@@ -56,7 +60,7 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
           <h2 className="text-4xl font-bold">Featured Playlist</h2>
           <p className="text-2xl opacity-90">{playlist.name}</p>
           <Button 
-            onClick={() => navigate(`/manager/playlists/${playlist.id}`)}
+            onClick={() => navigate(`/manager/playlists/${playlist._id}`)}
             className="mt-4 bg-white/20 hover:bg-white/30 transition-all border border-white/30 flex items-center gap-3"
           >
             <Play className="w-5 h-5 text-white" />
@@ -64,11 +68,18 @@ export function HeroPlaylist({ playlist, isLoading }: HeroPlaylistProps) {
           </Button>
         </div>
         <div className="w-64 h-64 relative z-10 transition-transform duration-300 group-hover:scale-105">
-          <img
-            src={playlist.artwork_url}
-            alt="Hero Playlist"
-            className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl"
-          />
+          {playlist.artworkUrl && (
+            <img
+              src={playlist.artworkUrl}
+              alt="Hero Playlist"
+              className="absolute inset-0 w-full h-full object-cover rounded-lg shadow-2xl"
+              onError={(e) => {
+                console.error('Image load error:', e); // Debug için eklendi
+                const img = e.target as HTMLImageElement;
+                img.src = "/placeholder.svg";
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

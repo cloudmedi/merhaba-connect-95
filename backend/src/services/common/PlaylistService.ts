@@ -57,6 +57,7 @@ export class PlaylistService {
         playlistId: playlist?._id,
         isPublic: playlist?.isPublic,
         isHero: playlist?.isHero,
+        artworkUrl: playlist?.artworkUrl, // Debug için eklendi
         assignedManagersCount: playlist?.assignedManagers?.length
       });
 
