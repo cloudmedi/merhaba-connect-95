@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, History, AlertCircle, Bell, Info, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/api";
+import api from "@/lib/api";
 
 interface NotificationRecord {
   id: number;
@@ -57,24 +57,21 @@ export function NotificationHistory() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ isRead: true })
-        .eq('status', 'unread');
+      const response = await api.put('/notifications/mark-all-read');
+      
+      if (response.status === 200) {
+        setNotifications(prevNotifications =>
+          prevNotifications.map(notification => ({
+            ...notification,
+            isRead: true
+          }))
+        );
 
-      if (error) throw error;
-
-      setNotifications(prevNotifications =>
-        prevNotifications.map(notification => ({
-          ...notification,
-          isRead: true
-        }))
-      );
-
-      toast({
-        title: "Başarılı",
-        description: "Tüm bildirimler okundu olarak işaretlendi",
-      });
+        toast({
+          title: "Başarılı",
+          description: "Tüm bildirimler okundu olarak işaretlendi",
+        });
+      }
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       toast({
