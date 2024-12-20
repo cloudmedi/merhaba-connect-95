@@ -24,25 +24,25 @@ let wsManager: WebSocketManager | null = null;
 
 async function getMacAddress() {
   try {
-    const networkInterfaces = await si.networkInterfaces()
+    const networkInterfaces = await si.networkInterfaces();
     for (const iface of networkInterfaces) {
       if (!iface.internal && iface.mac) {
-        return iface.mac
+        return iface.mac;
       }
     }
-    return null
+    return null;
   } catch (error) {
-    console.error('Error getting MAC address:', error)
-    return null
+    console.error('Error getting MAC address:', error);
+    return null;
   }
 }
 
 async function getSystemInfo() {
-  const cpu = await si.cpu()
-  const mem = await si.mem()
-  const os = await si.osInfo()
-  const disk = await si.fsSize()
-  const network = await si.networkInterfaces()
+  const cpu = await si.cpu();
+  const mem = await si.mem();
+  const os = await si.osInfo();
+  const disk = await si.fsSize();
+  const network = await si.networkInterfaces();
 
   return {
     cpu: {
@@ -73,7 +73,7 @@ async function getSystemInfo() {
       ip4: n.ip4,
       mac: n.mac,
     })),
-  }
+  };
 }
 
 async function createWindow() {
@@ -96,12 +96,10 @@ async function createWindow() {
     }
   });
 
-  // Determine if we're in development or production
   if (process.env.VITE_DEV_SERVER_URL) {
     console.log('Loading development URL:', process.env.VITE_DEV_SERVER_URL);
     win.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
-    // Production - load from built files
     const indexPath = path.join(__dirname, '..', 'renderer', 'index.html');
     console.log('Loading production index.html from:', indexPath);
     
@@ -131,7 +129,6 @@ app.on('activate', () => {
   }
 });
 
-// IPC handlers
 ipcMain.handle('get-system-info', getSystemInfo);
 ipcMain.handle('get-mac-address', getMacAddress);
 ipcMain.handle('get-device-id', () => deviceToken);
@@ -162,5 +159,4 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
   }
 });
 
-// Playlist sync handler
 ipcMain.handle('sync-playlist', handlePlaylistSync);
