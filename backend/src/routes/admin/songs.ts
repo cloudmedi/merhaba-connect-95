@@ -25,13 +25,13 @@ interface AuthRequest extends express.Request {
 const router = express.Router();
 
 // Get all songs
-router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/', authMiddleware, async (_req: AuthRequest, res: Response) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
-    res.json(songs);
+    return res.json(songs);
   } catch (error) {
     logger.error('Error fetching songs:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -64,12 +64,15 @@ router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: R
       }
     });
 
+    return res; // Return the response object
+
   } catch (error) {
     logger.error('Error establishing EventSource connection:', error);
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Connection failed' })}\n\n`);
       res.end();
     }
+    return res;
   }
 });
 
@@ -107,6 +110,7 @@ router.post(
       };
 
       await uploadService.uploadSong(req.file, req.user?.id, progressCallback, res);
+      return res;
 
     } catch (error: any) {
       logger.error('Error during upload process:', error);
@@ -119,6 +123,7 @@ router.post(
         })}\n\n`);
         res.end();
       }
+      return res;
     }
 });
 
@@ -157,11 +162,11 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
     }
 
     await Song.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Song successfully deleted' });
+    return res.json({ message: 'Song successfully deleted' });
 
   } catch (error: any) {
     logger.error('Error deleting song:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Error deleting song',
       details: error.message 
     });
