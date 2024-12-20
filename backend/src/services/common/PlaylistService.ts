@@ -14,10 +14,19 @@ export class PlaylistService {
     this.mutationService = new PlaylistMutationService(io);
   }
 
-  async getHeroPlaylist() {
+  async getHeroPlaylist(managerId?: string) {
     try {
-      console.log('Fetching hero playlist...');
-      const heroPlaylist = await Playlist.findOne({ isHero: true })
+      console.log('Fetching hero playlist for manager:', managerId);
+      
+      // Önce manager'a atanmış veya public playlistleri bul
+      const query = managerId ? {
+        $or: [
+          { isPublic: true },
+          { 'assignedManagers._id': managerId }
+        ]
+      } : { isHero: true };
+
+      const playlist = await Playlist.findOne(query)
         .populate('songs.songId')
         .populate('categories')
         .populate('genre')
@@ -27,19 +36,20 @@ export class PlaylistService {
           select: '_id email firstName lastName'
         });
 
-      console.log('Hero playlist found:', {
-        id: heroPlaylist?._id,
-        name: heroPlaylist?.name,
-        isPublic: heroPlaylist?.isPublic,
-        assignedManagers: heroPlaylist?.assignedManagers?.map(m => ({
+      console.log('Playlist found:', {
+        id: playlist?._id,
+        name: playlist?.name,
+        isPublic: playlist?.isPublic,
+        isHero: playlist?.isHero,
+        assignedManagers: playlist?.assignedManagers?.map(m => ({
           _id: m._id,
           email: m.email
         }))
       });
 
-      return heroPlaylist;
+      return playlist;
     } catch (error) {
-      console.error('Error fetching hero playlist:', error);
+      console.error('Error fetching playlist:', error);
       throw error;
     }
   }
