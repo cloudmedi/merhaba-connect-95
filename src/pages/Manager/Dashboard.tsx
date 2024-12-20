@@ -39,14 +39,20 @@ export default function ManagerDashboard() {
     queryFn: async () => {
       console.log('Fetching manager playlists...');
       const { data } = await api.get('/manager/playlists');
-      console.log('Manager playlists response:', data);
+      console.log('Manager playlists raw response:', data); // Debug için eklendi
+      
+      // Her playlist için artwork URL'ini kontrol et
+      data.forEach((playlist: any) => {
+        console.log(`Playlist ${playlist.name} artwork URL:`, playlist.artworkUrl);
+      });
+      
       return data;
     }
   });
 
   // Playlist'leri kategorilere göre grupla
-  const playlistsByCategory = playlists?.reduce((acc, playlist) => {
-    playlist.categories?.forEach(category => {
+  const playlistsByCategory = playlists?.reduce((acc: any, playlist: any) => {
+    playlist.categories?.forEach((category: any) => {
       if (!acc[category._id]) {
         acc[category._id] = {
           id: category._id,
@@ -55,6 +61,14 @@ export default function ManagerDashboard() {
           playlists: []
         };
       }
+      
+      // Debug için eklendi
+      console.log(`Adding playlist to category ${category.name}:`, {
+        id: playlist._id,
+        title: playlist.name,
+        artwork_url: playlist.artworkUrl
+      });
+
       acc[category._id].playlists.push({
         id: playlist._id,
         title: playlist.name,

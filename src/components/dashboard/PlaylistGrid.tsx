@@ -59,6 +59,8 @@ export function PlaylistGrid({
   };
 
   const handlePlayClick = async (playlist: GridPlaylist) => {
+    console.log('Playlist artwork URL:', playlist.artwork_url); // Debug için eklendi
+    
     // If clicking the currently playing playlist, we want to toggle play/pause
     if (playlist.id === currentPlayingId) {
       onPlay?.(playlist);
@@ -95,6 +97,13 @@ export function PlaylistGrid({
       </div>
     );
   }
+
+  // Debug için eklendi
+  console.log('Playlists in grid:', playlists.map(p => ({
+    id: p.id,
+    title: p.title,
+    artwork_url: p.artwork_url
+  })));
 
   return (
     <div className="space-y-4">
