@@ -13,67 +13,52 @@ export const useUploadProgress = () => {
 
   const handleProgress = useCallback((fileName: string, progress: number) => {
     console.log('Progress update received:', { fileName, progress });
-    setUploadingFiles(prev => {
-      const newState = {
-        ...prev,
-        [fileName]: {
-          ...prev[fileName],
-          progress
-        }
-      };
-      console.log('New uploadingFiles state:', newState);
-      return newState;
-    });
+    setUploadingFiles(prev => ({
+      ...prev,
+      [fileName]: {
+        ...prev[fileName],
+        progress,
+        status: 'uploading' as const
+      }
+    }));
   }, []);
 
   const handleError = useCallback((fileName: string, error: string) => {
     console.error('Upload error:', { fileName, error });
-    setUploadingFiles(prev => {
-      const newState = {
-        ...prev,
-        [fileName]: {
-          ...prev[fileName],
-          status: 'error',
-          error
-        }
-      };
-      console.log('Error state update:', newState);
-      return newState;
-    });
+    setUploadingFiles(prev => ({
+      ...prev,
+      [fileName]: {
+        ...prev[fileName],
+        status: 'error' as const,
+        error
+      }
+    }));
     toast.error(`${fileName}: ${error}`);
   }, []);
 
   const handleComplete = useCallback((fileName: string) => {
     console.log('Upload completed:', fileName);
-    setUploadingFiles(prev => {
-      const newState = {
-        ...prev,
-        [fileName]: {
-          ...prev[fileName],
-          status: 'completed',
-          progress: 100
-        }
-      };
-      console.log('Complete state update:', newState);
-      return newState;
-    });
+    setUploadingFiles(prev => ({
+      ...prev,
+      [fileName]: {
+        ...prev[fileName],
+        status: 'completed' as const,
+        progress: 100
+      }
+    }));
     toast.success(`${fileName} başarıyla yüklendi`);
   }, []);
 
   const addFile = useCallback((file: File) => {
     console.log('Adding new file to upload queue:', file.name);
-    setUploadingFiles(prev => {
-      const newState = {
-        ...prev,
-        [file.name]: {
-          file,
-          progress: 0,
-          status: 'uploading'
-        }
-      };
-      console.log('New file added to state:', newState);
-      return newState;
-    });
+    setUploadingFiles(prev => ({
+      ...prev,
+      [file.name]: {
+        file,
+        progress: 0,
+        status: 'uploading' as const
+      }
+    }));
   }, []);
 
   const removeFile = useCallback((fileName: string) => {
