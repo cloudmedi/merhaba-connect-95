@@ -13,7 +13,7 @@ const router = express.Router();
 const categoryService = new CategoryService();
 
 // Get all categories
-const getAllCategories = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response) => {
   try {
     const categories = await categoryService.getAllCategories();
     res.json(categories);
@@ -24,14 +24,14 @@ const getAllCategories = async (req: AuthRequest, res: Response, next: NextFunct
       details: error.message 
     });
   }
-};
+});
 
 // Create category
-const createCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const category = await categoryService.createCategory({
       ...req.body,
-      createdBy: req.user?.id
+      createdBy: req.user?.id || ''
     });
     res.status(201).json(category);
   } catch (error: any) {
@@ -41,46 +41,43 @@ const createCategory = async (req: AuthRequest, res: Response, next: NextFunctio
       details: error.message 
     });
   }
-};
+});
 
 // Update category
-const updateCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     if (!id) {
-      res.status(400).json({ error: 'Category ID is required' });
-      return;
+      return res.status(400).json({ error: 'Category ID is required' });
     }
 
     const category = await categoryService.updateCategory(id, req.body);
-    res.json(category);
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    
+    return res.json(category);
   } catch (error: any) {
     console.error('Error updating category:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to update category',
       details: error.message 
     });
   }
-};
+});
 
 // Delete category
-const deleteCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     await categoryService.deleteCategory(req.params.id);
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error: any) {
     console.error('Error deleting category:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to delete category',
       details: error.message 
     });
   }
-};
-
-// Route handlers
-router.get('/', authMiddleware, adminMiddleware, getAllCategories);
-router.post('/', authMiddleware, adminMiddleware, createCategory);
-router.put('/:id', authMiddleware, adminMiddleware, updateCategory);
-router.delete('/:id', authMiddleware, adminMiddleware, deleteCategory);
+});
 
 export default router;
