@@ -5,8 +5,9 @@ import { logger } from '../../utils/logger';
 
 const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
 const MAX_RETRIES = 3;
-const TIMEOUT = 15000; // 15 seconds timeout
+const TIMEOUT = 30000; // 30 seconds timeout
 const MAX_CONCURRENT_UPLOADS = 3;
+const PROGRESS_THROTTLE = 100; // 100ms
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
@@ -52,7 +53,8 @@ export class ChunkUploadService {
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed with status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Upload failed with status ${response.status}: ${errorText}`);
       }
 
       this.uploadedChunks++;
@@ -74,7 +76,7 @@ export class ChunkUploadService {
 
   private updateProgress() {
     const now = Date.now();
-    if (now - this.lastProgressUpdate > 100) { // Throttle updates to max 10 per second
+    if (now - this.lastProgressUpdate > PROGRESS_THROTTLE) {
       const progress = Math.floor((this.uploadedBytes / this.totalBytes) * 100);
       this.onProgress?.(progress);
       this.lastProgressUpdate = now;

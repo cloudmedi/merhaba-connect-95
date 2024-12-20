@@ -48,17 +48,11 @@ router.post(
 
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'Dosya yüklenmedi' });
+        return res.status(400).json({ error: 'No file uploaded' });
       }
 
       const file = req.file;
-      logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
-
-      const uniqueBunnyId = `song_${uuidv4()}`;
-      const fileExtension = file.originalname.split('.').pop();
-      const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
-      
-      logger.info(`Generated unique filename: ${uniqueFileName}`);
+      logger.info(`Starting upload for file: ${file.originalname}, size: ${file.size} bytes`);
 
       // SSE başlatma
       res.writeHead(200, {
@@ -67,10 +61,18 @@ router.post(
         'Connection': 'keep-alive'
       });
 
-      uploadService = new ChunkUploadService((progress) => {
-        // Progress güncellemelerini SSE ile gönder
+      // Progress güncellemelerini gönderen fonksiyon
+      const sendProgress = (progress: number) => {
         res.write(`data: ${JSON.stringify({ progress })}\n\n`);
-      });
+      };
+
+      uploadService = new ChunkUploadService(sendProgress);
+
+      const uniqueBunnyId = `song_${uuidv4()}`;
+      const fileExtension = file.originalname.split('.').pop();
+      const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
+      
+      logger.info(`Generated unique filename: ${uniqueFileName}`);
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
       logger.info('File uploaded to CDN:', fileUrl);
@@ -104,7 +106,7 @@ router.post(
       res.end();
 
     } catch (error: any) {
-      logger.error('Error during upload process:', error);
+      logger.error('Upload error:', error);
       
       if (uploadService) {
         uploadService.cancel();
@@ -120,7 +122,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
-      return res.status(404).json({ error: 'Şarkı bulunamadı' });
+      return res.status(404).json({ error: 'Song not found' });
     }
 
     if (song.bunnyId) {
@@ -138,7 +140,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
         }
       });
 
-      if (!deleteResponse.ok) {
+      if (!deleteResponse.ok && deleteResponse.status !== 404) {
         const errorText = await deleteResponse.text();
         logger.error('Failed to delete file from Bunny CDN:', {
           status: deleteResponse.status,
@@ -146,25 +148,21 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
           error: errorText,
           url: bunnyUrl
         });
-        
-        // Dosya zaten silinmiş olabilir, bu durumda devam ediyoruz
-        if (deleteResponse.status !== 404) {
-          throw new Error(`Failed to delete file from CDN: ${errorText}`);
-        }
-      } else {
-        logger.info('Successfully deleted file from Bunny CDN');
+        throw new Error(`Failed to delete file from CDN: ${errorText}`);
       }
+
+      logger.info('Successfully deleted file from Bunny CDN');
     }
 
     await Song.findByIdAndDelete(req.params.id);
     logger.info(`Song ${req.params.id} successfully deleted`);
     
-    res.json({ message: 'Şarkı başarıyla silindi' });
+    res.json({ message: 'Song successfully deleted' });
 
   } catch (error: any) {
     logger.error('Error deleting song:', error);
     res.status(500).json({ 
-      error: 'Şarkı silinirken hata oluştu',
+      error: 'Error deleting song',
       details: error.message 
     });
   }
