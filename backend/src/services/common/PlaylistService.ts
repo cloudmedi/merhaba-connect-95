@@ -24,14 +24,17 @@ export class PlaylistService {
         .populate('mood')
         .populate({
           path: 'assignedManagers',
-          select: 'email firstName lastName'
+          select: '_id email firstName lastName'
         });
 
       console.log('Hero playlist found:', {
         id: heroPlaylist?._id,
         name: heroPlaylist?.name,
         isPublic: heroPlaylist?.isPublic,
-        assignedManagers: heroPlaylist?.assignedManagers
+        assignedManagers: heroPlaylist?.assignedManagers?.map(m => ({
+          _id: m._id,
+          email: m.email
+        }))
       });
 
       return heroPlaylist;
