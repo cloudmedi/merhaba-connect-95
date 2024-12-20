@@ -51,38 +51,63 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
       formData.append('file', file);
 
       try {
-        const response = await axios.post('/admin/songs/upload', formData, {
+        const response = await fetch('/api/admin/songs/upload', {
+          method: 'POST',
+          body: formData,
           headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-            if (!progressEvent.total) return;
-            
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            
-            // Backend'den gelen gerçek progress'i kullan
-            setUploadingFiles(prev => ({
-              ...prev,
-              [file.name]: {
-                ...prev[file.name],
-                progress: progress
-              }
-            }));
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
 
-        // Backend işlemi başarılı olduğunda
-        setUploadingFiles(prev => ({
-          ...prev,
-          [file.name]: {
-            ...prev[file.name],
-            progress: 100,
-            status: 'completed'
-          }
-        }));
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('Stream reader not available');
 
-        await queryClient.invalidateQueries({ queryKey: ['songs'] });
-        toast.success(`${file.name} başarıyla yüklendi`);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const text = new TextDecoder().decode(value);
+          const events = text.split('\n\n').filter(Boolean);
+
+          for (const event of events) {
+            const data = JSON.parse(event.replace('data: ', ''));
+
+            if (data.progress !== undefined) {
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: data.progress
+                }
+              }));
+            }
+
+            if (data.type === 'complete') {
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: 100,
+                  status: 'completed'
+                }
+              }));
+              await queryClient.invalidateQueries({ queryKey: ['songs'] });
+              toast.success(`${file.name} başarıyla yüklendi`);
+            }
+
+            if (data.type === 'error') {
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  status: 'error',
+                  error: data.error
+                }
+              }));
+              toast.error(`${file.name}: ${data.error}`);
+            }
+          }
+        }
 
       } catch (error: any) {
         console.error('Upload error:', error);
@@ -92,11 +117,11 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           [file.name]: {
             ...prev[file.name],
             status: 'error',
-            error: error.response?.data?.error || error.message
+            error: error.message
           }
         }));
 
-        toast.error(`${file.name}: ${error.response?.data?.error || 'Yükleme hatası'}`);
+        toast.error(`${file.name}: ${error.message}`);
       }
     }
   };

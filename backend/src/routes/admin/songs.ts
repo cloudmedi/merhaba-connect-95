@@ -60,9 +60,16 @@ router.post(
       
       logger.info(`Generated unique filename: ${uniqueFileName}`);
 
+      // SSE başlatma
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      });
+
       uploadService = new ChunkUploadService((progress) => {
-        // Progress güncellemelerini client'a gönder
-        res.write(JSON.stringify({ progress }));
+        // Progress güncellemelerini SSE ile gönder
+        res.write(`data: ${JSON.stringify({ progress })}\n\n`);
       });
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
@@ -92,8 +99,9 @@ router.post(
       await song.save();
       logger.info('Song saved to database:', song);
       
-      // Yükleme tamamlandı, son response'u gönder
-      res.end(JSON.stringify({ success: true, song }));
+      // Yükleme tamamlandı, son event'i gönder
+      res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
+      res.end();
 
     } catch (error: any) {
       logger.error('Error during upload process:', error);
@@ -102,11 +110,9 @@ router.post(
         uploadService.cancel();
       }
 
-      // Hata durumunda error response'u gönder
-      res.end(JSON.stringify({ 
-        error: 'Dosya yükleme hatası',
-        details: error.message 
-      }));
+      // Hata durumunda error event'i gönder
+      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+      res.end();
     }
 });
 
