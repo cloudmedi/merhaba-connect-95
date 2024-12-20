@@ -1,7 +1,7 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody } from "@/components/ui/table";
 import { CampaignRow } from "./CampaignRow";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Campaign } from "../types";
 
@@ -9,31 +9,19 @@ export function CampaignList() {
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ['announcements'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select(`
-          *,
-          announcement_files (
-            id,
-            file_name,
-            file_url,
-            duration
-          ),
-          profiles (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const { data } = await api.get('/admin/announcements');
       
       // Transform the data to match Campaign type
-      return data.map((item): Campaign => ({
+      return data.map((item: any): Campaign => ({
         ...item,
         status: item.status === 'pending' || item.status === 'playing' 
           ? item.status 
           : 'pending', // Default to pending if status is invalid
+        announcement_files: item.files || [],
+        profiles: {
+          first_name: item.created_by?.firstName || null,
+          last_name: item.created_by?.lastName || null
+        }
       }));
     }
   });
