@@ -1,76 +1,90 @@
-import express from 'express';
-import { adminAuth } from '../../middleware/auth';
+import express, { Request, Response } from 'express';
 import { User } from '../../models/admin/User';
+import { adminAuth } from '../../middleware/auth';
 import { logger } from '../../utils/logger';
 
 const router = express.Router();
 
 // Get all users
-router.get('/', adminAuth, async (_req, res) => {
+router.get('/', adminAuth, async (_req: Request, res: Response): Promise<void> => {
   try {
-    const users = await User.find();
-    return res.json(users);
+    const users = await User.find().select('-password');
+    res.json(users);
+    return;
   } catch (error) {
     logger.error('Error fetching users:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 });
 
-// Create new user
-router.post('/', async (req, res) => {
+// Create user
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const user = new User(req.body);
     await user.save();
-    return res.status(201).json(user);
+    res.status(201).json(user);
+    return;
   } catch (error) {
     logger.error('Error creating user:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 });
 
 // Get user by ID
-router.get('/:id', adminAuth, async (req, res) => {
+router.get('/:id', adminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-    return res.json(user);
+    res.json(user);
+    return;
   } catch (error) {
     logger.error('Error fetching user:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 });
 
 // Update user
-router.put('/:id', adminAuth, async (req, res) => {
+router.put('/:id', adminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
-    );
+    ).select('-password');
+    
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-    return res.json(user);
+    res.json(user);
+    return;
   } catch (error) {
     logger.error('Error updating user:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 });
 
 // Delete user
-router.delete('/:id', adminAuth, async (req, res) => {
+router.delete('/:id', adminAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-    return res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'User deleted successfully' });
+    return;
   } catch (error) {
     logger.error('Error deleting user:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 });
 
