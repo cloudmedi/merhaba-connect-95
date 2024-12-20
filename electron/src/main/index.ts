@@ -91,11 +91,6 @@ async function createWindow() {
   win.webContents.on('did-finish-load', () => {
     if (!win) return;
     
-    win.webContents.send('env-vars', {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY
-    });
-
     if (deviceToken) {
       win.webContents.send('device-token-update', deviceToken);
     }
