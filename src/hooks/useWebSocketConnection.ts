@@ -17,6 +17,7 @@ export function useWebSocketConnection() {
           socketRef.current.close();
         }
 
+        // Port 5001'e güncelledik
         socketRef.current = io('http://localhost:5001', {
           transports: ['websocket'],
           reconnection: true,

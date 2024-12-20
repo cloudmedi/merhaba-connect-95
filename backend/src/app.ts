@@ -18,11 +18,12 @@ import adminMoodsRoutes from './routes/admin/moods';
 import adminSongsRoutes from './routes/admin/songs';
 import adminPlaylistsRoutes from './routes/admin/playlists';
 import adminMetricsRoutes from './routes/admin/metrics';
+import notificationsRoutes from './routes/notifications.routes';
 
 const app = express();
 const httpServer = createServer(app);
 
-// Initialize WebSocket (artık HTTP sunucusundan bağımsız)
+// Initialize WebSocket
 const io = initializeWebSocket();
 
 // Make io available in request object
@@ -63,7 +64,7 @@ app.use(morgan('combined', { stream }));
 app.use(requestLogger);
 app.use(responseLogger);
 
-// CORS configuration - Güncellendi
+// CORS configuration
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:4173', 'http://localhost:4174', 'http://localhost:5173'],
   credentials: true,
@@ -102,6 +103,7 @@ app.use('/api/admin/moods', adminMoodsRoutes);
 app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
+app.use('/api/notifications', notificationsRoutes); // Yeni route eklendi
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Tables } from '@/integrations/supabase/types';
+import { api } from '@/lib/api';
 
 export interface Notification {
   id: string;
@@ -17,8 +16,6 @@ export interface Notification {
   };
 }
 
-type SupabaseNotification = Tables<'notifications'>;
-
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -28,105 +25,90 @@ export function useNotifications() {
     if (!user) return;
 
     const fetchNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false });
+      try {
+        const response = await api.get('/notifications');
+        const formattedNotifications = response.data.map((n: any) => ({
+          id: n._id,
+          title: n.title,
+          message: n.message,
+          status: n.isRead ? 'read' : 'unread',
+          created_at: n.createdAt,
+          type: n.type,
+          metadata: n.metadata || {}
+        }));
 
-      if (error) {
+        setNotifications(formattedNotifications);
+        setUnreadCount(formattedNotifications.filter(n => n.status === 'unread').length);
+      } catch (error) {
         console.error('Error fetching notifications:', error);
-        return;
+        toast.error('Bildirimler alınamadı');
       }
-
-      const formattedNotifications: Notification[] = (data as SupabaseNotification[]).map(n => ({
-        id: n.id,
-        title: n.title,
-        message: n.message,
-        status: n.status as 'read' | 'unread',
-        created_at: n.created_at || '',
-        type: n.type,
-        metadata: n.metadata as { playlist_id?: string; artwork_url?: string; } || {}
-      }));
-
-      setNotifications(formattedNotifications);
-      setUnreadCount(formattedNotifications.filter(n => n.status === 'unread').length);
     };
 
     fetchNotifications();
 
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newNotification = payload.new as SupabaseNotification;
-          const formattedNotification: Notification = {
-            id: newNotification.id,
-            title: newNotification.title,
-            message: newNotification.message,
-            status: newNotification.status as 'read' | 'unread',
-            created_at: newNotification.created_at || '',
-            type: newNotification.type,
-            metadata: newNotification.metadata as { playlist_id?: string; artwork_url?: string; } || {}
-          };
-          
-          setNotifications(prev => [formattedNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          
-          toast(formattedNotification.title, {
-            description: formattedNotification.message,
-          });
-        }
-      )
-      .subscribe();
+    // WebSocket bağlantısı için useWebSocketConnection hook'unu kullan
+    const ws = new WebSocket('ws://localhost:5001');
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'notification') {
+        const newNotification = {
+          id: data.id,
+          title: data.title,
+          message: data.message,
+          status: 'unread',
+          created_at: new Date().toISOString(),
+          type: data.type,
+          metadata: data.metadata || {}
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+        
+        toast(newNotification.title, {
+          description: newNotification.message,
+        });
+      }
+    };
 
     return () => {
-      supabase.removeChannel(channel);
+      ws.close();
     };
   }, [user]);
 
   const markAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ status: 'read' })
-      .eq('id', notificationId);
-
-    if (error) {
+    try {
+      await api.patch(`/notifications/${notificationId}/read`);
+      
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === notificationId ? { ...n, status: 'read' } : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
       console.error('Error marking notification as read:', error);
-      return;
+      toast.error('Bildirim güncellenemedi');
     }
-
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === notificationId ? { ...n, status: 'read' } : n
-      )
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = async () => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ status: 'read' })
-      .eq('recipient_id', user?.id)
-      .eq('status', 'unread');
-
-    if (error) {
+    try {
+      const promises = notifications
+        .filter(n => n.status === 'unread')
+        .map(n => api.patch(`/notifications/${n.id}/read`));
+      
+      await Promise.all(promises);
+      
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, status: 'read' }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      return;
+      toast.error('Bildirimler güncellenemedi');
     }
-
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, status: 'read' }))
-    );
-    setUnreadCount(0);
   };
 
   return {
