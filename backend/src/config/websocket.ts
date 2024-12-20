@@ -1,9 +1,12 @@
 import { Server } from 'socket.io';
-import { Server as HTTPServer } from 'http';
+import { createServer } from 'http';
 import { logger } from '../utils/logger';
 
-export const initializeWebSocket = (httpServer: HTTPServer) => {
-  const io = new Server(httpServer, {
+export const initializeWebSocket = () => {
+  // Ayrı bir HTTP sunucusu oluştur
+  const wsServer = createServer();
+  
+  const io = new Server(wsServer, {
     cors: {
       origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
       methods: ['GET', 'POST']
@@ -44,8 +47,11 @@ export const initializeWebSocket = (httpServer: HTTPServer) => {
     });
   });
 
+  // WebSocket sunucusunu ayrı bir portta başlat
   const WEBSOCKET_PORT = process.env.WEBSOCKET_PORT || 5001;
-  logger.info(`WebSocket server running on port ${WEBSOCKET_PORT}`);
+  wsServer.listen(WEBSOCKET_PORT, () => {
+    logger.info(`WebSocket server running on port ${WEBSOCKET_PORT}`);
+  });
 
   return io;
 };

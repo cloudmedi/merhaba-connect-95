@@ -22,8 +22,8 @@ import adminMetricsRoutes from './routes/admin/metrics';
 const app = express();
 const httpServer = createServer(app);
 
-// Initialize WebSocket
-const io = initializeWebSocket(httpServer);
+// Initialize WebSocket (artık HTTP sunucusundan bağımsız)
+const io = initializeWebSocket();
 
 // Make io available in request object
 declare global {
@@ -116,7 +116,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`, {
+  logger.info(`HTTP server running on port ${PORT}`, {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
