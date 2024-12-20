@@ -22,7 +22,7 @@ export default function ManagerDashboard() {
 
   usePlaylistSubscription();
 
-  // Hero playlist için ayrı query
+  // Hero playlist için query
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
@@ -33,7 +33,7 @@ export default function ManagerDashboard() {
     }
   });
 
-  // Normal playlist'ler için query
+  // Kategorilere göre playlist'ler için query
   const { data: playlists, isLoading: isPlaylistsLoading } = useQuery({
     queryKey: ['manager-playlists', searchQuery],
     queryFn: async () => {
@@ -44,14 +44,31 @@ export default function ManagerDashboard() {
     }
   });
 
-  // Playlist'leri grid için uygun formata dönüştür
-  const transformedPlaylists = playlists?.map(playlist => ({
-    id: playlist._id,
-    title: playlist.name,
-    artwork_url: playlist.artworkUrl || "/placeholder.svg",
-    genre: playlist.genre?.name || "Various",
-    mood: playlist.mood?.name || "Various"
-  })) || [];
+  // Playlist'leri kategorilere göre grupla
+  const playlistsByCategory = playlists?.reduce((acc, playlist) => {
+    playlist.categories?.forEach(category => {
+      if (!acc[category._id]) {
+        acc[category._id] = {
+          id: category._id,
+          name: category.name,
+          description: category.description,
+          playlists: []
+        };
+      }
+      acc[category._id].playlists.push({
+        id: playlist._id,
+        title: playlist.name,
+        artwork_url: playlist.artworkUrl || "/placeholder.svg",
+        genre: playlist.genre?.name || "Various",
+        mood: playlist.mood?.name || "Various"
+      });
+    });
+    return acc;
+  }, {});
+
+  // Kategorileri array'e çevir
+  const categories = playlistsByCategory ? Object.values(playlistsByCategory) : [];
+  console.log('Grouped categories:', categories);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">
@@ -77,14 +94,21 @@ export default function ManagerDashboard() {
             </div>
           </div>
 
-          <PlaylistGrid
-            title="All Playlists"
-            playlists={transformedPlaylists}
-            isLoading={isPlaylistsLoading}
-            onPlay={handlePlayPlaylist}
-            currentPlayingId={currentPlaylist?.id}
-            isPlaying={isPlaying}
-          />
+          <div className="space-y-12">
+            {categories.map((category) => (
+              <PlaylistGrid
+                key={category.id}
+                title={category.name}
+                description={category.description}
+                categoryId={category.id}
+                playlists={category.playlists}
+                isLoading={isPlaylistsLoading}
+                onPlay={handlePlayPlaylist}
+                currentPlayingId={currentPlaylist?.id}
+                isPlaying={isPlaying}
+              />
+            ))}
+          </div>
 
           {currentPlaylist && (
             <MusicPlayer
