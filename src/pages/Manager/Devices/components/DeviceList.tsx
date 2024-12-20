@@ -6,8 +6,8 @@ import { useDeviceMutations } from "../hooks/useDeviceMutations";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import api from "@/lib/api";
 
 interface DeviceListProps {
   devices: Device[];
@@ -23,14 +23,12 @@ export function DeviceList({ devices }: DeviceListProps) {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    // Reset when devices prop changes
     setDisplayedDevices(devices.slice(0, ITEMS_PER_PAGE));
     setPage(1);
     setHasMore(devices.length > ITEMS_PER_PAGE);
   }, [devices]);
 
   useEffect(() => {
-    // Set up intersection observer for infinite scroll
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
@@ -72,36 +70,23 @@ export function DeviceList({ devices }: DeviceListProps) {
   };
 
   useEffect(() => {
-    const channel = supabase.channel('device_status')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'devices'
-        },
-        (payload) => {
-          console.log('Device status changed:', payload);
-          
-          if (payload.eventType === 'UPDATE' && payload.new && payload.old) {
-            const oldStatus = payload.old.status;
-            const newStatus = payload.new.status;
-            const deviceName = payload.new.name;
-            
-            if (oldStatus !== newStatus) {
-              if (newStatus === 'online') {
-                toast.success(`${deviceName} çevrimiçi oldu`);
-              } else if (newStatus === 'offline') {
-                toast.error(`${deviceName} çevrimdışı oldu`);
-              }
-            }
-          }
+    const socket = new WebSocket('ws://localhost:5000');
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'DEVICE_STATUS_CHANGED') {
+        const { deviceId, status, deviceName } = data;
+        
+        if (status === 'online') {
+          toast.success(`${deviceName} çevrimiçi oldu`);
+        } else if (status === 'offline') {
+          toast.error(`${deviceName} çevrimdışı oldu`);
         }
-      )
-      .subscribe();
+      }
+    };
 
     return () => {
-      supabase.removeChannel(channel);
+      socket.close();
     };
   }, []);
 

@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { EditDeviceDialog } from "./EditDeviceDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import api from "@/lib/api";
 
 interface DeviceListItemProps {
   device: Device;
@@ -46,16 +46,13 @@ export function DeviceListItem({ device, onDelete }: DeviceListItemProps) {
 
   const handleSave = async (updatedDevice: Partial<Device>) => {
     try {
-      const { error } = await supabase
-        .from('devices')
-        .update(updatedDevice)
-        .eq('id', device.id);
-
-      if (error) throw error;
+      const { data } = await api.put(`/admin/devices/${device.id}`, updatedDevice);
       toast.success('Cihaz başarıyla güncellendi');
+      return data;
     } catch (error) {
       console.error('Error updating device:', error);
       toast.error('Cihaz güncellenirken bir hata oluştu');
+      throw error;
     }
   };
 
