@@ -1,2 +1,2 @@
-import { db } from '@/lib/api';
-export { db as supabase };
+import { api } from '@/lib/api';
+export { api as supabase };

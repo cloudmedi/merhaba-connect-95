@@ -1,12 +1,7 @@
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-interface ApiResponse<T> {
-  data: T;
-  error: any;
-}
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 class ApiClient {
   private socket: Socket | null = null;
@@ -53,7 +48,6 @@ class ApiClient {
     });
   }
 
-  // WebSocket methods
   public channel(name: string) {
     if (!this.socket) {
       throw new Error('WebSocket not initialized');
@@ -76,37 +70,36 @@ class ApiClient {
     this.socket?.off(channel);
   }
 
-  // Database operations
   public from(table: string) {
     return {
-      select: async <T>(columns = '*'): Promise<ApiResponse<T>> => {
+      select: async <T>(columns = '*'): Promise<{ data: T; error: any }> => {
         const response = await this.axios.get(`/${table}`, { params: { select: columns } });
         return { data: response.data, error: null };
       },
 
-      insert: async <T>(data: any): Promise<ApiResponse<T>> => {
+      insert: async <T>(data: any): Promise<{ data: T; error: any }> => {
         const response = await this.axios.post(`/${table}`, data);
         return { data: response.data, error: null };
       },
 
-      update: async <T>(data: any): Promise<ApiResponse<T>> => {
+      update: async <T>(data: any): Promise<{ data: T; error: any }> => {
         const response = await this.axios.put(`/${table}`, data);
         return { data: response.data, error: null };
       },
 
-      delete: async <T>(): Promise<ApiResponse<T>> => {
+      delete: async <T>(): Promise<{ data: T; error: any }> => {
         const response = await this.axios.delete(`/${table}`);
         return { data: response.data, error: null };
       },
 
-      eq: async <T>(column: string, value: any): Promise<ApiResponse<T>> => {
+      eq: async <T>(column: string, value: any): Promise<{ data: T; error: any }> => {
         const response = await this.axios.get(`/${table}`, {
           params: { [column]: value }
         });
         return { data: response.data, error: null };
       },
 
-      order: async <T>(column: string, options: { ascending?: boolean } = {}): Promise<ApiResponse<T>> => {
+      order: async <T>(column: string, options: { ascending?: boolean } = {}): Promise<{ data: T; error: any }> => {
         const response = await this.axios.get(`/${table}`, {
           params: { 
             order: column,
@@ -114,34 +107,10 @@ class ApiClient {
           }
         });
         return { data: response.data, error: null };
-      },
-
-      in: async <T>(column: string, values: any[]): Promise<ApiResponse<T>> => {
-        const response = await this.axios.get(`/${table}`, {
-          params: { [column]: `in:${values.join(',')}` }
-        });
-        return { data: response.data, error: null };
-      },
-
-      or: async <T>(conditions: Record<string, any>): Promise<ApiResponse<T>> => {
-        const params = new URLSearchParams();
-        Object.entries(conditions).forEach(([key, value]) => {
-          params.append(`or[${key}]`, value);
-        });
-        const response = await this.axios.get(`/${table}?${params.toString()}`);
-        return { data: response.data, error: null };
-      },
-
-      ilike: async <T>(column: string, pattern: string): Promise<ApiResponse<T>> => {
-        const response = await this.axios.get(`/${table}`, {
-          params: { [column]: `ilike:${pattern}` }
-        });
-        return { data: response.data, error: null };
       }
     };
   }
 
-  // Auth methods
   public auth = {
     getUser: async () => {
       try {
