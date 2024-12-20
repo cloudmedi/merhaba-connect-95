@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "@/lib/axios";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
 
@@ -51,67 +50,85 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
       formData.append('file', file);
 
       try {
+        const token = localStorage.getItem('token');
+        const eventSource = new EventSource(`/api/admin/songs/upload?token=${token}`);
+        let uploadComplete = false;
+
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log('Upload progress:', data);
+
+          if (data.progress !== undefined) {
+            setUploadingFiles(prev => ({
+              ...prev,
+              [file.name]: {
+                ...prev[file.name],
+                progress: data.progress
+              }
+            }));
+          }
+
+          if (data.type === 'complete') {
+            uploadComplete = true;
+            eventSource.close();
+            setUploadingFiles(prev => ({
+              ...prev,
+              [file.name]: {
+                ...prev[file.name],
+                progress: 100,
+                status: 'completed'
+              }
+            }));
+            queryClient.invalidateQueries({ queryKey: ['songs'] });
+            toast.success(`${file.name} başarıyla yüklendi`);
+          }
+
+          if (data.type === 'error') {
+            uploadComplete = true;
+            eventSource.close();
+            setUploadingFiles(prev => ({
+              ...prev,
+              [file.name]: {
+                ...prev[file.name],
+                status: 'error',
+                error: data.error
+              }
+            }));
+            toast.error(`${file.name}: ${data.error}`);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('EventSource error:', error);
+          if (!uploadComplete) {
+            eventSource.close();
+            setUploadingFiles(prev => ({
+              ...prev,
+              [file.name]: {
+                ...prev[file.name],
+                status: 'error',
+                error: 'Bağlantı hatası oluştu'
+              }
+            }));
+            toast.error(`${file.name}: Bağlantı hatası oluştu`);
+          }
+        };
+
+        // Send the actual file upload request
         const response = await fetch('/api/admin/songs/upload', {
           method: 'POST',
           body: formData,
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error('Stream reader not available');
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const text = new TextDecoder().decode(value);
-          const events = text.split('\n\n').filter(Boolean);
-
-          for (const event of events) {
-            const data = JSON.parse(event.replace('data: ', ''));
-
-            if (data.progress !== undefined) {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: data.progress
-                }
-              }));
-            }
-
-            if (data.type === 'complete') {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: 100,
-                  status: 'completed'
-                }
-              }));
-              await queryClient.invalidateQueries({ queryKey: ['songs'] });
-              toast.success(`${file.name} başarıyla yüklendi`);
-            }
-
-            if (data.type === 'error') {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  status: 'error',
-                  error: data.error
-                }
-              }));
-              toast.error(`${file.name}: ${data.error}`);
-            }
-          }
+        if (!response.ok && !uploadComplete) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        
         setUploadingFiles(prev => ({
           ...prev,
           [file.name]: {
@@ -120,7 +137,6 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
             error: error.message
           }
         }));
-
         toast.error(`${file.name}: ${error.message}`);
       }
     }
