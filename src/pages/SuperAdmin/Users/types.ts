@@ -5,14 +5,16 @@ export interface User {
   lastName: string;
   role: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive: boolean;
-  license?: {
-    id: string;
-    type: string;
-    startDate: string;
-    endDate: string;
-  };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserCreateInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'super_admin' | 'admin' | 'manager' | 'user';
+  password: string;
 }
 
 export interface UserUpdateInput {
@@ -20,10 +22,4 @@ export interface UserUpdateInput {
   lastName?: string;
   role?: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive?: boolean;
-  license?: {
-    id: string;
-    type: string;
-    startDate: string;
-    endDate: string;
-  };
 }

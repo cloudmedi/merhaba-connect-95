@@ -33,52 +33,121 @@ api.interceptors.response.use(
   }
 );
 
-// Database operations
+// Database operations with TypeScript types
+interface QueryOptions {
+  select?: string[];
+  where?: Record<string, any>;
+  order?: { column: string; direction: 'asc' | 'desc' };
+  limit?: number;
+  offset?: number;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  error: any;
+}
+
 export const db = {
   from: (table: string) => ({
-    select: async (columns = '*') => {
-      const response = await api.get(`/${table}`);
-      return { data: response.data, error: null };
+    select: async <T>(columns = '*'): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.get(`/${table}`, {
+          params: { select: columns }
+        });
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    insert: async (data: any) => {
-      const response = await api.post(`/${table}`, data);
-      return { data: response.data, error: null };
+
+    insert: async <T>(data: any): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.post(`/${table}`, data);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    update: async (data: any) => {
-      const response = await api.put(`/${table}`, data);
-      return { data: response.data, error: null };
+
+    update: async <T>(data: any): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.put(`/${table}`, data);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    delete: async () => {
-      const response = await api.delete(`/${table}`);
-      return { data: response.data, error: null };
+
+    delete: async <T>(): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.delete(`/${table}`);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    eq: async (column: string, value: any) => {
-      const response = await api.get(`/${table}?${column}=${value}`);
-      return { data: response.data, error: null };
+
+    eq: async <T>(column: string, value: any): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.get(`/${table}`, {
+          params: { [column]: value }
+        });
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    order: async (column: string, options: { ascending?: boolean } = {}) => {
-      const direction = options.ascending ? 'asc' : 'desc';
-      const response = await api.get(`/${table}?order=${column}&direction=${direction}`);
-      return { data: response.data, error: null };
+
+    order: async <T>(column: string, options: { ascending?: boolean } = {}): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.get(`/${table}`, {
+          params: { 
+            order: column,
+            direction: options.ascending ? 'asc' : 'desc'
+          }
+        });
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    in: async (column: string, values: any[]) => {
-      const valuesStr = values.join(',');
-      const response = await api.get(`/${table}?${column}=in:${valuesStr}`);
-      return { data: response.data, error: null };
+
+    in: async <T>(column: string, values: any[]): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.get(`/${table}`, {
+          params: { [column]: `in:${values.join(',')}` }
+        });
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    or: async (conditions: Record<string, any>) => {
-      const params = new URLSearchParams();
-      Object.entries(conditions).forEach(([key, value]) => {
-        params.append(`or[${key}]`, value);
-      });
-      const response = await api.get(`/${table}?${params.toString()}`);
-      return { data: response.data, error: null };
+
+    or: async <T>(conditions: Record<string, any>): Promise<ApiResponse<T>> => {
+      try {
+        const params = new URLSearchParams();
+        Object.entries(conditions).forEach(([key, value]) => {
+          params.append(`or[${key}]`, value);
+        });
+        const response = await api.get(`/${table}?${params.toString()}`);
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     },
-    ilike: async (column: string, pattern: string) => {
-      const response = await api.get(`/${table}?${column}=ilike:${pattern}`);
-      return { data: response.data, error: null };
+
+    ilike: async <T>(column: string, pattern: string): Promise<ApiResponse<T>> => {
+      try {
+        const response = await api.get(`/${table}`, {
+          params: { [column]: `ilike:${pattern}` }
+        });
+        return { data: response.data, error: null };
+      } catch (error) {
+        return { data: null as any, error };
+      }
     }
   }),
+
   auth: {
     getUser: async () => {
       try {
@@ -88,6 +157,7 @@ export const db = {
         return { data: { user: null }, error };
       }
     },
+
     getSession: async () => {
       try {
         const response = await api.get('/auth/session');
