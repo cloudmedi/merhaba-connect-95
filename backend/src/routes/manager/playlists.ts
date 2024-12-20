@@ -15,16 +15,19 @@ router.get('/hero', async (_req: AuthRequest, res) => {
     const playlistService = new PlaylistService(_req.io);
     const heroPlaylist = await playlistService.getHeroPlaylist();
     
-    // Playlist bulunamadıysa 200 ile boş response
+    // Playlist bulunamadıysa 200 ile null response
     if (!heroPlaylist) {
       return res.status(200).json(null);
     }
     
-    // Playlist var ama public değilse 403
-    if (!heroPlaylist.isPublic) {
-      return res.status(403).json({ 
-        error: 'This playlist is not public' 
-      });
+    // Manager'a atanmış mı kontrol et
+    const isAssignedToManager = heroPlaylist.assignedManagers.some(
+      manager => manager._id.toString() === _req.user?.id
+    );
+    
+    // Public değilse ve manager'a atanmamışsa null dön
+    if (!heroPlaylist.isPublic && !isAssignedToManager) {
+      return res.status(200).json(null);
     }
     
     return res.json(heroPlaylist);
