@@ -17,17 +17,66 @@ export class PlaylistService {
 
   async getHeroPlaylist(managerId?: string) {
     try {
-      console.log('Fetching playlists for manager:', managerId);
+      console.log('Fetching hero playlist for manager:', managerId);
       
       if (!managerId) {
         console.log('No manager ID provided, returning null');
         return null;
       }
 
-      // Manager ID'yi ObjectId'ye çevir
       const managerObjectId = new Types.ObjectId(managerId);
       
-      // Sorguyu $elemMatch kullanarak güncelle
+      const query = {
+        isHero: true,
+        $or: [
+          { isPublic: true },
+          { 
+            assignedManagers: {
+              $elemMatch: { 
+                _id: managerObjectId 
+              }
+            }
+          }
+        ]
+      };
+
+      console.log('Executing hero playlist query:', JSON.stringify(query, null, 2));
+
+      const playlist = await Playlist.findOne(query)
+        .populate('songs.songId')
+        .populate('categories')
+        .populate('genre')
+        .populate('mood')
+        .populate({
+          path: 'assignedManagers',
+          select: '_id email firstName lastName'
+        });
+
+      console.log('Hero playlist query result:', {
+        found: !!playlist,
+        playlistId: playlist?._id,
+        isPublic: playlist?.isPublic,
+        isHero: playlist?.isHero,
+        assignedManagersCount: playlist?.assignedManagers?.length
+      });
+
+      return playlist;
+    } catch (error) {
+      console.error('Error fetching hero playlist:', error);
+      throw error;
+    }
+  }
+
+  async getManagerPlaylists(managerId: string) {
+    try {
+      console.log('Getting playlists for manager:', managerId);
+      
+      if (!managerId) {
+        throw new Error('Manager ID is required');
+      }
+
+      const managerObjectId = new Types.ObjectId(managerId);
+      
       const query = {
         $or: [
           { isPublic: true },
@@ -41,9 +90,9 @@ export class PlaylistService {
         ]
       };
 
-      console.log('Executing query:', JSON.stringify(query, null, 2));
+      console.log('Executing manager playlists query:', JSON.stringify(query, null, 2));
 
-      const playlist = await Playlist.findOne(query)
+      const playlists = await Playlist.find(query)
         .populate('songs.songId')
         .populate('categories')
         .populate('genre')
@@ -51,35 +100,15 @@ export class PlaylistService {
         .populate({
           path: 'assignedManagers',
           select: '_id email firstName lastName'
-        });
+        })
+        .sort({ createdAt: -1 });
 
-      console.log('Query result:', {
-        found: !!playlist,
-        playlistId: playlist?._id,
-        isPublic: playlist?.isPublic,
-        assignedManagersCount: playlist?.assignedManagers?.length,
-        assignedManagerIds: playlist?.assignedManagers?.map(m => m._id.toString())
-      });
-
-      if (playlist) {
-        console.log('Checking manager assignment:', {
-          managerId: managerId,
-          isAssigned: playlist.assignedManagers.some(m => m._id.toString() === managerId)
-        });
-      }
-
-      return playlist;
+      console.log(`Found ${playlists.length} playlists for manager`);
+      return playlists;
     } catch (error) {
-      console.error('Error fetching playlist:', error);
+      console.error('Error fetching manager playlists:', error);
       throw error;
     }
-  }
-
-  async getManagerPlaylists(managerId: string) {
-    console.log('Getting playlists for manager:', managerId);
-    const playlists = await this.queryService.getManagerPlaylists(managerId);
-    console.log('Found playlists count:', playlists.length);
-    return playlists;
   }
 
   async assignManagers(playlistId: string, managerIds: string[]) {
