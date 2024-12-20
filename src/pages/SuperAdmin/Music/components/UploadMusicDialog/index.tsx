@@ -56,97 +56,54 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           throw new Error('Oturum bulunamadı');
         }
 
-        // EventSource bağlantısı
-        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`);
-        let uploadComplete = false;
-
-        eventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('Upload progress:', data);
-
-            if (data.progress !== undefined) {
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: data.progress
-                }
-              }));
-            }
-
-            if (data.type === 'complete') {
-              uploadComplete = true;
-              eventSource.close();
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  progress: 100,
-                  status: 'completed'
-                }
-              }));
-              queryClient.invalidateQueries({ queryKey: ['songs'] });
-              toast.success(`${file.name} başarıyla yüklendi`);
-            }
-
-            if (data.type === 'error') {
-              uploadComplete = true;
-              eventSource.close();
-              setUploadingFiles(prev => ({
-                ...prev,
-                [file.name]: {
-                  ...prev[file.name],
-                  status: 'error',
-                  error: data.error
-                }
-              }));
-              toast.error(`${file.name}: ${data.error}`);
-            }
-          } catch (error) {
-            console.error('Event data parsing error:', error);
-            eventSource.close();
-            handleUploadError(file.name, 'Event verisi işlenemedi');
-          }
-        };
-
-        eventSource.onerror = (error) => {
-          console.error('EventSource error:', error);
-          if (!uploadComplete) {
-            eventSource.close();
-            handleUploadError(file.name, 'SSE bağlantı hatası');
-          }
-        };
-
-        // Dosya yükleme isteği
-        const response = await axios.post('/admin/songs/upload', formData, {
+        // Axios ile dosya yükleme isteği
+        const uploadResponse = await axios.post('/admin/songs/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${token}`
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadingFiles(prev => ({
+                ...prev,
+                [file.name]: {
+                  ...prev[file.name],
+                  progress: progress
+                }
+              }));
+            }
           }
         });
 
-        if (!response.ok && !uploadComplete) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (uploadResponse.status === 200) {
+          setUploadingFiles(prev => ({
+            ...prev,
+            [file.name]: {
+              ...prev[file.name],
+              progress: 100,
+              status: 'completed'
+            }
+          }));
+          queryClient.invalidateQueries({ queryKey: ['songs'] });
+          toast.success(`${file.name} başarıyla yüklendi`);
+        } else {
+          throw new Error('Yükleme başarısız oldu');
         }
 
       } catch (error: any) {
         console.error('Upload error:', error);
-        handleUploadError(file.name, error.message || 'Yükleme sırasında bir hata oluştu');
+        setUploadingFiles(prev => ({
+          ...prev,
+          [file.name]: {
+            ...prev[file.name],
+            status: 'error',
+            error: error.message || 'Yükleme sırasında bir hata oluştu'
+          }
+        }));
+        toast.error(`${file.name}: ${error.message || 'Yükleme sırasında bir hata oluştu'}`);
       }
     }
-  };
-
-  const handleUploadError = (fileName: string, errorMessage: string) => {
-    setUploadingFiles(prev => ({
-      ...prev,
-      [fileName]: {
-        ...prev[fileName],
-        status: 'error',
-        error: errorMessage
-      }
-    }));
-    toast.error(`${fileName}: ${errorMessage}`);
   };
 
   return (
