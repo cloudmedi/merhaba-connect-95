@@ -10,10 +10,10 @@ const router = express.Router();
 router.get('/', authMiddleware, managerMiddleware, async (req, res) => {
   try {
     const devices = await Device.find().populate('branchId');
-    res.json(devices);
+    return res.json(devices);
   } catch (error) {
     logger.error('Error fetching devices:', error);
-    res.status(500).json({ error: 'Failed to fetch devices' });
+    return res.status(500).json({ error: 'Failed to fetch devices' });
   }
 });
 
@@ -22,10 +22,10 @@ router.post('/', authMiddleware, managerMiddleware, async (req, res) => {
   try {
     const device = new Device(req.body);
     await device.save();
-    res.status(201).json(device);
+    return res.status(201).json(device);
   } catch (error) {
     logger.error('Error creating device:', error);
-    res.status(500).json({ error: 'Failed to create device' });
+    return res.status(500).json({ error: 'Failed to create device' });
   }
 });
 
@@ -36,10 +36,10 @@ router.put('/:id', authMiddleware, managerMiddleware, async (req, res) => {
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
-    res.json(device);
+    return res.json(device);
   } catch (error) {
     logger.error('Error updating device:', error);
-    res.status(500).json({ error: 'Failed to update device' });
+    return res.status(500).json({ error: 'Failed to update device' });
   }
 });
 
@@ -50,10 +50,10 @@ router.delete('/:id', authMiddleware, managerMiddleware, async (req, res) => {
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
-    res.status(204).send();
+    return res.status(204).send();
   } catch (error) {
     logger.error('Error deleting device:', error);
-    res.status(500).json({ error: 'Failed to delete device' });
+    return res.status(500).json({ error: 'Failed to delete device' });
   }
 });
 
