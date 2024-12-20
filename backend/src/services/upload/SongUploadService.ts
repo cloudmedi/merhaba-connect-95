@@ -70,11 +70,11 @@ export class SongUploadService {
 
       // MongoDB'ye kaydetme
       const song = new Song({
-        title: metadata.title,
-        artist: metadata.artist,
+        title: metadata.title || file.originalname.replace(/\.[^/.]+$/, ""),
+        artist: metadata.artist || 'Unknown Artist',
         album: metadata.album || null,
         genre: metadata.genre || [],
-        duration: metadata.duration,
+        duration: metadata.duration || 0,
         fileUrl: fileUrl,
         bunnyId: uniqueBunnyId,
         artworkUrl: null,
