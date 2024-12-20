@@ -22,22 +22,24 @@ export default function ManagerDashboard() {
 
   usePlaylistSubscription();
 
+  // Hero playlist için ayrı query
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
-      console.log('Fetching hero playlist from frontend...');
+      console.log('Fetching hero playlist...');
       const { data } = await api.get('/manager/playlists/hero');
       console.log('Hero playlist response:', data);
       return data;
     }
   });
 
+  // Normal playlist'ler için ayrı query
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
-    queryKey: ['manager-categories', searchQuery],
+    queryKey: ['manager-playlists', searchQuery],
     queryFn: async () => {
-      console.log('Fetching categories with search:', searchQuery);
-      const { data } = await api.get(`/manager/categories?search=${searchQuery}`);
-      console.log('Categories response:', data);
+      console.log('Fetching manager playlists with search:', searchQuery);
+      const { data } = await api.get(`/manager/playlists?search=${searchQuery}`);
+      console.log('Manager playlists response:', data);
       return data;
     }
   });
@@ -52,10 +54,13 @@ export default function ManagerDashboard() {
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">
       <ResizablePanel defaultSize={100} minSize={30}>
         <div className="h-full p-6">
-          <HeroPlaylist 
-            playlist={heroPlaylist} 
-            isLoading={isHeroLoading} 
-          />
+          {heroPlaylist && (
+            <HeroPlaylist 
+              playlist={heroPlaylist} 
+              isLoading={isHeroLoading}
+              onPlay={handlePlayPlaylist} 
+            />
+          )}
 
           <div className="flex justify-end mb-8">
             <div className="relative w-64">
