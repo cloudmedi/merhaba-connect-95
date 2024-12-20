@@ -26,7 +26,7 @@ const router = express.Router();
 
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const songs = await Song.find();
+    const songs = await Song.find().sort({ createdAt: -1 });
     res.json(songs);
   } catch (error) {
     logger.error('Error fetching songs:', error);

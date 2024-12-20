@@ -21,7 +21,6 @@ export class SongUploadService {
       } catch (error) {
         logger.error('Error sending progress:', error);
         this.isClientConnected = false;
-        throw error;
       }
     }
   }
@@ -38,21 +37,10 @@ export class SongUploadService {
 
       this.uploadService = new ChunkUploadService((progress) => {
         if (this.isClientConnected) {
-          this.sendProgress(res, { progress });
-        } else {
-          throw new Error('Client disconnected');
+          this.sendProgress(res, { type: 'progress', progress });
         }
       });
 
-      // Cleanup callback'i ekle
-      this.uploadService.addCleanupCallback(() => {
-        if (!res.writableEnded) {
-          this.sendProgress(res, { type: 'error', error: 'Upload cancelled' });
-          res.end();
-        }
-      });
-
-      // Client bağlantısı koptuğunda
       res.on('close', () => {
         this.isClientConnected = false;
         if (this.uploadService) {
@@ -74,20 +62,23 @@ export class SongUploadService {
 
       const song = new Song({
         title: metadata.title || file.originalname,
-        artist: metadata.artist,
+        artist: metadata.artist || 'Unknown Artist',
         album: metadata.album || null,
         genre: metadata.genre || [],
-        duration: metadata.duration,
+        duration: metadata.duration || 0,
         fileUrl: fileUrl,
         bunnyId: uniqueBunnyId,
         artworkUrl: null,
         createdBy: userId
       });
 
-      await song.save();
+      const savedSong = await song.save();
       
       if (this.isClientConnected && !res.writableEnded) {
-        this.sendProgress(res, { type: 'complete', song });
+        this.sendProgress(res, { 
+          type: 'complete', 
+          song: savedSong 
+        });
         res.end();
       }
 
@@ -103,11 +94,12 @@ export class SongUploadService {
       }
 
       if (!res.writableEnded) {
-        this.sendProgress(res, { type: 'error', error: error.message });
+        this.sendProgress(res, { 
+          type: 'error', 
+          error: error.message || 'Upload failed'
+        });
         res.end();
       }
-      
-      throw error;
     }
   }
 
