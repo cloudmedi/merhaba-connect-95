@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 import WebSocket from 'ws';
+import { verifyDeviceToken } from '../../utils/deviceToken';
 
 export class WebSocketManager {
   private ws: WebSocket | null = null;
@@ -24,6 +25,13 @@ export class WebSocketManager {
     try {
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
+        this.notifyRenderer('connection-failed');
+        return;
+      }
+
+      const isValid = await verifyDeviceToken(this.deviceToken);
+      if (!isValid) {
+        console.error('Invalid device token');
         this.notifyRenderer('connection-failed');
         return;
       }
