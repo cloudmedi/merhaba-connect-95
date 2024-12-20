@@ -1,7 +1,8 @@
 import { Category } from '../../models/schemas/admin/CategorySchema';
+import type { ICategory } from '../../models/schemas/admin/CategorySchema';
 
 export class CategoryService {
-  async getAllCategories() {
+  async getAllCategories(): Promise<ICategory[]> {
     try {
       return await Category.find().sort({ position: 1 });
     } catch (error) {
@@ -9,7 +10,7 @@ export class CategoryService {
     }
   }
 
-  async createCategory(data: { name: string; description?: string; createdBy: string }) {
+  async createCategory(data: { name: string; description?: string; createdBy: string }): Promise<ICategory> {
     try {
       const maxPositionCategory = await Category.findOne().sort({ position: -1 });
       const nextPosition = maxPositionCategory ? maxPositionCategory.position + 1 : 1;
@@ -26,7 +27,7 @@ export class CategoryService {
     }
   }
 
-  async updateCategory(id: string, data: { name?: string; description?: string; position?: number }) {
+  async updateCategory(id: string, data: { name?: string; description?: string; position?: number }): Promise<ICategory | null> {
     try {
       if (!id) {
         throw new Error('Category ID is required');
@@ -48,7 +49,7 @@ export class CategoryService {
     }
   }
 
-  async deleteCategory(id: string) {
+  async deleteCategory(id: string): Promise<ICategory | null> {
     try {
       const result = await Category.findByIdAndDelete(id);
       if (!result) {

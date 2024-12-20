@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import { CategoryService } from '../../services/admin/CategoryService';
-import { RequestHandler } from 'express';
 
 interface AuthRequest extends Request {
   user?: {
@@ -14,7 +13,7 @@ const router = express.Router();
 const categoryService = new CategoryService();
 
 // Get all categories
-const getAllCategories: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const getAllCategories = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const categories = await categoryService.getAllCategories();
     res.json(categories);
@@ -28,7 +27,7 @@ const getAllCategories: RequestHandler = async (req: AuthRequest, res: Response,
 };
 
 // Create category
-const createCategory: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const createCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const category = await categoryService.createCategory({
       ...req.body,
@@ -45,7 +44,7 @@ const createCategory: RequestHandler = async (req: AuthRequest, res: Response, n
 };
 
 // Update category
-const updateCategory: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const updateCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     if (!id) {
@@ -65,7 +64,7 @@ const updateCategory: RequestHandler = async (req: AuthRequest, res: Response, n
 };
 
 // Delete category
-const deleteCategory: RequestHandler = async (req: AuthRequest, res: Response, next: NextFunction) => {
+const deleteCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();
