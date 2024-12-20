@@ -10,7 +10,7 @@ export class TokenController {
     this.tokenService = new TokenService();
   }
 
-  async verifyToken(req: Request, res: Response) {
+  async verifyToken(req: Request, res: Response): Promise<Response> {
     try {
       // Cache kontrolünü devre dışı bırak
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -68,7 +68,7 @@ export class TokenController {
         companyName: user.companyName
       };
 
-      res.json({
+      return res.json({
         valid: true,
         user: userData,
         token
@@ -79,7 +79,7 @@ export class TokenController {
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString()
       });
-      res.status(401).json({ error: 'Invalid token' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
   }
 }
