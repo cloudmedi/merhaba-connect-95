@@ -38,7 +38,6 @@ export default function ManagerDashboard() {
     }
   });
 
-  // Filter categories that have playlists
   const filteredCategories = categories?.filter(category =>
     category.playlists?.length > 0
   ) || [];
@@ -49,9 +48,7 @@ export default function ManagerDashboard() {
         <div className="h-full p-6">
           <HeroPlaylist 
             playlist={heroPlaylist} 
-            isLoading={isHeroLoading}
-            onPlay={handlePlayPlaylist}
-            isPlaying={isPlaying && currentPlaylist?.id === heroPlaylist?.id}
+            isLoading={isHeroLoading} 
           />
 
           <div className="flex justify-end mb-8">
