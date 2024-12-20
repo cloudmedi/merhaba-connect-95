@@ -23,7 +23,6 @@ interface AuthRequest extends express.Request {
 }
 
 const router = express.Router();
-const uploadService = new SongUploadService();
 
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -41,23 +40,18 @@ router.post(
   adminMiddleware,
   upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
+    const uploadService = new SongUploadService();
+
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      // Set up SSE headers
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*'
-      });
-
-      // Handle client disconnection
-      req.on('close', () => {
-        logger.info('Client disconnected, cancelling upload');
-        uploadService.cancelUpload();
       });
 
       await uploadService.uploadSong(req.file, req.user?.id, res);

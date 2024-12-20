@@ -13,8 +13,11 @@ export class ChunkUploadService {
   private uploadedChunks: number = 0;
   private lastProgressUpdate: number = 0;
   private cleanupCallbacks: (() => void)[] = [];
+  private onProgressCallback: ((progress: number) => void) | null = null;
 
-  constructor(private onProgress?: (progress: number) => void) {}
+  constructor(onProgress?: (progress: number) => void) {
+    this.onProgressCallback = onProgress || null;
+  }
 
   public cancel() {
     if (this.isUploading) {
@@ -89,13 +92,13 @@ export class ChunkUploadService {
   }
 
   private updateProgress() {
-    if (!this.isUploading) return;
+    if (!this.isUploading || !this.onProgressCallback) return;
 
     const now = Date.now();
     if (now - this.lastProgressUpdate > 100) {
       const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
       try {
-        this.onProgress?.(progress);
+        this.onProgressCallback(progress);
         this.lastProgressUpdate = now;
       } catch (error) {
         logger.error('Error sending progress update:', error);
@@ -143,8 +146,8 @@ export class ChunkUploadService {
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
       logger.info(`Upload completed: ${cdnUrl}`);
       
-      if (this.isUploading) {
-        this.onProgress?.(100);
+      if (this.isUploading && this.onProgressCallback) {
+        this.onProgressCallback(100);
       }
       
       return cdnUrl;

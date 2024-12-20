@@ -8,21 +8,19 @@ import { v4 as uuidv4 } from 'uuid';
 export class SongUploadService {
   private uploadService: ChunkUploadService | null = null;
   private metadataService: MetadataService;
+  private isClientConnected: boolean = true;
 
   constructor() {
     this.metadataService = new MetadataService();
   }
 
-  private isClientConnected(res: Response): boolean {
-    return !res.writableEnded;
-  }
-
   private sendProgress(res: Response, data: any) {
-    if (this.isClientConnected(res)) {
+    if (this.isClientConnected && !res.writableEnded) {
       try {
         res.write(`data: ${JSON.stringify(data)}\n\n`);
       } catch (error) {
         logger.error('Error sending progress:', error);
+        this.isClientConnected = false;
         throw error;
       }
     }
@@ -39,22 +37,32 @@ export class SongUploadService {
       const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
 
       this.uploadService = new ChunkUploadService((progress) => {
-        if (this.isClientConnected(res)) {
+        if (this.isClientConnected) {
           this.sendProgress(res, { progress });
+        } else {
+          throw new Error('Client disconnected');
         }
       });
 
-      // Add cleanup callback
+      // Cleanup callback'i ekle
       this.uploadService.addCleanupCallback(() => {
-        if (this.isClientConnected(res)) {
+        if (!res.writableEnded) {
           this.sendProgress(res, { type: 'error', error: 'Upload cancelled' });
           res.end();
         }
       });
 
+      // Client bağlantısı koptuğunda
+      res.on('close', () => {
+        this.isClientConnected = false;
+        if (this.uploadService) {
+          this.uploadService.cancel();
+        }
+      });
+
       const fileUrl = await this.uploadService.uploadFile(file.buffer, uniqueFileName);
       
-      if (!this.isClientConnected(res)) {
+      if (!this.isClientConnected) {
         throw new Error('Client disconnected');
       }
 
@@ -78,7 +86,7 @@ export class SongUploadService {
 
       await song.save();
       
-      if (this.isClientConnected(res)) {
+      if (this.isClientConnected && !res.writableEnded) {
         this.sendProgress(res, { type: 'complete', song });
         res.end();
       }
@@ -94,7 +102,7 @@ export class SongUploadService {
         }
       }
 
-      if (this.isClientConnected(res)) {
+      if (!res.writableEnded) {
         this.sendProgress(res, { type: 'error', error: error.message });
         res.end();
       }
@@ -104,6 +112,7 @@ export class SongUploadService {
   }
 
   public cancelUpload() {
+    this.isClientConnected = false;
     if (this.uploadService) {
       this.uploadService.cancel();
     }
