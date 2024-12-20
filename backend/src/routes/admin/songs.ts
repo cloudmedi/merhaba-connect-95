@@ -46,6 +46,9 @@ router.post(
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
     let uploadService: ChunkUploadService | null = null;
 
+    // Client bağlantısının kopup kopmadığını kontrol et
+    const isClientConnected = () => !res.writableEnded;
+
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'Dosya yüklenmedi' });
@@ -68,18 +71,50 @@ router.post(
         'Access-Control-Allow-Origin': '*'
       });
 
+      // Client bağlantısı koptuğunda yüklemeyi iptal et
+      req.on('close', () => {
+        if (uploadService) {
+          logger.info('Client disconnected, cancelling upload');
+          try {
+            uploadService.cancel();
+          } catch (error) {
+            logger.error('Error while cancelling upload:', error);
+          }
+        }
+      });
+
       uploadService = new ChunkUploadService((progress) => {
-        try {
-          const data = JSON.stringify({ progress });
-          res.write(`data: ${data}\n\n`);
-        } catch (error) {
-          logger.error('Error sending progress update:', error);
-          throw error; // Yüklemeyi durdurmak için hatayı yeniden fırlat
+        if (isClientConnected()) {
+          try {
+            const data = JSON.stringify({ progress });
+            res.write(`data: ${data}\n\n`);
+          } catch (error) {
+            logger.error('Error sending progress update:', error);
+            throw error;
+          }
+        } else {
+          throw new Error('Client disconnected');
+        }
+      });
+
+      // Temizlik callback'i ekle
+      uploadService.addCleanupCallback(() => {
+        if (isClientConnected()) {
+          try {
+            res.write(`data: ${JSON.stringify({ type: 'error', error: 'Upload cancelled' })}\n\n`);
+            res.end();
+          } catch (error) {
+            logger.error('Error sending cancellation message:', error);
+          }
         }
       });
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
       logger.info('File uploaded to CDN:', fileUrl);
+
+      if (!isClientConnected()) {
+        throw new Error('Client disconnected');
+      }
 
       const metadata = await metadataService.extractMetadata(file.buffer, uniqueFileName);
       logger.info('Metadata extracted:', metadata);
@@ -105,8 +140,10 @@ router.post(
       await song.save();
       logger.info('Song saved to database:', song);
       
-      res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
-      res.end();
+      if (isClientConnected()) {
+        res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
+        res.end();
+      }
 
     } catch (error: any) {
       logger.error('Error during upload process:', error);
@@ -119,12 +156,13 @@ router.post(
         }
       }
 
-      // Hata durumunda client'a bildir
-      try {
-        res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
-        res.end();
-      } catch (writeError) {
-        logger.error('Error sending error message to client:', writeError);
+      if (!res.writableEnded) {
+        try {
+          res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+          res.end();
+        } catch (writeError) {
+          logger.error('Error sending error message to client:', writeError);
+        }
       }
     }
 });

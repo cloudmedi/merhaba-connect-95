@@ -14,14 +14,17 @@ export class ChunkUploadService {
   private uploadedChunks: number = 0;
   private lastProgressUpdate: number = 0;
   private uploadPromise: Promise<string> | null = null;
+  private cleanupCallbacks: (() => void)[] = [];
 
   constructor(private onProgress?: (progress: number) => void) {}
 
   public cancel() {
-    if (this.isUploading && this.abortController) {
+    if (this.isUploading) {
+      logger.info('Cancelling upload...');
       this.isUploading = false;
-      this.abortController.abort();
-      logger.info('Upload cancelled');
+      this.abortController?.abort();
+      this.cleanupCallbacks.forEach(callback => callback());
+      this.cleanupCallbacks = [];
       throw new Error('Upload cancelled by user');
     }
   }
@@ -58,6 +61,10 @@ export class ChunkUploadService {
       this.updateProgress();
       return true;
     } catch (error) {
+      if (!this.isUploading) {
+        throw new Error('Upload cancelled');
+      }
+
       logger.error(`Chunk upload error (attempt ${retryCount + 1}):`, error);
       
       if (retryCount < MAX_RETRIES && this.isUploading) {
@@ -70,12 +77,19 @@ export class ChunkUploadService {
   }
 
   private updateProgress() {
+    if (!this.isUploading) return;
+
     const now = Date.now();
-    if (now - this.lastProgressUpdate > 100) { // Throttle updates to max 10 per second
+    if (now - this.lastProgressUpdate > 100) {
       const progress = Math.floor((this.uploadedChunks / this.totalChunks) * 100);
-      this.onProgress?.(progress);
-      this.lastProgressUpdate = now;
-      logger.debug(`Upload progress: ${progress}%`);
+      try {
+        this.onProgress?.(progress);
+        this.lastProgressUpdate = now;
+        logger.debug(`Upload progress: ${progress}%`);
+      } catch (error) {
+        logger.error('Error sending progress update:', error);
+        this.cancel();
+      }
     }
   }
 
@@ -119,7 +133,9 @@ export class ChunkUploadService {
       logger.info(`Upload completed: ${cdnUrl}`);
       
       // Final progress update
-      this.onProgress?.(100);
+      if (this.isUploading) {
+        this.onProgress?.(100);
+      }
       
       return cdnUrl;
 
@@ -130,6 +146,11 @@ export class ChunkUploadService {
     } finally {
       this.isUploading = false;
       this.abortController = null;
+      this.cleanupCallbacks = [];
     }
+  }
+
+  public addCleanupCallback(callback: () => void) {
+    this.cleanupCallbacks.push(callback);
   }
 }
