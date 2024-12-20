@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, Clock, Monitor } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface PreviewStepProps {
   formData: {
@@ -29,12 +29,11 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
     queryFn: async () => {
       if (formData.devices.length === 0) return [];
       
-      const { data, error } = await supabase
-        .from('devices')
-        .select('name')
-        .in('id', formData.devices);
-
-      if (error) throw error;
+      const { data } = await api.get('/manager/devices', {
+        params: {
+          ids: formData.devices.join(',')
+        }
+      });
       return data;
     }
   });
@@ -101,8 +100,8 @@ export function PreviewStep({ formData, onBack, onCreate }: PreviewStepProps) {
               <p>{devices.length} cihaz seçildi</p>
             </div>
             <div className="mt-2 space-y-1">
-              {devices.map((device, index) => (
-                <p key={index} className="text-sm text-gray-600 ml-6">
+              {devices.map((device: any) => (
+                <p key={device.id} className="text-sm text-gray-600 ml-6">
                   • {device.name}
                 </p>
               ))}
