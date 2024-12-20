@@ -1,24 +1,22 @@
-import type { Json } from "@/integrations/supabase/types";
-
 export interface SystemInfo {
-  cpu: {
+  cpu?: {
     manufacturer: string;
     brand: string;
     speed: number;
     cores: number;
   };
-  memory: {
+  memory?: {
     total: number;
     free: number;
     used: number;
   };
-  os: {
+  os?: {
     platform: string;
     distro: string;
     release: string;
     arch: string;
   };
-  network: Array<{
+  network?: Array<{
     iface: string;
     ip4: string;
     mac: string;
@@ -26,62 +24,43 @@ export interface SystemInfo {
   health?: 'healthy' | 'warning' | 'error';
 }
 
-export interface DeviceSystemInfo {
-  version?: string;
-  cpu?: SystemInfo['cpu'];
-  memory?: SystemInfo['memory'];
-  os?: SystemInfo['os'];
-  network?: SystemInfo['network'];
-  health?: SystemInfo['health'];
-  [key: string]: Json | undefined;
-}
-
-export interface DeviceSchedule {
-  powerOn?: string;
-  powerOff?: string;
-  [key: string]: Json | undefined;
-}
-
 export type DeviceCategory = 'player' | 'display' | 'controller';
 export type DeviceStatus = 'online' | 'offline';
-
-export interface DeviceBranch {
-  id: string;
-  name: string;
-  company_id?: string | null;
-}
-
-export interface ScheduleEvent {
-  id: string;
-  title: string;
-}
-
-export interface PlaylistInfo {
-  id: string;
-  name: string;
-}
 
 export interface Device {
   id: string;
   name: string;
   category: DeviceCategory;
   status: DeviceStatus;
-  ip_address?: string | null;
-  system_info: DeviceSystemInfo;
-  schedule?: DeviceSchedule;
-  token?: string | null;
-  last_seen?: string | null;
+  ip_address?: string;
+  system_info?: SystemInfo;
+  schedule?: {
+    powerOn?: string;
+    powerOff?: string;
+  };
+  token?: string;
+  last_seen?: string;
   created_at?: string;
   updated_at?: string;
-  location?: string | null;
-  branch_id?: string | null;
-  location_id?: string | null;
+  location?: string;
+  branch_id?: string;
+  location_id?: string;
   created_by?: string;
-  branches?: DeviceBranch | null;
+  branches?: {
+    id: string;
+    name: string;
+    company_id?: string;
+  };
   schedule_device_assignments?: Array<{
-    schedule?: ScheduleEvent;
+    schedule?: {
+      id: string;
+      title: string;
+    };
   }>;
   playlist_assignments?: Array<{
-    playlist?: PlaylistInfo;
+    playlist?: {
+      id: string;
+      name: string;
+    };
   }>;
 }

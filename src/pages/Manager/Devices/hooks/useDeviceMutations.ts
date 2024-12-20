@@ -1,98 +1,49 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Device } from "./types";
+import api from "@/lib/api";
 
 export const useDeviceMutations = () => {
   const queryClient = useQueryClient();
 
   const createDevice = useMutation({
     mutationFn: async (device: Omit<Device, 'id'>) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { data, error } = await supabase
-        .from('devices')
-        .insert({
-          ...device,
-          last_seen: new Date().toISOString(),
-          ip_address: window.location.hostname,
-          system_info: device.system_info || {},
-          schedule: device.schedule || {},
-          created_by: userData.user.id
-        })
-        .select(`
-          *,
-          branches (
-            id,
-            name,
-            company_id
-          )
-        `)
-        .single();
-
-      if (error) throw error;
-      return data;
+      const response = await api.post('/admin/devices', device);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device added successfully');
+      toast.success('Cihaz başarıyla eklendi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to add device: ' + error.message);
+      toast.error('Cihaz eklenirken bir hata oluştu: ' + error.message);
     },
   });
 
   const updateDevice = useMutation({
     mutationFn: async ({ id, ...device }: Partial<Device> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('devices')
-        .update({
-          ...device,
-          last_seen: new Date().toISOString(),
-          system_info: JSON.stringify(device.system_info || {}),
-          schedule: JSON.stringify(device.schedule || {})
-        })
-        .eq('id', id)
-        .select(`
-          *,
-          branches (
-            id,
-            name,
-            company_id
-          )
-        `)
-        .single();
-
-      if (error) throw error;
-      return data;
+      const response = await api.put(`/admin/devices/${id}`, device);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device updated successfully');
+      toast.success('Cihaz başarıyla güncellendi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to update device: ' + error.message);
+      toast.error('Cihaz güncellenirken bir hata oluştu: ' + error.message);
     },
   });
 
   const deleteDevice = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('devices')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await api.delete(`/admin/devices/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
-      toast.success('Device deleted successfully');
+      toast.success('Cihaz başarıyla silindi');
     },
     onError: (error: Error) => {
-      toast.error('Failed to delete device: ' + error.message);
+      toast.error('Cihaz silinirken bir hata oluştu: ' + error.message);
     },
   });
 
