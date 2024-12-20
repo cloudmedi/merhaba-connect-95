@@ -4,7 +4,7 @@ import { DropZone } from "./DropZone";
 import { validateAudioFile } from "../utils/fileValidation";
 import { toast } from "sonner";
 import { FileWithPreview } from "../types";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface FileUploadPreviewProps {
   files: File[];
@@ -33,33 +33,21 @@ export function FileUploadPreview({
 
     setIsUploading(true);
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => {
-          const base64 = reader.result?.toString().split(',')[1];
-          if (base64) resolve(base64);
-        };
-      });
-      reader.readAsDataURL(file);
-      const base64Data = await base64Promise;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('announcementId', announcementId);
 
-      const { data, error } = await supabase.functions.invoke('upload-announcement', {
-        body: {
-          fileData: base64Data,
-          fileName: file.name,
-          contentType: file.type,
-          announcementId
+      const { data } = await api.post('/manager/announcements/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
         }
       });
 
-      if (error) throw error;
-
       toast.success("File uploaded successfully");
       return data.url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error("Failed to upload file");
+      toast.error(error.message || "Failed to upload file");
       throw error;
     } finally {
       setIsUploading(false);
