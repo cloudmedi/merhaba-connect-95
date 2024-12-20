@@ -7,13 +7,11 @@ import { Request, Response } from 'express';
 const router = express.Router();
 const categoryService = new CategoryService();
 
-// Get all public categories for manager
+// Get all categories for manager
 router.get('/', authMiddleware, managerMiddleware, async (_req: Request, res: Response) => {
   try {
     const categories = await categoryService.getAllCategories();
-    // Sadece public kategorileri filtrele
-    const publicCategories = categories.filter(category => category.isPublic);
-    return res.json(publicCategories);
+    return res.json(categories);
   } catch (error: any) {
     console.error('Error fetching categories:', error);
     return res.status(500).json({ 
