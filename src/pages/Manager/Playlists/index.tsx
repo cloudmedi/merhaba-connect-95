@@ -3,43 +3,21 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { GridPlaylist } from "@/components/dashboard/types";
 import { MusicPlayer } from "@/components/MusicPlayer";
+import api from "@/lib/api";
 
 export default function Playlists() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPlaylist, setCurrentPlaylist] = useState<GridPlaylist | null>(null);
 
   const { data: playlists, isLoading } = useQuery({
-    queryKey: ['manager-playlists'],
+    queryKey: ['manager-playlists', searchQuery],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      // Get user's company_id
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.company_id) throw new Error('No company associated with user');
-
-      // Fetch public playlists and company's private playlists
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          artwork_url,
-          genres (name),
-          moods (name)
-        `)
-        .or(`is_public.eq.true,company_id.eq.${profile.company_id}`);
-
-      if (error) throw error;
-      return data;
+      const response = await api.get('/admin/playlists', {
+        params: { search: searchQuery }
+      });
+      return response.data;
     }
   });
 
@@ -51,8 +29,8 @@ export default function Playlists() {
     id: playlist.id,
     title: playlist.name,
     artwork_url: playlist.artwork_url || "/placeholder.svg",
-    genre: playlist.genres?.name || "Various",
-    mood: playlist.moods?.name || "Various"
+    genre: playlist.genre?.name || "Various",
+    mood: playlist.mood?.name || "Various"
   }));
 
   return (
