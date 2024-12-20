@@ -33,22 +33,25 @@ export default function ManagerDashboard() {
     }
   });
 
-  // Normal playlist'ler için ayrı query
-  const { data: categories, isLoading: isCategoriesLoading } = useQuery({
+  // Normal playlist'ler için query
+  const { data: playlists, isLoading: isPlaylistsLoading } = useQuery({
     queryKey: ['manager-playlists', searchQuery],
     queryFn: async () => {
-      console.log('Fetching manager playlists with search:', searchQuery);
-      const { data } = await api.get(`/manager/playlists?search=${searchQuery}`);
+      console.log('Fetching manager playlists...');
+      const { data } = await api.get('/manager/playlists');
       console.log('Manager playlists response:', data);
       return data;
     }
   });
 
-  const filteredCategories = categories?.filter(category =>
-    category.playlists?.length > 0
-  ) || [];
-
-  console.log('Filtered categories:', filteredCategories);
+  // Playlist'leri grid için uygun formata dönüştür
+  const transformedPlaylists = playlists?.map(playlist => ({
+    id: playlist._id,
+    title: playlist.name,
+    artwork_url: playlist.artworkUrl || "/placeholder.svg",
+    genre: playlist.genre?.name || "Various",
+    mood: playlist.mood?.name || "Various"
+  })) || [];
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">
@@ -58,7 +61,6 @@ export default function ManagerDashboard() {
             <HeroPlaylist 
               playlist={heroPlaylist} 
               isLoading={isHeroLoading}
-              onPlay={handlePlayPlaylist} 
             />
           )}
 
@@ -75,27 +77,14 @@ export default function ManagerDashboard() {
             </div>
           </div>
 
-          <div className="space-y-12">
-            {filteredCategories.map((category) => (
-              <PlaylistGrid
-                key={category.id}
-                title={category.name}
-                description={category.description}
-                categoryId={category.id}
-                playlists={category.playlists.map(playlist => ({
-                  id: playlist.id,
-                  title: playlist.name,
-                  artwork_url: playlist.artwork_url,
-                  genre: playlist.genre?.name || "Various",
-                  mood: playlist.mood?.name || "Various"
-                }))}
-                isLoading={isCategoriesLoading}
-                onPlay={handlePlayPlaylist}
-                currentPlayingId={currentPlaylist?.id}
-                isPlaying={isPlaying}
-              />
-            ))}
-          </div>
+          <PlaylistGrid
+            title="All Playlists"
+            playlists={transformedPlaylists}
+            isLoading={isPlaylistsLoading}
+            onPlay={handlePlayPlaylist}
+            currentPlayingId={currentPlaylist?.id}
+            isPlaying={isPlaying}
+          />
 
           {currentPlaylist && (
             <MusicPlayer
