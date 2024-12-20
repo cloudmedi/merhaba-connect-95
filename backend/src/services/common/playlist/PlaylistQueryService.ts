@@ -1,5 +1,6 @@
 import { BasePlaylistService } from './BasePlaylistService';
 import { Playlist } from '../../../models/common/Playlist';
+import { Types } from 'mongoose';
 
 export class PlaylistQueryService extends BasePlaylistService {
   async getAllPlaylists() {
@@ -18,17 +19,33 @@ export class PlaylistQueryService extends BasePlaylistService {
         .populate('mood')
         .sort({ createdAt: -1 });
 
-      console.log('Found playlists with managers:', 
-        playlists.map(p => ({
-          id: p._id,
-          name: p.name,
-          managerCount: p.assignedManagers?.length
-        }))
-      );
-
       return playlists;
     } catch (error) {
       console.error('Error fetching playlists with managers:', error);
+      throw error;
+    }
+  }
+
+  async getManagerPlaylists(managerId: string) {
+    try {
+      if (!managerId) {
+        throw new Error('Manager ID is required');
+      }
+
+      console.log('Fetching playlists for manager:', managerId);
+      
+      const playlists = await Playlist.find({
+        'assignedManagers._id': new Types.ObjectId(managerId)
+      })
+        .populate('songs.songId')
+        .populate('categories')
+        .populate('genre')
+        .populate('mood')
+        .sort({ createdAt: -1 });
+
+      return playlists;
+    } catch (error) {
+      console.error('Error fetching manager playlists:', error);
       throw error;
     }
   }
