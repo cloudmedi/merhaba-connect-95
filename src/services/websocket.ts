@@ -1,14 +1,26 @@
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const WEBSOCKET_URL = 'http://localhost:5001';
 
 class WebSocketService {
   private socket: Socket | null = null;
 
   constructor() {
-    this.socket = io(API_URL, {
+    this.socket = io(WEBSOCKET_URL, {
       autoConnect: false,
       transports: ['websocket']
+    });
+
+    this.socket.on('connect', () => {
+      console.log('WebSocket connected');
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+    });
+
+    this.socket.on('error', (error) => {
+      console.error('WebSocket error:', error);
     });
   }
 
@@ -29,12 +41,20 @@ class WebSocketService {
     return () => this.socket?.off(channel, callback);
   }
 
-  unsubscribe(channel: string) {
-    this.socket?.off(channel);
+  emit(event: string, data: any) {
+    if (!this.socket?.connected) {
+      console.warn('WebSocket is not connected');
+      return;
+    }
+    this.socket.emit(event, data);
   }
 
-  emit(event: string, data: any) {
-    this.socket?.emit(event, data);
+  onPlaylistUpdate(callback: (data: any) => void) {
+    return this.subscribe('playlist-updated', callback);
+  }
+
+  onDeviceStatus(callback: (data: any) => void) {
+    return this.subscribe('device-status', callback);
   }
 }
 

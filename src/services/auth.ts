@@ -1,9 +1,9 @@
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { AuthResponse, LoginCredentials, User } from '@/types/auth';
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.axios.post('/auth/login', credentials);
+    const response = await api.post('/auth/login', credentials);
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
@@ -17,7 +17,7 @@ export const authService = {
     lastName: string;
     role: string;
   }): Promise<AuthResponse> {
-    const response = await api.axios.post('/auth/register', userData);
+    const response = await api.post('/auth/register', userData);
     return response.data;
   },
 
@@ -41,7 +41,7 @@ export const authService = {
 
   async verifyToken(): Promise<{ isValid: boolean; user: User | null }> {
     try {
-      const response = await api.axios.get('/auth/verify');
+      const response = await api.get('/auth/verify');
       return {
         isValid: true,
         user: response.data.user
