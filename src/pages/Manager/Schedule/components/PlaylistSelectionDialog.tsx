@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface PlaylistSelectionDialogProps {
   open: boolean;
@@ -22,33 +22,12 @@ export function PlaylistSelectionDialog({
   const { data: playlists = [], isLoading } = useQuery({
     queryKey: ['available-playlists', searchQuery],
     queryFn: async () => {
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!userProfile) throw new Error('No profile found');
-
-      const query = supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          artwork_url,
-          is_public,
-          company_id
-        `)
-        .ilike('name', `%${searchQuery}%`);
-
-      if (userProfile.company_id) {
-        query.or(`is_public.eq.true,company_id.eq.${userProfile.company_id}`);
-      } else {
-        query.eq('is_public', true);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data } = await api.get('/admin/playlists', {
+        params: {
+          search: searchQuery,
+          isPublic: true
+        }
+      });
       return data;
     },
   });
@@ -87,9 +66,9 @@ export function PlaylistSelectionDialog({
                   }}
                 >
                   <div className="w-10 h-10 rounded bg-gray-100 flex-shrink-0">
-                    {playlist.artwork_url && (
+                    {playlist.artworkUrl && (
                       <img
-                        src={playlist.artwork_url}
+                        src={playlist.artworkUrl}
                         alt={playlist.name}
                         className="w-full h-full object-cover rounded"
                       />
@@ -98,7 +77,7 @@ export function PlaylistSelectionDialog({
                   <div>
                     <p className="font-medium">{playlist.name}</p>
                     <p className="text-sm text-gray-500">
-                      {playlist.is_public ? "Public Playlist" : "Company Playlist"}
+                      {playlist.isPublic ? "Public Playlist" : "Company Playlist"}
                     </p>
                   </div>
                 </div>
