@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - token ekleme
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -18,12 +18,10 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor - hata yönetimi
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,5 +32,20 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Playlist servisleri
+export const playlistService = {
+  getHeroPlaylist: async () => {
+    const response = await api.get('/playlists/hero');
+    return response.data;
+  },
+
+  getCategories: async (search?: string) => {
+    const response = await api.get('/categories', {
+      params: { search }
+    });
+    return response.data;
+  }
+};
 
 export default api;

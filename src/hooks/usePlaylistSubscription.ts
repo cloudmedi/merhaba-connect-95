@@ -1,49 +1,50 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { io } from 'socket.io-client';
 
 export function usePlaylistSubscription() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
-      path: '/socket.io'
-    });
+    const ws = new WebSocket('ws://localhost:5001');
 
-    socket.on('connect', () => {
+    ws.onopen = () => {
       console.log('WebSocket connected for playlist updates');
-    });
+    };
 
-    socket.on('playlist-updated', (payload) => {
-      console.log('Playlist update received:', payload);
-      
-      if (payload.action === 'UPDATE') {
-        // If the hero status changed, show a toast
-        if (payload.playlist.isHero) {
-          toast.success("Hero playlist has been updated");
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Playlist update received:', data);
+        
+        if (data.type === 'playlist_updated') {
+          // Hero playlist güncellemesi
+          if (data.payload.playlist.isHero) {
+            toast.success("Hero playlist has been updated");
+            queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
+          }
+
+          // Kategori güncellemesi
+          queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
         }
-
-        // Invalidate queries to refresh the UI
-        queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
-        queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
-      } else if (payload.action === 'CREATE' || payload.action === 'DELETE') {
-        queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
+      } catch (error) {
+        console.error('Error processing playlist update:', error);
       }
-    });
+    };
 
-    socket.on('disconnect', () => {
-      console.log('WebSocket disconnected from playlist updates');
-    });
-
-    socket.on('error', (error) => {
+    ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       toast.error("Error receiving playlist updates");
-    });
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected from playlist updates');
+    };
 
     return () => {
-      console.log('Cleaning up playlist subscription');
-      socket.disconnect();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
   }, [queryClient]);
 }

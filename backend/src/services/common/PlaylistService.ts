@@ -1,6 +1,7 @@
 import { PlaylistManagerService } from './playlist/PlaylistManagerService';
 import { PlaylistQueryService } from './playlist/PlaylistQueryService';
 import { PlaylistMutationService } from './playlist/PlaylistMutationService';
+import { Playlist } from '../../models/common/Playlist';
 
 export class PlaylistService {
   private managerService: PlaylistManagerService;
@@ -13,7 +14,21 @@ export class PlaylistService {
     this.mutationService = new PlaylistMutationService(io);
   }
 
-  // Manager operations
+  // Yeni hero playlist metodu
+  async getHeroPlaylist() {
+    try {
+      const heroPlaylist = await Playlist.findOne({ isHero: true })
+        .populate('songs.songId')
+        .populate('categories')
+        .populate('genre')
+        .populate('mood');
+      return heroPlaylist;
+    } catch (error) {
+      console.error('Error fetching hero playlist:', error);
+      throw error;
+    }
+  }
+
   async assignManagers(playlistId: string, managerIds: string[]) {
     return this.managerService.assignManagers(playlistId, managerIds);
   }

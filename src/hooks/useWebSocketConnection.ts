@@ -1,29 +1,39 @@
 import { useEffect } from 'react';
-import io from 'socket.io-client';
 
 export function useWebSocketConnection() {
   useEffect(() => {
-    const socket = io('http://localhost:5001', {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
-    });
+    const ws = new WebSocket('ws://localhost:5001');
 
-    socket.on('connect', () => {
+    ws.onopen = () => {
       console.log('WebSocket connected');
-    });
+    };
 
-    socket.on('connect_error', (error) => {
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+        
+        // Playlist güncellemelerini işle
+        if (data.type === 'playlist_update') {
+          // Playlist güncelleme mantığı
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
       console.error('WebSocket connection error:', error);
-    });
+    };
 
-    socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason);
-    });
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
 
     return () => {
-      socket.disconnect();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
   }, []);
 }
