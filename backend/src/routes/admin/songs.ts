@@ -48,22 +48,37 @@ router.post(
 
     try {
       if (!req.file) {
+        logger.error('No file uploaded');
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
       const file = req.file;
-      logger.info(`Starting upload for file: ${file.originalname}, size: ${file.size} bytes`);
+      logger.info(`Starting upload process for file:`, {
+        name: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype
+      });
 
-      // SSE başlatma
+      // SSE headers
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no' // Nginx buffering'i devre dışı bırak
       });
 
-      // Progress güncellemelerini gönderen fonksiyon
+      // Keep-alive için düzenli ping
+      const keepAliveInterval = setInterval(() => {
+        res.write(':\n\n'); // SSE yorum satırı
+      }, 30000);
+
+      // Progress handler
       const sendProgress = (progress: number) => {
-        res.write(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
+        const event = {
+          type: 'progress',
+          progress: Math.round(progress * 10) / 10 // 1 ondalık basamak
+        };
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
       };
 
       uploadService = new ChunkUploadService(sendProgress);
@@ -101,9 +116,12 @@ router.post(
       await song.save();
       logger.info('Song saved to database:', song);
       
-      // Yükleme tamamlandı, son event'i gönder
-      res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
-      res.end();
+      // Başarılı sonuç
+      const completeEvent = {
+        type: 'complete',
+        song
+      };
+      res.write(`data: ${JSON.stringify(completeEvent)}\n\n`);
 
     } catch (error: any) {
       logger.error('Upload error:', error);
@@ -112,8 +130,15 @@ router.post(
         uploadService.cancel();
       }
 
-      // Hata durumunda error event'i gönder
-      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+      // Hata durumu
+      const errorEvent = {
+        type: 'error',
+        error: error.message
+      };
+      res.write(`data: ${JSON.stringify(errorEvent)}\n\n`);
+
+    } finally {
+      clearInterval(keepAliveInterval);
       res.end();
     }
 });
