@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
 import ContentLoader from 'react-content-loader';
+import api from "@/lib/api";
 
 const TitleLoader = () => (
   <ContentLoader
@@ -28,50 +28,14 @@ export function CategoryPlaylists() {
   const { data, isLoading } = useQuery({
     queryKey: ['category-playlists', categoryId],
     queryFn: async () => {
-      // Önce mevcut kullanıcının ID'sini al
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      // Kategori detaylarını getir
-      const { data: category, error: categoryError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('id', categoryId)
-        .single();
-
-      if (categoryError) throw categoryError;
-
-      // Bu kategorideki playlistleri getir (sadece public veya kullanıcıya atanmış olanlar)
-      const { data: playlistsData, error: playlistsError } = await supabase
-        .from('playlist_categories')
-        .select(`
-          playlist_id,
-          playlists (
-            id,
-            name,
-            artwork_url,
-            genre:genres(name),
-            mood:moods(name),
-            is_public,
-            assigned_to
-          )
-        `)
-        .eq('category_id', categoryId);
-
-      if (playlistsError) throw playlistsError;
-
-      // Playlistleri filtrele - sadece public olanları veya kullanıcıya atananları göster
-      const filteredPlaylists = playlistsData
-        .map(item => item.playlists)
-        .filter(playlist => playlist !== null)
-        .filter(playlist => 
-          playlist.is_public || 
-          (playlist.assigned_to && playlist.assigned_to.includes(user.id))
-        );
+      const [categoryResponse, playlistsResponse] = await Promise.all([
+        api.get(`/admin/categories/${categoryId}`),
+        api.get(`/admin/categories/${categoryId}/playlists`)
+      ]);
 
       return {
-        category,
-        playlists: filteredPlaylists
+        category: categoryResponse.data,
+        playlists: playlistsResponse.data
       };
     }
   });
