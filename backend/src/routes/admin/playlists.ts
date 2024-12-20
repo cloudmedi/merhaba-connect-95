@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express, { Response, Request } from 'express';
 import { PlaylistService } from '../../services/common/PlaylistService';
 import { adminAuth } from '../../middleware/auth';
 import multer from 'multer';
@@ -11,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(adminAuth);
 
-router.post('/upload-artwork', upload.single('file'), async (req, res) => {
+router.post('/upload-artwork', upload.single('file'), async (req: Request & { file?: Express.Multer.File }, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -32,7 +32,7 @@ router.post('/upload-artwork', upload.single('file'), async (req, res) => {
   }
 });
 
-router.post('/:id/assign-managers', async (req, res) => {
+router.post('/:id/assign-managers', async (req: AuthRequest, res: Response) => {
   try {
     console.log('Received assign managers request:', {
       playlistId: req.params.id,
