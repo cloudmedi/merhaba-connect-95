@@ -18,8 +18,7 @@ const TokenSchema = new mongoose.Schema({
   },
   createdAt: { 
     type: Date, 
-    default: Date.now,
-    expires: 86400 // 24 saat sonra otomatik silinir
+    default: Date.now
   }
 });
 
