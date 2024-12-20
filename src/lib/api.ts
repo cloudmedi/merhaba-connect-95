@@ -1,157 +1,151 @@
 import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Token handling
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Error handling
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-// Database operations with TypeScript types
-interface QueryOptions {
-  select?: string[];
-  where?: Record<string, any>;
-  order?: { column: string; direction: 'asc' | 'desc' };
-  limit?: number;
-  offset?: number;
-}
 
 interface ApiResponse<T> {
   data: T;
   error: any;
 }
 
-export const db = {
-  from: (table: string) => ({
-    select: async <T>(columns = '*'): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.get(`/${table}`, {
-          params: { select: columns }
-        });
-        return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
+class ApiClient {
+  private socket: Socket | null = null;
+  private axios = axios.create({
+    baseURL: API_URL,
+    headers: {
+      'Content-Type': 'application/json',
     },
+  });
 
-    insert: async <T>(data: any): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.post(`/${table}`, data);
-        return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
+  constructor() {
+    this.setupAxiosInterceptors();
+    this.setupWebSocket();
+  }
+
+  private setupAxiosInterceptors() {
+    this.axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    this.axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
       }
-    },
+    );
+  }
 
-    update: async <T>(data: any): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.put(`/${table}`, data);
-        return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
+  private setupWebSocket() {
+    this.socket = io(API_URL, {
+      autoConnect: false,
+      transports: ['websocket'],
+    });
+  }
+
+  // WebSocket methods
+  public channel(name: string) {
+    if (!this.socket) {
+      throw new Error('WebSocket not initialized');
+    }
+    return {
+      subscribe: (callback: (data: any) => void) => {
+        this.socket?.on(name, callback);
+        return () => this.socket?.off(name, callback);
+      },
+      unsubscribe: () => {
+        this.socket?.off(name);
+      },
+      emit: (event: string, data: any) => {
+        this.socket?.emit(event, data);
       }
-    },
+    };
+  }
 
-    delete: async <T>(): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.delete(`/${table}`);
+  public removeChannel(channel: string) {
+    this.socket?.off(channel);
+  }
+
+  // Database operations
+  public from(table: string) {
+    return {
+      select: async <T>(columns = '*'): Promise<ApiResponse<T>> => {
+        const response = await this.axios.get(`/${table}`, { params: { select: columns } });
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
-    },
+      },
 
-    eq: async <T>(column: string, value: any): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.get(`/${table}`, {
+      insert: async <T>(data: any): Promise<ApiResponse<T>> => {
+        const response = await this.axios.post(`/${table}`, data);
+        return { data: response.data, error: null };
+      },
+
+      update: async <T>(data: any): Promise<ApiResponse<T>> => {
+        const response = await this.axios.put(`/${table}`, data);
+        return { data: response.data, error: null };
+      },
+
+      delete: async <T>(): Promise<ApiResponse<T>> => {
+        const response = await this.axios.delete(`/${table}`);
+        return { data: response.data, error: null };
+      },
+
+      eq: async <T>(column: string, value: any): Promise<ApiResponse<T>> => {
+        const response = await this.axios.get(`/${table}`, {
           params: { [column]: value }
         });
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
-    },
+      },
 
-    order: async <T>(column: string, options: { ascending?: boolean } = {}): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.get(`/${table}`, {
+      order: async <T>(column: string, options: { ascending?: boolean } = {}): Promise<ApiResponse<T>> => {
+        const response = await this.axios.get(`/${table}`, {
           params: { 
             order: column,
             direction: options.ascending ? 'asc' : 'desc'
           }
         });
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
-    },
+      },
 
-    in: async <T>(column: string, values: any[]): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.get(`/${table}`, {
+      in: async <T>(column: string, values: any[]): Promise<ApiResponse<T>> => {
+        const response = await this.axios.get(`/${table}`, {
           params: { [column]: `in:${values.join(',')}` }
         });
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
-    },
+      },
 
-    or: async <T>(conditions: Record<string, any>): Promise<ApiResponse<T>> => {
-      try {
+      or: async <T>(conditions: Record<string, any>): Promise<ApiResponse<T>> => {
         const params = new URLSearchParams();
         Object.entries(conditions).forEach(([key, value]) => {
           params.append(`or[${key}]`, value);
         });
-        const response = await api.get(`/${table}?${params.toString()}`);
+        const response = await this.axios.get(`/${table}?${params.toString()}`);
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
-      }
-    },
+      },
 
-    ilike: async <T>(column: string, pattern: string): Promise<ApiResponse<T>> => {
-      try {
-        const response = await api.get(`/${table}`, {
+      ilike: async <T>(column: string, pattern: string): Promise<ApiResponse<T>> => {
+        const response = await this.axios.get(`/${table}`, {
           params: { [column]: `ilike:${pattern}` }
         });
         return { data: response.data, error: null };
-      } catch (error) {
-        return { data: null as any, error };
       }
-    }
-  }),
+    };
+  }
 
-  auth: {
+  // Auth methods
+  public auth = {
     getUser: async () => {
       try {
-        const response = await api.get('/auth/user');
+        const response = await this.axios.get('/auth/user');
         return { data: { user: response.data }, error: null };
       } catch (error) {
         return { data: { user: null }, error };
@@ -160,13 +154,13 @@ export const db = {
 
     getSession: async () => {
       try {
-        const response = await api.get('/auth/session');
+        const response = await this.axios.get('/auth/session');
         return { data: response.data, error: null };
       } catch (error) {
         return { data: null, error };
       }
     }
-  }
-};
+  };
+}
 
-export default api;
+export const api = new ApiClient();
