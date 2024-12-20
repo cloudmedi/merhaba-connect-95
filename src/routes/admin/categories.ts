@@ -17,12 +17,14 @@ router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: 
   try {
     const categories = await categoryService.getAllCategories();
     res.json(categories);
+    return;
   } catch (error: any) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ 
       error: 'Failed to fetch categories',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -34,12 +36,14 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
       createdBy: req.user?.id
     });
     res.status(201).json(category);
+    return;
   } catch (error: any) {
     console.error('Error creating category:', error);
     res.status(500).json({ 
       error: 'Failed to create category',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -54,12 +58,14 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 
     const category = await categoryService.updateCategory(id, req.body);
     res.json(category);
+    return;
   } catch (error: any) {
     console.error('Error updating category:', error);
     res.status(500).json({ 
       error: 'Failed to update category',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -68,12 +74,14 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();
+    return;
   } catch (error: any) {
     console.error('Error deleting category:', error);
     res.status(500).json({ 
       error: 'Failed to delete category',
       details: error.message 
     });
+    return;
   }
 });
 
