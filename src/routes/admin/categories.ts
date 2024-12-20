@@ -1,6 +1,7 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { CategoryService } from '../../services/admin/CategoryService';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
+import { Request } from 'express';
 
 interface AuthRequest extends Request {
   user?: {
