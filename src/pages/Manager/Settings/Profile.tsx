@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface ProfileFormData {
   firstName: string;
@@ -28,19 +28,16 @@ export default function Profile() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          avatar_url: formData.avatar_url
-        })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
+      const response = await api.put('/admin/profile', {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        avatar_url: formData.avatar_url
+      });
 
-      if (error) throw error;
-      toast.success("Profile updated successfully");
+      if (response.data) {
+        toast.success("Profile updated successfully");
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error("Failed to update profile");
