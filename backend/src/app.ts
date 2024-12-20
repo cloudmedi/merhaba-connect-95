@@ -36,7 +36,7 @@ declare global {
 }
 
 // Middleware to attach io to request object
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   req.io = io;
   next();
 });
@@ -84,10 +84,10 @@ app.use(cors({
 app.use(express.json());
 
 // Debug middleware to log requests
-app.use((req, res, next) => {
-  logger.debug(`${req.method} ${req.path}`, {
-    headers: req.headers,
-    body: req.body,
+app.use((_req, _res, next) => {
+  logger.debug(`${_req.method} ${_req.path}`, {
+    headers: _req.headers,
+    body: _req.body,
     timestamp: new Date().toISOString()
   });
   next();
@@ -103,10 +103,10 @@ app.use('/api/admin/moods', adminMoodsRoutes);
 app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
-app.use('/api/notifications', notificationsRoutes); // Yeni route eklendi
+app.use('/api/notifications', notificationsRoutes);
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Application error:', {
     error: err.message,
     stack: err.stack,
