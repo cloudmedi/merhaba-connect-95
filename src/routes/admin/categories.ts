@@ -1,8 +1,7 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { CategoryService } from '../../services/admin/CategoryService';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
-import { Request } from 'express';
-import { IUser } from '../../types/user';
+import type { Request } from 'express';
 
 interface AuthRequest extends Request {
   user?: {
@@ -15,7 +14,7 @@ const router = express.Router();
 const categoryService = new CategoryService();
 
 // Get all categories
-router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const categories = await categoryService.getAllCategories();
     res.json(categories);
@@ -29,11 +28,11 @@ router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) =
 });
 
 // Create category
-router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const category = await categoryService.createCategory({
       ...req.body,
-      createdBy: req.user?.id
+      createdBy: req.user?.id || ''
     });
     res.status(201).json(category);
   } catch (error: any) {
@@ -46,14 +45,20 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
 });
 
 // Update category
-router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ error: 'Category ID is required' });
+      res.status(400).json({ error: 'Category ID is required' });
+      return;
     }
 
     const category = await categoryService.updateCategory(id, req.body);
+    if (!category) {
+      res.status(404).json({ error: 'Category not found' });
+      return;
+    }
+    
     res.json(category);
   } catch (error: any) {
     console.error('Error updating category:', error);
@@ -65,7 +70,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 });
 
 // Delete category
-router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     await categoryService.deleteCategory(req.params.id);
     res.status(204).send();
