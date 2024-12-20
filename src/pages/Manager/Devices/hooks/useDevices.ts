@@ -8,13 +8,13 @@ export const useDevices = () => {
   const { data: devices = [], isLoading, error } = useQuery({
     queryKey: ['devices'],
     queryFn: async () => {
-      const response = await api.get('/admin/devices');
+      const response = await api.get('/manager/devices');
       return response.data;
     }
   });
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:5000');
+    const socket = new WebSocket('ws://localhost:5001');
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);

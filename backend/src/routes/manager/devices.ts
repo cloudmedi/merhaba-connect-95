@@ -1,43 +1,59 @@
 import express from 'express';
-import { DeviceService } from '../../services/manager/DeviceService';
-import { validateDeviceInput } from '../../middleware/validation';
+import { Device } from '../../models/manager/Device';
+import { authMiddleware } from '../../middleware/auth.middleware';
+import { managerMiddleware } from '../../middleware/manager.middleware';
+import { logger } from '../../utils/logger';
 
 const router = express.Router();
-const deviceService = new DeviceService();
 
-router.get('/', async (req, res, next) => {
+// Get all devices
+router.get('/', authMiddleware, managerMiddleware, async (req, res) => {
   try {
-    const devices = await deviceService.getAllDevices();
+    const devices = await Device.find().populate('branchId');
     res.json(devices);
   } catch (error) {
-    next(error);
+    logger.error('Error fetching devices:', error);
+    res.status(500).json({ error: 'Failed to fetch devices' });
   }
 });
 
-router.post('/', validateDeviceInput, async (req, res, next) => {
+// Create new device
+router.post('/', authMiddleware, managerMiddleware, async (req, res) => {
   try {
-    const device = await deviceService.createDevice(req.body);
+    const device = new Device(req.body);
+    await device.save();
     res.status(201).json(device);
   } catch (error) {
-    next(error);
+    logger.error('Error creating device:', error);
+    res.status(500).json({ error: 'Failed to create device' });
   }
 });
 
-router.put('/:id', validateDeviceInput, async (req, res, next) => {
+// Update device
+router.put('/:id', authMiddleware, managerMiddleware, async (req, res) => {
   try {
-    const device = await deviceService.updateDevice(req.params.id, req.body);
+    const device = await Device.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
     res.json(device);
   } catch (error) {
-    next(error);
+    logger.error('Error updating device:', error);
+    res.status(500).json({ error: 'Failed to update device' });
   }
 });
 
-router.delete('/:id', async (req, res, next) => {
+// Delete device
+router.delete('/:id', authMiddleware, managerMiddleware, async (req, res) => {
   try {
-    await deviceService.deleteDevice(req.params.id);
+    const device = await Device.findByIdAndDelete(req.params.id);
+    if (!device) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
     res.status(204).send();
   } catch (error) {
-    next(error);
+    logger.error('Error deleting device:', error);
+    res.status(500).json({ error: 'Failed to delete device' });
   }
 });
 

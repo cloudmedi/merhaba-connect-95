@@ -18,10 +18,10 @@ import adminMoodsRoutes from './routes/admin/moods';
 import adminSongsRoutes from './routes/admin/songs';
 import adminPlaylistsRoutes from './routes/admin/playlists';
 import adminMetricsRoutes from './routes/admin/metrics';
-import adminDevicesRoutes from './routes/admin/devices'; // Yeni eklenen route
 import notificationsRoutes from './routes/notifications.routes';
 import managerPlaylistsRoutes from './routes/manager/playlists';
 import managerCategoriesRoutes from './routes/manager/categories';
+import managerDevicesRoutes from './routes/manager/devices'; // Yeni eklenen route
 
 const app = express();
 const httpServer = createServer(app);
@@ -106,10 +106,10 @@ app.use('/api/admin/moods', adminMoodsRoutes);
 app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
-app.use('/api/admin/devices', adminDevicesRoutes); // Yeni eklenen route
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/manager/playlists', managerPlaylistsRoutes);
 app.use('/api/manager/categories', managerCategoriesRoutes);
+app.use('/api/manager/devices', managerDevicesRoutes); // Yeni eklenen route
 
 // Error handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
