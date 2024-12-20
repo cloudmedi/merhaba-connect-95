@@ -57,7 +57,7 @@ export function PlaylistDetail() {
   }
 
   const handleSongSelect = (song: any) => {
-    const index = playlist.songs.findIndex((s: any) => s.id === song.id);
+    const index = playlistSongs?.findIndex((s: any) => s.songId._id === song.id);
     if (index !== -1) {
       setCurrentSongIndex(index);
       setIsPlaying(true);
@@ -65,17 +65,17 @@ export function PlaylistDetail() {
   };
 
   const handlePlayClick = () => {
-    if (playlist.songs && playlist.songs.length > 0) {
+    if (playlistSongs && playlistSongs.length > 0) {
       setCurrentSongIndex(0);
       setIsPlaying(true);
     }
   };
 
   const calculateTotalDuration = () => {
-    if (!playlist.songs || playlist.songs.length === 0) return "0 min";
+    if (!playlistSongs || playlistSongs.length === 0) return "0 min";
     
-    const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
-      return acc + (song.duration || 0);
+    const totalSeconds = playlistSongs.reduce((acc: number, song: any) => {
+      return acc + (song.songId.duration || 0);
     }, 0);
     
     const hours = Math.floor(totalSeconds / 3600);
@@ -87,6 +87,16 @@ export function PlaylistDetail() {
     return `${minutes} min`;
   };
 
+  // Şarkı verilerini doğru formata dönüştür
+  const formattedSongs = playlistSongs?.map((song: any) => ({
+    id: song.songId._id,
+    title: song.songId.title,
+    artist: song.songId.artist || "Unknown Artist",
+    duration: song.songId.duration,
+    file_url: song.songId.fileUrl,
+    bunny_id: song.songId.bunnyId
+  })) || [];
+
   return (
     <div className="min-h-screen bg-white">
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
@@ -96,32 +106,26 @@ export function PlaylistDetail() {
           name={playlist.name}
           genreName={playlist.genre?.name}
           moodName={playlist.mood?.name}
-          songCount={playlist.songs?.length || 0}
+          songCount={playlistSongs?.length || 0}
           duration={calculateTotalDuration()}
           onPlay={handlePlayClick}
           onPush={() => setIsPushDialogOpen(true)}
         />
 
         <SongList 
-          songs={playlist.songs}
+          songs={formattedSongs}
           onSongSelect={handleSongSelect}
           currentSongIndex={isPlaying ? currentSongIndex : undefined}
           onCurrentSongIndexChange={setCurrentSongIndex}
           isPlaying={isPlaying}
         />
 
-        {isPlaying && playlist.songs && (
+        {isPlaying && formattedSongs.length > 0 && (
           <MusicPlayer
             playlist={{
               title: playlist.name,
               artwork: playlist.artworkUrl || "/placeholder.svg",
-              songs: playlist.songs.map((song: any) => ({
-                id: song.id,
-                title: song.title,
-                artist: song.artist || "Unknown Artist",
-                duration: song.duration?.toString() || "0:00",
-                file_url: song.file_url
-              }))
+              songs: formattedSongs
             }}
             onClose={() => setIsPlaying(false)}
             initialSongIndex={currentSongIndex}
@@ -134,7 +138,7 @@ export function PlaylistDetail() {
           isOpen={isPushDialogOpen}
           onClose={() => setIsPushDialogOpen(false)}
           playlistTitle={playlist.name}
-          playlistId={playlist.id}
+          playlistId={playlist._id}
         />
       </div>
     </div>
