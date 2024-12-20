@@ -28,8 +28,8 @@ export function PlaylistDetail() {
   const { data: playlistSongs } = useQuery({
     queryKey: ['playlist-songs', id],
     queryFn: async () => {
-      console.log('Fetching playlist songs for ID:', id);
-      const response = await api.get(`/manager/playlist-songs/${id}`);
+      console.log('Fetching songs for playlist ID:', id);
+      const response = await api.get(`/manager/playlists/${id}/songs`);
       console.log('Playlist songs response:', response.data);
       return response.data;
     },

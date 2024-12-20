@@ -49,7 +49,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
   }
 });
 
-// Playlist şarkılarını getir
+// Playlist şarkılarını getir - Yeni endpoint yapısı
 router.get('/:id/songs', async (req: AuthRequest, res) => {
   try {
     console.log('Playlist songs request received for ID:', req.params.id);
