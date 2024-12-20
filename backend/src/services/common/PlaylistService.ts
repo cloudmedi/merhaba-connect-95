@@ -31,6 +31,8 @@ export class PlaylistService {
         ]
       };
 
+      console.log('Executing query:', JSON.stringify(query, null, 2));
+
       const playlist = await Playlist.findOne(query)
         .populate('songs.songId')
         .populate('categories')
@@ -41,15 +43,12 @@ export class PlaylistService {
           select: '_id email firstName lastName'
         });
 
-      console.log('Playlist found:', {
-        id: playlist?._id,
-        name: playlist?.name,
+      console.log('Query result:', {
+        found: !!playlist,
+        playlistId: playlist?._id,
         isPublic: playlist?.isPublic,
-        isHero: playlist?.isHero,
-        assignedManagers: playlist?.assignedManagers?.map(m => ({
-          _id: m._id,
-          email: m.email
-        }))
+        assignedManagersCount: playlist?.assignedManagers?.length,
+        assignedManagerIds: playlist?.assignedManagers?.map(m => m._id.toString())
       });
 
       return playlist;
