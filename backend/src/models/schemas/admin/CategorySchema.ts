@@ -4,7 +4,8 @@ const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  position: { type: Number, required: true }
+  position: { type: Number, required: true },
+  isPublic: { type: Boolean, default: true }
 }, {
   timestamps: true
 });
