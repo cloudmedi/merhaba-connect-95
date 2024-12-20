@@ -9,11 +9,11 @@ const DeviceSchema = new mongoose.Schema({
   systemInfo: { type: Object, default: {} },
   schedule: { type: Object, default: {} },
   lastSeen: { type: Date },
-  token: { type: String },
+  token: { type: String, required: true, unique: true }, // Token alanını required ve unique yaptık
   location: { type: String },
   locationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Location' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  macAddress: { type: String },
+  macAddress: { type: String, required: true, unique: true }, // MAC adresini required ve unique yaptık
   volume: { type: Number, default: 50 },
   currentVersion: { type: String },
   lastUpdateCheck: { type: Date },

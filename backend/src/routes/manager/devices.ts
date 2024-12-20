@@ -9,8 +9,8 @@ const router = express.Router();
 // Register device and get token
 router.post('/register', async (req, res) => {
   try {
-    const { macAddress, systemInfo } = req.body;
-    logger.info('Device registration attempt:', { macAddress, systemInfo });
+    const { macAddress, token, systemInfo } = req.body;
+    logger.info('Device registration attempt:', { macAddress, token, systemInfo });
 
     // MAC adresi ile mevcut cihazı kontrol et
     let device = await Device.findOne({ macAddress });
@@ -18,8 +18,9 @@ router.post('/register', async (req, res) => {
 
     if (device) {
       logger.info('Updating existing device:', { deviceId: device._id });
-      // Cihaz varsa token'ı güncelle
+      // Cihaz varsa bilgileri güncelle
       device.systemInfo = systemInfo;
+      device.token = token; // Token'ı güncelle
       device.lastSeen = new Date();
       await device.save();
       
@@ -34,7 +35,6 @@ router.post('/register', async (req, res) => {
     }
 
     // Yeni cihaz oluştur
-    const token = Math.random().toString(36).substring(2, 8).toUpperCase();
     logger.info('Creating new device:', { macAddress, token });
     
     device = new Device({
