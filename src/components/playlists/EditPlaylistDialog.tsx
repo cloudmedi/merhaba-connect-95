@@ -26,7 +26,15 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
     description: playlist.description || "",
     artwork: null as File | null,
     artworkUrl: playlist.artworkUrl || "",
-    selectedSongs: playlist.songs || [],
+    selectedSongs: playlist.songs?.map(song => ({
+      _id: song.songId._id,
+      title: song.songId.title,
+      artist: song.songId.artist || "Unknown Artist",
+      album: song.songId.album,
+      duration: song.songId.duration,
+      fileUrl: song.songId.fileUrl,
+      artworkUrl: song.songId.artworkUrl
+    })) || [],
     selectedGenres: playlist.genre ? [playlist.genre] : [],
     selectedCategories: playlist.categories || [],
     selectedMoods: playlist.mood ? [playlist.mood] : [],
@@ -38,7 +46,6 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onSuccess }: 
 
   useEffect(() => {
     if (open && playlist.assignedManagers) {
-      // Convert string[] to Manager[]
       const managers = playlist.assignedManagers.map(manager => {
         if (typeof manager === 'string') {
           return {
