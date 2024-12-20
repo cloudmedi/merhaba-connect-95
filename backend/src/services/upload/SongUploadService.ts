@@ -62,7 +62,7 @@ export class SongUploadService {
 
       // Metadata çıkarma
       this.sendProgress(res, { type: 'status', status: 'processing' });
-      const metadata = await this.metadataService.extractMetadata(file.buffer, uniqueFileName);
+      const metadata = await this.metadataService.extractMetadata(file.buffer, file.originalname);
       
       if (!metadata) {
         throw new Error('Failed to extract metadata');
@@ -82,7 +82,7 @@ export class SongUploadService {
       });
 
       const savedSong = await song.save();
-      logger.info('Song saved to MongoDB:', savedSong._id);
+      logger.info('Song saved to MongoDB:', savedSong);
       
       if (this.isClientConnected && !res.writableEnded) {
         this.sendProgress(res, { 
