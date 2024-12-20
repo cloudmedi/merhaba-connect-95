@@ -14,14 +14,18 @@ export class PlaylistService {
     this.mutationService = new PlaylistMutationService(io);
   }
 
-  // Yeni hero playlist metodu
   async getHeroPlaylist() {
     try {
       const heroPlaylist = await Playlist.findOne({ isHero: true })
         .populate('songs.songId')
         .populate('categories')
         .populate('genre')
-        .populate('mood');
+        .populate('mood')
+        .populate({
+          path: 'assignedManagers',
+          select: 'email firstName lastName',
+          model: 'User'
+        });
       return heroPlaylist;
     } catch (error) {
       console.error('Error fetching hero playlist:', error);
@@ -29,7 +33,6 @@ export class PlaylistService {
     }
   }
 
-  // Manager playlists metodunu ekleyelim
   async getManagerPlaylists(managerId: string) {
     return this.queryService.getManagerPlaylists(managerId);
   }
@@ -42,7 +45,6 @@ export class PlaylistService {
     return this.managerService.getPlaylistManagers(playlistId);
   }
 
-  // Query operations
   async getAllPlaylists() {
     return this.queryService.getAllPlaylists();
   }
@@ -55,7 +57,6 @@ export class PlaylistService {
     return this.queryService.getPlaylistCategories(playlistId);
   }
 
-  // Mutation operations
   async createPlaylist(data: any) {
     return this.mutationService.createPlaylist(data);
   }
