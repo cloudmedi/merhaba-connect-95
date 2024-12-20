@@ -35,7 +35,27 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Şarkı yükle
+// Şarkı yükle - EventSource endpoint
+router.get('/upload', authMiddleware, adminMiddleware, (req: AuthRequest, res: Response) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
+
+  // Keep connection alive
+  const keepAlive = setInterval(() => {
+    res.write(': keepalive\n\n');
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(keepAlive);
+    res.end();
+  });
+});
+
+// Şarkı yükle - POST endpoint
 router.post(
   '/upload',
   authMiddleware,
