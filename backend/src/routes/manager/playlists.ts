@@ -21,7 +21,7 @@ router.get('/hero', async (_req: AuthRequest, res) => {
   }
 });
 
-// Get manager's playlists
+// Get manager's playlists - Sadece görüntüleme
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);

@@ -34,6 +34,7 @@ export class PlaylistQueryService extends BasePlaylistService {
 
       console.log('Fetching playlists for manager:', managerId);
       
+      // Manager'a atanmış playlistleri getir
       const playlists = await Playlist.find({
         'assignedManagers._id': new Types.ObjectId(managerId)
       })
