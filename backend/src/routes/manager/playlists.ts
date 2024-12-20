@@ -11,11 +11,11 @@ router.use(managerMiddleware);
 
 router.get('/hero', async (_req: AuthRequest, res) => {
   try {
-    console.log('Hero playlist request received from user:', _req.user?.id);
+    console.log('Hero playlist request received from user:', _req.user?.userId);
     const playlistService = new PlaylistService(_req.io);
     
     // Manager ID'sini geçirerek playlist'i al
-    const playlist = await playlistService.getHeroPlaylist(_req.user?.id);
+    const playlist = await playlistService.getHeroPlaylist(_req.user?.userId);
     
     if (!playlist) {
       console.log('No playlist found for manager');
@@ -24,14 +24,14 @@ router.get('/hero', async (_req: AuthRequest, res) => {
     
     // Yetkilendirme kontrolü
     const isAssignedToManager = playlist.assignedManagers.some(
-      manager => manager._id.toString() === _req.user?.id
+      manager => manager._id.toString() === _req.user?.userId
     );
     
     console.log('Access check:', {
       playlistId: playlist._id,
       isPublic: playlist.isPublic,
       isAssignedToManager,
-      userId: _req.user?.id,
+      userId: _req.user?.userId,
       assignedManagerIds: playlist.assignedManagers.map(m => m._id.toString())
     });
     
@@ -53,7 +53,7 @@ router.get('/hero', async (_req: AuthRequest, res) => {
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(req.io);
-    const playlists = await playlistService.getManagerPlaylists(req.user?.id);
+    const playlists = await playlistService.getManagerPlaylists(req.user?.userId);
     return res.json(playlists);
   } catch (error: any) {
     console.error('Error fetching playlists:', error);
