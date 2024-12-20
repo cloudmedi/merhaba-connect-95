@@ -11,7 +11,7 @@ export class RegisterController {
     this.tokenService = new TokenService();
   }
 
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response): Promise<Response> {
     try {
       const { email, password, firstName, lastName, role, companyName } = req.body;
 
@@ -55,7 +55,7 @@ export class RegisterController {
         timestamp: new Date().toISOString()
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         token,
         user: {
           id: user._id,
@@ -73,7 +73,7 @@ export class RegisterController {
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString()
       });
-      res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }
 }
