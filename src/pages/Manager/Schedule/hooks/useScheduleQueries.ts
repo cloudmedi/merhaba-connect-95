@@ -1,50 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { DatabaseScheduleEvent } from "../types/scheduleTypes";
-import { mapDatabaseToScheduleEvent } from "../utils/eventMappers";
+import api from "@/lib/api";
+import { ScheduleEvent } from "../types/scheduleTypes";
 
 export function useScheduleQueries() {
   return useQuery({
     queryKey: ['schedule-events'],
     queryFn: async () => {
-      console.log('🔍 Fetching schedule events...');
-      
-      const { data: userData } = await supabase.auth.getUser();
-      console.log('👤 Current user:', userData);
-      
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', userData.user?.id)
-        .single();
-
-      console.log('🏢 User profile:', userProfile);
-
-      const { data, error } = await supabase
-        .from('schedule_events')
-        .select(`
-          *,
-          playlists (
-            id,
-            name,
-            artwork_url
-          ),
-          devices:schedule_device_assignments(
-            device_id
-          )
-        `)
-        .eq('company_id', userProfile?.company_id)
-        .order('start_time', { ascending: true });
-
-      if (error) {
-        console.error('❌ Error fetching events:', error);
-        throw error;
-      }
-
-      console.log('📊 Raw events from database:', data);
-      const mappedEvents = (data as DatabaseScheduleEvent[]).map(mapDatabaseToScheduleEvent);
-      console.log('🎯 Mapped events:', mappedEvents);
-      return mappedEvents;
-    },
+      const { data } = await api.get('/admin/schedules');
+      return data.map((item: any): ScheduleEvent => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        playlist_id: item.playlistId,
+        start_time: item.startTime,
+        end_time: item.endTime,
+        color: {
+          primary: '#6E59A5',
+          secondary: '#8A7CB8',
+          text: '#FFFFFF'
+        },
+        recurrence: item.recurrence,
+        notifications: item.notifications,
+        created_by: item.createdBy,
+        company_id: item.companyId,
+        created_at: item.createdAt,
+        updated_at: item.updatedAt,
+        playlist: item.playlist,
+        devices: item.devices
+      }));
+    }
   });
 }
