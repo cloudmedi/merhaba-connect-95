@@ -2,6 +2,7 @@ import { PlaylistManagerService } from './playlist/PlaylistManagerService';
 import { PlaylistQueryService } from './playlist/PlaylistQueryService';
 import { PlaylistMutationService } from './playlist/PlaylistMutationService';
 import { Playlist } from '../../models/common/Playlist';
+import { Types } from 'mongoose';
 
 export class PlaylistService {
   private managerService: PlaylistManagerService;
@@ -23,11 +24,20 @@ export class PlaylistService {
         return null;
       }
 
-      // Manager'a atanmış veya public playlistleri bul
+      // Manager ID'yi ObjectId'ye çevir
+      const managerObjectId = new Types.ObjectId(managerId);
+      
+      // Sorguyu $elemMatch kullanarak güncelle
       const query = {
         $or: [
           { isPublic: true },
-          { 'assignedManagers._id': managerId }
+          { 
+            assignedManagers: {
+              $elemMatch: { 
+                _id: managerObjectId 
+              }
+            }
+          }
         ]
       };
 
@@ -50,6 +60,13 @@ export class PlaylistService {
         assignedManagersCount: playlist?.assignedManagers?.length,
         assignedManagerIds: playlist?.assignedManagers?.map(m => m._id.toString())
       });
+
+      if (playlist) {
+        console.log('Checking manager assignment:', {
+          managerId: managerId,
+          isAssigned: playlist.assignedManagers.some(m => m._id.toString() === managerId)
+        });
+      }
 
       return playlist;
     } catch (error) {
