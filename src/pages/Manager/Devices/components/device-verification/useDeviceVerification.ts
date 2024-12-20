@@ -1,15 +1,10 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import { toast } from "sonner";
-import type { Json } from "@/integrations/supabase/types";
 
 interface DeviceInfo {
   systemInfo?: Record<string, any>;
   existingDevice?: any;
-}
-
-function isRecord(value: Json): value is Record<string, any> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function useDeviceVerification() {
@@ -20,57 +15,34 @@ export function useDeviceVerification() {
       setIsVerifying(true);
       console.log('Verifying token:', token);
 
-      // First check if token exists and is active
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('device_tokens')
-        .select('*')
-        .eq('token', token)
-        .single();
+      // Verify token and get device info from API
+      const { data: deviceInfo } = await api.post('/manager/devices/verify-token', { token });
 
-      if (tokenError) {
-        console.error('Token verification error:', tokenError);
+      if (!deviceInfo) {
+        console.error('Token verification failed');
         toast.error('Token doğrulanamadı');
         return null;
       }
 
-      if (!tokenData) {
-        console.error('Token not found');
-        toast.error('Token bulunamadı');
-        return null;
-      }
-
-      console.log('Found token:', tokenData);
-
-      // Check if token is already used
-      if (tokenData.status === 'used') {
-        console.error('Token already used');
-        toast.error('Bu token zaten kullanılmış');
-        return null;
-      }
+      console.log('Device info retrieved:', deviceInfo);
 
       // Check if token is expired
-      const isExpired = new Date(tokenData.expires_at) < new Date();
-      if (isExpired) {
+      if (deviceInfo.isExpired) {
         console.error('Token expired');
         toast.error('Token süresi dolmuş');
         return null;
       }
 
-      // Check if device already exists with this token
-      const { data: existingDevice } = await supabase
-        .from('devices')
-        .select('*')
-        .eq('token', token)
-        .single();
-
-      // Token durumunu güncelleme işlemini kaldırdık - bu artık cihaz oluşturulduktan sonra yapılacak
-
-      // Ensure system_info is a valid object before returning
-      const systemInfo = isRecord(tokenData.system_info) ? tokenData.system_info : {};
+      // Check if token is already used
+      if (deviceInfo.status === 'used') {
+        console.error('Token already used');
+        toast.error('Bu token zaten kullanılmış');
+        return null;
+      }
 
       return {
-        systemInfo,
-        existingDevice: existingDevice || null
+        systemInfo: deviceInfo.systemInfo || {},
+        existingDevice: deviceInfo.existingDevice || null
       };
     } catch (error) {
       console.error('Verification error:', error);
@@ -83,15 +55,7 @@ export function useDeviceVerification() {
 
   const markTokenAsUsed = async (token: string) => {
     try {
-      const { error: updateError } = await supabase
-        .from('device_tokens')
-        .update({ status: 'used' })
-        .eq('token', token);
-
-      if (updateError) {
-        console.error('Error updating token status:', updateError);
-        throw updateError;
-      }
+      await api.post('/manager/devices/mark-token-used', { token });
     } catch (error) {
       console.error('Error marking token as used:', error);
       throw error;
