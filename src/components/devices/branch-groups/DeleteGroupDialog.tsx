@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface DeleteGroupDialogProps {
   isOpen: boolean;
@@ -30,36 +30,19 @@ export function DeleteGroupDialog({ isOpen, onClose, groupId, onDeleted }: Delet
       console.log('Starting deletion process for group:', groupId);
 
       // Delete group assignments first
-      const { error: assignmentsError } = await supabase
-        .from('branch_group_assignments')
-        .delete()
-        .eq('group_id', groupId);
-
-      if (assignmentsError) {
-        console.error('Error deleting assignments:', assignmentsError);
-        throw new Error('Grup atamaları silinirken bir hata oluştu');
-      }
-
+      await api.delete(`/branch-groups/${groupId}/assignments`);
       console.log('Successfully deleted group assignments');
 
       // Then delete the group
-      const { error: groupError } = await supabase
-        .from('branch_groups')
-        .delete()
-        .eq('id', groupId);
-
-      if (groupError) {
-        console.error('Error deleting group:', groupError);
-        throw new Error('Grup silinirken bir hata oluştu');
-      }
-
+      await api.delete(`/branch-groups/${groupId}`);
       console.log('Successfully deleted group');
+
       toast.success("Grup başarıyla silindi");
       onClose();
-      
+      await onDeleted();
     } catch (error) {
       console.error('Error in delete operation:', error);
-      toast.error(error instanceof Error ? error.message : "Grup silinirken bir hata oluştu");
+      toast.error("Grup silinirken bir hata oluştu");
     } finally {
       setIsDeleting(false);
     }

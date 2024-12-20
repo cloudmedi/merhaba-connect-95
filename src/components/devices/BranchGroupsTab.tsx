@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { CreateGroupDialog } from "./branch-groups/CreateGroupDialog";
 import { GroupList } from "./branch-groups/GroupList";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import DataTableLoader from "@/components/loaders/DataTableLoader";
+import api from "@/lib/api";
 
 export function BranchGroupsTab() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -18,14 +18,9 @@ export function BranchGroupsTab() {
   const fetchGroups = async () => {
     try {
       console.log('Fetching groups...');
-      const { data, error } = await supabase
-        .from('branch_groups')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      console.log('Fetched groups:', data);
-      setGroups(data || []);
+      const response = await api.get('/branch-groups');
+      console.log('Fetched groups:', response.data);
+      setGroups(response.data || []);
     } catch (error) {
       console.error('Error fetching groups:', error);
       toast.error("Gruplar yüklenirken bir hata oluştu");
@@ -39,47 +34,31 @@ export function BranchGroupsTab() {
     fetchGroups();
   }, []);
 
-  // Set up real-time subscription with enhanced logging
+  // Set up WebSocket subscription for real-time updates
   useEffect(() => {
-    console.log('Setting up real-time subscription...');
-    const channel = supabase
-      .channel('branch_groups_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'branch_groups'
-        },
-        (payload) => {
-          console.log('Received real-time update:', payload);
-          
-          // Handle different types of changes
-          if (payload.eventType === 'DELETE') {
-            console.log('Handling delete event for group:', payload.old.id);
-            setGroups(prevGroups => prevGroups.filter(group => group.id !== payload.old.id));
-            
-          } else if (payload.eventType === 'INSERT') {
-            console.log('Handling insert event for group:', payload.new);
-            setGroups(prevGroups => [payload.new, ...prevGroups]);
-            
-          } else if (payload.eventType === 'UPDATE') {
-            console.log('Handling update event for group:', payload.new);
-            setGroups(prevGroups => 
-              prevGroups.map(group => 
-                group.id === payload.new.id ? payload.new : group
-              )
-            );
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
+    console.log('Setting up WebSocket subscription...');
+    const ws = new WebSocket(`${import.meta.env.VITE_WS_URL}/branch-groups`);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received WebSocket update:', data);
+
+      if (data.type === 'DELETE') {
+        setGroups(prevGroups => prevGroups.filter(group => group.id !== data.id));
+      } else if (data.type === 'INSERT') {
+        setGroups(prevGroups => [data.group, ...prevGroups]);
+      } else if (data.type === 'UPDATE') {
+        setGroups(prevGroups => 
+          prevGroups.map(group => 
+            group.id === data.group.id ? data.group : group
+          )
+        );
+      }
+    };
 
     return () => {
-      console.log('Cleaning up real-time subscription');
-      supabase.removeChannel(channel);
+      console.log('Cleaning up WebSocket subscription');
+      ws.close();
     };
   }, []);
 
