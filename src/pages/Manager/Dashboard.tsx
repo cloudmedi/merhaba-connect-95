@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { PlaylistGrid } from "@/components/dashboard/PlaylistGrid";
 import { HeroPlaylist } from "@/components/dashboard/HeroPlaylist";
 import { usePlaylistSubscription } from "@/hooks/usePlaylistSubscription";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { usePlaylistControl } from "@/components/dashboard/hooks/usePlaylistControl";
 import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
+import api from "@/lib/api";
 
 export default function ManagerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,19 +25,7 @@ export default function ManagerDashboard() {
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlists')
-        .select(`
-          id,
-          name,
-          artwork_url,
-          genre_id:genres!inner(name),
-          mood_id:moods!inner(name)
-        `)
-        .eq('is_hero', true)
-        .single();
-
-      if (error) throw error;
+      const { data } = await api.get('/playlists/hero');
       return data;
     }
   });
@@ -45,49 +33,8 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
-
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('id, name, description');
-
-      if (categoriesError) throw categoriesError;
-
-      const categoriesWithPlaylists = await Promise.all(
-        categoriesData.map(async (category) => {
-          const { data: playlistsData, error: playlistsError } = await supabase
-            .from('playlists')
-            .select(`
-              id,
-              name,
-              artwork_url,
-              genre_id:genres!inner(name),
-              mood_id:moods!inner(name),
-              is_public,
-              assigned_to
-            `)
-            .or(`is_public.eq.true,assigned_to.cs.{${user.id}}`)
-            .ilike('name', `%${searchQuery}%`);
-
-          if (playlistsError) throw playlistsError;
-
-          const { data: categoryPlaylists } = await supabase
-            .from('playlist_categories')
-            .select('playlist_id')
-            .eq('category_id', category.id);
-
-          const categoryPlaylistIds = categoryPlaylists?.map(cp => cp.playlist_id) || [];
-          const filteredPlaylists = playlistsData.filter(p => categoryPlaylistIds.includes(p.id));
-
-          return {
-            ...category,
-            playlists: filteredPlaylists
-          };
-        })
-      );
-
-      return categoriesWithPlaylists;
+      const { data } = await api.get(`/categories?search=${searchQuery}`);
+      return data;
     }
   });
 
@@ -128,8 +75,8 @@ export default function ManagerDashboard() {
                   id: playlist.id,
                   title: playlist.name,
                   artwork_url: playlist.artwork_url,
-                  genre: playlist.genre_id?.name || "Various",
-                  mood: playlist.mood_id?.name || "Various"
+                  genre: playlist.genre?.name || "Various",
+                  mood: playlist.mood?.name || "Various"
                 }))}
                 isLoading={isCategoriesLoading}
                 onPlay={handlePlayPlaylist}
