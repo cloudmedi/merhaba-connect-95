@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { GenreService } from '../../services/admin/GenreService';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import { Request } from 'express';
@@ -14,7 +14,7 @@ const router = express.Router();
 const genreService = new GenreService();
 
 // Get all genres
-router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res) => {
+router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const genres = await genreService.getAllGenres();
     res.json(genres);
@@ -24,7 +24,7 @@ router.get('/', authMiddleware, adminMiddleware, async (_req: AuthRequest, res) 
 });
 
 // Create genre
-router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const genre = await genreService.createGenre({
       ...req.body,
@@ -37,7 +37,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res) 
 });
 
 // Update genre
-router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const genre = await genreService.updateGenre(req.params.id, req.body);
     res.json(genre);
@@ -47,7 +47,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res
 });
 
 // Delete genre
-router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     await genreService.deleteGenre(req.params.id);
     res.status(204).send();
