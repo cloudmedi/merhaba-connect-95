@@ -1,4 +1,3 @@
-import { Readable } from 'stream';
 import fetch from 'node-fetch';
 import { bunnyConfig } from '../../config/bunny';
 import { logger } from '../../utils/logger';
@@ -13,7 +12,6 @@ export class ChunkUploadService {
   private totalChunks: number = 0;
   private uploadedChunks: number = 0;
   private lastProgressUpdate: number = 0;
-  private uploadPromise: Promise<string> | null = null;
   private cleanupCallbacks: (() => void)[] = [];
 
   constructor(private onProgress?: (progress: number) => void) {}
@@ -22,11 +20,23 @@ export class ChunkUploadService {
     if (this.isUploading) {
       logger.info('Cancelling upload...');
       this.isUploading = false;
-      this.abortController?.abort();
-      this.cleanupCallbacks.forEach(callback => callback());
-      this.cleanupCallbacks = [];
-      throw new Error('Upload cancelled by user');
+      if (this.abortController) {
+        this.abortController.abort();
+        this.abortController = null;
+      }
+      this.executeCleanupCallbacks();
     }
+  }
+
+  private executeCleanupCallbacks() {
+    this.cleanupCallbacks.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        logger.error('Error in cleanup callback:', error);
+      }
+    });
+    this.cleanupCallbacks = [];
   }
 
   private async uploadChunk(
@@ -37,10 +47,12 @@ export class ChunkUploadService {
     retryCount = 0
   ): Promise<boolean> {
     if (!this.isUploading) {
-      throw new Error('Upload cancelled');
+      return false;
     }
 
     try {
+      this.abortController = new AbortController();
+      
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -49,7 +61,7 @@ export class ChunkUploadService {
           'Content-Range': `bytes ${start}-${start + chunk.length - 1}/${total}`
         },
         body: chunk,
-        signal: this.abortController?.signal,
+        signal: this.abortController.signal,
         timeout: TIMEOUT
       });
 
@@ -62,7 +74,7 @@ export class ChunkUploadService {
       return true;
     } catch (error) {
       if (!this.isUploading) {
-        throw new Error('Upload cancelled');
+        return false;
       }
 
       logger.error(`Chunk upload error (attempt ${retryCount + 1}):`, error);
@@ -85,10 +97,8 @@ export class ChunkUploadService {
       try {
         this.onProgress?.(progress);
         this.lastProgressUpdate = now;
-        logger.debug(`Upload progress: ${progress}%`);
       } catch (error) {
         logger.error('Error sending progress update:', error);
-        this.cancel();
       }
     }
   }
@@ -103,7 +113,6 @@ export class ChunkUploadService {
     }
 
     this.isUploading = true;
-    this.abortController = new AbortController();
     this.uploadedChunks = 0;
     this.lastProgressUpdate = 0;
 
@@ -119,20 +128,21 @@ export class ChunkUploadService {
       this.totalChunks = chunks.length;
       logger.info(`Starting upload of ${fileName} in ${chunks.length} chunks`);
       
-      // Upload chunks sequentially to maintain order
       for (let i = 0; i < chunks.length; i++) {
         if (!this.isUploading) {
-          throw new Error('Upload cancelled');
+          return '';
         }
         const chunk = chunks[i];
         const start = i * CHUNK_SIZE;
-        await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
+        const success = await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
+        if (!success) {
+          return '';
+        }
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
       logger.info(`Upload completed: ${cdnUrl}`);
       
-      // Final progress update
       if (this.isUploading) {
         this.onProgress?.(100);
       }
@@ -141,12 +151,11 @@ export class ChunkUploadService {
 
     } catch (error) {
       logger.error('File upload error:', error);
-      this.isUploading = false;
       throw error;
     } finally {
       this.isUploading = false;
       this.abortController = null;
-      this.cleanupCallbacks = [];
+      this.executeCleanupCallbacks();
     }
   }
 

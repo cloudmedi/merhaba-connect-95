@@ -3,11 +3,8 @@ import { Song } from '../../models/schemas/admin/SongSchema';
 import { authMiddleware, adminMiddleware } from '../../middleware/auth.middleware';
 import multer from 'multer';
 import { bunnyConfig } from '../../config/bunny';
-import { generateRandomString, sanitizeFileName } from '../../utils/helpers';
 import { logger } from '../../utils/logger';
-import { ChunkUploadService } from '../../services/upload/ChunkUploadService';
-import { MetadataService } from '../../services/upload/MetadataService';
-import { v4 as uuidv4 } from 'uuid';
+import { SongUploadService } from '../../services/upload/SongUploadService';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -26,7 +23,7 @@ interface AuthRequest extends express.Request {
 }
 
 const router = express.Router();
-const metadataService = new MetadataService();
+const uploadService = new SongUploadService();
 
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -44,26 +41,12 @@ router.post(
   adminMiddleware,
   upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
-    let uploadService: ChunkUploadService | null = null;
-
-    // Client bağlantısının kopup kopmadığını kontrol et
-    const isClientConnected = () => !res.writableEnded;
-
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'Dosya yüklenmedi' });
+        return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const file = req.file;
-      logger.info(`Uploading file: ${file.originalname}, size: ${file.size} bytes`);
-
-      const uniqueBunnyId = `song_${uuidv4()}`;
-      const fileExtension = file.originalname.split('.').pop();
-      const uniqueFileName = `${uniqueBunnyId}.${fileExtension}`;
-      
-      logger.info(`Generated unique filename: ${uniqueFileName}`);
-
-      // SSE başlatma
+      // Set up SSE headers
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -71,98 +54,20 @@ router.post(
         'Access-Control-Allow-Origin': '*'
       });
 
-      // Client bağlantısı koptuğunda yüklemeyi iptal et
+      // Handle client disconnection
       req.on('close', () => {
-        if (uploadService) {
-          logger.info('Client disconnected, cancelling upload');
-          try {
-            uploadService.cancel();
-          } catch (error) {
-            logger.error('Error while cancelling upload:', error);
-          }
-        }
+        logger.info('Client disconnected, cancelling upload');
+        uploadService.cancelUpload();
       });
 
-      uploadService = new ChunkUploadService((progress) => {
-        if (isClientConnected()) {
-          try {
-            const data = JSON.stringify({ progress });
-            res.write(`data: ${data}\n\n`);
-          } catch (error) {
-            logger.error('Error sending progress update:', error);
-            throw error;
-          }
-        } else {
-          throw new Error('Client disconnected');
-        }
-      });
-
-      // Temizlik callback'i ekle
-      uploadService.addCleanupCallback(() => {
-        if (isClientConnected()) {
-          try {
-            res.write(`data: ${JSON.stringify({ type: 'error', error: 'Upload cancelled' })}\n\n`);
-            res.end();
-          } catch (error) {
-            logger.error('Error sending cancellation message:', error);
-          }
-        }
-      });
-
-      const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
-      logger.info('File uploaded to CDN:', fileUrl);
-
-      if (!isClientConnected()) {
-        throw new Error('Client disconnected');
-      }
-
-      const metadata = await metadataService.extractMetadata(file.buffer, uniqueFileName);
-      logger.info('Metadata extracted:', metadata);
-
-      if (!metadata) {
-        throw new Error('Failed to extract metadata');
-      }
-
-      const user = req.user;
-
-      const song = new Song({
-        title: metadata.title || file.originalname,
-        artist: metadata.artist,
-        album: metadata.album || null,
-        genre: metadata.genre || [],
-        duration: metadata.duration,
-        fileUrl: fileUrl,
-        bunnyId: uniqueBunnyId,
-        artworkUrl: null,
-        createdBy: user?.id
-      });
-
-      await song.save();
-      logger.info('Song saved to database:', song);
-      
-      if (isClientConnected()) {
-        res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
-        res.end();
-      }
+      await uploadService.uploadSong(req.file, req.user?.id, res);
 
     } catch (error: any) {
       logger.error('Error during upload process:', error);
       
-      if (uploadService) {
-        try {
-          uploadService.cancel();
-        } catch (cancelError) {
-          logger.error('Error cancelling upload:', cancelError);
-        }
-      }
-
       if (!res.writableEnded) {
-        try {
-          res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
-          res.end();
-        } catch (writeError) {
-          logger.error('Error sending error message to client:', writeError);
-        }
+        res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+        res.end();
       }
     }
 });
@@ -171,7 +76,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
-      return res.status(404).json({ error: 'Şarkı bulunamadı' });
+      return res.status(404).json({ error: 'Song not found' });
     }
 
     if (song.bunnyId) {
@@ -189,32 +94,24 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req: AuthRequest, 
         }
       });
 
-      if (!deleteResponse.ok) {
+      if (!deleteResponse.ok && deleteResponse.status !== 404) {
         const errorText = await deleteResponse.text();
         logger.error('Failed to delete file from Bunny CDN:', {
           status: deleteResponse.status,
           statusText: deleteResponse.statusText,
-          error: errorText,
-          url: bunnyUrl
+          error: errorText
         });
-        
-        if (deleteResponse.status !== 404) {
-          throw new Error(`Failed to delete file from CDN: ${errorText}`);
-        }
-      } else {
-        logger.info('Successfully deleted file from Bunny CDN');
+        throw new Error(`Failed to delete file from CDN: ${errorText}`);
       }
     }
 
     await Song.findByIdAndDelete(req.params.id);
-    logger.info(`Song ${req.params.id} successfully deleted`);
-    
-    res.json({ message: 'Şarkı başarıyla silindi' });
+    res.json({ message: 'Song successfully deleted' });
 
   } catch (error: any) {
     logger.error('Error deleting song:', error);
     res.status(500).json({ 
-      error: 'Şarkı silinirken hata oluştu',
+      error: 'Error deleting song',
       details: error.message 
     });
   }
