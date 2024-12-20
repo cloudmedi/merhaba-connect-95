@@ -10,7 +10,7 @@ export class PlaylistQueryService extends BasePlaylistService {
       const playlists = await Playlist.find()
         .populate({
           path: 'songs.songId',
-          select: 'title artist album duration fileUrl artworkUrl bunnyId'
+          select: 'title artist album duration fileUrl artworkUrl'
         })
         .populate('categories')
         .populate('genre')
@@ -45,7 +45,7 @@ export class PlaylistQueryService extends BasePlaylistService {
       })
         .populate({
           path: 'songs.songId',
-          select: 'title artist album duration fileUrl artworkUrl bunnyId'
+          select: 'title artist album duration fileUrl artworkUrl'
         })
         .populate('categories')
         .populate('genre')
@@ -66,7 +66,7 @@ export class PlaylistQueryService extends BasePlaylistService {
       const playlist = await Playlist.findById(playlistId)
         .populate({
           path: 'songs.songId',
-          select: 'title artist album duration fileUrl artworkUrl bunnyId'
+          select: 'title artist album duration fileUrl artworkUrl'
         });
       
       console.log(`Found ${playlist?.songs?.length || 0} songs for playlist`);

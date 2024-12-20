@@ -40,7 +40,7 @@ export class PlaylistMutationService extends BasePlaylistService {
       const populatedPlaylist = await Playlist.findById(playlist._id)
         .populate({
           path: 'songs.songId',
-          select: 'title artist album duration fileUrl artworkUrl bunnyId'
+          select: 'title artist album duration fileUrl artworkUrl'
         })
         .populate('categories')
         .populate('genre')
@@ -50,8 +50,6 @@ export class PlaylistMutationService extends BasePlaylistService {
           select: '_id email firstName lastName'
         });
       
-      console.log('Created playlist with populated data:', populatedPlaylist);
-
       this.wsService.emitPlaylistUpdate(playlist.id, {
         action: 'created',
         playlist: populatedPlaylist
@@ -70,8 +68,6 @@ export class PlaylistMutationService extends BasePlaylistService {
       if (!existingPlaylist) {
         throw new Error('Playlist not found');
       }
-
-      console.log('Updating playlist with data:', data);
 
       // Fetch manager details from User model if assignedManagers array exists
       if (Array.isArray(data.assignedManagers)) {
@@ -109,7 +105,7 @@ export class PlaylistMutationService extends BasePlaylistService {
       )
       .populate({
         path: 'songs.songId',
-        select: 'title artist album duration fileUrl artworkUrl bunnyId'
+        select: 'title artist album duration fileUrl artworkUrl'
       })
       .populate('categories')
       .populate('genre')
@@ -118,8 +114,6 @@ export class PlaylistMutationService extends BasePlaylistService {
         path: 'assignedManagers',
         select: '_id email firstName lastName'
       });
-
-      console.log('Updated playlist with populated data:', updatedPlaylist);
 
       if (updatedPlaylist) {
         this.wsService.emitPlaylistUpdate(id, {

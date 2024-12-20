@@ -11,26 +11,6 @@ interface PlaylistFormProps {
     description: string;
     artwork: File | null;
     artworkUrl: string;
-    selectedSongs: Array<{
-      songId: {
-        _id: string;
-        title: string;
-        artist: string;
-        album: string | null;
-        duration: number | null;
-        fileUrl: string;
-        artworkUrl: string | null;
-      };
-      position: number;
-      _id: string;
-    }>;
-    selectedGenres: any[];
-    selectedCategories: any[];
-    selectedMoods: any[];
-    isCatalog: boolean;
-    isPublic: boolean;
-    isHero: boolean;
-    assignedManagers: any[];
   };
   setPlaylistData: (data: any) => void;
   isEditMode?: boolean;
@@ -38,9 +18,6 @@ interface PlaylistFormProps {
 
 export function PlaylistForm({ playlistData, setPlaylistData, isEditMode }: PlaylistFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string>(playlistData.artworkUrl || "");
-
-  console.log('PlaylistForm - Current playlist data:', playlistData);
-  console.log('PlaylistForm - Selected songs:', playlistData.selectedSongs);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

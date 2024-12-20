@@ -9,27 +9,13 @@ import DataTableLoader from "@/components/loaders/DataTableLoader";
 import { getSongsQuery } from "@/services/songs/queries";
 
 interface SongsTabProps {
-  selectedSongs: Array<{
-    songId: {
-      _id: string;
-      title: string;
-      artist: string;
-      album: string | null;
-      duration: number | null;
-      fileUrl: string;
-      artworkUrl: string | null;
-    };
-    position: number;
-    _id: string;
-  }>;
+  selectedSongs: Song[];
   onAddSong: (song: Song) => void;
   onRemoveSong: (songId: string) => void;
 }
 
 export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
-
-  console.log('SongsTab - Selected songs:', selectedSongs);
 
   const { data: songs = [], isLoading } = useQuery({
     queryKey: ['songs'],
@@ -47,7 +33,7 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
   };
 
   const filteredSongs = songs.filter((song: Song) =>
-    !selectedSongs.some(s => s.songId._id === song._id) && (
+    !selectedSongs.some(s => s._id === song._id) && (
       song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (song.artist?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     )
@@ -77,7 +63,7 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
           <h3 className="font-medium text-lg mb-4">Seçilen Şarkılar ({selectedSongs.length})</h3>
           <ScrollArea className="h-[400px]">
             <div className="space-y-2">
-              {selectedSongs.map((song) => (
+              {selectedSongs.map((song: Song) => (
                 <div
                   key={song._id}
                   className="flex items-center justify-between p-3 rounded-lg border bg-purple-50 border-purple-200"
@@ -87,14 +73,17 @@ export function SongsTab({ selectedSongs, onAddSong, onRemoveSong }: SongsTabPro
                       <Music2 className="w-4 h-4 text-purple-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-sm">{song.songId.title}</h4>
-                      <p className="text-sm text-gray-500">{song.songId.artist || 'Bilinmeyen Sanatçı'}</p>
+                      <h4 className="font-medium text-sm">{song.title}</h4>
+                      <p className="text-sm text-gray-500">{song.artist || 'Bilinmeyen Sanatçı'}</p>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveSong(song.songId._id)}
+                    onClick={() => {
+                      console.log('Remove button clicked for song:', song._id);
+                      handleRemoveSong(song._id);
+                    }}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <X className="w-4 h-4" />
