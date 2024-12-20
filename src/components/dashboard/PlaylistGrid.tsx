@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import ContentLoader from 'react-content-loader';
 import { GridPlaylist } from "./types";
 import CatalogLoader from "@/components/loaders/CatalogLoader";
@@ -47,23 +47,7 @@ export function PlaylistGrid({
   const { data: playlistSongs } = useQuery({
     queryKey: ['playlist-songs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('playlist_songs')
-        .select(`
-          playlist_id,
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            duration,
-            file_url,
-            bunny_id
-          )
-        `)
-        .order('position');
-
-      if (error) throw error;
+      const { data } = await api.get('/admin/playlist-songs');
       return data;
     }
   });
