@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 interface Group {
   id: string;
@@ -31,17 +31,15 @@ export function EditGroupDialog({ isOpen, onClose, group, onSuccess }: EditGroup
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('branch_groups')
-        .update({ name, description })
-        .eq('id', group.id);
-
-      if (error) throw error;
+      await api.put(`/admin/branch-groups/${group.id}`, { 
+        name, 
+        description 
+      });
 
       toast.success("Grup başarıyla güncellendi");
       await onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating group:', error);
       toast.error("Grup güncellenirken bir hata oluştu");
     } finally {
