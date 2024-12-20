@@ -1,54 +1,49 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { io } from 'socket.io-client';
 
 export function usePlaylistSubscription() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Enable REPLICA IDENTITY FULL for the playlists table to ensure we get complete row data
-    const channel = supabase
-      .channel('playlist-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'playlists'
-        },
-        (payload) => {
-          console.log('Playlist change detected:', payload);
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+      path: '/socket.io'
+    });
 
-          // Invalidate queries based on the type of change
-          if (payload.eventType === 'UPDATE') {
-            // If the hero status changed, show a toast
-            if (payload.old && payload.new && payload.old.is_hero !== payload.new.is_hero && payload.new.is_hero) {
-              toast.success("Hero playlist has been updated");
-            }
+    socket.on('connect', () => {
+      console.log('WebSocket connected for playlist updates');
+    });
 
-            // Always invalidate both queries to ensure UI is up to date
-            queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
-            queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
-          } else if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-            queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
-          }
+    socket.on('playlist-updated', (payload) => {
+      console.log('Playlist update received:', payload);
+      
+      if (payload.action === 'UPDATE') {
+        // If the hero status changed, show a toast
+        if (payload.playlist.isHero) {
+          toast.success("Hero playlist has been updated");
         }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-        
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to playlist changes');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to playlist changes');
-          toast.error("Error subscribing to playlist updates");
-        }
-      });
+
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ['hero-playlist'] });
+        queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
+      } else if (payload.action === 'CREATE' || payload.action === 'DELETE') {
+        queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('WebSocket disconnected from playlist updates');
+    });
+
+    socket.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      toast.error("Error receiving playlist updates");
+    });
 
     return () => {
       console.log('Cleaning up playlist subscription');
-      supabase.removeChannel(channel);
+      socket.disconnect();
     };
   }, [queryClient]);
 }
