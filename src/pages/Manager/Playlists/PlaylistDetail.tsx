@@ -1,13 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PushPlaylistDialog } from "@/components/playlists/push-dialog/PushPlaylistDialog";
 import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
 import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
-import { toast } from "sonner";
+import api from "@/lib/api";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -19,42 +18,8 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          genres (name),
-          moods (name)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (playlistError) throw playlistError;
-
-      const { data: playlistSongs, error: songsError } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            album,
-            duration,
-            artwork_url,
-            file_url,
-            genre
-          )
-        `)
-        .eq('playlist_id', id)
-        .order('position');
-
-      if (songsError) throw songsError;
-
-      return {
-        ...playlist,
-        songs: playlistSongs.map(ps => ps.songs)
-      };
+      const response = await api.get(`/admin/playlists/${id}`);
+      return response.data;
     }
   });
 
@@ -114,10 +79,10 @@ export function PlaylistDetail() {
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <PlaylistHeader
           onBack={() => navigate("/manager")}
-          artworkUrl={playlist.artwork_url}
+          artworkUrl={playlist.artworkUrl}
           name={playlist.name}
-          genreName={playlist.genres?.name}
-          moodName={playlist.moods?.name}
+          genreName={playlist.genre?.name}
+          moodName={playlist.mood?.name}
           songCount={playlist.songs?.length || 0}
           duration={calculateTotalDuration()}
           onPlay={handlePlayClick}
@@ -136,7 +101,7 @@ export function PlaylistDetail() {
           <MusicPlayer
             playlist={{
               title: playlist.name,
-              artwork: playlist.artwork_url || "/placeholder.svg",
+              artwork: playlist.artworkUrl || "/placeholder.svg",
               songs: playlist.songs.map((song: any) => ({
                 id: song.id,
                 title: song.title,
