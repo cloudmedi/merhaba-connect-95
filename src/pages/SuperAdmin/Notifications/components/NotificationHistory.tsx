@@ -3,7 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, History, AlertCircle, Bell, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, History, AlertCircle, Bell, Info, Check } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/api";
 
 interface NotificationRecord {
   id: number;
@@ -13,11 +16,13 @@ interface NotificationRecord {
   sentTo: string;
   sentAt: string;
   status: "delivered" | "failed" | "pending";
+  isRead: boolean;
 }
 
 export function NotificationHistory() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [notifications] = useState<NotificationRecord[]>([
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([
     {
       id: 1,
       title: "System Maintenance Complete",
@@ -26,6 +31,7 @@ export function NotificationHistory() {
       sentTo: "All Users",
       sentAt: "2024-02-25 14:30",
       status: "delivered",
+      isRead: false
     },
     {
       id: 2,
@@ -35,6 +41,7 @@ export function NotificationHistory() {
       sentTo: "Store Managers",
       sentAt: "2024-02-24 09:15",
       status: "delivered",
+      isRead: false
     },
     {
       id: 3,
@@ -44,8 +51,39 @@ export function NotificationHistory() {
       sentTo: "Administrators",
       sentAt: "2024-02-23 18:45",
       status: "failed",
+      isRead: false
     },
   ]);
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ isRead: true })
+        .eq('status', 'unread');
+
+      if (error) throw error;
+
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification => ({
+          ...notification,
+          isRead: true
+        }))
+      );
+
+      toast({
+        title: "Başarılı",
+        description: "Tüm bildirimler okundu olarak işaretlendi",
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast({
+        title: "Hata",
+        description: "Bildirimler işaretlenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getIconForType = (type: string) => {
     switch (type) {
@@ -79,26 +117,41 @@ export function NotificationHistory() {
             <History className="h-5 w-5 text-[#9b87f5]" />
             <h2>Notification History</h2>
           </div>
-          <div className="relative w-64">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search notifications..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={handleMarkAllAsRead}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Tümünü Oku
+            </Button>
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search notifications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
           </div>
         </div>
 
         <ScrollArea className="h-[400px] rounded-md border">
           <div className="p-4 space-y-4">
             {notifications.map((notification) => (
-              <Card key={notification.id} className="p-4">
+              <Card 
+                key={notification.id} 
+                className={`p-4 ${notification.isRead ? 'bg-gray-50' : 'bg-white border-l-4 border-l-[#9b87f5]'}`}
+              >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       {getIconForType(notification.type)}
-                      <h3 className="font-medium">{notification.title}</h3>
+                      <h3 className={`font-medium ${!notification.isRead && 'text-[#9b87f5]'}`}>
+                        {notification.title}
+                      </h3>
                     </div>
                     <Badge className={getStatusColor(notification.status)}>
                       {notification.status}
