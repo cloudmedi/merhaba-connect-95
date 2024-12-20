@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import api from '../../lib/api';
 
 interface DeviceToken {
   token: string;
@@ -12,92 +12,31 @@ export async function createDeviceToken(macAddress: string): Promise<DeviceToken
   try {
     console.log('Checking existing tokens for MAC:', macAddress);
     
-    const { data: existingTokens, error: checkError } = await supabase
-      .from('device_tokens')
-      .select('token, status, expires_at, mac_address, system_info')
-      .eq('mac_address', macAddress)
-      .order('created_at', { ascending: false });
+    // Node.js backend'e istek at
+    const { data: deviceToken } = await api.post('/manager/devices/register', {
+      macAddress,
+      systemInfo: await window.electronAPI.getSystemInfo()
+    });
 
-    if (checkError) {
-      console.error('Error checking tokens:', checkError);
-      throw checkError;
+    if (!deviceToken) {
+      throw new Error('Device token could not be created');
     }
 
-    console.log('Found tokens:', existingTokens);
+    console.log('Device token received:', deviceToken);
+    return deviceToken;
 
-    if (existingTokens && existingTokens.length > 0) {
-      const mostRecentToken = existingTokens[0] as DeviceToken;
-      console.log('Using existing token:', mostRecentToken);
-
-      if (!mostRecentToken.token || !mostRecentToken.status || !mostRecentToken.expires_at || !mostRecentToken.mac_address) {
-        throw new Error('Invalid token data structure');
-      }
-
-      const expirationDate = new Date(mostRecentToken.expires_at);
-      if (mostRecentToken.status === 'expired' || expirationDate < new Date()) {
-        console.log('Token expired, creating new one');
-        return await createNewToken(macAddress);
-      }
-
-      // Update devices table with the token
-      await updateDeviceToken(mostRecentToken.token, macAddress);
-
-      return mostRecentToken;
-    }
-
-    const newToken = await createNewToken(macAddress);
-    await updateDeviceToken(newToken.token, macAddress);
-    return newToken;
   } catch (error) {
     console.error('Error in createDeviceToken:', error);
     throw error;
   }
 }
 
-async function createNewToken(macAddress: string): Promise<DeviceToken> {
-  console.log('Creating new token for MAC:', macAddress);
-  
-  const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const expirationDate = new Date();
-  expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-  const { data: tokenData, error: tokenError } = await supabase
-    .from('device_tokens')
-    .insert({
-      token,
-      mac_address: macAddress,
-      status: 'active' as const,
-      expires_at: expirationDate.toISOString(),
-    })
-    .select('token, status, expires_at, mac_address, system_info')
-    .single();
-
-  if (tokenError) {
-    console.error('Error creating token:', tokenError);
-    throw tokenError;
-  }
-
-  if (!tokenData || !tokenData.token || !tokenData.status || !tokenData.expires_at || !tokenData.mac_address) {
-    throw new Error('Failed to create valid token data');
-  }
-
-  console.log('Created new token:', tokenData);
-  return tokenData as DeviceToken;
-}
-
-async function updateDeviceToken(token: string, macAddress: string): Promise<void> {
+export async function verifyDeviceToken(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('devices')
-      .update({ token })
-      .eq('mac_address', macAddress);
-
-    if (error) {
-      console.error('Error updating device token:', error);
-      throw error;
-    }
+    const { data } = await api.post('/manager/devices/verify', { token });
+    return data.valid;
   } catch (error) {
-    console.error('Error in updateDeviceToken:', error);
-    throw error;
+    console.error('Error verifying device token:', error);
+    return false;
   }
 }
