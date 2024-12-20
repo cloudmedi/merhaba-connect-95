@@ -29,6 +29,11 @@ export class PlaylistService {
     }
   }
 
+  // Manager playlists metodunu ekleyelim
+  async getManagerPlaylists(managerId: string) {
+    return this.queryService.getManagerPlaylists(managerId);
+  }
+
   async assignManagers(playlistId: string, managerIds: string[]) {
     return this.managerService.assignManagers(playlistId, managerIds);
   }
