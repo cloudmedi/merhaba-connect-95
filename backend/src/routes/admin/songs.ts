@@ -64,12 +64,13 @@ router.post(
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
       });
 
       uploadService = new ChunkUploadService((progress) => {
-        // Progress güncellemelerini SSE ile gönder
         res.write(`data: ${JSON.stringify({ progress })}\n\n`);
+        res.flush(); // Ensure data is sent immediately
       });
 
       const fileUrl = await uploadService.uploadFile(file.buffer, uniqueFileName);
@@ -99,7 +100,6 @@ router.post(
       await song.save();
       logger.info('Song saved to database:', song);
       
-      // Yükleme tamamlandı, son event'i gönder
       res.write(`data: ${JSON.stringify({ type: 'complete', song })}\n\n`);
       res.end();
 
@@ -110,7 +110,6 @@ router.post(
         uploadService.cancel();
       }
 
-      // Hata durumunda error event'i gönder
       res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
       res.end();
     }

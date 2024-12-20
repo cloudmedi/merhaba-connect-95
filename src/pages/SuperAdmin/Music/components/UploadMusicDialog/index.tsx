@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { UploadProgress } from "./UploadProgress";
 import { UploadZone } from "./UploadZone";
-import axios from "@/lib/axios";
 
 interface UploadingFile {
   file: File;
@@ -56,9 +55,10 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           throw new Error('Oturum bulunamadı');
         }
 
-        // EventSource ile gerçek zamanlı ilerleme takibi
-        const eventSource = new EventSource(`${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`);
-        
+        const eventSource = new EventSource(
+          `${import.meta.env.VITE_API_URL}/admin/songs/upload?token=${token}`
+        );
+
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
@@ -105,7 +105,6 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
           handleUploadError(file.name, 'Bağlantı hatası oluştu');
         };
 
-        // Dosya yükleme isteği
         const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/songs/upload`, {
           method: 'POST',
           headers: {

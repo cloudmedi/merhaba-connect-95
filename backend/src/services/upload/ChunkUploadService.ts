@@ -6,7 +6,6 @@ import { logger } from '../../utils/logger';
 const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB chunks
 const MAX_RETRIES = 3;
 const TIMEOUT = 15000; // 15 seconds timeout
-const MAX_CONCURRENT_UPLOADS = 3;
 
 export class ChunkUploadService {
   private abortController: AbortController | null = null;
@@ -104,21 +103,17 @@ export class ChunkUploadService {
       this.totalChunks = chunks.length;
       logger.info(`Starting upload of ${fileName} in ${chunks.length} chunks`);
       
-      // Paralel yükleme (3 chunk aynı anda)
-      for (let i = 0; i < chunks.length; i += MAX_CONCURRENT_UPLOADS) {
-        const chunkGroup = chunks.slice(i, i + MAX_CONCURRENT_UPLOADS);
-        const uploadPromises = chunkGroup.map((chunk, index) => {
-          const start = (i + index) * CHUNK_SIZE;
-          return this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
-        });
-
-        await Promise.all(uploadPromises);
+      // Upload chunks sequentially to maintain order
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const start = i * CHUNK_SIZE;
+        await this.uploadChunk(bunnyUrl, chunk, start, buffer.length);
       }
 
       const cdnUrl = `https://cloud-media.b-cdn.net/${uniqueFileName}`;
       logger.info(`Upload completed: ${cdnUrl}`);
       
-      // Son progress güncellemesi
+      // Final progress update
       this.onProgress?.(100);
       
       return cdnUrl;
