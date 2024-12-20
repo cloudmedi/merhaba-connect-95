@@ -10,6 +10,12 @@ export interface User {
   avatarUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  license?: {
+    id: string;
+    type: string;
+    startDate: string;
+    endDate: string;
+  } | null;
 }
 
 export interface LoginCredentials {
@@ -29,6 +35,12 @@ export interface UserCreateInput {
   lastName: string;
   role: 'super_admin' | 'admin' | 'manager' | 'user';
   companyName?: string;
+  license?: {
+    type: string;
+    startDate: string;
+    endDate: string;
+    quantity?: number;
+  };
 }
 
 export interface UserUpdateInput {
@@ -38,6 +50,7 @@ export interface UserUpdateInput {
   password?: string;
   role?: 'super_admin' | 'admin' | 'manager' | 'user';
   isActive?: boolean;
+  companyName?: string;
 }
 
 export interface LicenseUpdateInput {

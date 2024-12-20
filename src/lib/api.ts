@@ -4,13 +4,14 @@ import { io, Socket } from 'socket.io-client';
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 class ApiClient {
-  private socket: Socket | null = null;
-  private axios = axios.create({
+  public axios = axios.create({
     baseURL: API_URL,
     headers: {
       'Content-Type': 'application/json',
     },
   });
+
+  private socket: Socket | null = null;
 
   constructor() {
     this.setupAxiosInterceptors();
