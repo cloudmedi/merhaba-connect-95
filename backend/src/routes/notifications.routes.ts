@@ -1,45 +1,46 @@
-import express from 'express';
-import { Notification } from '../models/schemas/admin/NotificationSchema';
+import express, { Response } from 'express';
 import { auth } from '../middleware/auth';
+import { Notification } from '../models/admin/Notification';
+import { AuthRequest } from '../types/express';
 
 const router = express.Router();
 
-// Bildirimleri getir
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const notifications = await Notification.find({ userId: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(50);
-    res.json(notifications);
+      .sort({ createdAt: -1 });
+    
+    return res.json(notifications);
   } catch (error) {
-    res.status(500).json({ message: 'Bildirimler alınırken bir hata oluştu' });
+    console.error('Error fetching notifications:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Bildirimi okundu olarak işaretle
-router.patch('/:id/read', auth, async (req, res) => {
+router.patch('/:id/read', auth, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { isRead: true, readAt: new Date() },
+      { $set: { read: true } },
       { new: true }
     );
 
     if (!notification) {
-      return res.status(404).json({ message: 'Bildirim bulunamadı' });
+      return res.status(404).json({ error: 'Notification not found' });
     }
 
-    res.json(notification);
+    return res.json(notification);
   } catch (error) {
-    res.status(500).json({ message: 'Bildirim güncellenirken bir hata oluştu' });
+    console.error('Error marking notification as read:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
