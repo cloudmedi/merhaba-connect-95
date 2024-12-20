@@ -25,7 +25,9 @@ export default function ManagerDashboard() {
   const { data: heroPlaylist, isLoading: isHeroLoading } = useQuery({
     queryKey: ['hero-playlist'],
     queryFn: async () => {
+      console.log('Fetching hero playlist from frontend...');
       const { data } = await api.get('/manager/playlists/hero');
+      console.log('Hero playlist response:', data);
       return data;
     }
   });
@@ -33,7 +35,9 @@ export default function ManagerDashboard() {
   const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['manager-categories', searchQuery],
     queryFn: async () => {
+      console.log('Fetching categories with search:', searchQuery);
       const { data } = await api.get(`/manager/categories?search=${searchQuery}`);
+      console.log('Categories response:', data);
       return data;
     }
   });
@@ -41,6 +45,8 @@ export default function ManagerDashboard() {
   const filteredCategories = categories?.filter(category =>
     category.playlists?.length > 0
   ) || [];
+
+  console.log('Filtered categories:', filteredCategories);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-[calc(100vh-64px)]">

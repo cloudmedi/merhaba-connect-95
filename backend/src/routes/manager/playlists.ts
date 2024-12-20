@@ -9,24 +9,31 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(managerMiddleware);
 
-// Hero playlist endpoint'i
 router.get('/hero', async (_req: AuthRequest, res) => {
   try {
+    console.log('Hero playlist request received from user:', _req.user?.id);
     const playlistService = new PlaylistService(_req.io);
     const heroPlaylist = await playlistService.getHeroPlaylist();
     
-    // Playlist bulunamadıysa 200 ile null response
     if (!heroPlaylist) {
+      console.log('No hero playlist found');
       return res.status(200).json(null);
     }
     
-    // Manager'a atanmış mı kontrol et
     const isAssignedToManager = heroPlaylist.assignedManagers.some(
       manager => manager._id.toString() === _req.user?.id
     );
     
-    // Public değilse ve manager'a atanmamışsa null dön
+    console.log('Access check:', {
+      playlistId: heroPlaylist._id,
+      isPublic: heroPlaylist.isPublic,
+      isAssignedToManager,
+      userId: _req.user?.id,
+      assignedManagerIds: heroPlaylist.assignedManagers.map(m => m._id.toString())
+    });
+    
     if (!heroPlaylist.isPublic && !isAssignedToManager) {
+      console.log('Access denied: Playlist is not public and user is not assigned');
       return res.status(200).json(null);
     }
     

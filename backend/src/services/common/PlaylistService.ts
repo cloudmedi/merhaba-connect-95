@@ -14,14 +14,26 @@ export class PlaylistService {
     this.mutationService = new PlaylistMutationService(io);
   }
 
-  // Yeni hero playlist metodu
   async getHeroPlaylist() {
     try {
+      console.log('Fetching hero playlist...');
       const heroPlaylist = await Playlist.findOne({ isHero: true })
         .populate('songs.songId')
         .populate('categories')
         .populate('genre')
-        .populate('mood');
+        .populate('mood')
+        .populate({
+          path: 'assignedManagers',
+          select: 'email firstName lastName'
+        });
+
+      console.log('Hero playlist found:', {
+        id: heroPlaylist?._id,
+        name: heroPlaylist?.name,
+        isPublic: heroPlaylist?.isPublic,
+        assignedManagers: heroPlaylist?.assignedManagers
+      });
+
       return heroPlaylist;
     } catch (error) {
       console.error('Error fetching hero playlist:', error);
@@ -29,9 +41,11 @@ export class PlaylistService {
     }
   }
 
-  // Manager playlists metodunu ekleyelim
   async getManagerPlaylists(managerId: string) {
-    return this.queryService.getManagerPlaylists(managerId);
+    console.log('Getting playlists for manager:', managerId);
+    const playlists = await this.queryService.getManagerPlaylists(managerId);
+    console.log('Found playlists count:', playlists.length);
+    return playlists;
   }
 
   async assignManagers(playlistId: string, managerIds: string[]) {
