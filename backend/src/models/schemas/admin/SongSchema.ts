@@ -31,7 +31,6 @@ const SongSchema = new mongoose.Schema({
   },
   bunnyId: { 
     type: String,
-    unique: true,
     required: true,
     default: () => `song_${uuidv4()}`
   },
@@ -45,5 +44,8 @@ const SongSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Tek bir index tanımı yapıyoruz
+SongSchema.index({ bunnyId: 1 }, { unique: true });
 
 export const Song = mongoose.model('Song', SongSchema);
