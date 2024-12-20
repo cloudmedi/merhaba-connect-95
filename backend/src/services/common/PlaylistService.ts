@@ -43,7 +43,10 @@ export class PlaylistService {
       console.log('Executing hero playlist query:', JSON.stringify(query, null, 2));
 
       const playlist = await Playlist.findOne(query)
-        .populate('songs.songId')
+        .populate({
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
+        })
         .populate('categories')
         .populate('genre')
         .populate('mood')
@@ -57,7 +60,8 @@ export class PlaylistService {
         playlistId: playlist?._id,
         isPublic: playlist?.isPublic,
         isHero: playlist?.isHero,
-        artworkUrl: playlist?.artworkUrl, // Debug için eklendi
+        songsCount: playlist?.songs?.length,
+        artworkUrl: playlist?.artworkUrl,
         assignedManagersCount: playlist?.assignedManagers?.length
       });
 
@@ -94,7 +98,10 @@ export class PlaylistService {
       console.log('Executing manager playlists query:', JSON.stringify(query, null, 2));
 
       const playlists = await Playlist.find(query)
-        .populate('songs.songId')
+        .populate({
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
+        })
         .populate('categories')
         .populate('genre')
         .populate('mood')

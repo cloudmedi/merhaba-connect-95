@@ -9,16 +9,19 @@ export class PlaylistQueryService extends BasePlaylistService {
       
       const playlists = await Playlist.find()
         .populate({
-          path: 'assignedManagers',
-          select: 'email firstName lastName',
-          model: 'User'
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
         })
-        .populate('songs.songId')
         .populate('categories')
         .populate('genre')
         .populate('mood')
+        .populate({
+          path: 'assignedManagers',
+          select: '_id email firstName lastName'
+        })
         .sort({ createdAt: -1 });
 
+      console.log(`Found ${playlists.length} total playlists`);
       return playlists;
     } catch (error) {
       console.error('Error fetching playlists with managers:', error);
@@ -34,14 +37,16 @@ export class PlaylistQueryService extends BasePlaylistService {
 
       console.log('Fetching playlists for manager:', managerId);
       
-      // Manager'a atanmış ve public playlistleri getir
       const playlists = await Playlist.find({
         $or: [
           { 'assignedManagers._id': new Types.ObjectId(managerId) },
           { isPublic: true }
         ]
       })
-        .populate('songs.songId')
+        .populate({
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
+        })
         .populate('categories')
         .populate('genre')
         .populate('mood')
@@ -57,18 +62,31 @@ export class PlaylistQueryService extends BasePlaylistService {
 
   async getPlaylistSongs(playlistId: string) {
     try {
-      const playlist = await Playlist.findById(playlistId).populate('songs.songId');
+      console.log('Fetching songs for playlist:', playlistId);
+      const playlist = await Playlist.findById(playlistId)
+        .populate({
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
+        });
+      
+      console.log(`Found ${playlist?.songs?.length || 0} songs for playlist`);
       return playlist?.songs || [];
     } catch (error) {
+      console.error('Error fetching playlist songs:', error);
       throw error;
     }
   }
 
   async getPlaylistCategories(playlistId: string) {
     try {
-      const playlist = await Playlist.findById(playlistId).populate('categories');
+      console.log('Fetching categories for playlist:', playlistId);
+      const playlist = await Playlist.findById(playlistId)
+        .populate('categories');
+      
+      console.log(`Found ${playlist?.categories?.length || 0} categories for playlist`);
       return playlist?.categories || [];
     } catch (error) {
+      console.error('Error fetching playlist categories:', error);
       throw error;
     }
   }
