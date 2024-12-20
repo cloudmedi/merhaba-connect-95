@@ -9,20 +9,30 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(managerMiddleware);
 
-// Hero playlist endpoint'i - Sadece public hero playlist'i gösterilir
+// Hero playlist endpoint'i
 router.get('/hero', async (_req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(_req.io);
     const heroPlaylist = await playlistService.getHeroPlaylist();
     
-    if (!heroPlaylist?.isPublic) {
-      return res.status(404).json({ error: 'Hero playlist not found' });
+    // Playlist bulunamadıysa 200 ile boş response
+    if (!heroPlaylist) {
+      return res.status(200).json(null);
+    }
+    
+    // Playlist var ama public değilse 403
+    if (!heroPlaylist.isPublic) {
+      return res.status(403).json({ 
+        error: 'This playlist is not public' 
+      });
     }
     
     return res.json(heroPlaylist);
   } catch (error) {
     console.error('Error fetching hero playlist:', error);
-    return res.status(500).json({ error: 'Error fetching hero playlist' });
+    return res.status(500).json({ 
+      error: 'Internal server error while fetching hero playlist' 
+    });
   }
 });
 
