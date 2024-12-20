@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { SongList } from "@/components/playlists/SongList";
-import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { SongList } from "@/components/playlists/SongList";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { PushPlaylistDialog } from "@/components/playlists/push-dialog/PushPlaylistDialog";
+import { PlaylistDetailLoader } from "@/components/loaders/PlaylistDetailLoader";
+import { PlaylistHeader } from "@/components/playlists/PlaylistHeader";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export function PlaylistDetail() {
   const { id } = useParams();
@@ -18,58 +19,28 @@ export function PlaylistDetail() {
   const { data: playlist, isLoading } = useQuery({
     queryKey: ['playlist', id],
     queryFn: async () => {
-      const { data: playlist, error: playlistError } = await supabase
-        .from('playlists')
-        .select(`
-          *,
-          genres (name),
-          moods (name)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (playlistError) throw playlistError;
-
-      const { data: playlistSongs, error: songsError } = await supabase
-        .from('playlist_songs')
-        .select(`
-          position,
-          songs (
-            id,
-            title,
-            artist,
-            album,
-            duration,
-            artwork_url,
-            file_url,
-            genre
-          )
-        `)
-        .eq('playlist_id', id)
-        .order('position');
-
-      if (songsError) throw songsError;
-
-      return {
-        ...playlist,
-        songs: playlistSongs.map(ps => ps.songs)
-      };
+      const response = await api.get(`/admin/playlists/${id}`);
+      return response.data;
     }
   });
 
   if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div>Loading...</div>
-      </DashboardLayout>
-    );
+    return <PlaylistDetailLoader />;
   }
 
   if (!playlist) {
     return (
-      <DashboardLayout>
-        <div>Playlist not found</div>
-      </DashboardLayout>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-semibold text-gray-900">Playlist not found</h2>
+          <button 
+            onClick={() => navigate("/manager")}
+            className="text-purple-600 hover:text-purple-700 font-medium"
+          >
+            Back to Media Library
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -90,14 +61,14 @@ export function PlaylistDetail() {
 
   const calculateTotalDuration = () => {
     if (!playlist.songs || playlist.songs.length === 0) return "0 min";
-
+    
     const totalSeconds = playlist.songs.reduce((acc: number, song: any) => {
       return acc + (song.duration || 0);
     }, 0);
-
+    
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-
+    
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -105,20 +76,18 @@ export function PlaylistDetail() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
+    <div className="min-h-screen bg-white">
+      <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <PlaylistHeader
-          onBack={() => navigate("/super-admin/playlists")}
+          onBack={() => navigate("/manager")}
           artworkUrl={playlist.artwork_url}
           name={playlist.name}
-          genreName={playlist.genres?.name}
-          moodName={playlist.moods?.name}
-          songCount={playlist.songs?.length}
+          genreName={playlist.genre?.name}
+          moodName={playlist.mood?.name}
+          songCount={playlist.songs?.length || 0}
           duration={calculateTotalDuration()}
           onPlay={handlePlayClick}
           onPush={() => setIsPushDialogOpen(true)}
-          isHero={playlist.is_hero}
-          id={playlist.id}
         />
 
         <SongList 
@@ -132,7 +101,6 @@ export function PlaylistDetail() {
         {isPlaying && playlist.songs && (
           <MusicPlayer
             playlist={{
-              id: playlist.id,
               title: playlist.name,
               artwork: playlist.artwork_url || "/placeholder.svg",
               songs: playlist.songs.map((song: any) => ({
@@ -157,6 +125,6 @@ export function PlaylistDetail() {
           playlistId={playlist.id}
         />
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

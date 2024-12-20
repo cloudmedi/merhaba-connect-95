@@ -47,7 +47,6 @@ export function useNotifications() {
 
     fetchNotifications();
 
-    // WebSocket bağlantısı için useWebSocketConnection hook'unu kullan
     const ws = new WebSocket('ws://localhost:5001');
     
     ws.onmessage = (event) => {
