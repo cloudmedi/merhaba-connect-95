@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(adminAuth);
 
 // Hero playlist endpoint'i
-router.get('/hero', async (_req, res) => {
+router.get('/hero', async (_req: AuthRequest, res) => {
   try {
     const playlistService = new PlaylistService(_req.io);
     const heroPlaylist = await playlistService.getHeroPlaylist();

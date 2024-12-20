@@ -104,6 +104,8 @@ app.use('/api/admin/songs', adminSongsRoutes);
 app.use('/api/admin/playlists', adminPlaylistsRoutes);
 app.use('/api/admin/metrics', adminMetricsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/playlists', adminPlaylistsRoutes); // Yeni eklenen route
+app.use('/api/categories', adminCategoriesRoutes); // Yeni eklenen route
 
 // Error handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

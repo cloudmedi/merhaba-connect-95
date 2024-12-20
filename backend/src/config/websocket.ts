@@ -3,13 +3,13 @@ import { createServer } from 'http';
 import { logger } from '../utils/logger';
 
 export const initializeWebSocket = () => {
-  // Ayrı bir HTTP sunucusu oluştur
   const wsServer = createServer();
   
   const io = new Server(wsServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-      methods: ['GET', 'POST']
+      origin: ['http://localhost:3000', 'http://localhost:4173', 'http://localhost:4174', 'http://localhost:5173'],
+      methods: ['GET', 'POST'],
+      credentials: true
     },
     pingTimeout: 60000,
     pingInterval: 25000
@@ -22,6 +22,9 @@ export const initializeWebSocket = () => {
       try {
         socket.join(`playlist:${playlistId}`);
         logger.info(`Client ${socket.id} playlist'e katıldı: ${playlistId}`);
+        
+        // Bağlantı başarılı bildirimi
+        socket.emit('connection-status', { status: 'connected' });
       } catch (error) {
         logger.error(`Playlist'e katılma hatası:`, error);
         socket.emit('error', { message: 'Playlist\'e katılırken bir hata oluştu' });
@@ -38,6 +41,11 @@ export const initializeWebSocket = () => {
       }
     });
 
+    // Ping-pong mekanizması
+    socket.on('ping', () => {
+      socket.emit('pong');
+    });
+
     socket.on('error', (error) => {
       logger.error('WebSocket hatası:', error);
     });
@@ -47,7 +55,6 @@ export const initializeWebSocket = () => {
     });
   });
 
-  // WebSocket sunucusunu ayrı bir portta başlat
   const WEBSOCKET_PORT = process.env.WEBSOCKET_PORT || 5001;
   wsServer.listen(WEBSOCKET_PORT, () => {
     logger.info(`WebSocket server running on port ${WEBSOCKET_PORT}`);
