@@ -51,7 +51,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
 
       try {
         const token = localStorage.getItem('token');
-        const eventSource = new EventSource(`/api/admin/songs/upload?token=${token}`);
+        const eventSource = new EventSource(`http://localhost:5000/api/admin/songs/upload?token=${token}`);
         let uploadComplete = false;
 
         eventSource.onmessage = (event) => {
@@ -115,7 +115,7 @@ export function UploadMusicDialog({ open, onOpenChange }: Props) {
         };
 
         // Send the actual file upload request
-        const response = await fetch('/api/admin/songs/upload', {
+        const response = await fetch('http://localhost:5000/api/admin/songs/upload', {
           method: 'POST',
           body: formData,
           headers: {
