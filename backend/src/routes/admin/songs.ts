@@ -40,8 +40,6 @@ router.post(
   adminMiddleware,
   upload.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res: Response) => {
-    const uploadService = new SongUploadService();
-
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -54,6 +52,7 @@ router.post(
         'Access-Control-Allow-Origin': '*'
       });
 
+      const uploadService = new SongUploadService();
       await uploadService.uploadSong(req.file, req.user?.id, res);
 
     } catch (error: any) {

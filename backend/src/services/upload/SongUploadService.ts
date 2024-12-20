@@ -50,8 +50,8 @@ export class SongUploadService {
 
       const fileUrl = await this.uploadService.uploadFile(file.buffer, uniqueFileName);
       
-      if (!this.isClientConnected) {
-        throw new Error('Client disconnected');
+      if (!fileUrl) {
+        throw new Error('File upload failed');
       }
 
       const metadata = await this.metadataService.extractMetadata(file.buffer, uniqueFileName);
@@ -61,7 +61,7 @@ export class SongUploadService {
       }
 
       const song = new Song({
-        title: metadata.title || file.originalname,
+        title: metadata.title || file.originalname.replace(/\.[^/.]+$/, ""),
         artist: metadata.artist || 'Unknown Artist',
         album: metadata.album || null,
         genre: metadata.genre || [],
@@ -72,25 +72,27 @@ export class SongUploadService {
         createdBy: userId
       });
 
-      const savedSong = await song.save();
-      
-      if (this.isClientConnected && !res.writableEnded) {
-        this.sendProgress(res, { 
-          type: 'complete', 
-          song: savedSong 
-        });
-        res.end();
+      try {
+        const savedSong = await song.save();
+        logger.info('Song saved to MongoDB:', savedSong._id);
+        
+        if (this.isClientConnected && !res.writableEnded) {
+          this.sendProgress(res, { 
+            type: 'complete', 
+            song: savedSong 
+          });
+          res.end();
+        }
+      } catch (dbError) {
+        logger.error('Error saving song to MongoDB:', dbError);
+        throw new Error('Failed to save song to database');
       }
 
     } catch (error: any) {
       logger.error('Error during song upload:', error);
       
       if (this.uploadService) {
-        try {
-          this.uploadService.cancel();
-        } catch (cancelError) {
-          logger.error('Error cancelling upload:', cancelError);
-        }
+        this.uploadService.cancel();
       }
 
       if (!res.writableEnded) {
@@ -100,13 +102,6 @@ export class SongUploadService {
         });
         res.end();
       }
-    }
-  }
-
-  public cancelUpload() {
-    this.isClientConnected = false;
-    if (this.uploadService) {
-      this.uploadService.cancel();
     }
   }
 }
