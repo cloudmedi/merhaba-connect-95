@@ -6,6 +6,8 @@ import { Types } from 'mongoose';
 export class PlaylistMutationService extends BasePlaylistService {
   async createPlaylist(data: any) {
     try {
+      console.log('Creating playlist with data:', data);
+      
       // Fetch manager details from User model if assignedManagers array exists
       if (Array.isArray(data.assignedManagers)) {
         const managerIds = data.assignedManagers.map((id: string) => new Types.ObjectId(id));
@@ -33,13 +35,27 @@ export class PlaylistMutationService extends BasePlaylistService {
 
       const playlist = new Playlist(data);
       await playlist.save();
+
+      // Populate the saved playlist with all necessary fields
+      const populatedPlaylist = await Playlist.findById(playlist._id)
+        .populate({
+          path: 'songs.songId',
+          select: 'title artist album duration fileUrl artworkUrl'
+        })
+        .populate('categories')
+        .populate('genre')
+        .populate('mood')
+        .populate({
+          path: 'assignedManagers',
+          select: '_id email firstName lastName'
+        });
       
       this.wsService.emitPlaylistUpdate(playlist.id, {
         action: 'created',
-        playlist
+        playlist: populatedPlaylist
       });
       
-      return playlist;
+      return populatedPlaylist;
     } catch (error) {
       console.error('Error creating playlist:', error);
       throw error;
@@ -78,34 +94,35 @@ export class PlaylistMutationService extends BasePlaylistService {
         data.assignedManagers = tempPlaylist.assignedManagers;
       }
 
-      const updateData = {
-        ...data,
-        updatedAt: new Date()
-      };
-
-      console.log('Updating playlist with data:', updateData);
-
-      const playlist = await Playlist.findByIdAndUpdate(
+      // Update the playlist and get the populated version
+      const updatedPlaylist = await Playlist.findByIdAndUpdate(
         id,
-        { $set: updateData },
+        { $set: data },
         { 
           new: true,
           runValidators: true 
         }
       )
-      .populate('songs.songId')
+      .populate({
+        path: 'songs.songId',
+        select: 'title artist album duration fileUrl artworkUrl'
+      })
       .populate('categories')
       .populate('genre')
-      .populate('mood');
-      
-      if (playlist) {
-        this.wsService.emitPlaylistUpdate(playlist._id.toString(), {
+      .populate('mood')
+      .populate({
+        path: 'assignedManagers',
+        select: '_id email firstName lastName'
+      });
+
+      if (updatedPlaylist) {
+        this.wsService.emitPlaylistUpdate(id, {
           action: 'updated',
-          playlist
+          playlist: updatedPlaylist
         });
       }
       
-      return playlist;
+      return updatedPlaylist;
     } catch (error) {
       console.error('Error updating playlist:', error);
       throw error;
