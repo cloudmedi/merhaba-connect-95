@@ -29,23 +29,6 @@ export interface SystemInfo {
   }>;
 }
 
-export interface WebSocketMessage {
-  type: string;
-  payload: {
-    playlist?: {
-      id: string;
-      name: string;
-      songs?: Array<{
-        id: string;
-        title: string;
-      }>;
-    };
-    message?: string;
-    error?: string;
-    status?: 'online' | 'offline';
-  };
-}
-
 export interface RegisterDeviceResponse {
   success: boolean;
   token?: string;
@@ -61,15 +44,30 @@ export interface ElectronAPI {
   getSystemInfo: () => Promise<SystemInfo>;
   getDeviceId: () => Promise<string>;
   getMacAddress: () => Promise<string>;
-  onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
-  getEnvVars: () => Promise<Record<string, string>>;
+  registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
   syncPlaylist: (playlist: any) => Promise<SyncPlaylistResponse>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
-  registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
+}
+
+export interface WebSocketMessage {
+  type: string;
+  payload: {
+    playlist?: {
+      id: string;
+      name: string;
+      songs?: Array<{
+        id: string;
+        title: string;
+      }>;
+    };
+    message?: string;
+    error?: string;
+    status?: 'online' | 'offline';
+  };
 }
 
 declare global {
