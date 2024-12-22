@@ -4,6 +4,18 @@ export async function createDeviceToken(macAddress: string): Promise<{ token: st
   try {
     console.log('Checking device token for MAC:', macAddress);
     
+    // Önce mevcut cihazı kontrol et
+    const response = await api.get(`/manager/devices/check/${macAddress}`);
+    
+    if (response.data && response.data.token) {
+      console.log('Existing device found:', response.data);
+      return {
+        token: response.data.token,
+        status: response.data.status
+      };
+    }
+
+    // Mevcut cihaz yoksa yeni kayıt oluştur
     const { data } = await api.post('/manager/devices/register', {
       macAddress,
       systemInfo: await window.electronAPI.getSystemInfo()
@@ -13,7 +25,7 @@ export async function createDeviceToken(macAddress: string): Promise<{ token: st
       throw new Error('No token received from server');
     }
 
-    console.log('Device token received:', data);
+    console.log('New device registered:', data);
     return {
       token: data.token,
       status: data.status

@@ -6,6 +6,30 @@ import { logger } from '../../utils/logger';
 
 const router = express.Router();
 
+// MAC adresi ile cihaz kontrolü
+router.get('/check/:macAddress', async (req, res) => {
+  try {
+    const { macAddress } = req.params;
+    logger.info('Checking device with MAC:', macAddress);
+
+    const device = await Device.findOne({ macAddress });
+    
+    if (device) {
+      logger.info('Existing device found:', device);
+      return res.json({
+        token: device.token,
+        status: device.status
+      });
+    }
+
+    logger.info('No existing device found for MAC:', macAddress);
+    return res.json(null);
+  } catch (error) {
+    logger.error('Error checking device:', error);
+    return res.status(500).json({ error: 'Failed to check device' });
+  }
+});
+
 // Register device and get token
 router.post('/register', async (req, res) => {
   try {
@@ -18,18 +42,13 @@ router.post('/register', async (req, res) => {
 
     if (device) {
       logger.info('Updating existing device:', { deviceId: device._id });
-      // Cihaz varsa token'ı güncelle
       device.systemInfo = systemInfo;
       device.lastSeen = new Date();
       await device.save();
       
-      logger.info('Device updated successfully:', { deviceId: device._id, token: device.token });
       return res.json({
         token: device.token,
-        status: 'active',
-        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        mac_address: macAddress,
-        system_info: systemInfo
+        status: 'active'
       });
     }
 
@@ -51,13 +70,10 @@ router.post('/register', async (req, res) => {
 
     return res.json({
       token: device.token,
-      status: 'active',
-      expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      mac_address: macAddress,
-      system_info: systemInfo
+      status: 'active'
     });
   } catch (error) {
-    logger.error('Error registering device:', { error: error.message, stack: error.stack });
+    logger.error('Error registering device:', error);
     return res.status(500).json({ error: 'Failed to register device' });
   }
 });
