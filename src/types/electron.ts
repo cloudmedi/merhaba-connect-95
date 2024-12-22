@@ -40,19 +40,6 @@ export interface SyncPlaylistResponse {
   error?: string;
 }
 
-export interface ElectronAPI {
-  getSystemInfo: () => Promise<SystemInfo>;
-  getDeviceId: () => Promise<string>;
-  getMacAddress: () => Promise<string>;
-  registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
-  syncPlaylist: (playlist: any) => Promise<SyncPlaylistResponse>;
-  getStorageStats: () => Promise<{ used: number; total: number }>;
-  getDownloadProgress: (songId: string) => Promise<number>;
-  onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
-  onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
-  onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
-}
-
 export interface WebSocketMessage {
   type: string;
   payload: {
@@ -68,6 +55,19 @@ export interface WebSocketMessage {
     error?: string;
     status?: 'online' | 'offline';
   };
+}
+
+export interface ElectronAPI {
+  getSystemInfo: () => Promise<SystemInfo>;
+  getDeviceId: () => Promise<string>;
+  getMacAddress: () => Promise<string>;
+  registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
+  syncPlaylist: (playlist: any) => Promise<SyncPlaylistResponse>;
+  getStorageStats: () => Promise<{ used: number; total: number }>;
+  getDownloadProgress: (songId: string) => Promise<number>;
+  onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
+  onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
+  onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
 }
 
 declare global {
