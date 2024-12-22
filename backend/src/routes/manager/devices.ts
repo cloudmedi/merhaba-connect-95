@@ -1,7 +1,5 @@
 import express from 'express';
-import { Device } from '../../models/manager/Device';
-import { authMiddleware } from '../../middleware/auth.middleware';
-import { managerMiddleware } from '../../middleware/manager.middleware';
+import { Token } from '../../models/manager/Token';
 import { logger } from '../../utils/logger';
 
 const router = express.Router();
@@ -12,17 +10,17 @@ router.get('/check/:macAddress', async (req, res) => {
     const { macAddress } = req.params;
     logger.info('Checking device with MAC:', macAddress);
 
-    const device = await Device.findOne({ macAddress });
+    const tokenRecord = await Token.findOne({ macAddress });
     
-    if (device) {
-      logger.info('Existing device found:', device);
+    if (tokenRecord) {
+      logger.info('Existing token found:', tokenRecord);
       return res.json({
-        token: device.token,
-        status: device.status
+        token: tokenRecord.token,
+        status: tokenRecord.status
       });
     }
 
-    logger.info('No existing device found for MAC:', macAddress);
+    logger.info('No existing token found for MAC:', macAddress);
     return res.json(null);
   } catch (error) {
     logger.error('Error checking device:', error);
@@ -36,41 +34,40 @@ router.post('/register', async (req, res) => {
     const { macAddress, systemInfo } = req.body;
     logger.info('Device registration attempt:', { macAddress, systemInfo });
 
-    // MAC adresi ile mevcut cihazı kontrol et
-    let device = await Device.findOne({ macAddress });
-    logger.info('Existing device check result:', { exists: !!device, macAddress });
+    // MAC adresi ile mevcut token'ı kontrol et
+    let tokenRecord = await Token.findOne({ macAddress });
+    logger.info('Existing token check result:', { exists: !!tokenRecord, macAddress });
 
-    if (device) {
-      logger.info('Updating existing device:', { deviceId: device._id });
-      device.systemInfo = systemInfo;
-      device.lastSeen = new Date();
-      await device.save();
+    if (tokenRecord) {
+      logger.info('Returning existing token:', { token: tokenRecord.token });
+      tokenRecord.lastSeen = new Date();
+      await tokenRecord.save();
       
       return res.json({
-        token: device.token,
-        status: 'active'
+        token: tokenRecord.token,
+        status: tokenRecord.status
       });
     }
 
     // 6 haneli benzersiz token oluştur
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-    logger.info('Creating new device with token:', token);
+    logger.info('Generated new token:', token);
     
-    device = new Device({
-      name: `Device-${token}`,
+    // Yeni token kaydı oluştur
+    tokenRecord = new Token({
       token,
       macAddress,
       systemInfo,
-      status: 'offline',
+      status: 'pending',
       lastSeen: new Date()
     });
 
-    await device.save();
-    logger.info('New device created successfully:', { deviceId: device._id, token });
+    await tokenRecord.save();
+    logger.info('New token record created:', { token, macAddress });
 
     return res.json({
-      token: device.token,
-      status: 'active'
+      token: tokenRecord.token,
+      status: tokenRecord.status
     });
   } catch (error) {
     logger.error('Error registering device:', error);
@@ -78,74 +75,21 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Verify device token
+// Verify token
 router.post('/verify', async (req, res) => {
   try {
     const { token } = req.body;
     logger.info('Token verification attempt:', { token });
 
-    const device = await Device.findOne({ token });
-    logger.info('Token verification result:', { token, valid: !!device });
+    const tokenRecord = await Token.findOne({ token });
+    logger.info('Token verification result:', { token, valid: !!tokenRecord });
 
     return res.json({
-      valid: !!device
+      valid: !!tokenRecord
     });
   } catch (error) {
-    logger.error('Error verifying device token:', { error: error.message, stack: error.stack });
+    logger.error('Error verifying token:', error);
     return res.status(500).json({ error: 'Failed to verify token' });
-  }
-});
-
-// Get all devices
-router.get('/', authMiddleware, managerMiddleware, async (req, res) => {
-  try {
-    logger.info('Fetching all devices');
-    const devices = await Device.find().populate('branchId');
-    logger.info('Devices fetched successfully:', { count: devices.length });
-    return res.json(devices);
-  } catch (error) {
-    logger.error('Error fetching devices:', { error: error.message, stack: error.stack });
-    return res.status(500).json({ error: 'Failed to fetch devices' });
-  }
-});
-
-// Update device
-router.put('/:id', authMiddleware, managerMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    logger.info('Updating device:', { deviceId: id, updates: req.body });
-
-    const device = await Device.findByIdAndUpdate(id, req.body, { new: true });
-    if (!device) {
-      logger.warn('Device not found for update:', { deviceId: id });
-      return res.status(404).json({ error: 'Device not found' });
-    }
-
-    logger.info('Device updated successfully:', { deviceId: id });
-    return res.json(device);
-  } catch (error) {
-    logger.error('Error updating device:', { deviceId: req.params.id, error: error.message, stack: error.stack });
-    return res.status(500).json({ error: 'Failed to update device' });
-  }
-});
-
-// Delete device
-router.delete('/:id', authMiddleware, managerMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    logger.info('Deleting device:', { deviceId: id });
-
-    const device = await Device.findByIdAndDelete(id);
-    if (!device) {
-      logger.warn('Device not found for deletion:', { deviceId: id });
-      return res.status(404).json({ error: 'Device not found' });
-    }
-
-    logger.info('Device deleted successfully:', { deviceId: id });
-    return res.status(204).send();
-  } catch (error) {
-    logger.error('Error deleting device:', { deviceId: req.params.id, error: error.message, stack: error.stack });
-    return res.status(500).json({ error: 'Failed to delete device' });
   }
 });
 
