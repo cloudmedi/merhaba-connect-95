@@ -5,17 +5,7 @@ export const userService = {
   async getUsers(): Promise<User[]> {
     try {
       const response = await api.get('/admin/users');
-      return response.data.map((user: any) => ({
-        ...user,
-        role: user.role || 'user',
-        isActive: user.isActive ?? true,
-        license: user.license ? {
-          id: user.license.id,
-          type: user.license.type,
-          startDate: user.license.startDate,
-          endDate: user.license.endDate
-        } : null
-      }));
+      return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
@@ -43,5 +33,9 @@ export const userService = {
 
   async updateLicense(id: string, licenseData: LicenseUpdateInput): Promise<void> {
     await api.put(`/admin/users/${id}/license`, licenseData);
+  },
+
+  async renewLicense(id: string, licenseData: LicenseUpdateInput): Promise<void> {
+    await api.post(`/admin/users/${id}/license/renew`, licenseData);
   }
 };
