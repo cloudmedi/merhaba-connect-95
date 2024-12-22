@@ -132,7 +132,7 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     console.log('Registering device with info:', deviceInfo);
     
     if (!deviceInfo || !deviceInfo.macAddress || !deviceInfo.systemInfo) {
-      throw new Error('Invalid device info provided');
+      throw new Error('MAC address and system info are required');
     }
     
     // MAC adresi ile cihazı kontrol et ve kaydet
@@ -146,7 +146,7 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     }
     
     deviceToken = response.data.token;
-    console.log('Device token stored in main process:', deviceToken);
+    console.log('Device token received and stored:', deviceToken);
     
     if (wsManager) {
       await wsManager.disconnect();

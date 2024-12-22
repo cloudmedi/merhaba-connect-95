@@ -52,9 +52,9 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Yeni cihaz oluştur
+    // 6 haneli benzersiz token oluştur
     const token = Math.random().toString(36).substring(2, 8).toUpperCase();
-    logger.info('Creating new device:', { macAddress, token });
+    logger.info('Creating new device with token:', token);
     
     device = new Device({
       name: `Device-${token}`,
