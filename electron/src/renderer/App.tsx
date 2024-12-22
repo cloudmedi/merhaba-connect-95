@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { TokenDisplay } from './components/TokenDisplay';
-import type { SystemInfo } from './types/electron';
+import type { SystemInfo } from '../types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
@@ -16,11 +16,9 @@ function App() {
 
   useEffect(() => {
     const initialize = async () => {
-      // Eğer zaten initialize edildiyse, tekrar etme
       if (isInitialized) return;
 
       try {
-        // Önce mevcut device ID'yi kontrol et
         const existingToken = await window.electronAPI.getDeviceId();
         if (existingToken) {
           console.log('Existing token found:', existingToken);
@@ -30,7 +28,6 @@ function App() {
           return;
         }
 
-        // MAC adresi al
         const macAddress = await window.electronAPI.getMacAddress();
         console.log('MAC Address:', macAddress);
         
@@ -38,22 +35,20 @@ function App() {
           throw new Error('MAC adresi alınamadı');
         }
 
-        // Sistem bilgilerini al
         const sysInfo = await window.electronAPI.getSystemInfo();
         setSystemInfo(sysInfo);
         console.log('System Info:', sysInfo);
 
-        // Cihazı kaydet
         const result = await window.electronAPI.registerDevice({
           macAddress,
           systemInfo: sysInfo
         });
 
-        if (result && result.success) {
+        if (result.success && result.token) {
           setDeviceToken(result.token);
           toast.success('Cihaz başarıyla kaydedildi');
         } else {
-          throw new Error('Cihaz kaydı başarısız');
+          throw new Error(result.error || 'Cihaz kaydı başarısız');
         }
 
       } catch (error: any) {
@@ -67,7 +62,7 @@ function App() {
     };
 
     initialize();
-  }, [isInitialized]); // Sadece isInitialized değiştiğinde çalış
+  }, [isInitialized]);
 
   if (error) {
     return (
