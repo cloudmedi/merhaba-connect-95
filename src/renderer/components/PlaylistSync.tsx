@@ -1,55 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '../components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { RefreshCw, Music, Check, AlertCircle } from 'lucide-react';
-import type { WebSocketMessage } from '../../../electron/src/types/electron';
-
-interface SyncStatus {
-  playlistId: string;
-  name: string;
-  progress: number;
-  status: 'pending' | 'syncing' | 'completed' | 'error';
-}
-
-interface DownloadProgressData {
-  songId: string;
-  progress: number;
-}
+import { AudioPlayer } from './AudioPlayer';
+import { PlaylistList } from './playlist/PlaylistList';
+import { DownloadProgress } from './playlist/DownloadProgress';
+import type { Playlist, SyncStatus, DownloadProgressData } from '../types/playlist';
+import { toast } from 'sonner';
 
 export function PlaylistSync() {
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [syncStatus, setSyncStatus] = useState<Record<string, SyncStatus>>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist | null>(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    console.log('Setting up WebSocket listeners');
-    const cleanup = window.electronAPI.onWebSocketMessage((data: WebSocketMessage) => {
+    console.log('Setting up playlist sync listeners');
+    
+    const cleanup = window.electronAPI.onWebSocketMessage((data: any) => {
       console.log('WebSocket message received:', data);
-      if (data.type === 'sync_playlist' && data.payload.playlist) {
+      
+      if (data.type === 'playlist_sync' && data.payload?.playlist) {
         const playlist = data.payload.playlist;
-        setPlaylists(prev => [...prev, playlist]);
-        setSyncStatus(prev => ({
-          ...prev,
-          [playlist.id]: {
-            playlistId: playlist.id,
-            name: playlist.name,
-            progress: 0,
-            status: 'syncing'
-          }
-        }));
-
-        // Send playlist to main process for syncing
+        console.log('New playlist received:', playlist);
+        
         window.electronAPI.syncPlaylist(playlist)
           .then(result => {
             if (result.success) {
               console.log('Playlist synced successfully');
+              toast.success('Playlist başarıyla senkronize edildi');
             } else {
               console.error('Failed to sync playlist:', result.error);
+              toast.error('Playlist senkronizasyonu başarısız: ' + result.error);
             }
           })
           .catch(error => {
             console.error('Error syncing playlist:', error);
+            toast.error('Senkronizasyon hatası: ' + error.message);
           });
       }
     });
@@ -62,79 +51,85 @@ export function PlaylistSync() {
       }));
     });
 
+    const playlistUpdateCleanup = window.electronAPI.onPlaylistUpdated((playlist: Playlist) => {
+      console.log('Received updated playlist with local paths:', playlist);
+      setPlaylists(prev => {
+        const exists = prev.some(p => p.id === playlist.id);
+        if (exists) {
+          return prev.map(p => p.id === playlist.id ? playlist : p);
+        }
+        return [...prev, playlist];
+      });
+      
+      if (!currentPlaylist) {
+        setCurrentPlaylist(playlist);
+        setCurrentSongIndex(0);
+        setIsPlaying(true);
+      }
+    });
+
     return () => {
       cleanup();
       downloadCleanup();
+      playlistUpdateCleanup();
     };
-  }, []);
+  }, [currentPlaylist]);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <Check className="w-4 h-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'syncing':
-        return <RefreshCw className="w-4 h-4 animate-spin" />;
-      default:
-        return <Music className="w-4 h-4" />;
+  const handlePlaylistSelect = (playlist: Playlist) => {
+    setCurrentPlaylist(playlist);
+    setCurrentSongIndex(0);
+    setIsPlaying(true);
+  };
+
+  const handleNext = () => {
+    if (currentPlaylist && currentSongIndex < currentPlaylist.songs.length - 1) {
+      setCurrentSongIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentSongIndex > 0) {
+      setCurrentSongIndex(prev => prev - 1);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Offline Playlistler</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {playlists.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              WebSocket bağlantısı bekleniyor...
-            </p>
-          ) : (
-            playlists.map((playlist) => (
-              <div 
-                key={playlist.id} 
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(syncStatus[playlist.id]?.status)}
-                  <div>
-                    <h3 className="font-medium">{playlist.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {playlist.songs?.length || 0} şarkı
-                    </p>
-                  </div>
-                </div>
-                {syncStatus[playlist.id]?.status === 'syncing' ? (
-                  <Progress 
-                    value={syncStatus[playlist.id]?.progress} 
-                    className="w-[100px]"
-                  />
-                ) : null}
-              </div>
-            ))
-          )}
+    <div className="space-y-8">
+      <PlaylistList 
+        playlists={playlists}
+        syncStatus={syncStatus}
+        onPlaylistSelect={handlePlaylistSelect}
+        currentPlaylistId={currentPlaylist?.id}
+      />
 
-          {Object.keys(downloadProgress).length > 0 && (
-            <div className="mt-4 space-y-2 border-t pt-4">
-              <h4 className="font-medium">İndirme Durumu</h4>
-              {Object.entries(downloadProgress).map(([songId, progress]) => (
-                <div key={songId} className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Şarkı ID: {songId}</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  <Progress value={progress} className="h-1" />
-                </div>
-              ))}
+      {Object.keys(downloadProgress).length > 0 && (
+        <DownloadProgress progress={downloadProgress} />
+      )}
+
+      {currentPlaylist && currentPlaylist.songs[currentSongIndex] && (
+        <Card className="bg-gray-900 text-white">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium">
+                  {currentPlaylist.songs[currentSongIndex].title}
+                </h3>
+                <p className="text-gray-400">
+                  {currentPlaylist.songs[currentSongIndex].artist}
+                </p>
+              </div>
+              
+              <AudioPlayer
+                audioUrl={currentPlaylist.songs[currentSongIndex].file_url}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+                autoPlay={isPlaying}
+                onPlayStateChange={setIsPlaying}
+              />
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

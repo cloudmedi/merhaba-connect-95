@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { TokenDisplay } from './components/TokenDisplay';
-import type { SystemInfo } from './types/electron';
+import type { SystemInfo } from '../types/electron';
 import { PlaylistSync } from './components/PlaylistSync';
 import { LoadingState } from './components/LoadingState';
 import { toast } from 'sonner';
@@ -44,11 +44,11 @@ function App() {
           systemInfo: sysInfo
         });
 
-        if (result && result.success) {
+        if (result.success && result.token) {
           setDeviceToken(result.token);
           toast.success('Cihaz başarıyla kaydedildi');
         } else {
-          throw new Error('Cihaz kaydı başarısız');
+          throw new Error(result.error || 'Cihaz kaydı başarısız');
         }
 
       } catch (error: any) {
