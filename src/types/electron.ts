@@ -52,13 +52,18 @@ export interface RegisterDeviceResponse {
   error?: string;
 }
 
+export interface SyncPlaylistResponse {
+  success: boolean;
+  error?: string;
+}
+
 export interface ElectronAPI {
   getSystemInfo: () => Promise<SystemInfo>;
   getDeviceId: () => Promise<string>;
   getMacAddress: () => Promise<string>;
   onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
   getEnvVars: () => Promise<Record<string, string>>;
-  syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
+  syncPlaylist: (playlist: any) => Promise<SyncPlaylistResponse>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
