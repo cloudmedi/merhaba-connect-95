@@ -29,6 +29,12 @@ export interface SystemInfo {
   }>;
 }
 
+export interface RegisterDeviceResponse {
+  success: boolean;
+  token?: string;
+  error?: string;
+}
+
 export interface WebSocketMessage {
   type: string;
   payload: {
@@ -50,15 +56,13 @@ export interface ElectronAPI {
   getSystemInfo: () => Promise<SystemInfo>;
   getDeviceId: () => Promise<string>;
   getMacAddress: () => Promise<string>;
-  onSystemInfoUpdate: (callback: (data: SystemInfo) => void) => void;
-  getEnvVars: () => Promise<Record<string, string>>;
+  registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
   syncPlaylist: (playlist: any) => Promise<{ success: boolean; error?: string }>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
   onWebSocketMessage: (callback: (data: WebSocketMessage) => void) => () => void;
   onPlaylistUpdated: (callback: (playlist: any) => void) => () => void;
-  registerDevice: (deviceInfo: { token: string }) => Promise<void>;
 }
 
 declare global {
