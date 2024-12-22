@@ -131,11 +131,21 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
   try {
     console.log('Registering device with info:', deviceInfo);
     
-    if (!deviceInfo || !deviceInfo.token) {
-      throw new Error('No token provided');
+    if (!deviceInfo || !deviceInfo.macAddress || !deviceInfo.systemInfo) {
+      throw new Error('Invalid device info provided');
     }
     
-    deviceToken = deviceInfo.token;
+    // MAC adresi ile cihazı kontrol et ve kaydet
+    const response = await api.post('/manager/devices/register', {
+      macAddress: deviceInfo.macAddress,
+      systemInfo: deviceInfo.systemInfo
+    });
+
+    if (!response.data || !response.data.token) {
+      throw new Error('Invalid response from server');
+    }
+    
+    deviceToken = response.data.token;
     console.log('Device token stored in main process:', deviceToken);
     
     if (wsManager) {
@@ -143,10 +153,16 @@ ipcMain.handle('register-device', async (_event, deviceInfo) => {
     }
     wsManager = new WebSocketManager(deviceToken, win);
     
-    return { success: true };
+    return {
+      success: true,
+      token: deviceToken
+    };
   } catch (error) {
     console.error('Error registering device:', error);
-    throw error;
+    return {
+      success: false,
+      error: error.message
+    };
   }
 });
 

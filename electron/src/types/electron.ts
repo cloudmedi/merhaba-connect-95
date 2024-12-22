@@ -35,11 +35,6 @@ export interface RegisterDeviceResponse {
   error?: string;
 }
 
-export interface SyncPlaylistResponse {
-  success: boolean;
-  error?: string;
-}
-
 export interface WebSocketMessage {
   type: string;
   payload: {
@@ -62,7 +57,7 @@ export interface ElectronAPI {
   getDeviceId: () => Promise<string>;
   getMacAddress: () => Promise<string>;
   registerDevice: (deviceInfo: { macAddress: string; systemInfo: SystemInfo }) => Promise<RegisterDeviceResponse>;
-  syncPlaylist: (playlist: any) => Promise<SyncPlaylistResponse>;
+  syncPlaylist: (playlist: any) => Promise<void>;
   getStorageStats: () => Promise<{ used: number; total: number }>;
   getDownloadProgress: (songId: string) => Promise<number>;
   onDownloadProgress: (callback: (data: { songId: string; progress: number }) => void) => () => void;
